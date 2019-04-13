@@ -13,17 +13,17 @@ import java.util.*;
 public class Main {
     private static final Log LOG = LogFactory.getLog(Main.class);
 
-    private static final String PATH_TO_LOWER_SUBTITLES = "";
-
     private static final String PATH_TO_UPPER_SUBTITLES = "";
+
+    private static final String PATH_TO_LOWER_SUBTITLES = "";
 
     private static final String PATH_TO_MERGED_SUBTITLES = "";
 
     public static void main(String[] args) throws IOException {
-        Subtitles lowerSubtitles = parseSubtitles(PATH_TO_LOWER_SUBTITLES);
         Subtitles upperSubtitles = parseSubtitles(PATH_TO_UPPER_SUBTITLES);
+        Subtitles lowerSubtitles = parseSubtitles(PATH_TO_LOWER_SUBTITLES);
 
-        Subtitles mergedSubtitles = mergeSubtitles(lowerSubtitles, upperSubtitles);
+        Subtitles mergedSubtitles = mergeSubtitles(upperSubtitles, lowerSubtitles);
         writeSubTitlesToFile(mergedSubtitles, PATH_TO_MERGED_SUBTITLES);
     }
 
@@ -95,10 +95,10 @@ public class Main {
         return result;
     }
 
-    private static Subtitles mergeSubtitles(Subtitles lowerSubtitles, Subtitles upperSubtitles) {
+    private static Subtitles mergeSubtitles(Subtitles upperSubtitles, Subtitles lowerSubtitles) {
         Subtitles result = new Subtitles();
 
-        List<LocalTime> uniqueSortedPointsOfTime = getUniqueSortedPointsOfTime(lowerSubtitles, upperSubtitles);
+        List<LocalTime> uniqueSortedPointsOfTime = getUniqueSortedPointsOfTime(upperSubtitles, lowerSubtitles);
 
         SubtitlesElement previousUpperElement = null;
         SubtitlesElement previousLowerElement = null;
@@ -108,9 +108,9 @@ public class Main {
             LocalTime from = uniqueSortedPointsOfTime.get(i);
             LocalTime to = uniqueSortedPointsOfTime.get(i + 1);
 
-            SubtitlesElement lowerElement = findElementForPeriod(from, to, lowerSubtitles).orElse(null);
             SubtitlesElement upperElement = findElementForPeriod(from, to, upperSubtitles).orElse(null);
-            if (lowerElement != null || upperElement != null) {
+            SubtitlesElement lowerElement = findElementForPeriod(from, to, lowerSubtitles).orElse(null);
+            if (upperElement != null || lowerElement != null) {
                 SubtitlesElement mergedElement = new SubtitlesElement();
 
                 mergedElement.setNumber(subtitleNumber++);
@@ -139,15 +139,15 @@ public class Main {
     }
 
     //Возвращает уникальные отсортированные моменты времени когда показываются субтитры из обоих объектов с субтитрами.
-    private static List<LocalTime> getUniqueSortedPointsOfTime(Subtitles lowerSubtitles, Subtitles upperSubtitles) {
+    private static List<LocalTime> getUniqueSortedPointsOfTime(Subtitles upperSubtitles, Subtitles lowerSubtitles) {
         Set<LocalTime> result = new TreeSet<>();
 
-        for (SubtitlesElement subtitleLine : lowerSubtitles.getElements()) {
+        for (SubtitlesElement subtitleLine : upperSubtitles.getElements()) {
             result.add(subtitleLine.getFrom());
             result.add(subtitleLine.getTo());
         }
 
-        for (SubtitlesElement subtitleLine : upperSubtitles.getElements()) {
+        for (SubtitlesElement subtitleLine : lowerSubtitles.getElements()) {
             result.add(subtitleLine.getFrom());
             result.add(subtitleLine.getTo());
         }
