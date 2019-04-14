@@ -12,7 +12,7 @@ public class SubtitlesElement {
 
     private LocalTime to;
 
-    private List<SubtitleElementLine> lines = new ArrayList<>();
+    private List<SubtitlesElementLine> lines = new ArrayList<>();
 
     public int getNumber() {
         return number;
@@ -38,11 +38,11 @@ public class SubtitlesElement {
         this.to = to;
     }
 
-    public List<SubtitleElementLine> getLines() {
+    public List<SubtitlesElementLine> getLines() {
         return lines;
     }
 
-    public void setLines(List<SubtitleElementLine> lines) {
+    public void setLines(List<SubtitlesElementLine> lines) {
         this.lines = lines;
     }
 }

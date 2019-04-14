@@ -1,5 +1,6 @@
 package kirill.subtitles_merger;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -9,6 +10,7 @@ import org.joda.time.format.DateTimeFormat;
 
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Main {
     private static final Log LOG = LogFactory.getLog(Main.class);
@@ -73,7 +75,7 @@ public class Main {
                     continue;
                 }
 
-                currentElement.getLines().add(new SubtitleElementLine(currentLine, subtitlesName));
+                currentElement.getLines().add(new SubtitlesElementLine(currentLine, subtitlesName));
                 parsingStage = ParsingStage.PARSED_FIRST_LINE;
             } else {
                 if (StringUtils.isBlank(currentLine)) {
@@ -82,7 +84,7 @@ public class Main {
                     currentElement = null;
                     parsingStage = ParsingStage.HAVE_NOT_STARTED;
                 } else {
-                    currentElement.getLines().add(new SubtitleElementLine(currentLine, subtitlesName));
+                    currentElement.getLines().add(new SubtitlesElementLine(currentLine, subtitlesName));
                 }
             }
         }
@@ -103,10 +105,7 @@ public class Main {
 
         List<LocalTime> uniqueSortedPointsOfTime = getUniqueSortedPointsOfTime(upperSubtitles, lowerSubtitles);
 
-        SubtitlesElement previousUpperElement = null;
-        SubtitlesElement previousLowerElement = null;
         int subtitleNumber = 1;
-
         for (int i = 0; i < uniqueSortedPointsOfTime.size() - 1; i++) {
             LocalTime from = uniqueSortedPointsOfTime.get(i);
             LocalTime to = uniqueSortedPointsOfTime.get(i + 1);
@@ -122,20 +121,98 @@ public class Main {
 
                 if (upperElement != null) {
                     mergedElement.getLines().addAll(upperElement.getLines());
-                    previousUpperElement = upperElement;
-                } else if (previousUpperElement != null) {
-                    mergedElement.getLines().addAll(previousUpperElement.getLines());
                 }
 
                 if (lowerElement != null) {
                     mergedElement.getLines().addAll(lowerElement.getLines());
-                    previousLowerElement = lowerElement;
-                } else if (previousLowerElement != null) {
-                    mergedElement.getLines().addAll(previousLowerElement.getLines());
                 }
 
                 result.getElements().add(mergedElement);
             }
+        }
+
+        return postProcessMergedSubtitles(result);
+    }
+
+    //Нужна пост обработка полученных субтитров, чтобы не было "скачков". Если субтитры в данном блоке времени есть только в одном источнике, нужно посмотреть соседние блоки чтобы
+    //взять оттуда значение из другого источника.
+    private static Subtitles postProcessMergedSubtitles(Subtitles mergedSubtitles) {
+        Subtitles result = new Subtitles();
+
+        //Важно сохранить порядок следования субтитров.
+        Set<String> allSources = new LinkedHashSet<>();
+        for (SubtitlesElement subtitlesElement : mergedSubtitles.getElements()) {
+            Set<String> currentSource = subtitlesElement.getLines().stream()
+                            .map(SubtitlesElementLine::getSubtitlesOriginName)
+                            .collect(Collectors.toCollection(LinkedHashSet::new));
+            if (currentSource.size() == 2) {
+                allSources = currentSource;
+                break;
+            }
+        }
+
+        if (allSources.size() != 2) {
+            throw new IllegalStateException();
+        }
+
+        int i = 0;
+        for (SubtitlesElement subtitlesElement : mergedSubtitles.getElements()) {
+            Set<String> sources = subtitlesElement.getLines().stream()
+                    .map(SubtitlesElementLine::getSubtitlesOriginName)
+                    .collect(Collectors.toSet());
+
+            if (sources.size() == 2) {
+                result.getElements().add(subtitlesElement);
+                i++;
+                continue;
+            }
+
+            if (sources.size() != 1) {
+                throw new IllegalStateException();
+            }
+
+            SubtitlesElement postProcessedElement = new SubtitlesElement();
+            postProcessedElement.setNumber(subtitlesElement.getNumber());
+            postProcessedElement.setFrom(subtitlesElement.getFrom());
+            postProcessedElement.setTo(subtitlesElement.getTo());
+
+            List<SubtitlesElementLine> lines = new ArrayList<>();
+            lines.addAll(subtitlesElement.getLines());
+
+            String source = sources.iterator().next();
+            String missingSource = allSources.stream()
+                    .filter(currentSource -> !Objects.equals(currentSource, source))
+                    .findFirst().orElseThrow(IllegalStateException::new);
+
+            if (i == 0) {
+                for (SubtitlesElement currentSubtitlesElement : mergedSubtitles.getElements()) {
+                    List<SubtitlesElementLine> linesFromMissingSource = currentSubtitlesElement.getLines().stream()
+                            .filter(currentElement -> Objects.equals(currentElement.getSubtitlesOriginName(), missingSource))
+                            .collect(Collectors.toList());
+                    if (!CollectionUtils.isEmpty(linesFromMissingSource)) {
+                        lines.addAll(linesFromMissingSource);
+                        break;
+                    }
+                }
+            } else {
+                for (int j = i - 1; j >= 0; j--) {
+                    List<SubtitlesElementLine> linesFromMissingSource = mergedSubtitles.getElements().get(j).getLines().stream()
+                            .filter(currentElement -> Objects.equals(currentElement.getSubtitlesOriginName(), missingSource))
+                            .collect(Collectors.toList());
+                    if (!CollectionUtils.isEmpty(linesFromMissingSource)) {
+                        lines.addAll(linesFromMissingSource);
+                        break;
+                    }
+                }
+            }
+
+            for (String currentSource : allSources) {
+                postProcessedElement.getLines().addAll(lines.stream().filter(currentLine -> Objects.equals(currentLine.getSubtitlesOriginName(), currentSource)).collect(Collectors.toList()));
+            }
+
+            result.getElements().add(postProcessedElement);
+
+            i++;
         }
 
         return result;
@@ -182,8 +259,8 @@ public class Main {
             result.append(DateTimeFormat.forPattern("HH:mm:ss,SSS").print(subtitlesElement.getTo()));
             result.append("\n");
 
-            for (SubtitleElementLine line : subtitlesElement.getLines()) {
-                result.append(line);
+            for (SubtitlesElementLine line : subtitlesElement.getLines()) {
+                result.append(line.getText());
                 result.append("\n");
             }
 

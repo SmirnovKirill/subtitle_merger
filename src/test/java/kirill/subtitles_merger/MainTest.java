@@ -34,8 +34,8 @@ public class MainTest {
             result.append(DateTimeFormat.forPattern("HH:mm:ss,SSS").print(subtitlesElement.getTo()));
             result.append("\n");
 
-            for (SubtitleElementLine line : subtitlesElement.getLines()) {
-                result.append(line);
+            for (SubtitlesElementLine line : subtitlesElement.getLines()) {
+                result.append(line.getText());
                 result.append("\n");
             }
 
