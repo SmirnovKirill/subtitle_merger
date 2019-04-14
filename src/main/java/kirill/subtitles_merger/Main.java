@@ -27,7 +27,7 @@ public class Main {
         writeSubTitlesToFile(mergedSubtitles, PATH_TO_MERGED_SUBTITLES);
     }
 
-    public static Subtitles parseSubtitles(String path, String subtitlesName) throws IOException {
+    private static Subtitles parseSubtitles(String path, String subtitlesName) throws IOException {
         if (!new File(path).exists()) {
             LOG.error("file " + path + " doesn't exist");
             throw new IllegalArgumentException();
@@ -36,7 +36,7 @@ public class Main {
         return parseSubtitles(new FileInputStream(path), subtitlesName);
     }
 
-    public static Subtitles parseSubtitles(InputStream inputStream, String subtitlesName) throws IOException {
+    static Subtitles parseSubtitles(InputStream inputStream, String subtitlesName) throws IOException {
         Subtitles result = new Subtitles();
 
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
@@ -98,7 +98,7 @@ public class Main {
         return result;
     }
 
-    public static Subtitles mergeSubtitles(Subtitles upperSubtitles, Subtitles lowerSubtitles) {
+    static Subtitles mergeSubtitles(Subtitles upperSubtitles, Subtitles lowerSubtitles) {
         Subtitles result = new Subtitles();
 
         List<LocalTime> uniqueSortedPointsOfTime = getUniqueSortedPointsOfTime(upperSubtitles, lowerSubtitles);
@@ -170,7 +170,7 @@ public class Main {
         return Optional.empty();
     }
 
-    public static void writeSubTitlesToFile(Subtitles mergedSubtitles, String path) throws IOException {
+    private static void writeSubTitlesToFile(Subtitles mergedSubtitles, String path) throws IOException {
         StringBuilder result = new StringBuilder();
 
         for (SubtitlesElement subtitlesElement : mergedSubtitles.getElements()) {

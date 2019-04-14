@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import static com.google.common.truth.Truth.assertThat;
 
-public class MainTest {
+class MainTest {
     @Test
     private void testParseFromFileToSubtitles() throws IOException {
         Subtitles subtitles = Main.parseSubtitles(MainTest.class.getResourceAsStream("/ru.srt"), "ru");
@@ -18,5 +18,13 @@ public class MainTest {
                 .filter(currentElement -> currentElement.getNumber() == 7)
                 .findFirst().orElseThrow(IllegalStateException::new);
         assertThat(elementWithTwoLines.getLines()).hasSize(2);
+    }
+
+    @Test
+    private void testMerge() throws IOException {
+        Subtitles upperSubtitles = Main.parseSubtitles(MainTest.class.getResourceAsStream("/ru.srt"), "upper");
+        Subtitles lowerSubtitles = Main.parseSubtitles(MainTest.class.getResourceAsStream("/rn.srt"), "lower");
+
+        Subtitles merged = Main.mergeSubtitles(upperSubtitles, lowerSubtitles);
     }
 }
