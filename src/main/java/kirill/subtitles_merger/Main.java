@@ -20,23 +20,23 @@ public class Main {
     private static final String PATH_TO_MERGED_SUBTITLES = "";
 
     public static void main(String[] args) throws IOException {
-        Subtitles upperSubtitles = parseSubtitles(PATH_TO_UPPER_SUBTITLES);
-        Subtitles lowerSubtitles = parseSubtitles(PATH_TO_LOWER_SUBTITLES);
+        Subtitles upperSubtitles = parseSubtitles(PATH_TO_UPPER_SUBTITLES, "upper");
+        Subtitles lowerSubtitles = parseSubtitles(PATH_TO_LOWER_SUBTITLES, "lower");
 
         Subtitles mergedSubtitles = mergeSubtitles(upperSubtitles, lowerSubtitles);
         writeSubTitlesToFile(mergedSubtitles, PATH_TO_MERGED_SUBTITLES);
     }
 
-    public static Subtitles parseSubtitles(String path) throws IOException {
+    public static Subtitles parseSubtitles(String path, String subtitlesName) throws IOException {
         if (!new File(path).exists()) {
             LOG.error("file " + path + " doesn't exist");
             throw new IllegalArgumentException();
         }
 
-        return parseSubtitles(new FileInputStream(path));
+        return parseSubtitles(new FileInputStream(path), subtitlesName);
     }
 
-    public static Subtitles parseSubtitles(InputStream inputStream) throws IOException {
+    public static Subtitles parseSubtitles(InputStream inputStream, String subtitlesName) throws IOException {
         Subtitles result = new Subtitles();
 
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
@@ -73,7 +73,7 @@ public class Main {
                     continue;
                 }
 
-                currentElement.getLines().add(currentLine);
+                currentElement.getLines().add(new SubtitleElementLine(currentLine, subtitlesName));
                 parsingStage = ParsingStage.PARSED_FIRST_LINE;
             } else {
                 if (StringUtils.isBlank(currentLine)) {
@@ -82,7 +82,7 @@ public class Main {
                     currentElement = null;
                     parsingStage = ParsingStage.HAVE_NOT_STARTED;
                 } else {
-                    currentElement.getLines().add(currentLine);
+                    currentElement.getLines().add(new SubtitleElementLine(currentLine, subtitlesName));
                 }
             }
         }
@@ -182,7 +182,7 @@ public class Main {
             result.append(DateTimeFormat.forPattern("HH:mm:ss,SSS").print(subtitlesElement.getTo()));
             result.append("\n");
 
-            for (String line : subtitlesElement.getLines()) {
+            for (SubtitleElementLine line : subtitlesElement.getLines()) {
                 result.append(line);
                 result.append("\n");
             }

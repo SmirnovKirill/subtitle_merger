@@ -9,7 +9,7 @@ import static com.google.common.truth.Truth.assertThat;
 public class MainTest {
     @Test
     private void testParseFromFileToSubtitles() throws IOException {
-        Subtitles subtitles = Main.parseSubtitles(MainTest.class.getResourceAsStream("/ru.srt"));
+        Subtitles subtitles = Main.parseSubtitles(MainTest.class.getResourceAsStream("/ru.srt"), "ru");
         assertThat(subtitles.getElements()).hasSize(10);
 
         assertThat(subtitles.getElements().get(0).getLines()).hasSize(1);
