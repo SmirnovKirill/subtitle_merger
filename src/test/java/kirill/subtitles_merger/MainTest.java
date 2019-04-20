@@ -10,7 +10,7 @@ import static com.google.common.truth.Truth.assertThat;
 public class MainTest {
     @Test
     public void testParseFromFileToSubtitles() throws IOException {
-        Subtitles subtitles = Main.parseSubtitles(MainTest.class.getResourceAsStream("/ru.srt"), "ru");
+        Subtitles subtitles = Main.parseSubtitles(MainTest.class.getResourceAsStream("/MainTest/testParseFromFileToSubtitles/sub.srt"), "ru");
         assertThat(subtitles.getElements()).hasSize(10);
 
         assertThat(subtitles.getElements().get(0).getLines()).hasSize(2);
@@ -19,8 +19,8 @@ public class MainTest {
 
     @Test
     public void testMerge() throws IOException {
-        Subtitles upperSubtitles = Main.parseSubtitles(MainTest.class.getResourceAsStream("/ru.srt"), "upper");
-        Subtitles lowerSubtitles = Main.parseSubtitles(MainTest.class.getResourceAsStream("/en.srt"), "lower");
+        Subtitles upperSubtitles = Main.parseSubtitles(MainTest.class.getResourceAsStream("/MainTest/testMerged/upper.srt"), "upper");
+        Subtitles lowerSubtitles = Main.parseSubtitles(MainTest.class.getResourceAsStream("/MainTest/testMerged/lower.srt"), "lower");
 
         Subtitles merged = Main.mergeSubtitles(upperSubtitles, lowerSubtitles);
         StringBuilder result = new StringBuilder();

@@ -15,18 +15,28 @@ import java.util.stream.Collectors;
 public class Main {
     private static final Log LOG = LogFactory.getLog(Main.class);
 
-    private static final String PATH_TO_UPPER_SUBTITLES = "";
+    private static final String PATH_TO_UPPER_SUBTITLES_PROPERTY = "pathToUpperSubtitles";
 
-    private static final String PATH_TO_LOWER_SUBTITLES = "";
+    private static final String PATH_TO_LOWER_SUBTITLES_PROPERTY = "pathToLowerSubtitles";
 
-    private static final String PATH_TO_MERGED_SUBTITLES = "";
+    private static final String PATH_TO_MERGED_SUBTITLES_PROPERTY = "pathToMergedSubtitles";
 
     public static void main(String[] args) throws IOException {
-        Subtitles upperSubtitles = parseSubtitles(PATH_TO_UPPER_SUBTITLES, "upper");
-        Subtitles lowerSubtitles = parseSubtitles(PATH_TO_LOWER_SUBTITLES, "lower");
+        Properties properties = getProperties();
+
+        Subtitles upperSubtitles = parseSubtitles(properties.getProperty(PATH_TO_UPPER_SUBTITLES_PROPERTY), "upper");
+        Subtitles lowerSubtitles = parseSubtitles(properties.getProperty(PATH_TO_LOWER_SUBTITLES_PROPERTY), "lower");
 
         Subtitles mergedSubtitles = mergeSubtitles(upperSubtitles, lowerSubtitles);
-        writeSubTitlesToFile(mergedSubtitles, PATH_TO_MERGED_SUBTITLES);
+        writeSubTitlesToFile(mergedSubtitles, properties.getProperty(PATH_TO_MERGED_SUBTITLES_PROPERTY));
+    }
+
+    private static Properties getProperties() throws IOException {
+        Properties result = new Properties();
+
+        result.load(Main.class.getResourceAsStream("/config.properties"));
+
+        return result;
     }
 
     private static Subtitles parseSubtitles(String path, String subtitlesName) throws IOException {
