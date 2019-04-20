@@ -14,6 +14,16 @@ public class SubtitlesElement {
 
     private List<SubtitlesElementLine> lines = new ArrayList<>();
 
+    public SubtitlesElement() {
+    }
+
+    public SubtitlesElement(int number, LocalTime from, LocalTime to, List<SubtitlesElementLine> lines) {
+        this.number = number;
+        this.from = from;
+        this.to = to;
+        this.lines = lines;
+    }
+
     public int getNumber() {
         return number;
     }

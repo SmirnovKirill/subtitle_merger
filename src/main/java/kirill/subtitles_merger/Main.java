@@ -111,6 +111,26 @@ public class Main {
     }
 
     static Subtitles mergeSubtitles(Subtitles upperSubtitles, Subtitles lowerSubtitles) {
+        List<String> sortedSources = getSortedSources(upperSubtitles, lowerSubtitles);
+
+        Subtitles result = makeInitialMerge(upperSubtitles, lowerSubtitles);
+        result = getExtendedSubtitles(result, sortedSources);
+        orderSubtitles(result, sortedSources);
+        result = getCombinedSubtitles(result);
+
+        return result;
+    }
+
+    private static List<String> getSortedSources(Subtitles upperSubtitles, Subtitles lowerSubtitles) {
+        return Arrays.asList(
+                upperSubtitles.getElements().get(0).getLines().get(0).getSubtitlesOriginName(),
+                lowerSubtitles.getElements().get(0).getLines().get(0).getSubtitlesOriginName()
+        );
+    }
+
+    //Самый первый и простой этап объединения - делам список всех упомянутых точек времени и на каждом отрезке смотрим есть ли текст
+    //в объединяемых субтитров, если есть, то объединяем.
+    private static Subtitles makeInitialMerge(Subtitles upperSubtitles, Subtitles lowerSubtitles) {
         Subtitles result = new Subtitles();
 
         List<LocalTime> uniqueSortedPointsOfTime = getUniqueSortedPointsOfTime(upperSubtitles, lowerSubtitles);
@@ -139,90 +159,6 @@ public class Main {
 
                 result.getElements().add(mergedElement);
             }
-        }
-
-        return postProcessMergedSubtitles(result);
-    }
-
-    //Нужна пост обработка полученных субтитров, чтобы не было "скачков". Если субтитры в данном блоке времени есть только в одном источнике, нужно посмотреть соседние блоки чтобы
-    //взять оттуда значение из другого источника.
-    private static Subtitles postProcessMergedSubtitles(Subtitles mergedSubtitles) {
-        Subtitles result = new Subtitles();
-
-        //Важно сохранить порядок следования субтитров.
-        Set<String> allSources = new LinkedHashSet<>();
-        for (SubtitlesElement subtitlesElement : mergedSubtitles.getElements()) {
-            Set<String> currentSource = subtitlesElement.getLines().stream()
-                            .map(SubtitlesElementLine::getSubtitlesOriginName)
-                            .collect(Collectors.toCollection(LinkedHashSet::new));
-            if (currentSource.size() == 2) {
-                allSources = currentSource;
-                break;
-            }
-        }
-
-        if (allSources.size() != 2) {
-            throw new IllegalStateException();
-        }
-
-        int i = 0;
-        for (SubtitlesElement subtitlesElement : mergedSubtitles.getElements()) {
-            Set<String> sources = subtitlesElement.getLines().stream()
-                    .map(SubtitlesElementLine::getSubtitlesOriginName)
-                    .collect(Collectors.toSet());
-
-            if (sources.size() == 2) {
-                result.getElements().add(subtitlesElement);
-                i++;
-                continue;
-            }
-
-            if (sources.size() != 1) {
-                throw new IllegalStateException();
-            }
-
-            SubtitlesElement postProcessedElement = new SubtitlesElement();
-            postProcessedElement.setNumber(subtitlesElement.getNumber());
-            postProcessedElement.setFrom(subtitlesElement.getFrom());
-            postProcessedElement.setTo(subtitlesElement.getTo());
-
-            List<SubtitlesElementLine> lines = new ArrayList<>();
-            lines.addAll(subtitlesElement.getLines());
-
-            String source = sources.iterator().next();
-            String missingSource = allSources.stream()
-                    .filter(currentSource -> !Objects.equals(currentSource, source))
-                    .findFirst().orElseThrow(IllegalStateException::new);
-
-            if (i == 0) {
-                for (SubtitlesElement currentSubtitlesElement : mergedSubtitles.getElements()) {
-                    List<SubtitlesElementLine> linesFromMissingSource = currentSubtitlesElement.getLines().stream()
-                            .filter(currentElement -> Objects.equals(currentElement.getSubtitlesOriginName(), missingSource))
-                            .collect(Collectors.toList());
-                    if (!CollectionUtils.isEmpty(linesFromMissingSource)) {
-                        lines.addAll(linesFromMissingSource);
-                        break;
-                    }
-                }
-            } else {
-                for (int j = i - 1; j >= 0; j--) {
-                    List<SubtitlesElementLine> linesFromMissingSource = mergedSubtitles.getElements().get(j).getLines().stream()
-                            .filter(currentElement -> Objects.equals(currentElement.getSubtitlesOriginName(), missingSource))
-                            .collect(Collectors.toList());
-                    if (!CollectionUtils.isEmpty(linesFromMissingSource)) {
-                        lines.addAll(linesFromMissingSource);
-                        break;
-                    }
-                }
-            }
-
-            for (String currentSource : allSources) {
-                postProcessedElement.getLines().addAll(lines.stream().filter(currentLine -> Objects.equals(currentLine.getSubtitlesOriginName(), currentSource)).collect(Collectors.toList()));
-            }
-
-            result.getElements().add(postProcessedElement);
-
-            i++;
         }
 
         return result;
@@ -257,6 +193,136 @@ public class Main {
         return Optional.empty();
     }
 
+    //Метод устраняет "скачки". Если субтитры в данном блоке времени есть только в одном источнике, нужно посмотреть соседние блоки чтобы
+    //взять оттуда значение из другого источника.
+    private static Subtitles getExtendedSubtitles(Subtitles mergedSubtitles, List<String> sortedSources) {
+        Subtitles result = new Subtitles();
+
+        int i = 0;
+        for (SubtitlesElement subtitlesElement : mergedSubtitles.getElements()) {
+            Set<String> sources = subtitlesElement.getLines().stream()
+                    .map(SubtitlesElementLine::getSubtitlesOriginName)
+                    .collect(Collectors.toSet());
+
+            if (sources.size() == 2) {
+                result.getElements().add(subtitlesElement);
+                i++;
+                continue;
+            }
+
+            if (sources.size() != 1) {
+                throw new IllegalStateException();
+            }
+
+            SubtitlesElement postProcessedElement = new SubtitlesElement();
+            postProcessedElement.setNumber(subtitlesElement.getNumber());
+            postProcessedElement.setFrom(subtitlesElement.getFrom());
+            postProcessedElement.setTo(subtitlesElement.getTo());
+            postProcessedElement.getLines().addAll(subtitlesElement.getLines());
+
+            String source = sources.iterator().next();
+            String missingSource = sortedSources.stream()
+                    .filter(currentSource -> !Objects.equals(currentSource, source))
+                    .findFirst().orElseThrow(IllegalStateException::new);
+
+            if (i == 0) {
+                for (SubtitlesElement currentSubtitlesElement : mergedSubtitles.getElements()) {
+                    List<SubtitlesElementLine> linesFromMissingSource = currentSubtitlesElement.getLines().stream()
+                            .filter(currentElement -> Objects.equals(currentElement.getSubtitlesOriginName(), missingSource))
+                            .collect(Collectors.toList());
+                    if (!CollectionUtils.isEmpty(linesFromMissingSource)) {
+                        postProcessedElement.getLines().addAll(linesFromMissingSource);
+                        break;
+                    }
+                }
+            } else {
+                for (int j = i - 1; j >= 0; j--) {
+                    List<SubtitlesElementLine> linesFromMissingSource = mergedSubtitles.getElements().get(j).getLines().stream()
+                            .filter(currentElement -> Objects.equals(currentElement.getSubtitlesOriginName(), missingSource))
+                            .collect(Collectors.toList());
+                    if (!CollectionUtils.isEmpty(linesFromMissingSource)) {
+                        postProcessedElement.getLines().addAll(linesFromMissingSource);
+                        break;
+                    }
+                }
+            }
+
+            result.getElements().add(postProcessedElement);
+
+            i++;
+        }
+
+        return result;
+    }
+
+    //Сортирует тексты каждого субтитра на основе сортированного списка источников
+    private static void orderSubtitles(Subtitles mergedSubtitles, List<String> sortedSources) {
+        for (SubtitlesElement subtitlesElement : mergedSubtitles.getElements()) {
+            List<SubtitlesElementLine> orderedLines = new ArrayList<>();
+
+            for (String source : sortedSources) {
+                orderedLines.addAll(subtitlesElement.getLines().stream().filter(currentLine -> Objects.equals(currentLine.getSubtitlesOriginName(), source)).collect(Collectors.toList()));
+            }
+
+            subtitlesElement.setLines(orderedLines);
+        }
+    }
+
+    //Метод объединяет повторяющиеся субтитры если они одинаковые и идут строго подряд.
+    private static Subtitles getCombinedSubtitles(Subtitles mergedSubtitles) {
+        Subtitles result = new Subtitles();
+
+        int elementNumber = 1;
+
+        SubtitlesElement currentStartElement = mergedSubtitles.getElements().get(0);
+        LocalTime currentTo = mergedSubtitles.getElements().get(0).getTo();
+
+        for (int i = 1; i < mergedSubtitles.getElements().size(); i++) {
+            SubtitlesElement currentElement = mergedSubtitles.getElements().get(i);
+
+            if (!Objects.equals(currentElement.getLines(), currentStartElement.getLines()) || !Objects.equals(currentTo, currentElement.getFrom())) {
+                result.getElements().add(
+                        new SubtitlesElement(
+                                elementNumber++,
+                                currentStartElement.getFrom(),
+                                currentTo,
+                                new ArrayList<>(currentStartElement.getLines())
+                        )
+                );
+
+                currentStartElement = currentElement;
+                currentTo = currentElement.getTo();
+
+            } else {
+                currentTo = currentStartElement.getTo();
+            }
+        }
+
+        SubtitlesElement lastElement = mergedSubtitles.getElements().get(mergedSubtitles.getElements().size() - 1);
+
+        if (!Objects.equals(lastElement.getLines(), currentStartElement.getLines()) || !Objects.equals(currentTo, lastElement.getFrom())) {
+            result.getElements().add(
+                    new SubtitlesElement(
+                            elementNumber,
+                            lastElement.getFrom(),
+                            lastElement.getTo(),
+                            new ArrayList<>(lastElement.getLines())
+                    )
+            );
+        } else {
+            result.getElements().add(
+                    new SubtitlesElement(
+                            elementNumber,
+                            currentStartElement.getFrom(),
+                            lastElement.getTo(),
+                            new ArrayList<>(currentStartElement.getLines())
+                    )
+            );
+        }
+
+        return result;
+    }
+
     private enum ParsingStage {
         HAVE_NOT_STARTED,
         PARSED_NUMBER,
@@ -264,4 +330,3 @@ public class Main {
         PARSED_FIRST_LINE,
     }
 }
-
