@@ -28,7 +28,7 @@ public class Main {
         Subtitles lowerSubtitles = parseSubtitles(properties.getProperty(PATH_TO_LOWER_SUBTITLES_PROPERTY), "lower");
 
         Subtitles mergedSubtitles = mergeSubtitles(upperSubtitles, lowerSubtitles);
-        writeSubTitlesToFile(mergedSubtitles, properties.getProperty(PATH_TO_MERGED_SUBTITLES_PROPERTY));
+        FileUtils.writeStringToFile(new File(properties.getProperty(PATH_TO_MERGED_SUBTITLES_PROPERTY)), mergedSubtitles.toString());
     }
 
     private static Properties getProperties() throws IOException {
@@ -255,29 +255,6 @@ public class Main {
         }
 
         return Optional.empty();
-    }
-
-    private static void writeSubTitlesToFile(Subtitles mergedSubtitles, String path) throws IOException {
-        StringBuilder result = new StringBuilder();
-
-        for (SubtitlesElement subtitlesElement : mergedSubtitles.getElements()) {
-            result.append(subtitlesElement.getNumber());
-            result.append("\n");
-
-            result.append(DateTimeFormat.forPattern("HH:mm:ss,SSS").print(subtitlesElement.getFrom()));
-            result.append(" --> ");
-            result.append(DateTimeFormat.forPattern("HH:mm:ss,SSS").print(subtitlesElement.getTo()));
-            result.append("\n");
-
-            for (SubtitlesElementLine line : subtitlesElement.getLines()) {
-                result.append(line.getText());
-                result.append("\n");
-            }
-
-            result.append("\n");
-        }
-
-        FileUtils.writeStringToFile(new File(path), result.toString());
     }
 
     private enum ParsingStage {
