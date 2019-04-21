@@ -294,7 +294,7 @@ public class Main {
                 currentTo = currentElement.getTo();
 
             } else {
-                currentTo = currentStartElement.getTo();
+                currentTo = currentElement.getTo();
             }
         }
 
