@@ -12,6 +12,8 @@ import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toSet;
+
 public class Main {
     private static final Log LOG = LogFactory.getLog(Main.class);
 
@@ -202,16 +204,21 @@ public class Main {
         for (SubtitlesElement subtitlesElement : mergedSubtitles.getElements()) {
             Set<String> sources = subtitlesElement.getLines().stream()
                     .map(SubtitlesElementLine::getSubtitlesOriginName)
-                    .collect(Collectors.toSet());
+                    .collect(toSet());
 
-            if (sources.size() == 2) {
+            if (sources.size() != 1 && sources.size() != 2) {
+                throw new IllegalStateException();
+            }
+
+            boolean shouldExtend = sources.size() != 2 && (
+                    linesStartToHaveSecondSource(subtitlesElement.getLines(), i, Direction.FORWARD, mergedSubtitles)
+                            || linesStartToHaveSecondSource(subtitlesElement.getLines(), i, Direction.BACKWARD, mergedSubtitles)
+            );
+
+            if (!shouldExtend) {
                 result.getElements().add(subtitlesElement);
                 i++;
                 continue;
-            }
-
-            if (sources.size() != 1) {
-                throw new IllegalStateException();
             }
 
             SubtitlesElement postProcessedElement = new SubtitlesElement();
@@ -253,6 +260,52 @@ public class Main {
         }
 
         return result;
+    }
+
+    private static boolean linesStartToHaveSecondSource(List<SubtitlesElementLine> lines, int elementIndex, Direction direction, Subtitles subtitles) {
+        if (elementIndex == subtitles.getElements().size() - 1) {
+            return false; //Значит искомые строки были и так последними.
+        }
+
+        String linesSource = lines.get(0).getSubtitlesOriginName();
+
+        List<Integer> range = new ArrayList<>();
+        if (direction == Direction.FORWARD) {
+            for (int i = elementIndex + 1; i < subtitles.getElements().size(); i++) {
+                range.add(i);
+            }
+        } else if (direction == Direction.BACKWARD) {
+            for (int i = elementIndex - 1; i >= 0; i--) {
+                range.add(i);
+            }
+        } else {
+            throw new IllegalStateException();
+        }
+
+        for (int i : range) {
+            SubtitlesElement subtitlesElement = subtitles.getElements().get(i);
+
+            Set<String> currentElementSources = subtitlesElement.getLines().stream().map(SubtitlesElementLine::getSubtitlesOriginName).collect(toSet());
+
+            if (currentElementSources.size() == 1) {
+                if (currentElementSources.iterator().next().equals(linesSource)) {
+                    if (!Objects.equals(subtitlesElement.getLines(), lines)) {
+                        return false; //Значит пошел новый текст из того же источника, поэтому исходный текст был до этого только в одном источнике.
+                    }
+                } else {
+                    return false; //Если пошел текст из нового источника а из исходного при этом нет, значит исходный текст был до этого только в одном источнике.
+                }
+            } else {
+                List<SubtitlesElementLine> linesFromOriginalSource = subtitlesElement.getLines().stream()
+                        .filter(currentLine -> Objects.equals(currentLine.getSubtitlesOriginName(), linesSource))
+                        .collect(Collectors.toList());
+                return Objects.equals(linesFromOriginalSource, lines); //Если строки из того же источника равны исходным, то значит к исходному тексту
+                //добавился новый язык и надо вернуть true (т.е. исходный текст не был один на всем протяжении), а иначе false, т.к. сменился текст и из исходного источника и
+                //из нового.
+            }
+        }
+
+        return false;
     }
 
     //Сортирует тексты каждого субтитра на основе сортированного списка источников
@@ -328,5 +381,10 @@ public class Main {
         PARSED_NUMBER,
         PARSED_DURATION,
         PARSED_FIRST_LINE,
+    }
+
+    private enum Direction {
+        FORWARD,
+        BACKWARD
     }
 }
