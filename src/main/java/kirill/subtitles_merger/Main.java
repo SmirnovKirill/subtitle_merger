@@ -210,11 +210,7 @@ public class Main {
                 throw new IllegalStateException();
             }
 
-            boolean shouldExtend = sources.size() != 2 && (
-                    linesStartToHaveSecondSource(subtitlesElement.getLines(), i, Direction.FORWARD, mergedSubtitles)
-                            || linesStartToHaveSecondSource(subtitlesElement.getLines(), i, Direction.BACKWARD, mergedSubtitles)
-            );
-
+            boolean shouldExtend = sources.size() != 2 && linesStartToHaveSecondSource(subtitlesElement.getLines(), i, mergedSubtitles);
             if (!shouldExtend) {
                 result.getElements().add(subtitlesElement);
                 i++;
@@ -262,27 +258,29 @@ public class Main {
         return result;
     }
 
-    private static boolean linesStartToHaveSecondSource(List<SubtitlesElementLine> lines, int elementIndex, Direction direction, Subtitles subtitles) {
-        if (elementIndex == subtitles.getElements().size() - 1) {
-            return false; //Значит искомые строки были и так последними.
-        }
-
+    private static boolean linesStartToHaveSecondSource(List<SubtitlesElementLine> lines, int elementIndex, Subtitles subtitles) {
         String linesSource = lines.get(0).getSubtitlesOriginName();
 
-        List<Integer> range = new ArrayList<>();
-        if (direction == Direction.FORWARD) {
-            for (int i = elementIndex + 1; i < subtitles.getElements().size(); i++) {
-                range.add(i);
+        int startIndex = -1;
+        for (int i = elementIndex; i >= 0; i--) {
+            SubtitlesElement subtitlesElement = subtitles.getElements().get(i);
+
+            List<SubtitlesElementLine> linesFromOriginalSource = subtitlesElement.getLines().stream()
+                    .filter(currentLine -> Objects.equals(currentLine.getSubtitlesOriginName(), linesSource))
+                    .collect(Collectors.toList());
+
+            if (!Objects.equals(lines, linesFromOriginalSource)) {
+                break;
+            } else {
+                startIndex = i;
             }
-        } else if (direction == Direction.BACKWARD) {
-            for (int i = elementIndex - 1; i >= 0; i--) {
-                range.add(i);
-            }
-        } else {
+        }
+
+        if (startIndex == -1) {
             throw new IllegalStateException();
         }
 
-        for (int i : range) {
+        for (int i = startIndex; i < subtitles.getElements().size(); i++) {
             SubtitlesElement subtitlesElement = subtitles.getElements().get(i);
 
             Set<String> currentElementSources = subtitlesElement.getLines().stream().map(SubtitlesElementLine::getSubtitlesOriginName).collect(toSet());
@@ -353,7 +351,7 @@ public class Main {
 
         SubtitlesElement lastElement = mergedSubtitles.getElements().get(mergedSubtitles.getElements().size() - 1);
 
-        if (!Objects.equals(lastElement.getLines(), currentStartElement.getLines()) || !Objects.equals(currentTo, lastElement.getFrom())) {
+        if (!Objects.equals(lastElement.getLines(), currentStartElement.getLines())) {
             result.getElements().add(
                     new SubtitlesElement(
                             elementNumber,
@@ -381,10 +379,5 @@ public class Main {
         PARSED_NUMBER,
         PARSED_DURATION,
         PARSED_FIRST_LINE,
-    }
-
-    private enum Direction {
-        FORWARD,
-        BACKWARD
     }
 }
