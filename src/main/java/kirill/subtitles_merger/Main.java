@@ -60,8 +60,8 @@ public class Main {
 
         String currentLine;
         while ((currentLine = bufferedReader.readLine()) != null) {
-            currentLine = currentLine.replace("\uFEFF", "").trim(); //Этот спец символ может быть в начале самой первой строки, надо убрать а то не распарсится инт
-
+            // Этот спец, символ может быть в начале самой первой строки, надо убрать а то не распарсится инт.
+            currentLine = currentLine.replace("\uFEFF", "").trim();
             if (parsingStage == ParsingStage.HAVE_NOT_STARTED) {
                 if (StringUtils.isBlank(currentLine)) {
                     continue;
@@ -130,8 +130,8 @@ public class Main {
         );
     }
 
-    //Самый первый и простой этап объединения - делам список всех упомянутых точек времени и на каждом отрезке смотрим есть ли текст
-    //в объединяемых субтитров, если есть, то объединяем.
+    // Самый первый и простой этап объединения - делам список всех упомянутых точек времени и на каждом отрезке смотрим есть ли текст
+    // в объединяемых субтитров, если есть, то объединяем.
     private static Subtitles makeInitialMerge(Subtitles upperSubtitles, Subtitles lowerSubtitles) {
         Subtitles result = new Subtitles();
 
@@ -166,7 +166,7 @@ public class Main {
         return result;
     }
 
-    //Возвращает уникальные отсортированные моменты времени когда показываются субтитры из обоих объектов с субтитрами.
+    // Возвращает уникальные отсортированные моменты времени когда показываются субтитры из обоих объектов с субтитрами.
     private static List<LocalTime> getUniqueSortedPointsOfTime(Subtitles upperSubtitles, Subtitles lowerSubtitles) {
         Set<LocalTime> result = new TreeSet<>();
 
@@ -195,8 +195,8 @@ public class Main {
         return Optional.empty();
     }
 
-    //Метод устраняет "скачки". Если субтитры в данном блоке времени есть только в одном источнике, нужно посмотреть соседние блоки чтобы
-    //взять оттуда значение из другого источника.
+    // Метод устраняет "скачки". Если субтитры в данном блоке времени есть только в одном источнике, нужно посмотреть соседние блоки чтобы
+    // взять оттуда значение из другого источника.
     private static Subtitles getExtendedSubtitles(Subtitles mergedSubtitles, List<String> sortedSources) {
         Subtitles result = new Subtitles();
 
@@ -288,25 +288,28 @@ public class Main {
             if (currentElementSources.size() == 1) {
                 if (currentElementSources.iterator().next().equals(linesSource)) {
                     if (!Objects.equals(subtitlesElement.getLines(), lines)) {
-                        return false; //Значит пошел новый текст из того же источника, поэтому исходный текст был до этого только в одном источнике.
+                        // Значит пошел новый текст из того же источника, поэтому исходный текст был до этого только в одном источнике.
+                        return false;
                     }
                 } else {
-                    return false; //Если пошел текст из нового источника а из исходного при этом нет, значит исходный текст был до этого только в одном источнике.
+                    // Если пошел текст из нового источника а из исходного при этом нет, значит исходный текст был до этого только в одном источнике.
+                    return false;
                 }
             } else {
+                // Если строки из того же источника равны исходным, то значит к исходному тексту
+                // добавился новый язык и надо вернуть true (т.е. исходный текст не был один на всем протяжении), а иначе false, т.к. сменился текст и из исходного источника и
+                // из нового.
                 List<SubtitlesElementLine> linesFromOriginalSource = subtitlesElement.getLines().stream()
                         .filter(currentLine -> Objects.equals(currentLine.getSource(), linesSource))
                         .collect(Collectors.toList());
-                return Objects.equals(linesFromOriginalSource, lines); //Если строки из того же источника равны исходным, то значит к исходному тексту
-                //добавился новый язык и надо вернуть true (т.е. исходный текст не был один на всем протяжении), а иначе false, т.к. сменился текст и из исходного источника и
-                //из нового.
+                return Objects.equals(linesFromOriginalSource, lines);
             }
         }
 
         return false;
     }
 
-    //Сортирует тексты каждого субтитра на основе сортированного списка источников
+    // Сортирует тексты каждого субтитра на основе сортированного списка источников.
     private static void orderSubtitles(Subtitles mergedSubtitles, List<String> sortedSources) {
         for (SubtitlesElement subtitlesElement : mergedSubtitles.getElements()) {
             List<SubtitlesElementLine> orderedLines = new ArrayList<>();
@@ -319,7 +322,7 @@ public class Main {
         }
     }
 
-    //Метод объединяет повторяющиеся субтитры если они одинаковые и идут строго подряд.
+    // Метод объединяет повторяющиеся субтитры если они одинаковые и идут строго подряд.
     private static Subtitles getCombinedSubtitles(Subtitles mergedSubtitles) {
         Subtitles result = new Subtitles();
 
