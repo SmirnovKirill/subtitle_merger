@@ -338,52 +338,23 @@ public class Main {
     private static Subtitles getCombinedSubtitles(Subtitles mergedSubtitles) {
         Subtitles result = new Subtitles();
 
-        int elementNumber = 1;
-
-        SubtitlesElement currentStartElement = mergedSubtitles.getElements().get(0);
-        LocalTime currentTo = mergedSubtitles.getElements().get(0).getTo();
-
-        for (int i = 1; i < mergedSubtitles.getElements().size(); i++) {
+        for (int i = 0; i < mergedSubtitles.getElements().size(); i++) {
             SubtitlesElement currentElement = mergedSubtitles.getElements().get(i);
 
-            if (!Objects.equals(currentElement.getLines(), currentStartElement.getLines()) || !Objects.equals(currentTo, currentElement.getFrom())) {
-                result.getElements().add(
-                        new SubtitlesElement(
-                                elementNumber++,
-                                currentStartElement.getFrom(),
-                                currentTo,
-                                new ArrayList<>(currentStartElement.getLines())
-                        )
-                );
+            boolean shouldAddCurrentElement = true;
 
-                currentStartElement = currentElement;
-                currentTo = currentElement.getTo();
-
-            } else {
-                currentTo = currentElement.getTo();
+            if (result.getElements().size() > 0) {
+                SubtitlesElement lastAddedElement = result.getElements().get(result.getElements().size() - 1);
+                if (Objects.equals(lastAddedElement.getLines(), currentElement.getLines()) && Objects.equals(lastAddedElement.getTo(), currentElement.getFrom())) {
+                    lastAddedElement.setTo(currentElement.getTo());
+                    shouldAddCurrentElement = false;
+                }
             }
-        }
 
-        SubtitlesElement lastElement = mergedSubtitles.getElements().get(mergedSubtitles.getElements().size() - 1);
-
-        if (!Objects.equals(lastElement.getLines(), currentStartElement.getLines())) {
-            result.getElements().add(
-                    new SubtitlesElement(
-                            elementNumber,
-                            lastElement.getFrom(),
-                            lastElement.getTo(),
-                            new ArrayList<>(lastElement.getLines())
-                    )
-            );
-        } else {
-            result.getElements().add(
-                    new SubtitlesElement(
-                            elementNumber,
-                            currentStartElement.getFrom(),
-                            lastElement.getTo(),
-                            new ArrayList<>(currentStartElement.getLines())
-                    )
-            );
+            if (shouldAddCurrentElement) {
+                currentElement.setNumber(result.getElements().size() + 1);
+                result.getElements().add(currentElement);
+            }
         }
 
         return result;
