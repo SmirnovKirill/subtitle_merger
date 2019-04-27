@@ -125,8 +125,8 @@ public class Main {
 
     private static List<String> getSortedSources(Subtitles upperSubtitles, Subtitles lowerSubtitles) {
         return Arrays.asList(
-                upperSubtitles.getElements().get(0).getLines().get(0).getSubtitlesOriginName(),
-                lowerSubtitles.getElements().get(0).getLines().get(0).getSubtitlesOriginName()
+                upperSubtitles.getElements().get(0).getLines().get(0).getSource(),
+                lowerSubtitles.getElements().get(0).getLines().get(0).getSource()
         );
     }
 
@@ -203,7 +203,7 @@ public class Main {
         int i = 0;
         for (SubtitlesElement subtitlesElement : mergedSubtitles.getElements()) {
             Set<String> sources = subtitlesElement.getLines().stream()
-                    .map(SubtitlesElementLine::getSubtitlesOriginName)
+                    .map(SubtitlesElementLine::getSource)
                     .collect(toSet());
 
             if (sources.size() != 1 && sources.size() != 2) {
@@ -231,7 +231,7 @@ public class Main {
             if (i == 0) {
                 for (SubtitlesElement currentSubtitlesElement : mergedSubtitles.getElements()) {
                     List<SubtitlesElementLine> linesFromMissingSource = currentSubtitlesElement.getLines().stream()
-                            .filter(currentElement -> Objects.equals(currentElement.getSubtitlesOriginName(), missingSource))
+                            .filter(currentElement -> Objects.equals(currentElement.getSource(), missingSource))
                             .collect(Collectors.toList());
                     if (!CollectionUtils.isEmpty(linesFromMissingSource)) {
                         postProcessedElement.getLines().addAll(linesFromMissingSource);
@@ -241,7 +241,7 @@ public class Main {
             } else {
                 for (int j = i - 1; j >= 0; j--) {
                     List<SubtitlesElementLine> linesFromMissingSource = mergedSubtitles.getElements().get(j).getLines().stream()
-                            .filter(currentElement -> Objects.equals(currentElement.getSubtitlesOriginName(), missingSource))
+                            .filter(currentElement -> Objects.equals(currentElement.getSource(), missingSource))
                             .collect(Collectors.toList());
                     if (!CollectionUtils.isEmpty(linesFromMissingSource)) {
                         postProcessedElement.getLines().addAll(linesFromMissingSource);
@@ -259,14 +259,14 @@ public class Main {
     }
 
     private static boolean linesStartToHaveSecondSource(List<SubtitlesElementLine> lines, int elementIndex, Subtitles subtitles) {
-        String linesSource = lines.get(0).getSubtitlesOriginName();
+        String linesSource = lines.get(0).getSource();
 
         int startIndex = -1;
         for (int i = elementIndex; i >= 0; i--) {
             SubtitlesElement subtitlesElement = subtitles.getElements().get(i);
 
             List<SubtitlesElementLine> linesFromOriginalSource = subtitlesElement.getLines().stream()
-                    .filter(currentLine -> Objects.equals(currentLine.getSubtitlesOriginName(), linesSource))
+                    .filter(currentLine -> Objects.equals(currentLine.getSource(), linesSource))
                     .collect(Collectors.toList());
 
             if (!Objects.equals(lines, linesFromOriginalSource)) {
@@ -283,7 +283,7 @@ public class Main {
         for (int i = startIndex; i < subtitles.getElements().size(); i++) {
             SubtitlesElement subtitlesElement = subtitles.getElements().get(i);
 
-            Set<String> currentElementSources = subtitlesElement.getLines().stream().map(SubtitlesElementLine::getSubtitlesOriginName).collect(toSet());
+            Set<String> currentElementSources = subtitlesElement.getLines().stream().map(SubtitlesElementLine::getSource).collect(toSet());
 
             if (currentElementSources.size() == 1) {
                 if (currentElementSources.iterator().next().equals(linesSource)) {
@@ -295,7 +295,7 @@ public class Main {
                 }
             } else {
                 List<SubtitlesElementLine> linesFromOriginalSource = subtitlesElement.getLines().stream()
-                        .filter(currentLine -> Objects.equals(currentLine.getSubtitlesOriginName(), linesSource))
+                        .filter(currentLine -> Objects.equals(currentLine.getSource(), linesSource))
                         .collect(Collectors.toList());
                 return Objects.equals(linesFromOriginalSource, lines); //Если строки из того же источника равны исходным, то значит к исходному тексту
                 //добавился новый язык и надо вернуть true (т.е. исходный текст не был один на всем протяжении), а иначе false, т.к. сменился текст и из исходного источника и
@@ -312,7 +312,7 @@ public class Main {
             List<SubtitlesElementLine> orderedLines = new ArrayList<>();
 
             for (String source : sortedSources) {
-                orderedLines.addAll(subtitlesElement.getLines().stream().filter(currentLine -> Objects.equals(currentLine.getSubtitlesOriginName(), source)).collect(Collectors.toList()));
+                orderedLines.addAll(subtitlesElement.getLines().stream().filter(currentLine -> Objects.equals(currentLine.getSource(), source)).collect(Collectors.toList()));
             }
 
             subtitlesElement.setLines(orderedLines);

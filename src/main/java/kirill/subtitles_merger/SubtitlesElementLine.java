@@ -5,19 +5,19 @@ import java.util.Objects;
 public class SubtitlesElementLine {
     private String text;
 
-    private String subtitlesOriginName;
+    private String source;
 
-    public SubtitlesElementLine(String text, String subtitlesOriginName) {
+    public SubtitlesElementLine(String text, String source) {
         this.text = text;
-        this.subtitlesOriginName = subtitlesOriginName;
+        this.source = source;
     }
 
     public String getText() {
         return text;
     }
 
-    public String getSubtitlesOriginName() {
-        return subtitlesOriginName;
+    public String getSource() {
+        return source;
     }
 
     @Override
@@ -33,11 +33,11 @@ public class SubtitlesElementLine {
         SubtitlesElementLine that = (SubtitlesElementLine) o;
 
         return Objects.equals(text, that.text) &&
-                Objects.equals(subtitlesOriginName, that.subtitlesOriginName);
+                Objects.equals(source, that.source);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(text, subtitlesOriginName);
+        return Objects.hash(text, source);
     }
 }
