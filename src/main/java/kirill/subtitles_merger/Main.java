@@ -131,7 +131,7 @@ public class Main {
     }
 
     /*
-     * Самый первый и простой этап объединения - делам список всех упомянутых точек времени и на каждом отрезке смотрим есть ли текст
+     * Самый первый и простой этап объединения - делаем список всех упомянутых точек времени и на каждом отрезке смотрим есть ли текст
      * в объединяемых субтитров, если есть, то объединяем.
      */
     private static Subtitles makeInitialMerge(Subtitles upperSubtitles, Subtitles lowerSubtitles) {
@@ -230,14 +230,10 @@ public class Main {
             postProcessedElement.getLines().addAll(subtitlesElement.getLines());
 
             String source = sources.iterator().next();
-            String missingSource = sortedSources.stream()
-                    .filter(currentSource -> !Objects.equals(currentSource, source))
-                    .findFirst().orElseThrow(IllegalStateException::new);
-
             if (i == 0) {
                 for (SubtitlesElement currentSubtitlesElement : mergedSubtitles.getElements()) {
                     List<SubtitlesElementLine> linesFromMissingSource = currentSubtitlesElement.getLines().stream()
-                            .filter(currentElement -> Objects.equals(currentElement.getSource(), missingSource))
+                            .filter(currentElement -> !Objects.equals(currentElement.getSource(), source))
                             .collect(Collectors.toList());
                     if (!CollectionUtils.isEmpty(linesFromMissingSource)) {
                         postProcessedElement.getLines().addAll(linesFromMissingSource);
@@ -247,7 +243,7 @@ public class Main {
             } else {
                 for (int j = i - 1; j >= 0; j--) {
                     List<SubtitlesElementLine> linesFromMissingSource = mergedSubtitles.getElements().get(j).getLines().stream()
-                            .filter(currentElement -> Objects.equals(currentElement.getSource(), missingSource))
+                            .filter(currentElement -> !Objects.equals(currentElement.getSource(), source))
                             .collect(Collectors.toList());
                     if (!CollectionUtils.isEmpty(linesFromMissingSource)) {
                         postProcessedElement.getLines().addAll(linesFromMissingSource);
