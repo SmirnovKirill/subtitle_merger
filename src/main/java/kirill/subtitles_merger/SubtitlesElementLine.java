@@ -7,16 +7,16 @@ public class SubtitlesElementLine {
 
     private String source;
 
-    public SubtitlesElementLine(String text, String source) {
+    SubtitlesElementLine(String text, String source) {
         this.text = text;
         this.source = source;
     }
 
-    public String getText() {
+    String getText() {
         return text;
     }
 
-    public String getSource() {
+    String getSource() {
         return source;
     }
 

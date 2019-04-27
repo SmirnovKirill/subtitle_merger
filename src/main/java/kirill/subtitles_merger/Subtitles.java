@@ -5,10 +5,10 @@ import org.joda.time.format.DateTimeFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Subtitles {
+class Subtitles {
     private List<SubtitlesElement> elements = new ArrayList<>();
 
-    public List<SubtitlesElement> getElements() {
+    List<SubtitlesElement> getElements() {
         return elements;
     }
 

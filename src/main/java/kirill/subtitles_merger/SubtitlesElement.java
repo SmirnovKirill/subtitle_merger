@@ -5,7 +5,7 @@ import org.joda.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SubtitlesElement {
+class SubtitlesElement {
     private int number;
 
     private LocalTime from;
@@ -14,45 +14,45 @@ public class SubtitlesElement {
 
     private List<SubtitlesElementLine> lines = new ArrayList<>();
 
-    public SubtitlesElement() {
+    SubtitlesElement() {
     }
 
-    public SubtitlesElement(int number, LocalTime from, LocalTime to, List<SubtitlesElementLine> lines) {
+    SubtitlesElement(int number, LocalTime from, LocalTime to, List<SubtitlesElementLine> lines) {
         this.number = number;
         this.from = from;
         this.to = to;
         this.lines = lines;
     }
 
-    public int getNumber() {
+    int getNumber() {
         return number;
     }
 
-    public void setNumber(int number) {
+    void setNumber(int number) {
         this.number = number;
     }
 
-    public LocalTime getFrom() {
+    LocalTime getFrom() {
         return from;
     }
 
-    public void setFrom(LocalTime from) {
+    void setFrom(LocalTime from) {
         this.from = from;
     }
 
-    public LocalTime getTo() {
+    LocalTime getTo() {
         return to;
     }
 
-    public void setTo(LocalTime to) {
+    void setTo(LocalTime to) {
         this.to = to;
     }
 
-    public List<SubtitlesElementLine> getLines() {
+    List<SubtitlesElementLine> getLines() {
         return lines;
     }
 
-    public void setLines(List<SubtitlesElementLine> lines) {
+    void setLines(List<SubtitlesElementLine> lines) {
         this.lines = lines;
     }
 }
