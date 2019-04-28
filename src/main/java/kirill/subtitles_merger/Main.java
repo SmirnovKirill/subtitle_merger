@@ -1,17 +1,19 @@
 package kirill.subtitles_merger;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.joda.time.LocalTime;
+import org.joda.time.Seconds;
 import org.joda.time.format.DateTimeFormat;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 public class Main {
@@ -53,7 +55,7 @@ public class Main {
     static Subtitles parseSubtitles(InputStream inputStream, String subtitlesName) throws IOException {
         Subtitles result = new Subtitles();
 
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
 
         SubtitlesElement currentElement = null;
         ParsingStage parsingStage = ParsingStage.HAVE_NOT_STARTED;
@@ -229,28 +231,8 @@ public class Main {
             postProcessedElement.setTo(subtitlesElement.getTo());
             postProcessedElement.getLines().addAll(subtitlesElement.getLines());
 
-            String source = sources.iterator().next();
-            if (i == 0) {
-                for (SubtitlesElement currentSubtitlesElement : mergedSubtitles.getElements()) {
-                    List<SubtitlesElementLine> linesFromMissingSource = currentSubtitlesElement.getLines().stream()
-                            .filter(currentElement -> !Objects.equals(currentElement.getSource(), source))
-                            .collect(Collectors.toList());
-                    if (!CollectionUtils.isEmpty(linesFromMissingSource)) {
-                        postProcessedElement.getLines().addAll(linesFromMissingSource);
-                        break;
-                    }
-                }
-            } else {
-                for (int j = i - 1; j >= 0; j--) {
-                    List<SubtitlesElementLine> linesFromMissingSource = mergedSubtitles.getElements().get(j).getLines().stream()
-                            .filter(currentElement -> !Objects.equals(currentElement.getSource(), source))
-                            .collect(Collectors.toList());
-                    if (!CollectionUtils.isEmpty(linesFromMissingSource)) {
-                        postProcessedElement.getLines().addAll(linesFromMissingSource);
-                        break;
-                    }
-                }
-            }
+            String otherSource = sortedSources.stream().filter(currentSource -> !sources.contains(currentSource)).findFirst().orElseThrow(IllegalStateException::new);
+            postProcessedElement.getLines().addAll(getClosestLinesFromOtherSource(i, otherSource, mergedSubtitles));
 
             result.getElements().add(postProcessedElement);
 
@@ -311,6 +293,45 @@ public class Main {
         }
 
         return false;
+    }
+
+    private static List<SubtitlesElementLine> getClosestLinesFromOtherSource(int elementIndex, String otherSource, Subtitles subtitles) {
+        List<SubtitlesElementLine> result;
+
+        SubtitlesElement firstMatchingElementForward = null;
+        for (int i = elementIndex + 1; i < subtitles.getElements().size(); i++) {
+            SubtitlesElement currentElement = subtitles.getElements().get(i);
+            if (currentElement.getLines().stream().map(SubtitlesElementLine::getSource).collect(toList()).contains(otherSource)) {
+                firstMatchingElementForward = currentElement;
+                break;
+            }
+        }
+
+        SubtitlesElement firstMatchingElementBackward = null;
+        for (int i = elementIndex - 1; i >= 0; i--) {
+            SubtitlesElement currentElement = subtitles.getElements().get(i);
+            if (currentElement.getLines().stream().map(SubtitlesElementLine::getSource).collect(toList()).contains(otherSource)) {
+                firstMatchingElementBackward = currentElement;
+                break;
+            }
+        }
+
+        if (firstMatchingElementForward == null && firstMatchingElementBackward == null) {
+            throw new IllegalStateException();
+        } else if (firstMatchingElementForward != null && firstMatchingElementBackward != null) {
+            SubtitlesElement mainElement = subtitles.getElements().get(elementIndex);
+            if (Seconds.secondsBetween(mainElement.getTo(), firstMatchingElementForward.getFrom()).isLessThan(Seconds.secondsBetween(firstMatchingElementBackward.getTo(), mainElement.getFrom()))) {
+                result = firstMatchingElementForward.getLines();
+            } else {
+                result = firstMatchingElementBackward.getLines();
+            }
+        } else if (firstMatchingElementForward != null) {
+            result = firstMatchingElementForward.getLines();
+        } else {
+            result = firstMatchingElementBackward.getLines();
+        }
+
+        return result.stream().filter(currentLine -> Objects.equals(currentLine.getSource(), otherSource)).collect(Collectors.toList());
     }
 
     /*
