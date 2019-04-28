@@ -119,7 +119,7 @@ public class Main {
 
         Subtitles result = makeInitialMerge(upperSubtitles, lowerSubtitles);
         result = getExtendedSubtitles(result, sortedSources);
-        orderSubtitles(result, sortedSources);
+        sortSubtitleLines(result, sortedSources);
         result = getCombinedSubtitles(result);
 
         return result;
@@ -170,9 +170,6 @@ public class Main {
         return result;
     }
 
-    /*
-     * Возвращает уникальные отсортированные моменты времени когда показываются субтитры из обоих объектов с субтитрами.
-     */
     private static List<LocalTime> getUniqueSortedPointsOfTime(Subtitles upperSubtitles, Subtitles lowerSubtitles) {
         Set<LocalTime> result = new TreeSet<>();
 
@@ -202,8 +199,11 @@ public class Main {
     }
 
     /*
-     * Метод устраняет "скачки". Если субтитры в данном блоке времени есть только в одном источнике, нужно посмотреть соседние блоки чтобы
-     * взять оттуда значение из другого источника.
+     * Метод устраняет "скачки". Они появляются если в процессе разбиения на маленькие отрезки какой-то блок сначала идет только в одном источнике, а потом появляется в другом.
+     * Получается очень маленький промежуток времени субтитры одни, проходят, потом добавляется второй источник и те субтитры "скачут" вверх.
+     * Метод исправляет это путем добавления строк субтитров из второго источника к строкам субтитров из первого в моменты когда они не идут вместе.
+     * При этом если какие-то строки все время идут только одни, то добавления не происходит. Это часто бывает когда в английских субтитрах идет описание
+     * звуков, оно присутствует только в одном языке, расширять и добавлять строки из второго языка не надо.
      */
     private static Subtitles getExtendedSubtitles(Subtitles mergedSubtitles, List<String> sortedSources) {
         Subtitles result = new Subtitles();
@@ -218,23 +218,24 @@ public class Main {
                 throw new IllegalStateException();
             }
 
-            boolean shouldExtend = sources.size() != 2 && linesStartToHaveSecondSource(subtitlesElement.getLines(), i, mergedSubtitles);
-            if (!shouldExtend) {
+            if (sources.size() == 2 || !linesStartToHaveSecondSource(subtitlesElement.getLines(), i, mergedSubtitles)) {
                 result.getElements().add(subtitlesElement);
                 i++;
                 continue;
             }
 
-            SubtitlesElement postProcessedElement = new SubtitlesElement();
-            postProcessedElement.setNumber(subtitlesElement.getNumber());
-            postProcessedElement.setFrom(subtitlesElement.getFrom());
-            postProcessedElement.setTo(subtitlesElement.getTo());
-            postProcessedElement.getLines().addAll(subtitlesElement.getLines());
+            SubtitlesElement extendedElement = new SubtitlesElement();
+
+            extendedElement.setNumber(subtitlesElement.getNumber());
+            extendedElement.setFrom(subtitlesElement.getFrom());
+            extendedElement.setTo(subtitlesElement.getTo());
 
             String otherSource = sortedSources.stream().filter(currentSource -> !sources.contains(currentSource)).findFirst().orElseThrow(IllegalStateException::new);
-            postProcessedElement.getLines().addAll(getClosestLinesFromOtherSource(i, otherSource, mergedSubtitles));
 
-            result.getElements().add(postProcessedElement);
+            extendedElement.getLines().addAll(subtitlesElement.getLines());
+            extendedElement.getLines().addAll(getClosestLinesFromOtherSource(i, otherSource, mergedSubtitles));
+
+            result.getElements().add(extendedElement);
 
             i++;
         }
@@ -334,10 +335,7 @@ public class Main {
         return result.stream().filter(currentLine -> Objects.equals(currentLine.getSource(), otherSource)).collect(Collectors.toList());
     }
 
-    /*
-     * Сортирует тексты каждого субтитра на основе сортированного списка источников.
-     */
-    private static void orderSubtitles(Subtitles mergedSubtitles, List<String> sortedSources) {
+    private static void sortSubtitleLines(Subtitles mergedSubtitles, List<String> sortedSources) {
         for (SubtitlesElement subtitlesElement : mergedSubtitles.getElements()) {
             List<SubtitlesElementLine> orderedLines = new ArrayList<>();
 
@@ -350,7 +348,7 @@ public class Main {
     }
 
     /*
-     * Метод объединяет повторяющиеся субтитры если они одинаковые и идут строго подряд.
+     * Метод объединяет повторяющиеся элементы субтитров если они одинаковые и идут строго подряд.
      */
     private static Subtitles getCombinedSubtitles(Subtitles mergedSubtitles) {
         Subtitles result = new Subtitles();
