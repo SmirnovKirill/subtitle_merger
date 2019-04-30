@@ -218,7 +218,7 @@ public class Main {
                 throw new IllegalStateException();
             }
 
-            if (sources.size() == 2 || !linesStartToHaveSecondSource(subtitlesElement.getLines(), i, mergedSubtitles)) {
+            if (sources.size() == 2 || currentLinesAlwaysGoInOneSource(subtitlesElement.getLines(), i, mergedSubtitles)) {
                 result.getElements().add(subtitlesElement);
                 i++;
                 continue;
@@ -243,7 +243,12 @@ public class Main {
         return result;
     }
 
-    private static boolean linesStartToHaveSecondSource(List<SubtitlesElementLine> lines, int elementIndex, Subtitles subtitles) {
+    /*
+     * Возвращает true если строки субтитров с данным индексом везде присутствуют одни, без строк из другого источника.
+     * Для этого первым делом отматываемся в самое начало когда данные строки появляются, потому что если просто смотреть последующие элементы можно пропустить
+     * случай когда строки из другого источника были раньше.
+     */
+    private static boolean currentLinesAlwaysGoInOneSource(List<SubtitlesElementLine> lines, int elementIndex, Subtitles subtitles) {
         String linesSource = lines.get(0).getSource();
 
         int startIndex = -1;
@@ -268,32 +273,20 @@ public class Main {
         for (int i = startIndex; i < subtitles.getElements().size(); i++) {
             SubtitlesElement subtitlesElement = subtitles.getElements().get(i);
 
-            Set<String> currentElementSources = subtitlesElement.getLines().stream().map(SubtitlesElementLine::getSource).collect(toSet());
-
-            if (currentElementSources.size() == 1) {
-                if (currentElementSources.iterator().next().equals(linesSource)) {
-                    if (!Objects.equals(subtitlesElement.getLines(), lines)) {
-                        /* Значит пошел новый текст из того же источника, поэтому исходный текст был до этого только в одном источнике. */
-                        return false;
-                    }
-                } else {
-                    /* Если пошел текст из нового источника а из исходного при этом нет, значит исходный текст был до этого только в одном источнике. */
-                    return false;
-                }
-            } else {
+            if (!Objects.equals(subtitlesElement.getLines(), lines)) {
                 /*
-                 * Если строки из того же источника равны исходным, то значит к исходному тексту
-                 * добавился новый язык и надо вернуть true (т.е. исходный текст не был один на всем протяжении), а иначе false, т.к. сменился текст и из исходного источника и
-                 * из нового.
+                 * Если попали сюда, то значит строки поменялись. Либо они поменялись потому что добавился новый источник, либо потому что изменились строки исходного источника.
+                 * Если изменились строки исходного источника, надо вернуть true, значит что исходные строки все время шли одни, а если строки исходого источника те же но получилось что
+                 * все строки не совпадают с исходными, значит добавился новый источник и надо вернуть false.
                  */
                 List<SubtitlesElementLine> linesFromOriginalSource = subtitlesElement.getLines().stream()
                         .filter(currentLine -> Objects.equals(currentLine.getSource(), linesSource))
                         .collect(Collectors.toList());
-                return Objects.equals(linesFromOriginalSource, lines);
+                return !Objects.equals(linesFromOriginalSource, lines);
             }
         }
 
-        return false;
+        return true;
     }
 
     private static List<SubtitlesElementLine> getClosestLinesFromOtherSource(int elementIndex, String otherSource, Subtitles subtitles) {
