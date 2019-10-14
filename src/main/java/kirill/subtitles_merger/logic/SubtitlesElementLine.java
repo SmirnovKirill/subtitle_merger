@@ -1,4 +1,4 @@
-package kirill.subtitles_merger;
+package kirill.subtitles_merger.logic;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -7,7 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 @EqualsAndHashCode
-public class SubtitlesElementLine {
+class SubtitlesElementLine {
     private String text;
 
     private String source;

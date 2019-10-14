@@ -1,4 +1,4 @@
-package kirill.subtitles_merger;
+package kirill.subtitles_merger.logic;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
