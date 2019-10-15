@@ -5,6 +5,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
+
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 public class JsonStream {
@@ -13,4 +15,7 @@ public class JsonStream {
 
     @JsonProperty(value = "codec_type")
     private String codecType;
+
+    @JsonProperty(value = "tags")
+    private Map<String, String> tags;
 }

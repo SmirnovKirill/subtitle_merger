@@ -1,7 +1,9 @@
 package kirill.subtitles_merger;
 
 import kirill.subtitles_merger.ffprobe.Ffprobe;
+import kirill.subtitles_merger.ffprobe.FfprobeSubtitlesInfo;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -34,6 +36,16 @@ public class Main {
             preferences.put("ffprobe_path", "/usr/bin/ffprobe");
         }
         Ffprobe fFprobe = new Ffprobe(ffprobePath);
+
+
+        List<File> videoFiles = getVideoFiles(new File("/home/user"));
+
+        for (File file : videoFiles) {
+            FfprobeSubtitlesInfo subtitlesInfo = fFprobe.getSubtitlesInfo(file);
+            if (!CollectionUtils.isEmpty(subtitlesInfo.getSubtitleStreams())) {
+                log.info("file " + file.getAbsolutePath() + " has " + subtitlesInfo.getSubtitleStreams().size() + " subs");
+            }
+        }
     }
 
     private static List<File> getVideoFiles(File folder) {

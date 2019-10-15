@@ -3,10 +3,18 @@ package kirill.subtitles_merger.ffprobe;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitles_merger.ffprobe.json.JsonFfprobeFileInfo;
+import kirill.subtitles_merger.ffprobe.json.JsonStream;
+import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 public class Ffprobe {
     private static final ObjectMapper JSON_OBJECT_MAPPER;
@@ -25,9 +33,30 @@ public class Ffprobe {
 
     public Ffprobe(String path) {
         this.path = path;
+        //todo валидация
     }
 
-    public JsonFfprobeFileInfo getFileInfo(String filePath) throws IOException {
+    public FfprobeSubtitlesInfo getSubtitlesInfo(File file) throws IOException {
+        JsonFfprobeFileInfo rawJsonInfo = getRawJsonInfo(file);
+
+        List<SubtitleStream> subtitleStreams = new ArrayList<>();
+
+        for (JsonStream rawStream : rawJsonInfo.getStreams()) {
+            if ("subtitle".equals(rawStream.getCodecType())) {
+                subtitleStreams.add(
+                        new SubtitleStream(
+                                rawStream.getIndex(),
+                                getLanguage(rawStream).orElse(null),
+                                getTitle(rawStream).orElse(null)
+                        )
+                );
+            }
+        }
+
+        return new FfprobeSubtitlesInfo(subtitleStreams);
+    }
+
+    private JsonFfprobeFileInfo getRawJsonInfo(File file) throws IOException {
         ProcessBuilder processBuilder = new ProcessBuilder(
                 Arrays.asList(
                         path,
@@ -36,7 +65,7 @@ public class Ffprobe {
                         "-show_streams",
                         "-print_format",
                         "json",
-                        filePath
+                        file.getAbsolutePath()
 
                 )
         );
@@ -49,5 +78,26 @@ public class Ffprobe {
         } finally {
             process.destroy();
         }
+    }
+
+    private Optional<LanguageAlpha3Code> getLanguage(JsonStream stream) {
+        if (MapUtils.isEmpty(stream.getTags())) {
+            return Optional.empty();
+        }
+
+        String languageRaw = stream.getTags().get("language");
+        if (StringUtils.isBlank(languageRaw)) {
+            return Optional.empty();
+        }
+
+        return Optional.ofNullable(LanguageAlpha3Code.getByCodeIgnoreCase(languageRaw));
+    }
+
+    private Optional<String> getTitle(JsonStream stream) {
+        if (MapUtils.isEmpty(stream.getTags())) {
+            return Optional.empty();
+        }
+
+        return Optional.ofNullable(stream.getTags().get("title"));
     }
 }
