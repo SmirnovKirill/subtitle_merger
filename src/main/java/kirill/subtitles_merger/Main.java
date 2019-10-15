@@ -4,7 +4,7 @@ import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitles_merger.ffmpeg.Ffmpeg;
 import kirill.subtitles_merger.ffprobe.Ffprobe;
 import kirill.subtitles_merger.ffprobe.FfprobeSubtitlesInfo;
-import kirill.subtitles_merger.ffprobe.SubtitleStream;
+import kirill.subtitles_merger.ffprobe.FfpProbeSubtitleStream;
 import kirill.subtitles_merger.logic.Merger;
 import kirill.subtitles_merger.logic.Parser;
 import kirill.subtitles_merger.logic.Subtitles;
@@ -36,28 +36,22 @@ public class Main {
 
         List<File> videoFiles = getVideoFiles(directoryWithVideos);
         if (CollectionUtils.isEmpty(videoFiles)) {
-            log.info("no videos in the provided directory");
+            System.out.println("no videos in the provided directory");
             return;
         }
 
         Ffprobe ffprobe = new Ffprobe(config.getFfprobePath());
         Ffmpeg ffmpeg = new Ffmpeg(config.getFfmpegPath());
 
-        for (File videoFile : videoFiles) {
-            FfprobeSubtitlesInfo subtitlesInfo = ffprobe.getSubtitlesInfo(videoFile);
-            if (!CollectionUtils.isEmpty(subtitlesInfo.getSubtitleStreams())) {
-                List<String> subtitles = new ArrayList<>();
-
-                for (SubtitleStream subtitleStream : subtitlesInfo.getSubtitleStreams()) {
-                    subtitles.add(ffmpeg.getSubtitlesText(subtitleStream, videoFile));
-                }
-
-                if (subtitles.size() >= 2) {
-                    Subtitles upper = Parser.parseSubtitles(new ByteArrayInputStream(subtitles.get(0).getBytes()), "upper");
-                    Subtitles lower = Parser.parseSubtitles(new ByteArrayInputStream(subtitles.get(1).getBytes()), "lower");
-                    Subtitles result = Merger.mergeSubtitles(upper, lower);
-
-                    ffmpeg.addSubtitleToFile(result.toString(), videoFile);
+        List<Video> videos = getVideos(videoFiles, ffprobe, ffmpeg);
+        for (Video video : videos) {
+            if (video.getSubtitles().size() >= 2) {
+                List<Subtitles> subtitlesPair = video.getSubtitlesPair(config).orElse(null);
+                if (subtitlesPair == null) {
+                    log.error("failed to find pair for " + video.getFile().getAbsolutePath());
+                } else {
+                    Subtitles result = Merger.mergeSubtitles(subtitlesPair.get(0), subtitlesPair.get(1));
+                    System.out.println("ok");
                 }
             }
         }
@@ -171,6 +165,41 @@ public class Main {
                     result.add(file);
                 }
             }
+        }
+
+        return result;
+    }
+
+    private static List<Video> getVideos(
+            List<File> videoFiles,
+            Ffprobe ffprobe,
+            Ffmpeg ffmpeg
+    ) throws IOException, FfmpegException, InterruptedException {
+        List<Video> result = new ArrayList<>();
+
+        for (File videoFile : videoFiles) {
+            List<VideoSubtitles> videoSubtitles = new ArrayList<>();
+
+            FfprobeSubtitlesInfo subtitlesInfo = ffprobe.getSubtitlesInfo(videoFile);
+            if (!CollectionUtils.isEmpty(subtitlesInfo.getFfpProbeSubtitleStreams())) {
+                for (FfpProbeSubtitleStream ffpProbeSubtitleStream : subtitlesInfo.getFfpProbeSubtitleStreams()) {
+                    videoSubtitles.add(
+                            new VideoSubtitles(
+                                    ffpProbeSubtitleStream.getIndex(),
+                                    ffpProbeSubtitleStream.getLanguage(),
+                                    ffpProbeSubtitleStream.getTitle(),
+                                    Parser.parseSubtitles(
+                                            new ByteArrayInputStream(
+                                                    ffmpeg.getSubtitlesText(ffpProbeSubtitleStream, videoFile).getBytes()
+                                            ),
+                                            "subtitles-" + ffpProbeSubtitleStream.getIndex()
+                                    )
+                            )
+                    );
+                }
+            }
+
+            result.add(new Video(videoFile, videoSubtitles));
         }
 
         return result;

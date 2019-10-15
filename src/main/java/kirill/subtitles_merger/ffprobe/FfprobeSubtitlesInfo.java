@@ -8,5 +8,5 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 public class FfprobeSubtitlesInfo {
-    private List<SubtitleStream> subtitleStreams;
+    private List<FfpProbeSubtitleStream> ffpProbeSubtitleStreams;
 }

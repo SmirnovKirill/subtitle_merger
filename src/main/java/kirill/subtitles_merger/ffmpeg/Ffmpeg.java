@@ -1,7 +1,7 @@
 package kirill.subtitles_merger.ffmpeg;
 
 import kirill.subtitles_merger.FfmpegException;
-import kirill.subtitles_merger.ffprobe.SubtitleStream;
+import kirill.subtitles_merger.ffprobe.FfpProbeSubtitleStream;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FileUtils;
 
@@ -23,7 +23,7 @@ public class Ffmpeg {
         //todo валидация
     }
 
-    public synchronized String getSubtitlesText(SubtitleStream subtitleStream, File videoFile) throws IOException, FfmpegException, InterruptedException {
+    public synchronized String getSubtitlesText(FfpProbeSubtitleStream ffpProbeSubtitleStream, File videoFile) throws IOException, FfmpegException, InterruptedException {
         File result = File.createTempFile("subtitles_merger_", ".srt");
 
         /*
@@ -37,7 +37,7 @@ public class Ffmpeg {
                         videoFile.getAbsolutePath(),
                         "-y",
                         "-map",
-                        "0:" + subtitleStream.getIndex(),
+                        "0:" + ffpProbeSubtitleStream.getIndex(),
                         TEMP_SUBTITLE_FILE.getAbsolutePath()
                 )
         );

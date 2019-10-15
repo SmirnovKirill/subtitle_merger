@@ -39,12 +39,12 @@ public class Ffprobe {
     public FfprobeSubtitlesInfo getSubtitlesInfo(File file) throws IOException {
         JsonFfprobeFileInfo rawJsonInfo = getRawJsonInfo(file);
 
-        List<SubtitleStream> subtitleStreams = new ArrayList<>();
+        List<FfpProbeSubtitleStream> ffpProbeSubtitleStreams = new ArrayList<>();
 
         for (JsonStream rawStream : rawJsonInfo.getStreams()) {
             if ("subtitle".equals(rawStream.getCodecType())) {
-                subtitleStreams.add(
-                        new SubtitleStream(
+                ffpProbeSubtitleStreams.add(
+                        new FfpProbeSubtitleStream(
                                 rawStream.getIndex(),
                                 getLanguage(rawStream).orElse(null),
                                 getTitle(rawStream).orElse(null)
@@ -53,7 +53,7 @@ public class Ffprobe {
             }
         }
 
-        return new FfprobeSubtitlesInfo(subtitleStreams);
+        return new FfprobeSubtitlesInfo(ffpProbeSubtitleStreams);
     }
 
     private JsonFfprobeFileInfo getRawJsonInfo(File file) throws IOException {
