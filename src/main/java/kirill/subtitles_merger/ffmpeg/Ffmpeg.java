@@ -83,7 +83,7 @@ public class Ffmpeg {
          * На всякий случай еще сделаем проверку что новый файл больше чем старый, а то нехорошо будет если испортим
          * видео, его могли долго качать.
          */
-        File outputTemp = new File(videoFile.getAbsolutePath() + "_temp");
+        File outputTemp = new File(videoFile.getParentFile(), "temp_" + videoFile.getName());
 
         FileUtils.writeStringToFile(subtitlesTemp, text);
 
@@ -95,10 +95,14 @@ public class Ffmpeg {
                         videoFile.getAbsolutePath(),
                         "-i",
                         subtitlesTemp.getAbsolutePath(),
+                        "-map",
+                        "0",
                         "-c",
                         "copy",
+                        "-map",
+                        "1",
                         "-c:s",
-                        "mov_text",
+                        "copy",
                         outputTemp.getAbsolutePath()
                 )
         );
@@ -134,6 +138,6 @@ public class Ffmpeg {
             throw new IllegalStateException();
         }
 
-        Files.move(outputTemp.toPath(), videoFile.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        //Files.move(outputTemp.toPath(), videoFile.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
     }
 }
