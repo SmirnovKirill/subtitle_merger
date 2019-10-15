@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitles_merger.ffprobe.json.JsonFfprobeFileInfo;
 import kirill.subtitles_merger.ffprobe.json.JsonStream;
+import lombok.Getter;
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -16,6 +18,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+@CommonsLog
 public class Ffprobe {
     private static final ObjectMapper JSON_OBJECT_MAPPER;
 
@@ -39,10 +42,15 @@ public class Ffprobe {
     public FfprobeSubtitlesInfo getSubtitlesInfo(File file) throws IOException {
         JsonFfprobeFileInfo rawJsonInfo = getRawJsonInfo(file);
 
+        if (!"matroska,webm".equals(rawJsonInfo.getFormat().getFormatName())) {
+            log.error("incorrect format name: " + rawJsonInfo.getFormat().getFormatName());
+            throw new IllegalStateException();
+        }
+
         List<FfpProbeSubtitleStream> ffpProbeSubtitleStreams = new ArrayList<>();
 
         for (JsonStream rawStream : rawJsonInfo.getStreams()) {
-            if ("subtitle".equals(rawStream.getCodecType())) {
+            if ("subtitle".equals(rawStream.getCodecType()) && "subrip".equals(rawStream.getCodecName())) {
                 ffpProbeSubtitleStreams.add(
                         new FfpProbeSubtitleStream(
                                 rawStream.getIndex(),
@@ -62,6 +70,7 @@ public class Ffprobe {
                         path,
                         "-v",
                         "quiet",
+                        "-show_format",
                         "-show_streams",
                         "-print_format",
                         "json",

@@ -10,6 +10,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
@@ -33,9 +35,9 @@ public class Ffmpeg {
         ProcessBuilder processBuilder = new ProcessBuilder(
                 Arrays.asList(
                         path,
+                        "-y",
                         "-i",
                         videoFile.getAbsolutePath(),
-                        "-y",
                         "-map",
                         "0:" + ffpProbeSubtitleStream.getIndex(),
                         TEMP_SUBTITLE_FILE.getAbsolutePath()
@@ -73,23 +75,31 @@ public class Ffmpeg {
 
     //todo переделать, пока наспех
     public void addSubtitleToFile(String text, File videoFile) throws IOException, FfmpegException, InterruptedException {
-        File temp = File.createTempFile("subtitles_merger_", ".srt");
+        File subtitlesTemp = File.createTempFile("subtitles_merger_", ".srt");
 
-        FileUtils.writeStringToFile(temp, text);
+        /*
+         * Ffmpeg не может добавить к файлу субтитры и записать это в тот же файл.
+         * Поэтому нужно сначала записать результат во временный файл а потом его переименовать.
+         * На всякий случай еще сделаем проверку что новый файл больше чем старый, а то нехорошо будет если испортим
+         * видео, его могли долго качать.
+         */
+        File outputTemp = new File(videoFile.getAbsolutePath() + "_temp");
+
+        FileUtils.writeStringToFile(subtitlesTemp, text);
 
         ProcessBuilder processBuilder = new ProcessBuilder(
                 Arrays.asList(
                         path,
+                        "-y",
                         "-i",
                         videoFile.getAbsolutePath(),
                         "-i",
-                        temp.getAbsolutePath(),
-                        "-y",
+                        subtitlesTemp.getAbsolutePath(),
                         "-c",
                         "copy",
                         "-c:s",
                         "mov_text",
-                        videoFile.getAbsolutePath()
+                        outputTemp.getAbsolutePath()
                 )
         );
 
@@ -118,5 +128,12 @@ public class Ffmpeg {
             log.error("ffmpeg exited with code " + process.exitValue() + ": " + output.toString());
             throw new FfmpegException("ffmpeg exited with code " + process.exitValue());
         }
+
+        if (outputTemp.length() <= videoFile.length()) {
+            log.error("resulting file size is less than original one");
+            throw new IllegalStateException();
+        }
+
+        Files.move(outputTemp.toPath(), videoFile.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
     }
 }

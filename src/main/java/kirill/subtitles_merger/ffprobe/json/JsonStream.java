@@ -16,6 +16,9 @@ public class JsonStream {
     @JsonProperty(value = "codec_type")
     private String codecType;
 
+    @JsonProperty(value = "codec_name")
+    private String codecName;
+
     @JsonProperty(value = "tags")
     private Map<String, String> tags;
 }

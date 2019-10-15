@@ -5,14 +5,9 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
-public class JsonFfprobeFileInfo {
-    @JsonProperty(value = "streams")
-    private List<JsonStream> streams;
-
-    @JsonProperty(value = "format")
-    private JsonFormat format;
+public class JsonFormat {
+    @JsonProperty(value = "format_name")
+    private String formatName;
 }

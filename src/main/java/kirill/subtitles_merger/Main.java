@@ -12,10 +12,12 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.prefs.Preferences;
 
@@ -23,10 +25,9 @@ import java.util.prefs.Preferences;
 public class Main {
     private static final String PREFERENCES_ROOT_NODE = "subtitlesmerger";
 
-    private static final List<String> ALLOWED_VIDEO_EXTENSIONS = Arrays.asList(
-            "mp4",
-            "mkv"
-    );
+    private static final List<String> ALLOWED_VIDEO_EXTENSIONS = Collections.singletonList("mkv");
+
+    private static final List<String> ALLOWED_VIDEO_MIME_TYPES = Collections.singletonList("video/x-matroska");
 
     public static void main(String[] args) throws IOException, FfmpegException, InterruptedException {
         Scanner scanner = new Scanner(System.in);
@@ -51,7 +52,7 @@ public class Main {
                     log.error("failed to find pair for " + video.getFile().getAbsolutePath());
                 } else {
                     Subtitles result = Merger.mergeSubtitles(subtitlesPair.get(0), subtitlesPair.get(1));
-                    System.out.println("ok");
+                    ffmpeg.addSubtitleToFile(result.toString(), video.getFile());
                 }
             }
         }
@@ -159,11 +160,17 @@ public class Main {
         Objects.requireNonNull(allFiles);
 
         for (File file : allFiles) {
-            if (file.isFile()) {
-                String extension = FilenameUtils.getExtension(file.getName());
-                if (ALLOWED_VIDEO_EXTENSIONS.contains(extension.toLowerCase())) {
-                    result.add(file);
+            try {
+                if (file.isFile()) {
+                    String extension = FilenameUtils.getExtension(file.getName());
+                    if (ALLOWED_VIDEO_EXTENSIONS.contains(extension.toLowerCase())) {
+                        if (ALLOWED_VIDEO_MIME_TYPES.contains(Files.probeContentType(file.toPath()))) {
+                            result.add(file);
+                        }
+                    }
                 }
+            } catch (IOException e) {
+                log.error("failed to process file " + file.getAbsolutePath() + ": " + ExceptionUtils.getStackTrace(e));
             }
         }
 
