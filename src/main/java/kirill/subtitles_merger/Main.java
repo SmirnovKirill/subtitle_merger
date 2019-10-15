@@ -49,16 +49,22 @@ public class Main {
         boolean hasErrors;
 
         String ffmpegPath = preferences.get("ffmpeg_path", "");
-        if (StringUtils.isBlank(ffmpegPath)) {
+        while (StringUtils.isBlank(ffmpegPath)) {
             System.out.println("please provide path to the ffmpeg executable file");
-            ffmpegPath = scanner.next();
+            ffmpegPath = scanner.nextLine();
+            if (!StringUtils.isBlank(ffmpegPath)) {
+                preferences.put("ffmpeg_path", ffmpegPath);
+            }
             //todo валидация
         }
 
         String ffprobePath = preferences.get("ffprobe_path", "");
-        if (StringUtils.isBlank(ffprobePath)) {
+        while (StringUtils.isBlank(ffprobePath)) {
             System.out.println("please provide path to the ffprobe executable file");
-            ffprobePath = scanner.next();
+            ffprobePath = scanner.nextLine();
+            if (!StringUtils.isBlank(ffprobePath)) {
+                preferences.put("ffprobe_path", ffprobePath);
+            }
             //todo валидация
         }
 
@@ -69,23 +75,24 @@ public class Main {
                 System.out.println("please provide preferred language (ISO 639-2) to upper subtitles");
             }
 
-            upperLanguage = scanner.next();
+            upperLanguage = scanner.nextLine();
             if (LanguageAlpha3Code.getByCodeIgnoreCase(upperLanguage) == null) {
                 hasErrors = true;
                 System.out.println("incorrect language format");
             } else {
+                preferences.put("upper_language", upperLanguage);
                 hasErrors = false;
             }
         }
 
-        String lowerLanguage = preferences.get("lowe_language", "");
+        String lowerLanguage = preferences.get("lower_language", "");
         hasErrors = false;
         while (StringUtils.isBlank(lowerLanguage) || hasErrors) {
             if (!hasErrors) {
                 System.out.println("please provide preferred language (ISO 639-2) to lower subtitles");
             }
 
-            lowerLanguage = scanner.next();
+            lowerLanguage = scanner.nextLine();
             if (LanguageAlpha3Code.getByCodeIgnoreCase(upperLanguage) == null) {
                 hasErrors = true;
                 System.out.println("incorrect language format");
@@ -93,6 +100,7 @@ public class Main {
                 System.out.println("languages have to be different!");
                 hasErrors = true;
             } else {
+                preferences.put("lower_language", lowerLanguage);
                 hasErrors = false;
             }
         }
@@ -115,7 +123,7 @@ public class Main {
                 System.out.println("please provide full path to the directory with video files");
             }
 
-            path = scanner.next();
+            path = scanner.nextLine();
             if (!new File(path).exists()) {
                 hasErrors = true;
                 System.out.println("directory does not exist");
