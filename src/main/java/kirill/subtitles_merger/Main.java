@@ -1,8 +1,10 @@
 package kirill.subtitles_merger;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
+import kirill.subtitles_merger.ffmpeg.Ffmpeg;
 import kirill.subtitles_merger.ffprobe.Ffprobe;
 import kirill.subtitles_merger.ffprobe.FfprobeSubtitlesInfo;
+import kirill.subtitles_merger.ffprobe.SubtitleStream;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -22,7 +24,7 @@ public class Main {
             "mkv"
     );
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, FfmpegException, InterruptedException {
         Scanner scanner = new Scanner(System.in);
 
         Config config = getConfig(scanner);
@@ -35,10 +37,15 @@ public class Main {
         }
 
         Ffprobe fFprobe = new Ffprobe(config.getFfprobePath());
-        for (File file : videoFiles) {
-            FfprobeSubtitlesInfo subtitlesInfo = fFprobe.getSubtitlesInfo(file);
+        Ffmpeg fFmpeg = new Ffmpeg(config.getFfmpegPath());
+
+        for (File videoFile : videoFiles) {
+            FfprobeSubtitlesInfo subtitlesInfo = fFprobe.getSubtitlesInfo(videoFile);
             if (!CollectionUtils.isEmpty(subtitlesInfo.getSubtitleStreams())) {
-                log.info("file " + file.getAbsolutePath() + " has " + subtitlesInfo.getSubtitleStreams().size() + " subs");
+                for (SubtitleStream subtitleStream : subtitlesInfo.getSubtitleStreams()) {
+                    String subtitles = fFmpeg.getSubtitlesText(subtitleStream, videoFile);
+                    log.info("test: " + subtitles);
+                }
             }
         }
     }
