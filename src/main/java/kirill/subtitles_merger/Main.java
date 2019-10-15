@@ -5,11 +5,15 @@ import kirill.subtitles_merger.ffmpeg.Ffmpeg;
 import kirill.subtitles_merger.ffprobe.Ffprobe;
 import kirill.subtitles_merger.ffprobe.FfprobeSubtitlesInfo;
 import kirill.subtitles_merger.ffprobe.SubtitleStream;
+import kirill.subtitles_merger.logic.Merger;
+import kirill.subtitles_merger.logic.Parser;
+import kirill.subtitles_merger.logic.Subtitles;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -36,15 +40,24 @@ public class Main {
             return;
         }
 
-        Ffprobe fFprobe = new Ffprobe(config.getFfprobePath());
-        Ffmpeg fFmpeg = new Ffmpeg(config.getFfmpegPath());
+        Ffprobe ffprobe = new Ffprobe(config.getFfprobePath());
+        Ffmpeg ffmpeg = new Ffmpeg(config.getFfmpegPath());
 
         for (File videoFile : videoFiles) {
-            FfprobeSubtitlesInfo subtitlesInfo = fFprobe.getSubtitlesInfo(videoFile);
+            FfprobeSubtitlesInfo subtitlesInfo = ffprobe.getSubtitlesInfo(videoFile);
             if (!CollectionUtils.isEmpty(subtitlesInfo.getSubtitleStreams())) {
+                List<String> subtitles = new ArrayList<>();
+
                 for (SubtitleStream subtitleStream : subtitlesInfo.getSubtitleStreams()) {
-                    String subtitles = fFmpeg.getSubtitlesText(subtitleStream, videoFile);
-                    log.info("test: " + subtitles);
+                    subtitles.add(ffmpeg.getSubtitlesText(subtitleStream, videoFile));
+                }
+
+                if (subtitles.size() >= 2) {
+                    Subtitles upper = Parser.parseSubtitles(new ByteArrayInputStream(subtitles.get(0).getBytes()), "upper");
+                    Subtitles lower = Parser.parseSubtitles(new ByteArrayInputStream(subtitles.get(1).getBytes()), "lower");
+                    Subtitles result = Merger.mergeSubtitles(upper, lower);
+
+                    ffmpeg.addSubtitleToFile(result.toString(), videoFile);
                 }
             }
         }
