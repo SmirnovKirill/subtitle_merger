@@ -15,7 +15,7 @@ import java.util.prefs.Preferences;
 
 @CommonsLog
 public class Main {
-    private static final String PREFERENCES_ROOT_NODE = "subtitlesmetger";
+    private static final String PREFERENCES_ROOT_NODE = "subtitlesmerger";
 
     private static final List<String> ALLOWED_VIDEO_EXTENSIONS = Arrays.asList(
             "mp4",
