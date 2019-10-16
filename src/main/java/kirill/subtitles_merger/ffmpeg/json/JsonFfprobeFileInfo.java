@@ -1,4 +1,4 @@
-package kirill.subtitles_merger.ffprobe.json;
+package kirill.subtitles_merger.ffmpeg.json;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;

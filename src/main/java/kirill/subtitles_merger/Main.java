@@ -2,24 +2,22 @@ package kirill.subtitles_merger;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitles_merger.ffmpeg.Ffmpeg;
-import kirill.subtitles_merger.ffprobe.Ffprobe;
-import kirill.subtitles_merger.ffprobe.FfprobeSubtitlesInfo;
-import kirill.subtitles_merger.ffprobe.FfpProbeSubtitleStream;
-import kirill.subtitles_merger.logic.Merger;
-import kirill.subtitles_merger.logic.Parser;
-import kirill.subtitles_merger.logic.Subtitles;
+import kirill.subtitles_merger.ffmpeg.Ffprobe;
+import kirill.subtitles_merger.ffmpeg.json.JsonFfprobeFileInfo;
+import kirill.subtitles_merger.ffmpeg.json.JsonStream;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.prefs.Preferences;
+
+import static kirill.subtitles_merger.FileUnavailabilityReason.*;
 
 @CommonsLog
 public class Main {
@@ -29,33 +27,22 @@ public class Main {
 
     private static final List<String> ALLOWED_VIDEO_MIME_TYPES = Collections.singletonList("video/x-matroska");
 
-    public static void main(String[] args) throws IOException, FfmpegException, InterruptedException {
+    public static void main(String[] args) throws InterruptedException {
         Scanner scanner = new Scanner(System.in);
 
         Config config = getConfig(scanner);
         File directoryWithVideos = getDirectoryWithVideos(scanner);
 
-        List<File> videoFiles = getVideoFiles(directoryWithVideos);
-        if (CollectionUtils.isEmpty(videoFiles)) {
-            System.out.println("no videos in the provided directory");
-            return;
+        File[] directoryFiles = directoryWithVideos.listFiles();
+        if (directoryFiles == null) {
+            log.error("something is wrong with the directory " + directoryWithVideos.getAbsolutePath());
+            throw new IllegalStateException();
         }
 
         Ffprobe ffprobe = new Ffprobe(config.getFfprobePath());
         Ffmpeg ffmpeg = new Ffmpeg(config.getFfmpegPath());
 
-        List<Video> videos = getVideos(videoFiles, ffprobe, ffmpeg);
-        for (Video video : videos) {
-            if (video.getSubtitles().size() >= 2) {
-                List<Subtitles> subtitlesPair = video.getSubtitlesPair(config).orElse(null);
-                if (subtitlesPair == null) {
-                    log.error("failed to find pair for " + video.getFile().getAbsolutePath());
-                } else {
-                    Subtitles result = Merger.mergeSubtitles(subtitlesPair.get(0), subtitlesPair.get(1));
-                    ffmpeg.addSubtitleToFile(result.toString(), video.getFile());
-                }
-            }
-        }
+        List<BriefFileInfo> briefFilesInfo = getBriefFilesInfo(directoryFiles, ffprobe);
     }
 
     private static Config getConfig(Scanner scanner) {
@@ -153,62 +140,116 @@ public class Main {
         return new File(path);
     }
 
-    private static List<File> getVideoFiles(File folder) {
-        List<File> result = new ArrayList<>();
+    private static List<BriefFileInfo> getBriefFilesInfo(File[] files, Ffprobe ffprobe) throws InterruptedException {
+        List<BriefFileInfo> result = new ArrayList<>();
 
-        File[] allFiles = folder.listFiles();
-        Objects.requireNonNull(allFiles);
-
-        for (File file : allFiles) {
-            try {
-                if (file.isFile()) {
-                    String extension = FilenameUtils.getExtension(file.getName());
-                    if (ALLOWED_VIDEO_EXTENSIONS.contains(extension.toLowerCase())) {
-                        if (ALLOWED_VIDEO_MIME_TYPES.contains(Files.probeContentType(file.toPath()))) {
-                            result.add(file);
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                log.error("failed to process file " + file.getAbsolutePath() + ": " + ExceptionUtils.getStackTrace(e));
+        for (File file : files) {
+            if (!file.isFile()) {
+                continue;
             }
+
+            String extension = FilenameUtils.getExtension(file.getName());
+            if (StringUtils.isBlank(extension)) {
+                result.add(new BriefFileInfo(file, NO_EXTENSION, null, null));
+                continue;
+            }
+
+            if (!ALLOWED_VIDEO_EXTENSIONS.contains(extension.toLowerCase())) {
+                result.add(new BriefFileInfo(file, NOT_ALLOWED_EXTENSION, null, null));
+                continue;
+            }
+
+            String mimeType;
+            try {
+                mimeType = Files.probeContentType(file.toPath());
+            } catch (IOException e) {
+                log.error("failed to get mime type of file " + file.getAbsolutePath() + ": " + ExceptionUtils.getStackTrace(e));
+                result.add(new BriefFileInfo(file, FAILED_TO_GET_MIME_TYPE, null, null));
+                continue;
+            }
+
+            if (!ALLOWED_VIDEO_MIME_TYPES.contains(mimeType)) {
+                result.add(new BriefFileInfo(file, NOT_ALLOWED_MIME_TYPE, null, null));
+                continue;
+            }
+
+            JsonFfprobeFileInfo ffprobeInfo;
+            try {
+                ffprobeInfo = ffprobe.getFileInfo(file);
+            } catch (InterruptedException e) {
+                throw e;
+            } catch (Exception e) {
+                log.error("failed to get ffprobe info for file " + file.getAbsolutePath() + ": " + ExceptionUtils.getStackTrace(e));
+                result.add(new BriefFileInfo(file, FAILED_TO_GET_FFPROBE_INFO, null, null));
+                continue;
+            }
+
+            VideoFormat videoFormat = VideoFormat.from(ffprobeInfo.getFormat().getFormatName()).orElse(null);
+            if (videoFormat == null) {
+                result.add(new BriefFileInfo(file, NOT_ALLOWED_CONTAINER, null, null));
+                continue;
+            }
+
+            result.add(new BriefFileInfo(file, null, videoFormat, getBriefSubtitlesInfo(ffprobeInfo)));
         }
 
         return result;
     }
 
-    private static List<Video> getVideos(
-            List<File> videoFiles,
-            Ffprobe ffprobe,
-            Ffmpeg ffmpeg
-    ) throws IOException, FfmpegException, InterruptedException {
-        List<Video> result = new ArrayList<>();
+    private static List<BriefSingleSubtitlesInfo> getBriefSubtitlesInfo(JsonFfprobeFileInfo ffprobeInfo) {
+        List<BriefSingleSubtitlesInfo> result = new ArrayList<>();
 
-        for (File videoFile : videoFiles) {
-            List<VideoSubtitles> videoSubtitles = new ArrayList<>();
-
-            FfprobeSubtitlesInfo subtitlesInfo = ffprobe.getSubtitlesInfo(videoFile);
-            if (!CollectionUtils.isEmpty(subtitlesInfo.getFfpProbeSubtitleStreams())) {
-                for (FfpProbeSubtitleStream ffpProbeSubtitleStream : subtitlesInfo.getFfpProbeSubtitleStreams()) {
-                    videoSubtitles.add(
-                            new VideoSubtitles(
-                                    ffpProbeSubtitleStream.getIndex(),
-                                    ffpProbeSubtitleStream.getLanguage(),
-                                    ffpProbeSubtitleStream.getTitle(),
-                                    Parser.parseSubtitles(
-                                            new ByteArrayInputStream(
-                                                    ffmpeg.getSubtitlesText(ffpProbeSubtitleStream, videoFile).getBytes()
-                                            ),
-                                            "subtitles-" + ffpProbeSubtitleStream.getIndex()
-                                    )
-                            )
-                    );
-                }
+        for (JsonStream stream : ffprobeInfo.getStreams()) {
+            if (!"subtitle".equals(stream.getCodecType())) {
+                continue;
             }
 
-            result.add(new Video(videoFile, videoSubtitles));
+            SubtitlesCodec codec = SubtitlesCodec.from(stream.getCodecName()).orElse(null);
+            if (codec == null) {
+                result.add(
+                        new BriefSingleSubtitlesInfo(
+                                stream.getIndex(),
+                                null,
+                                SubtitlesUnavailabilityReason.NOT_ALLOWED_CODEC,
+                                getLanguage(stream).orElse(null),
+                                getTitle(stream).orElse(null)
+                        )
+                );
+                continue;
+            }
+
+            result.add(
+                    new BriefSingleSubtitlesInfo(
+                            stream.getIndex(),
+                            codec,
+                            null,
+                            getLanguage(stream).orElse(null),
+                            getTitle(stream).orElse(null)
+                    )
+            );
         }
 
         return result;
+    }
+
+    private static Optional<LanguageAlpha3Code> getLanguage(JsonStream stream) {
+        if (MapUtils.isEmpty(stream.getTags())) {
+            return Optional.empty();
+        }
+
+        String languageRaw = stream.getTags().get("language");
+        if (StringUtils.isBlank(languageRaw)) {
+            return Optional.empty();
+        }
+
+        return Optional.ofNullable(LanguageAlpha3Code.getByCodeIgnoreCase(languageRaw));
+    }
+
+    private static Optional<String> getTitle(JsonStream stream) {
+        if (MapUtils.isEmpty(stream.getTags())) {
+            return Optional.empty();
+        }
+
+        return Optional.ofNullable(stream.getTags().get("title"));
     }
 }

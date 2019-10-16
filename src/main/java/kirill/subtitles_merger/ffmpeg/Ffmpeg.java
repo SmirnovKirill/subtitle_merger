@@ -1,19 +1,8 @@
 package kirill.subtitles_merger.ffmpeg;
 
-import kirill.subtitles_merger.FfmpegException;
-import kirill.subtitles_merger.ffprobe.FfpProbeSubtitleStream;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.io.FileUtils;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 
 @CommonsLog
 public class Ffmpeg {
@@ -25,13 +14,13 @@ public class Ffmpeg {
         //todo валидация
     }
 
-    public synchronized String getSubtitlesText(FfpProbeSubtitleStream ffpProbeSubtitleStream, File videoFile) throws IOException, FfmpegException, InterruptedException {
+   /* public synchronized String getSubtitlesText(FfpProbeSubtitleStream ffpProbeSubtitleStream, File videoFile) throws IOException, FfmpegException, InterruptedException {
         File result = File.createTempFile("subtitles_merger_", ".srt");
 
-        /*
+        *//*
          * -y нужно передавать чтобы дать согласие на перезаписывание файла, это всегда нужно делать потому что временный
          * файл уже будет создан джавой на момент вызова ffmpeg.
-         */
+         *//*
         ProcessBuilder processBuilder = new ProcessBuilder(
                 Arrays.asList(
                         path,
@@ -77,12 +66,12 @@ public class Ffmpeg {
     public void addSubtitleToFile(String text, File videoFile) throws IOException, FfmpegException, InterruptedException {
         File subtitlesTemp = File.createTempFile("subtitles_merger_", ".srt");
 
-        /*
+        *//*
          * Ffmpeg не может добавить к файлу субтитры и записать это в тот же файл.
          * Поэтому нужно сначала записать результат во временный файл а потом его переименовать.
          * На всякий случай еще сделаем проверку что новый файл больше чем старый, а то нехорошо будет если испортим
          * видео, его могли долго качать.
-         */
+         *//*
         File outputTemp = new File(videoFile.getParentFile(), "temp_" + videoFile.getName());
 
         FileUtils.writeStringToFile(subtitlesTemp, text);
@@ -139,5 +128,5 @@ public class Ffmpeg {
         }
 
         //Files.move(outputTemp.toPath(), videoFile.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-    }
+    }*/
 }

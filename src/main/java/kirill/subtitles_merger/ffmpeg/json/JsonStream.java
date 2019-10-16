@@ -1,4 +1,4 @@
-package kirill.subtitles_merger.ffprobe.json;
+package kirill.subtitles_merger.ffmpeg.json;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
@@ -19,6 +19,10 @@ public class JsonStream {
     @JsonProperty(value = "codec_name")
     private String codecName;
 
+    /*
+     * Ffmpeg использует ISO 639-2 в качестве кода языка, ниже ответ на SO разработчика ffmpeg
+     * https://stackoverflow.com/questions/44351606/ffmpeg-set-the-language-of-an-audio-stream
+     */
     @JsonProperty(value = "tags")
     private Map<String, String> tags;
 }
