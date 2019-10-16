@@ -316,10 +316,14 @@ public class Main {
         }
     }
 
-    private static List<FullSingleSubtitlesInfo> wrap(List<BriefSingleSubtitlesInfo> briesSubtitlesInfo) {
+    private static List<FullSingleSubtitlesInfo> wrap(List<BriefSingleSubtitlesInfo> allBiefSubtitlesInfo) {
+        if (allBiefSubtitlesInfo == null) {
+            return null;
+        }
+
         List<FullSingleSubtitlesInfo> result = new ArrayList<>();
 
-        for (BriefSingleSubtitlesInfo briefSubtitlesInfo : briesSubtitlesInfo) {
+        for (BriefSingleSubtitlesInfo briefSubtitlesInfo : allBiefSubtitlesInfo) {
             result.add(
                     new FullSingleSubtitlesInfo(
                             briefSubtitlesInfo,

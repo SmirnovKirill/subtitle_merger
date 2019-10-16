@@ -9,7 +9,6 @@ import lombok.extern.apachecommons.CommonsLog;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 
 @CommonsLog
 public class Ffprobe {
@@ -33,8 +32,6 @@ public class Ffprobe {
     }
 
     public JsonFfprobeFileInfo getFileInfo(File file) throws IOException, InterruptedException {
-        JsonFfprobeFileInfo result;
-
         ProcessBuilder processBuilder = new ProcessBuilder(
                 Arrays.asList(
                         path,
@@ -48,23 +45,15 @@ public class Ffprobe {
 
                 )
         );
-
         processBuilder.redirectErrorStream(true);
 
         Process process = processBuilder.start();
-        try {
-            result = JSON_OBJECT_MAPPER.readValue(process.getInputStream(), JsonFfprobeFileInfo.class);
-        } finally {
-            process.destroy();
-        }
 
-        if (!process.waitFor(1, TimeUnit.SECONDS)) {
-            log.error("ffprobe exits for too long, that's weird");
-            throw new IllegalStateException();
-        }
+        JsonFfprobeFileInfo result = JSON_OBJECT_MAPPER.readValue(process.getInputStream(), JsonFfprobeFileInfo.class);
 
-        if (process.exitValue() != 0) {
-            log.error("ffprobe has exited with code " + process.exitValue());
+        int exitValue = process.waitFor();
+        if (exitValue != 0) {
+            log.error("ffprobe has exited with code " + exitValue);
             throw new IllegalStateException();
         }
 

@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 
 @CommonsLog
 public class Ffmpeg {
@@ -37,30 +36,20 @@ public class Ffmpeg {
                             TEMP_SUBTITLE_FILE.getAbsolutePath()
                     )
             );
-
             processBuilder.redirectErrorStream(true);
 
             Process process = processBuilder.start();
 
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
             StringBuilder output = new StringBuilder();
-            try {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
-
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    output.append(line);
-                }
-            } finally {
-                process.destroy();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.append(line);
             }
 
-            if (!process.waitFor(10, TimeUnit.SECONDS)) {
-                log.error("ffmpeg exits for too long, that's weird");
-                throw new IllegalStateException();
-            }
-
-            if (process.exitValue() != 0) {
-                log.error("ffmpeg exited with code " + process.exitValue() + ": " + output.toString());
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                log.error("ffmpeg exited with code " + exitCode + ": " + output.toString());
                 throw new IllegalStateException();
             }
 
