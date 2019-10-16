@@ -13,7 +13,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -309,7 +308,7 @@ public class Main {
                         new FullSingleSubtitlesInfo(
                                 briefSubtitlesInfo,
                                 null,
-                                Parser.parseSubtitles(new ByteArrayInputStream(subtitlesText.getBytes()), "subs-" + briefSubtitlesInfo.getIndex()) //todo криво, переделать
+                                Parser.parseSubtitles(subtitlesText, "subs-" + briefSubtitlesInfo.getIndex())
                         )
                 );
             }

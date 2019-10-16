@@ -1,14 +1,15 @@
 package kirill.subtitles_merger.logic;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.joda.time.format.DateTimeFormat;
 
-import java.util.ArrayList;
 import java.util.List;
 
+@AllArgsConstructor
 @Getter
 public class Subtitles {
-    private List<SubtitlesElement> elements = new ArrayList<>();
+    private List<SubtitlesElement> elements;
 
     @Override
     public String toString() {

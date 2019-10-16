@@ -1,33 +1,33 @@
 package kirill.subtitles_merger.logic;
 
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.format.DateTimeFormat;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 @CommonsLog
 public class Parser {
-    public static Subtitles parseSubtitles(String path, String subtitlesName) throws IOException {
-        if (!new File(path).exists()) {
-            log.error("file " + path + " doesn't exist");
+    public static Subtitles parseSubtitles(File file, String subtitlesName) throws IOException {
+        if (!file.exists()) {
+            log.error("file " + file.getAbsolutePath() + " doesn't exist");
             throw new IllegalArgumentException();
         }
 
-        return parseSubtitles(new FileInputStream(path), subtitlesName);
+        return parseSubtitles(FileUtils.readFileToString(file), subtitlesName);
     }
 
-    public static Subtitles parseSubtitles(InputStream inputStream, String subtitlesName) throws IOException {
-        Subtitles result = new Subtitles();
-
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+    public static Subtitles parseSubtitles(String subtitlesUnprocessed, String subtitlesName) {
+        List<SubtitlesElement> result = new ArrayList<>();
 
         SubtitlesElement currentElement = null;
         ParsingStage parsingStage = ParsingStage.HAVE_NOT_STARTED;
 
-        String currentLine;
-        while ((currentLine = bufferedReader.readLine()) != null) {
+        for (String currentLine : subtitlesUnprocessed.split("\\r?\\n")) {
             /* Этот спец, символ может быть в начале самой первой строки, надо убрать а то не распарсится инт. */
             currentLine = currentLine.replace("\uFEFF", "").trim();
             if (parsingStage == ParsingStage.HAVE_NOT_STARTED) {
@@ -59,7 +59,7 @@ public class Parser {
                 parsingStage = ParsingStage.PARSED_FIRST_LINE;
             } else {
                 if (StringUtils.isBlank(currentLine)) {
-                    result.getElements().add(currentElement);
+                    result.add(currentElement);
 
                     currentElement = null;
                     parsingStage = ParsingStage.HAVE_NOT_STARTED;
@@ -74,10 +74,10 @@ public class Parser {
         }
 
         if (parsingStage == ParsingStage.PARSED_FIRST_LINE) {
-            result.getElements().add(currentElement);
+            result.add(currentElement);
         }
 
-        return result;
+        return new Subtitles(result);
     }
 
     private enum ParsingStage {

@@ -35,7 +35,7 @@ public class Merger {
      * в объединяемых субтитров, если есть, то объединяем.
      */
     private static Subtitles makeInitialMerge(Subtitles upperSubtitles, Subtitles lowerSubtitles) {
-        Subtitles result = new Subtitles();
+        List<SubtitlesElement> result = new ArrayList<>();
 
         List<LocalTime> uniqueSortedPointsOfTime = getUniqueSortedPointsOfTime(upperSubtitles, lowerSubtitles);
 
@@ -61,11 +61,11 @@ public class Merger {
                     mergedElement.getLines().addAll(lowerElement.getLines());
                 }
 
-                result.getElements().add(mergedElement);
+                result.add(mergedElement);
             }
         }
 
-        return result;
+        return new Subtitles(result);
     }
 
     private static List<LocalTime> getUniqueSortedPointsOfTime(Subtitles upperSubtitles, Subtitles lowerSubtitles) {
@@ -104,7 +104,7 @@ public class Merger {
      * звуков, оно присутствует только в одном языке, расширять и добавлять строки из второго языка не надо.
      */
     private static Subtitles getExtendedSubtitles(Subtitles mergedSubtitles, List<String> sortedSources) {
-        Subtitles result = new Subtitles();
+        List<SubtitlesElement> result = new ArrayList<>();
 
         int i = 0;
         for (SubtitlesElement subtitlesElement : mergedSubtitles.getElements()) {
@@ -117,7 +117,7 @@ public class Merger {
             }
 
             if (sources.size() == 2 || currentLinesAlwaysGoInOneSource(subtitlesElement.getLines(), i, mergedSubtitles)) {
-                result.getElements().add(subtitlesElement);
+                result.add(subtitlesElement);
                 i++;
                 continue;
             }
@@ -133,12 +133,12 @@ public class Merger {
             extendedElement.getLines().addAll(subtitlesElement.getLines());
             extendedElement.getLines().addAll(getClosestLinesFromOtherSource(i, otherSource, mergedSubtitles));
 
-            result.getElements().add(extendedElement);
+            result.add(extendedElement);
 
             i++;
         }
 
-        return result;
+        return new Subtitles(result);
     }
 
     /*
@@ -242,15 +242,15 @@ public class Merger {
      * Метод объединяет повторяющиеся элементы субтитров если они одинаковые и идут строго подряд.
      */
     private static Subtitles getCombinedSubtitles(Subtitles mergedSubtitles) {
-        Subtitles result = new Subtitles();
+        List<SubtitlesElement> result = new ArrayList<>();
 
         for (int i = 0; i < mergedSubtitles.getElements().size(); i++) {
             SubtitlesElement currentElement = mergedSubtitles.getElements().get(i);
 
             boolean shouldAddCurrentElement = true;
 
-            if (result.getElements().size() > 0) {
-                SubtitlesElement lastAddedElement = result.getElements().get(result.getElements().size() - 1);
+            if (result.size() > 0) {
+                SubtitlesElement lastAddedElement = result.get(result.size() - 1);
                 if (Objects.equals(lastAddedElement.getLines(), currentElement.getLines()) && Objects.equals(lastAddedElement.getTo(), currentElement.getFrom())) {
                     lastAddedElement.setTo(currentElement.getTo());
                     shouldAddCurrentElement = false;
@@ -258,11 +258,11 @@ public class Merger {
             }
 
             if (shouldAddCurrentElement) {
-                currentElement.setNumber(result.getElements().size() + 1);
-                result.getElements().add(currentElement);
+                currentElement.setNumber(result.size() + 1);
+                result.add(currentElement);
             }
         }
 
-        return result;
+        return new Subtitles(result);
     }
 }
