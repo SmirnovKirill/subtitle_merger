@@ -21,7 +21,9 @@ public class JsonStream {
 
     /*
      * Ffmpeg использует ISO 639-2 в качестве кода языка, ниже ответ на SO разработчика ffmpeg
-     * https://stackoverflow.com/questions/44351606/ffmpeg-set-the-language-of-an-audio-stream
+     * https://stackoverflow.com/questions/44351606/ffmpeg-set-the-language-of-an-audio-stream.
+     * Потом оказалось что не только такой формат, есть еще через дефис, это есть в документации
+     * https://www.ffmpeg.org/ffmpeg-formats.html#matroska.
      */
     @JsonProperty(value = "tags")
     private Map<String, String> tags;

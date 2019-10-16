@@ -258,6 +258,14 @@ public class Main {
             return Optional.empty();
         }
 
+        /*
+         * В описании формата https://www.ffmpeg.org/ffmpeg-formats.html#matroska сказано:
+         * The language can be either the 3 letters bibliographic ISO-639-2 (ISO 639-2/B) form (like "fre" for French),
+         * or a language code mixed with a country code for specialities in languages (like "fre-ca" for Canadian French).
+         * Поэтому можно засплиттить по дефису и использовать первую часть как код в ISO-639.
+         */
+        languageRaw = languageRaw.split("-")[0];
+
         return Optional.ofNullable(LanguageAlpha3Code.getByCodeIgnoreCase(languageRaw));
     }
 

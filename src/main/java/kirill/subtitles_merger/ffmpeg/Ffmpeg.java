@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 @CommonsLog
 public class Ffmpeg {
@@ -61,7 +62,7 @@ public class Ffmpeg {
         }
     }
 
-   /* //todo переделать, пока наспех
+  /*  //todo переделать, пока наспех
     public void addSubtitleToFile(String text, File videoFile) throws IOException, FfmpegException, InterruptedException {
         File subtitlesTemp = File.createTempFile("subtitles_merger_", ".srt");
 
@@ -79,6 +80,12 @@ public class Ffmpeg {
                 Arrays.asList(
                         path,
                         "-y",
+                        *//*
+                        * Не сталкивался с таким, но прочел в документации ffmpeg и мне показалось что стоит добавить.
+                        * Потому что вдруг есть какие то неизвестные стримы в файле, пусть они без изменений копируются,
+                        * потому что задача метода просто добавить субтитры не меняя ничего другого.
+                        *//*
+                        "-copy_unknown",
                         "-i",
                         videoFile.getAbsolutePath(),
                         "-i",
