@@ -1,14 +1,15 @@
 package kirill.subtitles_merger.ffmpeg;
 
+import kirill.subtitles_merger.logic.Subtitles;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FileUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 
 @CommonsLog
 public class Ffmpeg {
@@ -62,70 +63,57 @@ public class Ffmpeg {
         }
     }
 
-  /*  //todo переделать, пока наспех
-    public void addSubtitleToFile(String text, File videoFile) throws IOException, FfmpegException, InterruptedException {
-        File subtitlesTemp = File.createTempFile("subtitles_merger_", ".srt");
-
-        *//*
+    //todo переделать, пока наспех
+    public void addSubtitleToFile(Subtitles subtitles, File videoFile) throws InterruptedException, IOException {
+        /*
          * Ffmpeg не может добавить к файлу субтитры и записать это в тот же файл.
          * Поэтому нужно сначала записать результат во временный файл а потом его переименовать.
          * На всякий случай еще сделаем проверку что новый файл больше чем старый, а то нехорошо будет если испортим
          * видео, его могли долго качать.
-         *//*
+         */
         File outputTemp = new File(videoFile.getParentFile(), "temp_" + videoFile.getName());
 
-        FileUtils.writeStringToFile(subtitlesTemp, text);
+        File subtitlesTemp = File.createTempFile("subtitles_merger_", ".srt");
+        FileUtils.writeStringToFile(subtitlesTemp, subtitles.toString());
 
         ProcessBuilder processBuilder = new ProcessBuilder(
                 Arrays.asList(
                         path,
                         "-y",
-                        *//*
+                        /*
                         * Не сталкивался с таким, но прочел в документации ffmpeg и мне показалось что стоит добавить.
                         * Потому что вдруг есть какие то неизвестные стримы в файле, пусть они без изменений копируются,
                         * потому что задача метода просто добавить субтитры не меняя ничего другого.
-                        *//*
+                        */
                         "-copy_unknown",
                         "-i",
                         videoFile.getAbsolutePath(),
                         "-i",
                         subtitlesTemp.getAbsolutePath(),
-                        "-map",
-                        "0",
                         "-c",
                         "copy",
                         "-map",
+                        "0",
+                        "-map",
                         "1",
-                        "-c:s",
-                        "copy",
                         outputTemp.getAbsolutePath()
                 )
         );
-
         processBuilder.redirectErrorStream(true);
 
         Process process = processBuilder.start();
 
+        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
         StringBuilder output = new StringBuilder();
-        try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
-
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line);
-            }
-        } finally {
-            process.destroy();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            output.append(line);
         }
 
-        if (!process.waitFor(10, TimeUnit.SECONDS)) {
-            log.error("ffmpeg exits for too long, that's weird");
-            throw new FfmpegException("ffmpeg exits for too long");
-        }
-
-        if (process.exitValue() != 0) {
-            log.error("ffmpeg exited with code " + process.exitValue() + ": " + output.toString());
-            throw new FfmpegException("ffmpeg exited with code " + process.exitValue());
+        int exitCode = process.waitFor();
+        if (exitCode != 0) {
+            log.error("ffmpeg exited with code " + exitCode + ": " + output.toString());
+            throw new IllegalStateException();
         }
 
         if (outputTemp.length() <= videoFile.length()) {
@@ -134,5 +122,5 @@ public class Ffmpeg {
         }
 
         //Files.move(outputTemp.toPath(), videoFile.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-    }*/
+    }
 }

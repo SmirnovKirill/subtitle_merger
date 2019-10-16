@@ -7,6 +7,7 @@ import kirill.subtitles_merger.ffmpeg.Ffprobe;
 import kirill.subtitles_merger.ffmpeg.json.JsonFfprobeFileInfo;
 import kirill.subtitles_merger.ffmpeg.json.JsonStream;
 import kirill.subtitles_merger.logic.Parser;
+import kirill.subtitles_merger.logic.Subtitles;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -57,7 +58,19 @@ public class Main {
             fullFilesInfo.add(getFullFileInfo(briefFileInfo, ffmpeg));
         }
 
-        System.out.println("all files have been processed");
+        System.out.println("start injecting subtitles");
+        for (int i = 0; i < fullFilesInfo.size(); i++) {
+            FullFileInfo fullFileInfo = fullFilesInfo.get(i);
+
+            System.out.println("start processing file " + fullFileInfo.getBriefInfo().getFile().getAbsolutePath() + ", " + (i + 1) + "/" + fullFilesInfo.size());
+
+            Subtitles merged = fullFileInfo.getMerged(config).orElse(null);
+            if (merged == null) {
+                System.out.println("no merged subtitles");
+            } else {
+                ffmpeg.addSubtitleToFile(merged, fullFileInfo.getBriefInfo().getFile());
+            }
+        }
     }
 
     private static Config getConfig(Scanner scanner) {
