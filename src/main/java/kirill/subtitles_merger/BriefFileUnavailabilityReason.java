@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public enum FileUnavailabilityReason {
+public enum BriefFileUnavailabilityReason {
     NO_EXTENSION,
     NOT_ALLOWED_EXTENSION,
     FAILED_TO_GET_MIME_TYPE,

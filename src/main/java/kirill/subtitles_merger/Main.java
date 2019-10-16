@@ -2,22 +2,25 @@ package kirill.subtitles_merger;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitles_merger.ffmpeg.Ffmpeg;
+import kirill.subtitles_merger.ffmpeg.FfmpegException;
 import kirill.subtitles_merger.ffmpeg.Ffprobe;
 import kirill.subtitles_merger.ffmpeg.json.JsonFfprobeFileInfo;
 import kirill.subtitles_merger.ffmpeg.json.JsonStream;
+import kirill.subtitles_merger.logic.Parser;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.prefs.Preferences;
 
-import static kirill.subtitles_merger.FileUnavailabilityReason.*;
+import static kirill.subtitles_merger.BriefFileUnavailabilityReason.*;
 
 @CommonsLog
 public class Main {
@@ -27,7 +30,7 @@ public class Main {
 
     private static final List<String> ALLOWED_VIDEO_MIME_TYPES = Collections.singletonList("video/x-matroska");
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException, IOException {
         Scanner scanner = new Scanner(System.in);
 
         Config config = getConfig(scanner);
@@ -43,6 +46,19 @@ public class Main {
         Ffmpeg ffmpeg = new Ffmpeg(config.getFfmpegPath());
 
         List<BriefFileInfo> briefFilesInfo = getBriefFilesInfo(directoryFiles, ffprobe);
+
+        System.out.println("got brief files info");
+
+        List<FullFileInfo> fullFilesInfo = new ArrayList<>();
+        for (int i = 0; i < briefFilesInfo.size(); i++) {
+            BriefFileInfo briefFileInfo = briefFilesInfo.get(i);
+
+            System.out.println("start processing file " + briefFileInfo.getFile().getAbsolutePath() + ", " + (i + 1) + "/" + briefFilesInfo.size());
+
+            fullFilesInfo.add(getFullFileInfo(briefFileInfo, ffmpeg));
+        }
+
+        System.out.println("all files have been processed");
     }
 
     private static Config getConfig(Scanner scanner) {
@@ -210,7 +226,7 @@ public class Main {
                         new BriefSingleSubtitlesInfo(
                                 stream.getIndex(),
                                 null,
-                                SubtitlesUnavailabilityReason.NOT_ALLOWED_CODEC,
+                                BriefSubtitlesUnavailabilityReason.NOT_ALLOWED_CODEC,
                                 getLanguage(stream).orElse(null),
                                 getTitle(stream).orElse(null)
                         )
@@ -251,5 +267,69 @@ public class Main {
         }
 
         return Optional.ofNullable(stream.getTags().get("title"));
+    }
+
+    //todo не должно быть IOException
+    private static FullFileInfo getFullFileInfo(BriefFileInfo briefFileInfo, Ffmpeg ffmpeg) throws InterruptedException, IOException {
+        if (briefFileInfo.getUnavailabilityReason() != null) {
+            return new FullFileInfo(
+                    briefFileInfo,
+                    FullFileUnavailabilityReason.FAILED_BEFORE,
+                    wrap(briefFileInfo.getAllSubtitles())
+            );
+        }
+
+        try {
+            List<FullSingleSubtitlesInfo> allSubtitles = new ArrayList<>();
+
+            for (BriefSingleSubtitlesInfo briefSubtitlesInfo : briefFileInfo.getAllSubtitles()) {
+                if (briefFileInfo.getUnavailabilityReason() != null) {
+                    allSubtitles.add(
+                            new FullSingleSubtitlesInfo(
+                                    briefSubtitlesInfo,
+                                    briefSubtitlesInfo.getUnavailabilityReason() != null
+                                            ? FullSingleSubtitlesUnavailabilityReason.FAILED_BEFORE
+                                            : null,
+                                    null
+                            )
+                    );
+                    continue;
+                }
+
+                String subtitlesText = ffmpeg.getSubtitlesText(briefSubtitlesInfo.getIndex(), briefFileInfo.getFile());
+                allSubtitles.add(
+                        new FullSingleSubtitlesInfo(
+                                briefSubtitlesInfo,
+                                null,
+                                Parser.parseSubtitles(new ByteArrayInputStream(subtitlesText.getBytes()), "subs-" + briefSubtitlesInfo.getIndex()) //todo криво, переделать
+                        )
+                );
+            }
+
+            return new FullFileInfo(briefFileInfo, null, allSubtitles);
+        } catch (FfmpegException e) {
+            return new FullFileInfo(
+                    briefFileInfo,
+                    FullFileUnavailabilityReason.FFMPEG_FAILED,
+                    wrap(briefFileInfo.getAllSubtitles())
+            );
+        }
+    }
+
+    private static List<FullSingleSubtitlesInfo> wrap(List<BriefSingleSubtitlesInfo> briesSubtitlesInfo) {
+        List<FullSingleSubtitlesInfo> result = new ArrayList<>();
+
+        for (BriefSingleSubtitlesInfo briefSubtitlesInfo : briesSubtitlesInfo) {
+            result.add(
+                    new FullSingleSubtitlesInfo(
+                            briefSubtitlesInfo,
+                            briefSubtitlesInfo.getUnavailabilityReason() != null
+                                    ? FullSingleSubtitlesUnavailabilityReason.FAILED_BEFORE
+                                    : null,
+                            null
+                    ));
+        }
+
+        return result;
     }
 }

@@ -19,7 +19,7 @@ public class BriefSingleSubtitlesInfo {
      * Информация о всех найденных ffprobe'ом для данного видео субтитрах будет храниться, даже для тех которые не подходят
      * для использования в данной программе. В этом енуме содержатся причины непригодности к использованию для лучшей диагностики.
      */
-    private SubtitlesUnavailabilityReason unavailabilityReason;
+    private BriefSubtitlesUnavailabilityReason unavailabilityReason;
 
     private LanguageAlpha3Code language;
 

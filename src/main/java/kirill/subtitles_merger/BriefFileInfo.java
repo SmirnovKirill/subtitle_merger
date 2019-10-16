@@ -20,7 +20,7 @@ public class BriefFileInfo {
      * Информация о всех файлах в выбранной папке будет храниться, даже для тех которые не подходят для использования
      * в данной программе. В этом енуме содержатся причины непригодности к использованию для лучшей диагностики.
      */
-    private FileUnavailabilityReason unavailabilityReason;
+    private BriefFileUnavailabilityReason unavailabilityReason;
 
     private VideoFormat videoContainer;
 
