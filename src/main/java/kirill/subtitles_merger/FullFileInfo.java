@@ -21,6 +21,10 @@ public class FullFileInfo {
     private List<FullSingleSubtitlesInfo> allSubtitles;
 
     public Optional<Subtitles> getMerged(Config config) {
+        if (unavailabilityReason == null || CollectionUtils.isEmpty(allSubtitles)) {
+            return Optional.empty();
+        }
+
         List<FullSingleSubtitlesInfo> subtitlesMatchingUpperLanguage = allSubtitles.stream()
                 .filter(subtitles -> subtitles.getUnavailabilityReason() == null)
                 .filter(subtitles -> subtitles.getBriefInfo().getLanguage() == config.getUpperLanguage())
