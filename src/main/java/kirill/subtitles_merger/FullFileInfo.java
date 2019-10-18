@@ -21,7 +21,7 @@ public class FullFileInfo {
     private List<FullSingleSubtitlesInfo> allSubtitles;
 
     public Optional<Subtitles> getMerged(Config config) {
-        if (unavailabilityReason == null || CollectionUtils.isEmpty(allSubtitles)) {
+        if (unavailabilityReason != null || CollectionUtils.isEmpty(allSubtitles)) {
             return Optional.empty();
         }
 
