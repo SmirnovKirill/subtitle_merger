@@ -9,6 +9,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 
 @CommonsLog
@@ -64,7 +66,7 @@ public class Ffmpeg {
     }
 
     //todo переделать, пока наспех
-    public void addSubtitleToFile(Subtitles subtitles, File videoFile) throws InterruptedException, IOException {
+    public void addSubtitleToFile(Subtitles subtitles, int existingSubtitlesLength, File videoFile) throws InterruptedException, IOException {
         /*
          * Ffmpeg не может добавить к файлу субтитры и записать это в тот же файл.
          * Поэтому нужно сначала записать результат во временный файл а потом его переименовать.
@@ -74,7 +76,7 @@ public class Ffmpeg {
         File outputTemp = new File(videoFile.getParentFile(), "temp_" + videoFile.getName());
 
         File subtitlesTemp = File.createTempFile("subtitles_merger_", ".srt");
-        FileUtils.writeStringToFile(subtitlesTemp, subtitles.toString());
+        FileUtils.writeStringToFile(subtitlesTemp, subtitles.toString(), StandardCharsets.UTF_8);
 
         ProcessBuilder processBuilder = new ProcessBuilder(
                 Arrays.asList(
@@ -92,6 +94,12 @@ public class Ffmpeg {
                         subtitlesTemp.getAbsolutePath(),
                         "-c",
                         "copy",
+                        "-max_interleave_delta",
+                        "0",
+                        "-metadata:s:s:" + existingSubtitlesLength,
+                        "language=rus",
+                        "-metadata:s:s:" + existingSubtitlesLength,
+                        "title=Merged subtitles",
                         "-map",
                         "0",
                         "-map",
@@ -121,6 +129,6 @@ public class Ffmpeg {
             throw new IllegalStateException();
         }
 
-        //Files.move(outputTemp.toPath(), videoFile.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        Files.move(outputTemp.toPath(), videoFile.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
     }
 }

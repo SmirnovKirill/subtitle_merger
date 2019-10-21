@@ -68,7 +68,7 @@ public class Main {
             if (merged == null) {
                 System.out.println("no merged subtitles");
             } else {
-                ffmpeg.addSubtitleToFile(merged, fullFileInfo.getBriefInfo().getFile());
+                ffmpeg.addSubtitleToFile(merged, fullFileInfo.getAllSubtitles().size(), fullFileInfo.getBriefInfo().getFile());
             }
         }
     }
