@@ -1,12 +1,13 @@
 package kirill.subtitles_merger.logic;
 
+import com.neovisionaries.i18n.LanguageAlpha3Code;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.format.DateTimeFormat;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,10 +19,14 @@ public class Parser {
             throw new IllegalArgumentException();
         }
 
-        return parseSubtitles(FileUtils.readFileToString(file), subtitlesName);
+        return parseSubtitles(FileUtils.readFileToString(file), subtitlesName, null);
     }
 
-    public static Subtitles parseSubtitles(String subtitlesUnprocessed, String subtitlesName) {
+    public static Subtitles parseSubtitles(
+            String subtitlesUnprocessed,
+            String subtitlesName,
+            LanguageAlpha3Code language
+    ) {
         List<SubtitlesElement> result = new ArrayList<>();
 
         SubtitlesElement currentElement = null;
@@ -77,7 +82,11 @@ public class Parser {
             result.add(currentElement);
         }
 
-        return new Subtitles(result);
+        List<LanguageAlpha3Code> languages = new ArrayList<>();
+        if (language != null) {
+            languages.add(language);
+        }
+        return new Subtitles(result, languages);
     }
 
     private enum ParsingStage {

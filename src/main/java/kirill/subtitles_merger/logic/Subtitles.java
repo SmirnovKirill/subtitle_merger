@@ -1,5 +1,6 @@
 package kirill.subtitles_merger.logic;
 
+import com.neovisionaries.i18n.LanguageAlpha3Code;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.joda.time.format.DateTimeFormat;
@@ -10,6 +11,8 @@ import java.util.List;
 @Getter
 public class Subtitles {
     private List<SubtitlesElement> elements;
+
+    private List<LanguageAlpha3Code> languages;
 
     @Override
     public String toString() {

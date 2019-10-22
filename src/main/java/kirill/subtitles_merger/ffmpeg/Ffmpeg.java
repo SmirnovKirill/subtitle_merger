@@ -1,7 +1,9 @@
 package kirill.subtitles_merger.ffmpeg;
 
+import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitles_merger.logic.Subtitles;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 
 import java.io.BufferedReader;
@@ -9,9 +11,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 @CommonsLog
 public class Ffmpeg {
@@ -66,7 +68,11 @@ public class Ffmpeg {
     }
 
     //todo переделать, пока наспех
-    public void addSubtitleToFile(Subtitles subtitles, int existingSubtitlesLength, File videoFile) throws InterruptedException, IOException {
+    public void addSubtitleToFile(
+            Subtitles subtitles,
+            int existingSubtitlesLength,
+            File videoFile
+    ) throws InterruptedException, IOException {
         /*
          * Ffmpeg не может добавить к файлу субтитры и записать это в тот же файл.
          * Поэтому нужно сначала записать результат во временный файл а потом его переименовать.
@@ -78,33 +84,18 @@ public class Ffmpeg {
         File subtitlesTemp = File.createTempFile("subtitles_merger_", ".srt");
         FileUtils.writeStringToFile(subtitlesTemp, subtitles.toString(), StandardCharsets.UTF_8);
 
+        LanguageAlpha3Code language = null;
+        if (!CollectionUtils.isEmpty(subtitles.getLanguages())) {
+            language = subtitles.getLanguages().get(0);
+        }
+
         ProcessBuilder processBuilder = new ProcessBuilder(
-                Arrays.asList(
-                        path,
-                        "-y",
-                        /*
-                        * Не сталкивался с таким, но прочел в документации ffmpeg и мне показалось что стоит добавить.
-                        * Потому что вдруг есть какие то неизвестные стримы в файле, пусть они без изменений копируются,
-                        * потому что задача метода просто добавить субтитры не меняя ничего другого.
-                        */
-                        "-copy_unknown",
-                        "-i",
-                        videoFile.getAbsolutePath(),
-                        "-i",
-                        subtitlesTemp.getAbsolutePath(),
-                        "-c",
-                        "copy",
-                        "-max_interleave_delta",
-                        "0",
-                        "-metadata:s:s:" + existingSubtitlesLength,
-                        "language=rus",
-                        "-metadata:s:s:" + existingSubtitlesLength,
-                        "title=Merged subtitles",
-                        "-map",
-                        "0",
-                        "-map",
-                        "1",
-                        outputTemp.getAbsolutePath()
+                getArgumentAddToFile(
+                        videoFile,
+                        subtitlesTemp,
+                        outputTemp,
+                        existingSubtitlesLength,
+                        language
                 )
         );
         processBuilder.redirectErrorStream(true);
@@ -129,6 +120,46 @@ public class Ffmpeg {
             throw new IllegalStateException();
         }
 
-        Files.move(outputTemp.toPath(), videoFile.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+    }
+
+    private List<String> getArgumentAddToFile(
+            File videoFile,
+            File subtitlesTemp,
+            File outputTemp,
+            int existingSubtitlesLength,
+            LanguageAlpha3Code language
+    ) {
+        List<String> result = new ArrayList<>();
+
+        result.add(path);
+        result.add("-y");
+
+        /*
+         * Не сталкивался с таким, но прочел в документации ffmpeg и мне показалось что стоит добавить.
+         * Потому что вдруг есть какие то неизвестные стримы в файле, пусть они без изменений копируются,
+         * потому что задача метода просто добавить субтитры не меняя ничего другого.
+         */
+        result.add("-copy_unknown");
+
+        result.addAll(Arrays.asList("-i", videoFile.getAbsolutePath()));
+        result.addAll(Arrays.asList("-i", subtitlesTemp.getAbsolutePath()));
+        result.addAll(Arrays.asList("-c", "copy"));
+
+        /*
+         * Очень важный аргумент, без него во многих видео может быть проблема.
+         * https://video.stackexchange.com/questions/28719/srt-subtitles-added-to-mkv-with-ffmpeg-are-not-displayed
+         */
+        result.addAll(Arrays.asList("-max_interleave_delta", "0"));
+
+        if (language != null) {
+            result.addAll(Arrays.asList("-metadata:s:s:" + existingSubtitlesLength, "language=" + language.toString()));
+        }
+        result.addAll(Arrays.asList("-metadata:s:s:" + existingSubtitlesLength, "title=Merged subtitles"));
+        result.addAll(Arrays.asList("-disposition:s:s:" + existingSubtitlesLength, "default"));
+        result.addAll(Arrays.asList("-map", "0"));
+        result.addAll(Arrays.asList("-map", "1"));
+        result.add(outputTemp.getAbsolutePath());
+
+        return result;
     }
 }

@@ -1,6 +1,8 @@
 package kirill.subtitles_merger.logic;
 
+import com.neovisionaries.i18n.LanguageAlpha3Code;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.collections4.CollectionUtils;
 import org.joda.time.LocalTime;
 import org.joda.time.Seconds;
 
@@ -65,7 +67,15 @@ public class Merger {
             }
         }
 
-        return new Subtitles(result);
+        List<LanguageAlpha3Code> languages = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(upperSubtitles.getLanguages())) {
+            languages.addAll(upperSubtitles.getLanguages());
+        }
+        if (!CollectionUtils.isEmpty(lowerSubtitles.getLanguages())) {
+            languages.addAll(lowerSubtitles.getLanguages());
+        }
+
+        return new Subtitles(result, languages);
     }
 
     private static List<LocalTime> getUniqueSortedPointsOfTime(Subtitles upperSubtitles, Subtitles lowerSubtitles) {
@@ -138,7 +148,7 @@ public class Merger {
             i++;
         }
 
-        return new Subtitles(result);
+        return new Subtitles(result, mergedSubtitles.getLanguages());
     }
 
     /*
@@ -263,6 +273,6 @@ public class Merger {
             }
         }
 
-        return new Subtitles(result);
+        return new Subtitles(result, mergedSubtitles.getLanguages());
     }
 }

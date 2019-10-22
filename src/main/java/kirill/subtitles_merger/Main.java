@@ -321,7 +321,7 @@ public class Main {
                         new FullSingleSubtitlesInfo(
                                 briefSubtitlesInfo,
                                 null,
-                                Parser.parseSubtitles(subtitlesText, "subs-" + briefSubtitlesInfo.getIndex())
+                                Parser.parseSubtitles(subtitlesText, "subs-" + briefSubtitlesInfo.getIndex(), briefSubtitlesInfo.getLanguage())
                         )
                 );
             }
