@@ -38,7 +38,7 @@ public class Ffmpeg {
                             "-i",
                             videoFile.getAbsolutePath(),
                             "-map",
-                            "0:" + streamIndex, //todo возможно добавить тут явное указание кодека
+                            "0:" + streamIndex,
                             TEMP_SUBTITLE_FILE.getAbsolutePath()
                     )
             );
