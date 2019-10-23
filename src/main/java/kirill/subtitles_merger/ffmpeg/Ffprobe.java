@@ -63,7 +63,7 @@ public class Ffprobe {
         }
 
         if (!process.waitFor(5, TimeUnit.SECONDS)) {
-            log.info("getting version is taking too long");
+            log.info("getting ffprobe version is taking too long");
             throw new FfmpegException(FfmpegException.Code.INCORRECT_FFPROBE_PATH);
         }
 
@@ -74,7 +74,7 @@ public class Ffprobe {
         }
 
         if (!lineWithVersion.startsWith("ffprobe version")) {
-            log.info("incorrect line with version: " + lineWithVersion);
+            log.info("incorrect ffprobe line with version: " + lineWithVersion);
             throw new FfmpegException(FfmpegException.Code.INCORRECT_FFPROBE_PATH);
         }
     }

@@ -14,19 +14,60 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @CommonsLog
 public class Ffmpeg {
     private static final File TEMP_SUBTITLE_FILE = new File(System.getProperty("java.io.tmpdir"), "subtitles_merger_temp.srt");
     private String path;
 
-    public Ffmpeg(String path) {
+    public Ffmpeg(String path) throws FfmpegException, InterruptedException {
+        validate(path);
+
         this.path = path;
-        validate();
     }
 
-    private void validate() {
+    public static void validate(String path) throws FfmpegException, InterruptedException {
+        ProcessBuilder processBuilder = new ProcessBuilder(
+                Arrays.asList(
+                        path,
+                        "-version"
+                )
+        );
+        processBuilder.redirectErrorStream(true);
 
+        Process process;
+        try {
+            process = processBuilder.start();
+        } catch (IOException e) {
+            log.info("failed to start the ffmpeg process");
+            throw new FfmpegException(FfmpegException.Code.INCORRECT_FFMPEG_PATH);
+        }
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
+        String lineWithVersion;
+
+        try {
+            lineWithVersion = reader.readLine();
+        } catch (IOException e) {
+            throw new FfmpegException(FfmpegException.Code.INCORRECT_FFMPEG_PATH);
+        }
+
+        if (!process.waitFor(5, TimeUnit.SECONDS)) {
+            log.info("getting ffmpeg version is taking too long");
+            throw new FfmpegException(FfmpegException.Code.INCORRECT_FFMPEG_PATH);
+        }
+
+        int exitValue = process.exitValue();
+        if (exitValue != 0) {
+            log.info("ffmpeg has exited with code " + exitValue);
+            throw new FfmpegException(FfmpegException.Code.INCORRECT_FFMPEG_PATH);
+        }
+
+        if (!lineWithVersion.startsWith("ffmpeg version")) {
+            log.info("incorrect ffmpeg line with version: " + lineWithVersion);
+            throw new FfmpegException(FfmpegException.Code.INCORRECT_FFMPEG_PATH);
+        }
     }
 
     public synchronized String getSubtitlesText(int streamIndex, File videoFile) throws FfmpegException, InterruptedException {

@@ -79,13 +79,24 @@ public class Main {
         boolean hasErrors;
 
         String ffmpegPath = preferences.get("ffmpeg_path", "");
+        if (!StringUtils.isBlank(ffmpegPath)) {
+            try {
+                Ffmpeg.validate(ffmpegPath);
+            } catch (FfmpegException e) {
+                ffmpegPath = null;
+            }
+        }
         while (StringUtils.isBlank(ffmpegPath)) {
             System.out.println("please provide path to the ffmpeg executable file");
             ffmpegPath = scanner.nextLine();
             if (!StringUtils.isBlank(ffmpegPath)) {
-                preferences.put("ffmpeg_path", ffmpegPath);
+                try {
+                    Ffprobe.validate(ffmpegPath);
+                    preferences.put("ffmpeg_path", ffmpegPath);
+                } catch (FfmpegException e) {
+                    ffmpegPath = null;
+                }
             }
-            //todo валидация
         }
 
         String ffprobePath = preferences.get("ffprobe_path", "");
