@@ -22,7 +22,11 @@ public class Ffmpeg {
 
     public Ffmpeg(String path) {
         this.path = path;
-        //todo валидация
+        validate();
+    }
+
+    private void validate() {
+
     }
 
     public synchronized String getSubtitlesText(int streamIndex, File videoFile) throws FfmpegException, InterruptedException {
@@ -63,7 +67,7 @@ public class Ffmpeg {
         } catch (InterruptedException e) {
             throw e;
         } catch (Exception e) {
-            throw new FfmpegException(e);
+            throw new FfmpegException(FfmpegException.Code.COMMON, e);
         }
     }
 

@@ -30,7 +30,7 @@ public class Main {
 
     private static final List<String> ALLOWED_VIDEO_MIME_TYPES = Collections.singletonList("video/x-matroska");
 
-    public static void main(String[] args) throws InterruptedException, IOException {
+    public static void main(String[] args) throws InterruptedException, IOException, FfmpegException {
         Scanner scanner = new Scanner(System.in);
 
         Config config = getConfig(scanner);
@@ -73,7 +73,7 @@ public class Main {
         }
     }
 
-    private static Config getConfig(Scanner scanner) {
+    private static Config getConfig(Scanner scanner) throws InterruptedException {
         Preferences preferences = Preferences.userRoot().node(PREFERENCES_ROOT_NODE);
 
         boolean hasErrors;
@@ -89,13 +89,24 @@ public class Main {
         }
 
         String ffprobePath = preferences.get("ffprobe_path", "");
+        if (!StringUtils.isBlank(ffprobePath)) {
+            try {
+                Ffprobe.validate(ffprobePath);
+            } catch (FfmpegException e) {
+                ffprobePath = null;
+            }
+        }
         while (StringUtils.isBlank(ffprobePath)) {
             System.out.println("please provide path to the ffprobe executable file");
             ffprobePath = scanner.nextLine();
             if (!StringUtils.isBlank(ffprobePath)) {
-                preferences.put("ffprobe_path", ffprobePath);
+                try {
+                    Ffprobe.validate(ffprobePath);
+                    preferences.put("ffprobe_path", ffprobePath);
+                } catch (FfmpegException e) {
+                    ffprobePath = null;
+                }
             }
-            //todo валидация
         }
 
         String upperLanguage = preferences.get("upper_language", "");
