@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public class Config {
+class Config {
     private String ffmpegPath;
 
     private String ffprobePath;

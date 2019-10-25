@@ -6,12 +6,7 @@ import lombok.Getter;
 public class FfmpegException extends Exception {
     private Code code;
 
-    public FfmpegException(Code code, Throwable cause) {
-        super(cause);
-        this.code = code;
-    }
-
-    public FfmpegException(Code code) {
+    FfmpegException(Code code) {
         super();
         this.code = code;
     }

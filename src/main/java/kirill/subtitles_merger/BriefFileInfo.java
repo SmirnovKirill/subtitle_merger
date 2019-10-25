@@ -13,7 +13,7 @@ import java.util.List;
  */
 @AllArgsConstructor
 @Getter
-public class BriefFileInfo {
+class BriefFileInfo {
     private File file;
 
     /**

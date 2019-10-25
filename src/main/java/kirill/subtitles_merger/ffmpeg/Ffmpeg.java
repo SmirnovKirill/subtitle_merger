@@ -16,7 +16,11 @@ import java.util.List;
 
 @CommonsLog
 public class Ffmpeg {
-    private static final File TEMP_SUBTITLE_FILE = new File(System.getProperty("java.io.tmpdir"), "subtitles_merger_temp.srt");
+    private static final File TEMP_SUBTITLE_FILE = new File(
+            System.getProperty("java.io.tmpdir"),
+            "subtitles_merger_temp.srt"
+    );
+
     private String path;
 
     public Ffmpeg(String path) throws FfmpegException {
@@ -35,7 +39,7 @@ public class Ffmpeg {
             );
 
             if (!consoleOutput.startsWith("ffmpeg version")) {
-                log.info("console output doesn't start with ffmpeg version");
+                log.info("console output doesn't start with the ffmpeg version");
                 throw new FfmpegException(FfmpegException.Code.INCORRECT_FFMPEG_PATH);
             }
         } catch (ProcessException e) {
@@ -90,10 +94,8 @@ public class Ffmpeg {
          */
         File outputTemp = new File(videoFile.getParentFile(), "temp_" + videoFile.getName());
 
-        File subtitlesTemp;
         try {
-            subtitlesTemp = File.createTempFile("subtitles_merger_", ".srt");
-            FileUtils.writeStringToFile(subtitlesTemp, subtitles.toString(), StandardCharsets.UTF_8);
+            FileUtils.writeStringToFile(TEMP_SUBTITLE_FILE, subtitles.toString(), StandardCharsets.UTF_8);
         } catch (IOException e) {
             log.warn("failed to write merged subtiutles to the temp file: " + ExceptionUtils.getStackTrace(e));
             throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
@@ -108,7 +110,7 @@ public class Ffmpeg {
             ProcessRunner.run(
                     getArgumentsAddToFile(
                             videoFile,
-                            subtitlesTemp,
+                            TEMP_SUBTITLE_FILE,
                             outputTemp,
                             existingSubtitlesLength,
                             language
@@ -120,8 +122,8 @@ public class Ffmpeg {
         }
 
         if (outputTemp.length() <= videoFile.length()) {
-            log.error("resulting file size is less than original one");
-            throw new IllegalStateException();
+            log.warn("resulting file size is less than original one");
+            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
         }
     }
 

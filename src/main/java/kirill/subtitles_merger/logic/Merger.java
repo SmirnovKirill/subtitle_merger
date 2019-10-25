@@ -4,12 +4,10 @@ import com.neovisionaries.i18n.LanguageAlpha3Code;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.joda.time.LocalTime;
-import org.joda.time.Seconds;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 @CommonsLog
@@ -33,8 +31,8 @@ public class Merger {
     }
 
     /*
-     * Самый первый и простой этап объединения - делаем список всех упомянутых точек времени и на каждом отрезке смотрим есть ли текст
-     * в объединяемых субтитров, если есть, то объединяем.
+     * Самый первый и простой этап объединения - делаем список всех упомянутых точек времени и на каждом отрезке
+     * смотрим есть ли текст в объединяемых субтитров, если есть, то объединяем.
      */
     private static Subtitles makeInitialMerge(Subtitles upperSubtitles, Subtitles lowerSubtitles) {
         List<SubtitlesElement> result = new ArrayList<>();
@@ -107,17 +105,19 @@ public class Merger {
     }
 
     /*
-     * Метод устраняет "скачки". Они появляются если в процессе разбиения на маленькие отрезки какой-то блок сначала идет только в одном источнике, а потом появляется в другом.
-     * Получается очень маленький промежуток времени субтитры одни, проходят, потом добавляется второй источник и те субтитры "скачут" вверх.
-     * Метод исправляет это путем добавления строк субтитров из второго источника к строкам субтитров из первого в моменты когда они не идут вместе.
-     * При этом если какие-то строки все время идут только одни, то добавления не происходит. Это часто бывает когда в английских субтитрах идет описание
-     * звуков, оно присутствует только в одном языке, расширять и добавлять строки из второго языка не надо.
+     * Метод устраняет "скачки". Они появляются если в процессе разбиения на маленькие отрезки какой-то блок сначала
+     * идет только в одном источнике, а потом появляется в другом. Получается очень маленький промежуток времени
+     * субтитры одни, проходят, потом добавляется второй источник и те субтитры "скачут" вверх. Метод исправляет
+     * это путем добавления строк субтитров из второго источника к строкам субтитров из первого в моменты когда они
+     * не идут вместе. При этом если какие-то строки все время идут только одни, то добавления не происходит.
+     * Это часто бывает когда в английских субтитрах идет описание звуков, оно присутствует только в одном языке,
+     * расширять и добавлять строки из второго языка не надо.
      */
-    private static Subtitles getExtendedSubtitles(Subtitles mergedSubtitles, List<String> sortedSources) {
+    private static Subtitles getExtendedSubtitles(Subtitles merged, List<String> sortedSources) {
         List<SubtitlesElement> result = new ArrayList<>();
 
         int i = 0;
-        for (SubtitlesElement subtitlesElement : mergedSubtitles.getElements()) {
+        for (SubtitlesElement subtitlesElement : merged.getElements()) {
             Set<String> sources = subtitlesElement.getLines().stream()
                     .map(SubtitlesElementLine::getSource)
                     .collect(toSet());
@@ -126,7 +126,7 @@ public class Merger {
                 throw new IllegalStateException();
             }
 
-            if (sources.size() == 2 || currentLinesAlwaysGoInOneSource(subtitlesElement.getLines(), i, mergedSubtitles)) {
+            if (sources.size() == 2 || currentLinesAlwaysGoInOneSource(subtitlesElement.getLines(), i, merged)) {
                 result.add(subtitlesElement);
                 i++;
                 continue;
@@ -138,25 +138,31 @@ public class Merger {
             extendedElement.setFrom(subtitlesElement.getFrom());
             extendedElement.setTo(subtitlesElement.getTo());
 
-            String otherSource = sortedSources.stream().filter(currentSource -> !sources.contains(currentSource)).findFirst().orElseThrow(IllegalStateException::new);
+            String otherSource = sortedSources.stream()
+                    .filter(currentSource -> !sources.contains(currentSource))
+                    .findFirst().orElseThrow(IllegalStateException::new);
 
             extendedElement.getLines().addAll(subtitlesElement.getLines());
-            extendedElement.getLines().addAll(getClosestLinesFromOtherSource(i, otherSource, mergedSubtitles));
+            extendedElement.getLines().addAll(getClosestLinesFromOtherSource(i, otherSource, merged));
 
             result.add(extendedElement);
 
             i++;
         }
 
-        return new Subtitles(result, mergedSubtitles.getLanguages());
+        return new Subtitles(result, merged.getLanguages());
     }
 
     /*
      * Возвращает true если строки субтитров с данным индексом везде присутствуют одни, без строк из другого источника.
-     * Для этого первым делом отматываемся в самое начало когда данные строки появляются, потому что если просто смотреть последующие элементы можно пропустить
-     * случай когда строки из другого источника были раньше.
+     * Для этого первым делом отматываемся в самое начало когда данные строки появляются, потому что если просто
+     * смотреть последующие элементы можно пропустить случай когда строки из другого источника были раньше.
      */
-    private static boolean currentLinesAlwaysGoInOneSource(List<SubtitlesElementLine> lines, int elementIndex, Subtitles subtitles) {
+    private static boolean currentLinesAlwaysGoInOneSource(
+            List<SubtitlesElementLine> lines,
+            int elementIndex,
+            Subtitles subtitles
+    ) {
         String linesSource = lines.get(0).getSource();
 
         int startIndex = -1;
@@ -183,9 +189,11 @@ public class Merger {
 
             if (!Objects.equals(subtitlesElement.getLines(), lines)) {
                 /*
-                 * Если попали сюда, то значит строки поменялись. Либо они поменялись потому что добавился новый источник, либо потому что изменились строки исходного источника.
-                 * Если изменились строки исходного источника, надо вернуть true, значит что исходные строки все время шли одни, а если строки исходого источника те же но получилось что
-                 * все строки не совпадают с исходными, значит добавился новый источник и надо вернуть false.
+                 * Если попали сюда, то значит строки поменялись. Либо они поменялись потому что добавился новый
+                 * источник, либо потому что изменились строки исходного источника. Если изменились строки исходного
+                 * источника, надо вернуть true, значит что исходные строки все время шли одни, а если строки исходого
+                 * источника те же но получилось что все строки не совпадают с исходными, значит добавился
+                 * новый источник и надо вернуть false.
                  */
                 List<SubtitlesElementLine> linesFromOriginalSource = subtitlesElement.getLines().stream()
                         .filter(currentLine -> Objects.equals(currentLine.getSource(), linesSource))
@@ -197,13 +205,17 @@ public class Merger {
         return true;
     }
 
-    private static List<SubtitlesElementLine> getClosestLinesFromOtherSource(int elementIndex, String otherSource, Subtitles subtitles) {
+    private static List<SubtitlesElementLine> getClosestLinesFromOtherSource(
+            int elementIndex,
+            String otherSource,
+            Subtitles subtitles
+    ) {
         List<SubtitlesElementLine> result;
 
         SubtitlesElement firstMatchingElementForward = null;
         for (int i = elementIndex + 1; i < subtitles.getElements().size(); i++) {
             SubtitlesElement currentElement = subtitles.getElements().get(i);
-            if (currentElement.getLines().stream().map(SubtitlesElementLine::getSource).collect(toList()).contains(otherSource)) {
+            if (currentElement.getLines().stream().anyMatch(line -> Objects.equals(line.getSource(), otherSource))) {
                 firstMatchingElementForward = currentElement;
                 break;
             }
@@ -212,7 +224,7 @@ public class Merger {
         SubtitlesElement firstMatchingElementBackward = null;
         for (int i = elementIndex - 1; i >= 0; i--) {
             SubtitlesElement currentElement = subtitles.getElements().get(i);
-            if (currentElement.getLines().stream().map(SubtitlesElementLine::getSource).collect(toList()).contains(otherSource)) {
+            if (currentElement.getLines().stream().anyMatch(line -> Objects.equals(line.getSource(), otherSource))) {
                 firstMatchingElementBackward = currentElement;
                 break;
             }
@@ -222,7 +234,12 @@ public class Merger {
             throw new IllegalStateException();
         } else if (firstMatchingElementForward != null && firstMatchingElementBackward != null) {
             SubtitlesElement mainElement = subtitles.getElements().get(elementIndex);
-            if (Seconds.secondsBetween(mainElement.getTo(), firstMatchingElementForward.getFrom()).isLessThan(Seconds.secondsBetween(firstMatchingElementBackward.getTo(), mainElement.getFrom()))) {
+
+            int millisBeforeNext = firstMatchingElementForward.getFrom().getMillisOfDay()
+                    - mainElement.getTo().getMillisOfDay();
+            int millisAfterPrevious = mainElement.getFrom().getMillisOfDay()
+                    - firstMatchingElementBackward.getTo().getMillisOfDay();
+            if (millisBeforeNext < millisAfterPrevious) {
                 result = firstMatchingElementForward.getLines();
             } else {
                 result = firstMatchingElementBackward.getLines();
@@ -233,15 +250,21 @@ public class Merger {
             result = firstMatchingElementBackward.getLines();
         }
 
-        return result.stream().filter(currentLine -> Objects.equals(currentLine.getSource(), otherSource)).collect(Collectors.toList());
+        return result.stream()
+                .filter(currentLine -> Objects.equals(currentLine.getSource(), otherSource))
+                .collect(Collectors.toList());
     }
 
-    private static void sortSubtitleLines(Subtitles mergedSubtitles, List<String> sortedSources) {
-        for (SubtitlesElement subtitlesElement : mergedSubtitles.getElements()) {
+    private static void sortSubtitleLines(Subtitles merged, List<String> sortedSources) {
+        for (SubtitlesElement subtitlesElement : merged.getElements()) {
             List<SubtitlesElementLine> orderedLines = new ArrayList<>();
 
             for (String source : sortedSources) {
-                orderedLines.addAll(subtitlesElement.getLines().stream().filter(currentLine -> Objects.equals(currentLine.getSource(), source)).collect(Collectors.toList()));
+                orderedLines.addAll(
+                        subtitlesElement.getLines().stream()
+                                .filter(currentLine -> Objects.equals(currentLine.getSource(), source))
+                                .collect(Collectors.toList())
+                );
             }
 
             subtitlesElement.setLines(orderedLines);
@@ -251,17 +274,20 @@ public class Merger {
     /*
      * Метод объединяет повторяющиеся элементы субтитров если они одинаковые и идут строго подряд.
      */
-    private static Subtitles getCombinedSubtitles(Subtitles mergedSubtitles) {
+    private static Subtitles getCombinedSubtitles(Subtitles merged) {
         List<SubtitlesElement> result = new ArrayList<>();
 
-        for (int i = 0; i < mergedSubtitles.getElements().size(); i++) {
-            SubtitlesElement currentElement = mergedSubtitles.getElements().get(i);
+        for (int i = 0; i < merged.getElements().size(); i++) {
+            SubtitlesElement currentElement = merged.getElements().get(i);
 
             boolean shouldAddCurrentElement = true;
 
             if (result.size() > 0) {
                 SubtitlesElement lastAddedElement = result.get(result.size() - 1);
-                if (Objects.equals(lastAddedElement.getLines(), currentElement.getLines()) && Objects.equals(lastAddedElement.getTo(), currentElement.getFrom())) {
+
+                boolean canCombine = Objects.equals(lastAddedElement.getLines(), currentElement.getLines())
+                        && Objects.equals(lastAddedElement.getTo(), currentElement.getFrom());
+                if (canCombine) {
                     lastAddedElement.setTo(currentElement.getTo());
                     shouldAddCurrentElement = false;
                 }
@@ -273,6 +299,6 @@ public class Merger {
             }
         }
 
-        return new Subtitles(result, mergedSubtitles.getLanguages());
+        return new Subtitles(result, merged.getLanguages());
     }
 }

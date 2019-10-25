@@ -30,7 +30,7 @@ public class Main {
 
     private static final List<String> ALLOWED_VIDEO_MIME_TYPES = Collections.singletonList("video/x-matroska");
 
-    public static void main(String[] args) throws IOException, FfmpegException {
+    public static void main(String[] args) throws FfmpegException {
         Scanner scanner = new Scanner(System.in);
 
         Config config = getConfig(scanner);
@@ -53,7 +53,10 @@ public class Main {
         for (int i = 0; i < briefFilesInfo.size(); i++) {
             BriefFileInfo briefFileInfo = briefFilesInfo.get(i);
 
-            System.out.println("start processing file " + briefFileInfo.getFile().getAbsolutePath() + ", " + (i + 1) + "/" + briefFilesInfo.size());
+            System.out.println(
+                    "start processing file " + briefFileInfo.getFile().getAbsolutePath() + ", "
+                            + (i + 1) + "/" + briefFilesInfo.size()
+            );
 
             fullFilesInfo.add(getFullFileInfo(briefFileInfo, ffmpeg));
         }
@@ -62,13 +65,19 @@ public class Main {
         for (int i = 0; i < fullFilesInfo.size(); i++) {
             FullFileInfo fullFileInfo = fullFilesInfo.get(i);
 
-            System.out.println("start processing file " + fullFileInfo.getBriefInfo().getFile().getAbsolutePath() + ", " + (i + 1) + "/" + fullFilesInfo.size());
+            System.out.println("start processing file " + fullFileInfo.getBriefInfo().getFile().getAbsolutePath() + ", "
+                    + (i + 1) + "/" + fullFilesInfo.size()
+            );
 
             Subtitles merged = fullFileInfo.getMerged(config).orElse(null);
             if (merged == null) {
                 System.out.println("no merged subtitles");
             } else {
-                ffmpeg.addSubtitleToFile(merged, fullFileInfo.getAllSubtitles().size(), fullFileInfo.getBriefInfo().getFile());
+                ffmpeg.addSubtitleToFile(
+                        merged,
+                        fullFileInfo.getAllSubtitles().size(),
+                        fullFileInfo.getBriefInfo().getFile()
+                );
             }
         }
     }
@@ -213,7 +222,9 @@ public class Main {
             try {
                 mimeType = Files.probeContentType(file.toPath());
             } catch (IOException e) {
-                log.error("failed to get mime type of file " + file.getAbsolutePath() + ": " + ExceptionUtils.getStackTrace(e));
+                log.error("failed to get mime type of file " + file.getAbsolutePath() + ": "
+                        + ExceptionUtils.getStackTrace(e)
+                );
                 result.add(new BriefFileInfo(file, FAILED_TO_GET_MIME_TYPE, null, null));
                 continue;
             }
@@ -227,7 +238,9 @@ public class Main {
             try {
                 ffprobeInfo = ffprobe.getFileInfo(file);
             } catch (Exception e) {
-                log.error("failed to get ffprobe info for file " + file.getAbsolutePath() + ": " + ExceptionUtils.getStackTrace(e));
+                log.error("failed to get ffprobe info for file " + file.getAbsolutePath() + ": "
+                        + ExceptionUtils.getStackTrace(e)
+                );
                 result.add(new BriefFileInfo(file, FAILED_TO_GET_FFPROBE_INFO, null, null));
                 continue;
             }
@@ -238,7 +251,9 @@ public class Main {
                 continue;
             }
 
-            result.add(new BriefFileInfo(file, null, videoFormat, getBriefSubtitlesInfo(ffprobeInfo)));
+            result.add(
+                    new BriefFileInfo(file, null, videoFormat, getBriefSubtitlesInfo(ffprobeInfo))
+            );
         }
 
         return result;
@@ -293,7 +308,8 @@ public class Main {
         /*
          * В описании формата https://www.ffmpeg.org/ffmpeg-formats.html#matroska сказано:
          * The language can be either the 3 letters bibliographic ISO-639-2 (ISO 639-2/B) form (like "fre" for French),
-         * or a language code mixed with a country code for specialities in languages (like "fre-ca" for Canadian French).
+         * or a language code mixed with a country code for specialities in languages
+         * (like "fre-ca" for Canadian French).
          * Поэтому можно засплиттить по дефису и использовать первую часть как код в ISO-639.
          */
         languageRaw = languageRaw.split("-")[0];
@@ -340,7 +356,11 @@ public class Main {
                         new FullSingleSubtitlesInfo(
                                 briefSubtitlesInfo,
                                 null,
-                                Parser.parseSubtitles(subtitlesText, "subs-" + briefSubtitlesInfo.getIndex(), briefSubtitlesInfo.getLanguage())
+                                Parser.parseSubtitles(
+                                        subtitlesText,
+                                        "subs-" + briefSubtitlesInfo.getIndex(),
+                                        briefSubtitlesInfo.getLanguage()
+                                )
                         )
                 );
             }

@@ -10,14 +10,15 @@ import lombok.Getter;
  */
 @AllArgsConstructor
 @Getter
-public class BriefSingleSubtitlesInfo {
+class BriefSingleSubtitlesInfo {
     private int index;
 
     private SubtitlesCodec codec;
 
     /**
-     * Информация о всех найденных ffprobe'ом для данного видео субтитрах будет храниться, даже для тех которые не подходят
-     * для использования в данной программе. В этом енуме содержатся причины непригодности к использованию для лучшей диагностики.
+     * Информация о всех найденных ffprobe'ом для данного видео субтитрах будет храниться, даже для тех которые не
+     * подходят для использования в данной программе. В этом енуме содержатся причины непригодности к использованию
+     * для лучшей диагностики.
      */
     private BriefSubtitlesUnavailabilityReason unavailabilityReason;
 

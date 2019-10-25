@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public class FullSingleSubtitlesInfo {
+class FullSingleSubtitlesInfo {
     private BriefSingleSubtitlesInfo briefInfo;
 
     private FullSingleSubtitlesUnavailabilityReason unavailabilityReason;

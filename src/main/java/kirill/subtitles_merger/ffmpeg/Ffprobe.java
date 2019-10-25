@@ -43,7 +43,7 @@ public class Ffprobe {
             );
 
             if (!consoleOutput.startsWith("ffprobe version")) {
-                log.info("console output doesn't start with ffprobe version");
+                log.info("console output doesn't start with the ffprobe version");
                 throw new FfmpegException(FfmpegException.Code.INCORRECT_FFPROBE_PATH);
             }
         } catch (ProcessException e) {

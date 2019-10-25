@@ -13,44 +13,46 @@ import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Getter
-public class FullFileInfo {
+class FullFileInfo {
     private BriefFileInfo briefInfo;
 
     private FullFileUnavailabilityReason unavailabilityReason;
 
     private List<FullSingleSubtitlesInfo> allSubtitles;
 
-    public Optional<Subtitles> getMerged(Config config) {
+    Optional<Subtitles> getMerged(Config config) {
         if (unavailabilityReason != null || CollectionUtils.isEmpty(allSubtitles)) {
             return Optional.empty();
         }
 
-        List<FullSingleSubtitlesInfo> subtitlesMatchingUpperLanguage = allSubtitles.stream()
+        List<FullSingleSubtitlesInfo> subtitlesUpperLanguage = allSubtitles.stream()
                 .filter(subtitles -> subtitles.getUnavailabilityReason() == null)
                 .filter(subtitles -> subtitles.getBriefInfo().getLanguage() == config.getUpperLanguage())
                 .collect(Collectors.toList());
 
-        List<FullSingleSubtitlesInfo> subtitlesMatchingLowerLanguage = allSubtitles.stream()
+        List<FullSingleSubtitlesInfo> subtitlesLowerLanguage = allSubtitles.stream()
                 .filter(subtitles -> subtitles.getUnavailabilityReason() == null)
                 .filter(subtitles -> subtitles.getBriefInfo().getLanguage() == config.getLowerLanguage())
                 .collect(Collectors.toList());
 
-        if (CollectionUtils.isEmpty(subtitlesMatchingUpperLanguage) || CollectionUtils.isEmpty(subtitlesMatchingLowerLanguage)) {
+        if (CollectionUtils.isEmpty(subtitlesUpperLanguage) || CollectionUtils.isEmpty(subtitlesLowerLanguage)) {
             return Optional.empty();
         }
 
-        subtitlesMatchingUpperLanguage.sort(
-                Comparator.comparing((FullSingleSubtitlesInfo subtitles) -> subtitles.getContent().toString().length()).reversed()
+        subtitlesUpperLanguage.sort(
+                Comparator.comparing((FullSingleSubtitlesInfo subtitles) -> subtitles.getContent().toString().length())
+                        .reversed()
         );
 
-        subtitlesMatchingLowerLanguage.sort(
-                Comparator.comparing((FullSingleSubtitlesInfo subtitles) -> subtitles.getContent().toString().length()).reversed()
+        subtitlesLowerLanguage.sort(
+                Comparator.comparing((FullSingleSubtitlesInfo subtitles) -> subtitles.getContent().toString().length())
+                        .reversed()
         );
 
         return Optional.of(
                 Merger.mergeSubtitles(
-                        subtitlesMatchingUpperLanguage.get(0).getContent(),
-                        subtitlesMatchingLowerLanguage.get(0).getContent()
+                        subtitlesUpperLanguage.get(0).getContent(),
+                        subtitlesLowerLanguage.get(0).getContent()
                 )
         );
     }
