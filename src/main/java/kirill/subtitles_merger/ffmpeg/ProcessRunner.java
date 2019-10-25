@@ -11,13 +11,11 @@ class ProcessRunner {
     /**
      *
      * @param arguments аргументы командной строки для запуска
-     * @param waitMilliseconds время в миллисекундах в течение которого будем ждать завершения выполнения процесса,
-     *                         если передать 0 то ожидание будет неограничено.
      * @return строку содержащую вывод из консоли (стандартный поток и поток с ошибками
      * объединены, это подходит для задач приложения).
      * @throws ProcessException с кодами внутри при разных ошибках выполнения.
      */
-    public static String run(List<String> arguments, long waitMilliseconds) throws ProcessException {
+    static String run(List<String> arguments) throws ProcessException {
         ProcessBuilder processBuilder = new ProcessBuilder(arguments);
         processBuilder.redirectErrorStream(true);
 
@@ -29,17 +27,6 @@ class ProcessRunner {
         }
 
         try {
-            int exitValue;
-            if (waitMilliseconds == 0) {
-                exitValue = process.waitFor();
-            } else {
-                if (!process.waitFor(waitMilliseconds, TimeUnit.MILLISECONDS)) {
-                    process.destroy();
-                    throw new ProcessException(ProcessException.Code.PROCESS_KILLED, null);
-                }
-                exitValue = process.exitValue();
-            }
-
             String result;
             try {
                 result = IOUtils.toString(process.getInputStream(), StandardCharsets.UTF_8);
@@ -47,7 +34,12 @@ class ProcessRunner {
                 throw new ProcessException(ProcessException.Code.FAILED_TO_READ_OUTPUT, null);
             }
 
-            if (exitValue != 0) {
+            if (!process.waitFor(10000, TimeUnit.MILLISECONDS)) {
+                process.destroy();
+                throw new ProcessException(ProcessException.Code.PROCESS_KILLED, result);
+            }
+
+            if (process.exitValue() != 0) {
                 throw new ProcessException(ProcessException.Code.EXIT_VALUE_NOT_ZERO, result);
             }
 

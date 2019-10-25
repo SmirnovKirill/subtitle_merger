@@ -31,8 +31,7 @@ public class Ffmpeg {
                     Arrays.asList(
                             ffmpegPath,
                             "-version"
-                    ),
-                    10000
+                    )
             );
 
             if (!consoleOutput.startsWith("ffmpeg version")) {
@@ -63,8 +62,7 @@ public class Ffmpeg {
                             "-map",
                             "0:" + streamIndex,
                             TEMP_SUBTITLE_FILE.getAbsolutePath()
-                    ),
-                    0
+                    )
             );
         } catch (ProcessException e) {
             log.warn("failed to extract subtitles with ffmpeg: " + e.getCode());
@@ -114,8 +112,7 @@ public class Ffmpeg {
                             outputTemp,
                             existingSubtitlesLength,
                             language
-                    ),
-                    0
+                    )
             );
         } catch (ProcessException e) {
             log.warn("failed to add subtitles with ffmpeg: " + e.getCode());

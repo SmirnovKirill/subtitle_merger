@@ -39,8 +39,7 @@ public class Ffprobe {
                     Arrays.asList(
                             ffprobePath,
                             "-version"
-                    ),
-                    10000
+                    )
             );
 
             if (!consoleOutput.startsWith("ffprobe version")) {
@@ -67,8 +66,7 @@ public class Ffprobe {
                             "json",
                             file.getAbsolutePath()
 
-                    ),
-                    0
+                    )
             );
         } catch (ProcessException e) {
             log.warn("failed to get file info with ffprobe: " + e.getCode());
