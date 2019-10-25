@@ -1,18 +1,15 @@
 package kirill.subtitles_merger.ffmpeg;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kirill.subtitles_merger.ffmpeg.json.JsonFfprobeFileInfo;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 
 @CommonsLog
 public class Ffprobe {
@@ -30,81 +27,63 @@ public class Ffprobe {
         JSON_OBJECT_MAPPER.configure(MapperFeature.AUTO_DETECT_CREATORS, false);
     }
 
-    public Ffprobe(String path) throws FfmpegException, InterruptedException {
+    public Ffprobe(String path) throws FfmpegException {
         validate(path);
 
         this.path = path;
     }
 
-    public static void validate(String path) throws FfmpegException, InterruptedException {
-        ProcessBuilder processBuilder = new ProcessBuilder(
-                Arrays.asList(
-                        path,
-                        "-version"
-                )
-        );
-        processBuilder.redirectErrorStream(true);
-
-        Process process;
+    public static void validate(String ffprobePath) throws FfmpegException {
         try {
-            process = processBuilder.start();
-        } catch (IOException e) {
-            log.info("failed to start the ffprobe process");
-            throw new FfmpegException(FfmpegException.Code.INCORRECT_FFPROBE_PATH);
-        }
+            String consoleOutput = ProcessRunner.run(
+                    Arrays.asList(
+                            ffprobePath,
+                            "-version"
+                    ),
+                    10000
+            );
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
-        String lineWithVersion;
-
-        try {
-            lineWithVersion = reader.readLine();
-        } catch (IOException e) {
-            throw new FfmpegException(FfmpegException.Code.INCORRECT_FFPROBE_PATH);
-        }
-
-        if (!process.waitFor(5, TimeUnit.SECONDS)) {
-            log.info("getting ffprobe version is taking too long");
-            throw new FfmpegException(FfmpegException.Code.INCORRECT_FFPROBE_PATH);
-        }
-
-        int exitValue = process.exitValue();
-        if (exitValue != 0) {
-            log.info("ffprobe has exited with code " + exitValue);
-            throw new FfmpegException(FfmpegException.Code.INCORRECT_FFPROBE_PATH);
-        }
-
-        if (!lineWithVersion.startsWith("ffprobe version")) {
-            log.info("incorrect ffprobe line with version: " + lineWithVersion);
+            if (!consoleOutput.startsWith("ffprobe version")) {
+                log.info("console output doesn't start with ffprobe version");
+                throw new FfmpegException(FfmpegException.Code.INCORRECT_FFPROBE_PATH);
+            }
+        } catch (ProcessException e) {
+            log.info("failed to check ffprobe: " + e.getCode());
             throw new FfmpegException(FfmpegException.Code.INCORRECT_FFPROBE_PATH);
         }
     }
 
-    public JsonFfprobeFileInfo getFileInfo(File file) throws IOException, InterruptedException {
-        ProcessBuilder processBuilder = new ProcessBuilder(
-                Arrays.asList(
-                        path,
-                        "-v",
-                        "quiet",
-                        "-show_format",
-                        "-show_streams",
-                        "-print_format",
-                        "json",
-                        file.getAbsolutePath()
+    public JsonFfprobeFileInfo getFileInfo(File file) throws FfmpegException {
+        String consoleOutput;
+        try {
+            consoleOutput = ProcessRunner.run(
+                    Arrays.asList(
+                            path,
+                            "-v",
+                            "quiet",
+                            "-show_format",
+                            "-show_streams",
+                            "-print_format",
+                            "json",
+                            file.getAbsolutePath()
 
-                )
-        );
-        processBuilder.redirectErrorStream(true);
-
-        Process process = processBuilder.start();
-
-        JsonFfprobeFileInfo result = JSON_OBJECT_MAPPER.readValue(process.getInputStream(), JsonFfprobeFileInfo.class);
-
-        int exitValue = process.waitFor();
-        if (exitValue != 0) {
-            log.error("ffprobe has exited with code " + exitValue);
-            throw new IllegalStateException();
+                    ),
+                    0
+            );
+        } catch (ProcessException e) {
+            log.warn("failed to get file info with ffprobe: " + e.getCode());
+            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
         }
 
-        return result;
+        try {
+            return JSON_OBJECT_MAPPER.readValue(consoleOutput, JsonFfprobeFileInfo.class);
+        } catch (JsonProcessingException e) {
+            log.warn("failed to convert console output to json: "
+                    + ExceptionUtils.getStackTrace(e)
+                    + ", output is "
+                    + consoleOutput
+            );
+            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
+        }
     }
 }

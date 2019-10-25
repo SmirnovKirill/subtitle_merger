@@ -30,7 +30,7 @@ public class Main {
 
     private static final List<String> ALLOWED_VIDEO_MIME_TYPES = Collections.singletonList("video/x-matroska");
 
-    public static void main(String[] args) throws InterruptedException, IOException, FfmpegException {
+    public static void main(String[] args) throws IOException, FfmpegException {
         Scanner scanner = new Scanner(System.in);
 
         Config config = getConfig(scanner);
@@ -73,7 +73,7 @@ public class Main {
         }
     }
 
-    private static Config getConfig(Scanner scanner) throws InterruptedException {
+    private static Config getConfig(Scanner scanner) {
         Preferences preferences = Preferences.userRoot().node(PREFERENCES_ROOT_NODE);
 
         boolean hasErrors;
@@ -190,7 +190,7 @@ public class Main {
         return new File(path);
     }
 
-    private static List<BriefFileInfo> getBriefFilesInfo(File[] files, Ffprobe ffprobe) throws InterruptedException {
+    private static List<BriefFileInfo> getBriefFilesInfo(File[] files, Ffprobe ffprobe) {
         List<BriefFileInfo> result = new ArrayList<>();
 
         for (File file : files) {
@@ -226,8 +226,6 @@ public class Main {
             JsonFfprobeFileInfo ffprobeInfo;
             try {
                 ffprobeInfo = ffprobe.getFileInfo(file);
-            } catch (InterruptedException e) {
-                throw e;
             } catch (Exception e) {
                 log.error("failed to get ffprobe info for file " + file.getAbsolutePath() + ": " + ExceptionUtils.getStackTrace(e));
                 result.add(new BriefFileInfo(file, FAILED_TO_GET_FFPROBE_INFO, null, null));
@@ -311,8 +309,7 @@ public class Main {
         return Optional.ofNullable(stream.getTags().get("title"));
     }
 
-    //todo не должно быть IOException
-    private static FullFileInfo getFullFileInfo(BriefFileInfo briefFileInfo, Ffmpeg ffmpeg) throws InterruptedException, IOException {
+    private static FullFileInfo getFullFileInfo(BriefFileInfo briefFileInfo, Ffmpeg ffmpeg) {
         if (briefFileInfo.getUnavailabilityReason() != null) {
             return new FullFileInfo(
                     briefFileInfo,

@@ -1,5 +1,8 @@
 package kirill.subtitles_merger.ffmpeg;
 
+import lombok.Getter;
+
+@Getter
 public class FfmpegException extends Exception {
     private Code code;
 
@@ -16,6 +19,6 @@ public class FfmpegException extends Exception {
     public enum Code {
         INCORRECT_FFPROBE_PATH,
         INCORRECT_FFMPEG_PATH,
-        COMMON //todo убрать
+        GENERAL_ERROR
     }
 }

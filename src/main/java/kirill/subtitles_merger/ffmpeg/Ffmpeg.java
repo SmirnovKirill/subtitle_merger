@@ -5,78 +5,56 @@ import kirill.subtitles_merger.logic.Subtitles;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @CommonsLog
 public class Ffmpeg {
     private static final File TEMP_SUBTITLE_FILE = new File(System.getProperty("java.io.tmpdir"), "subtitles_merger_temp.srt");
     private String path;
 
-    public Ffmpeg(String path) throws FfmpegException, InterruptedException {
+    public Ffmpeg(String path) throws FfmpegException {
         validate(path);
 
         this.path = path;
     }
 
-    public static void validate(String path) throws FfmpegException, InterruptedException {
-        ProcessBuilder processBuilder = new ProcessBuilder(
-                Arrays.asList(
-                        path,
-                        "-version"
-                )
-        );
-        processBuilder.redirectErrorStream(true);
-
-        Process process;
+    public static void validate(String ffmpegPath) throws FfmpegException {
         try {
-            process = processBuilder.start();
-        } catch (IOException e) {
-            log.info("failed to start the ffmpeg process");
-            throw new FfmpegException(FfmpegException.Code.INCORRECT_FFMPEG_PATH);
-        }
+            String consoleOutput = ProcessRunner.run(
+                    Arrays.asList(
+                            ffmpegPath,
+                            "-version"
+                    ),
+                    10000
+            );
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
-        String lineWithVersion;
-
-        try {
-            lineWithVersion = reader.readLine();
-        } catch (IOException e) {
-            throw new FfmpegException(FfmpegException.Code.INCORRECT_FFMPEG_PATH);
-        }
-
-        if (!process.waitFor(5, TimeUnit.SECONDS)) {
-            log.info("getting ffmpeg version is taking too long");
-            throw new FfmpegException(FfmpegException.Code.INCORRECT_FFMPEG_PATH);
-        }
-
-        int exitValue = process.exitValue();
-        if (exitValue != 0) {
-            log.info("ffmpeg has exited with code " + exitValue);
-            throw new FfmpegException(FfmpegException.Code.INCORRECT_FFMPEG_PATH);
-        }
-
-        if (!lineWithVersion.startsWith("ffmpeg version")) {
-            log.info("incorrect ffmpeg line with version: " + lineWithVersion);
+            if (!consoleOutput.startsWith("ffmpeg version")) {
+                log.info("console output doesn't start with ffmpeg version");
+                throw new FfmpegException(FfmpegException.Code.INCORRECT_FFMPEG_PATH);
+            }
+        } catch (ProcessException e) {
+            log.info("failed to check ffmpeg: " + e.getCode());
             throw new FfmpegException(FfmpegException.Code.INCORRECT_FFMPEG_PATH);
         }
     }
 
-    public synchronized String getSubtitlesText(int streamIndex, File videoFile) throws FfmpegException, InterruptedException {
+    /*
+     * Synchronized потому что работаем с одним временным файлом.
+     */
+    public synchronized String getSubtitlesText(int streamIndex, File videoFile) throws FfmpegException {
         try {
-            /*
-             * -y нужно передавать чтобы дать согласие на перезаписывание файла, это всегда нужно делать потому что временный
-             * файл уже будет создан джавой на момент вызова ffmpeg.
-             */
-            ProcessBuilder processBuilder = new ProcessBuilder(
+            ProcessRunner.run(
+                    /*
+                     * -y нужно передавать чтобы дать согласие на перезаписывание файла, это всегда нужно делать
+                     * потому что временный файл уже будет создан джавой на момент вызова ffmpeg.
+                     */
                     Arrays.asList(
                             path,
                             "-y",
@@ -85,39 +63,27 @@ public class Ffmpeg {
                             "-map",
                             "0:" + streamIndex,
                             TEMP_SUBTITLE_FILE.getAbsolutePath()
-                    )
+                    ),
+                    0
             );
-            processBuilder.redirectErrorStream(true);
+        } catch (ProcessException e) {
+            log.warn("failed to extract subtitles with ffmpeg: " + e.getCode());
+            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
+        }
 
-            Process process = processBuilder.start();
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
-            StringBuilder output = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line);
-            }
-
-            int exitCode = process.waitFor();
-            if (exitCode != 0) {
-                log.error("ffmpeg exited with code " + exitCode + ": " + output.toString());
-                throw new IllegalStateException();
-            }
-
+        try {
             return FileUtils.readFileToString(TEMP_SUBTITLE_FILE);
-        } catch (InterruptedException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new FfmpegException(FfmpegException.Code.COMMON, e);
+        } catch (IOException e) {
+            log.warn("failed to read subtitles from the file: " + ExceptionUtils.getStackTrace(e));
+            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
         }
     }
 
-    //todo переделать, пока наспех
     public void addSubtitleToFile(
             Subtitles subtitles,
             int existingSubtitlesLength,
             File videoFile
-    ) throws InterruptedException, IOException {
+    ) throws FfmpegException {
         /*
          * Ffmpeg не может добавить к файлу субтитры и записать это в тот же файл.
          * Поэтому нужно сначала записать результат во временный файл а потом его переименовать.
@@ -126,48 +92,43 @@ public class Ffmpeg {
          */
         File outputTemp = new File(videoFile.getParentFile(), "temp_" + videoFile.getName());
 
-        File subtitlesTemp = File.createTempFile("subtitles_merger_", ".srt");
-        FileUtils.writeStringToFile(subtitlesTemp, subtitles.toString(), StandardCharsets.UTF_8);
+        File subtitlesTemp;
+        try {
+            subtitlesTemp = File.createTempFile("subtitles_merger_", ".srt");
+            FileUtils.writeStringToFile(subtitlesTemp, subtitles.toString(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            log.warn("failed to write merged subtiutles to the temp file: " + ExceptionUtils.getStackTrace(e));
+            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
+        }
 
         LanguageAlpha3Code language = null;
         if (!CollectionUtils.isEmpty(subtitles.getLanguages())) {
             language = subtitles.getLanguages().get(0);
         }
 
-        ProcessBuilder processBuilder = new ProcessBuilder(
-                getArgumentAddToFile(
-                        videoFile,
-                        subtitlesTemp,
-                        outputTemp,
-                        existingSubtitlesLength,
-                        language
-                )
-        );
-        processBuilder.redirectErrorStream(true);
-
-        Process process = processBuilder.start();
-
-        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
-        StringBuilder output = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            output.append(line);
-        }
-
-        int exitCode = process.waitFor();
-        if (exitCode != 0) {
-            log.error("ffmpeg exited with code " + exitCode + ": " + output.toString());
-            throw new IllegalStateException();
+        try {
+            ProcessRunner.run(
+                    getArgumentsAddToFile(
+                            videoFile,
+                            subtitlesTemp,
+                            outputTemp,
+                            existingSubtitlesLength,
+                            language
+                    ),
+                    0
+            );
+        } catch (ProcessException e) {
+            log.warn("failed to add subtitles with ffmpeg: " + e.getCode());
+            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
         }
 
         if (outputTemp.length() <= videoFile.length()) {
             log.error("resulting file size is less than original one");
             throw new IllegalStateException();
         }
-
     }
 
-    private List<String> getArgumentAddToFile(
+    private List<String> getArgumentsAddToFile(
             File videoFile,
             File subtitlesTemp,
             File outputTemp,
