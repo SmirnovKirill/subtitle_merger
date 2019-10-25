@@ -158,7 +158,7 @@ public class Ffmpeg {
             result.addAll(Arrays.asList("-metadata:s:s:" + existingSubtitlesLength, "language=" + language.toString()));
         }
         result.addAll(Arrays.asList("-metadata:s:s:" + existingSubtitlesLength, "title=Merged subtitles"));
-        result.addAll(Arrays.asList("-disposition:s:s:" + existingSubtitlesLength, "default"));
+        result.addAll(Arrays.asList("-disposition:s:" + existingSubtitlesLength, "default"));
         result.addAll(Arrays.asList("-map", "0"));
         result.addAll(Arrays.asList("-map", "1"));
         result.add(outputTemp.getAbsolutePath());
