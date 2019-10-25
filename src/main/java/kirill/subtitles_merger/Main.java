@@ -109,7 +109,7 @@ public class Main {
             ffmpegPath = scanner.nextLine();
             if (!StringUtils.isBlank(ffmpegPath)) {
                 try {
-                    Ffprobe.validate(ffmpegPath);
+                    Ffmpeg.validate(ffmpegPath);
                 } catch (FfmpegException e) {
                     ffmpegPath = null;
                     System.out.println("path to the ffmpeg executable file is incorrect");
