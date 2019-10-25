@@ -183,7 +183,7 @@ public class Main {
         }
 
         LanguageAlpha3Code lowerLanguage = null;
-        String lowerLanguageRaw = preferences.get("lowe_language", "");
+        String lowerLanguageRaw = preferences.get("lower_language", "");
         if (!StringUtils.isBlank(lowerLanguageRaw)) {
             if (LanguageAlpha3Code.getByCodeIgnoreCase(lowerLanguageRaw) == null) {
                 log.warn("incorrect lower language in config: " + lowerLanguageRaw);
