@@ -81,7 +81,10 @@ public class Ffmpeg {
         }
     }
 
-    public void addSubtitleToFile(
+    /*
+     * Synchronized потому что работаем с одним временным файлом для субтитров.
+     */
+    public synchronized void addSubtitleToFile(
             Subtitles subtitles,
             int existingSubtitlesLength,
             File videoFile
@@ -122,7 +125,7 @@ public class Ffmpeg {
         }
 
         if (outputTemp.length() <= videoFile.length()) {
-            log.warn("resulting file size is less than original one");
+            log.warn("resulting file size is less than the original one");
             throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
         }
     }

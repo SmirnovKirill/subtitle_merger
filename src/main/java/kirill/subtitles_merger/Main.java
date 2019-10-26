@@ -98,8 +98,8 @@ public class Main {
                 try {
                     Ffprobe.validate(ffprobePath);
                 } catch (FfmpegException e) {
-                    ffprobePath = null;
                     System.out.println("path to the ffprobe executable file is incorrect");
+                    ffprobePath = null;
                 }
             }
         }
@@ -196,27 +196,23 @@ public class Main {
     }
 
     private static File getDirectoryWithVideos(Scanner scanner) {
-        String path = null;
-        boolean hasErrors = false;
+        File result = null;
 
-        while (StringUtils.isBlank(path) || hasErrors) {
-            if (!hasErrors) {
-                System.out.println("please provide full path to the directory with video files");
-            }
+        while (result == null) {
+            System.out.println("please provide full path to the directory with video files");
 
-            path = scanner.nextLine();
-            if (!new File(path).exists()) {
-                hasErrors = true;
+            String path = scanner.nextLine();
+            result = new File(path);
+            if (!result.exists()) {
                 System.out.println("directory does not exist");
-            } else if (!new File(path).isDirectory()) {
-                hasErrors = true;
+                result = null;
+            } else if (!result.isDirectory()) {
                 System.out.println("specified path contains a file not a directory");
-            } else {
-                hasErrors = false;
+                result = null;
             }
         }
 
-        return new File(path);
+        return result;
     }
 
     private static List<BriefFileInfo> getBriefFilesInfo(File[] files, Ffprobe ffprobe) {

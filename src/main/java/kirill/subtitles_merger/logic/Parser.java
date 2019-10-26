@@ -2,26 +2,14 @@ package kirill.subtitles_merger.logic;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.format.DateTimeFormat;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 @CommonsLog
 public class Parser {
-    public static Subtitles parseSubtitles(File file, String subtitlesName) throws IOException {
-        if (!file.exists()) {
-            log.error("file " + file.getAbsolutePath() + " doesn't exist");
-            throw new IllegalArgumentException();
-        }
-
-        return parseSubtitles(FileUtils.readFileToString(file), subtitlesName, null);
-    }
-
     public static Subtitles parseSubtitles(
             String subtitlesUnprocessed,
             String subtitlesName,
