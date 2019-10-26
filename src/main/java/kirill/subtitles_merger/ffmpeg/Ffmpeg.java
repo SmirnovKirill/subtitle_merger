@@ -116,51 +116,52 @@ public class Ffmpeg {
         }
 
         try {
-            ProcessRunner.run(
-                    getArgumentsInjectToFile(
-                            videoFile,
-                            TEMP_SUBTITLE_FILE,
-                            outputTemp,
-                            existingSubtitlesLength,
-                            language
-                    )
-            );
-        } catch (ProcessException e) {
-            log.warn("failed to inject subtitles with ffmpeg: " + e.getCode());
-            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
-        }
-
-        if (outputTemp.length() <= videoFile.length()) {
-            log.warn("resulting file size is less than the original one");
-            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
-        }
-
-        /*
-         * Сохраним сначала этот признак чтобы потом вернуть все как было, а то если изначально файл рид онли
-         * а мы его в процессе работы сделаем записываемым, нехорошо это так оставлять.
-         */
-        boolean originallyWritable = videoFile.canWrite();
-
-        if (!videoFile.setWritable(true, true)) {
-            log.warn("failed to make video file " + videoFile.getAbsolutePath() + " writable");
-            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
-        }
-
-        try {
-            Files.move(outputTemp.toPath(), videoFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
-            log.warn("failed to move temp video: " + ExceptionUtils.getStackTrace(e));
-
-            if (!outputTemp.delete()) {
-                log.error("failed to delete temp file " + outputTemp.getAbsolutePath());
+            try {
+                ProcessRunner.run(
+                        getArgumentsInjectToFile(
+                                videoFile,
+                                TEMP_SUBTITLE_FILE,
+                                outputTemp,
+                                existingSubtitlesLength,
+                                language
+                        )
+                );
+            } catch (ProcessException e) {
+                log.warn("failed to inject subtitles with ffmpeg: " + e.getCode());
+                throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
             }
 
-            throw new FfmpegException(FfmpegException.Code.FAILED_TO_MOVE_TEMP_VIDEO);
-        }
+            if (outputTemp.length() <= videoFile.length()) {
+                log.warn("resulting file size is less than the original one");
+                throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
+            }
 
-        if (!originallyWritable) {
-            if (!videoFile.setWritable(false, true)) {
-                log.warn("failed to make video file " + videoFile.getAbsolutePath() + " not writable");
+            /*
+             * Сохраним сначала этот признак чтобы потом вернуть все как было, а то если изначально файл рид онли
+             * а мы его в процессе работы сделаем записываемым, нехорошо это так оставлять.
+             */
+            boolean originallyWritable = videoFile.canWrite();
+
+            if (!videoFile.setWritable(true, true)) {
+                log.warn("failed to make video file " + videoFile.getAbsolutePath() + " writable");
+                throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
+            }
+
+            try {
+                Files.move(outputTemp.toPath(), videoFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                log.warn("failed to move temp video: " + ExceptionUtils.getStackTrace(e));
+                throw new FfmpegException(FfmpegException.Code.FAILED_TO_MOVE_TEMP_VIDEO);
+            }
+
+            if (!originallyWritable) {
+                if (!videoFile.setWritable(false, true)) {
+                    log.warn("failed to make video file " + videoFile.getAbsolutePath() + " not writable");
+                }
+            }
+        } finally {
+            if (outputTemp.exists() && !outputTemp.delete()) {
+                log.error("failed to delete temp video file " + outputTemp.getAbsolutePath());
             }
         }
     }
