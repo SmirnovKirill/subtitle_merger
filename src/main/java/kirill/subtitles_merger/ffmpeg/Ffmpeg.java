@@ -94,15 +94,15 @@ public class Ffmpeg {
         /*
          * Ffmpeg не может добавить к файлу субтитры и записать это в тот же файл.
          * Поэтому нужно сначала записать результат во временный файл а потом его переименовать.
-         * На всякий случай еще сделаем проверку что новый файл больше чем старый, а то нехорошо будет если испортим
-         * видео, его могли долго качать.
+         * На всякий случай еще потом сделаем проверку что новый файл больше чем старый, а то нехорошо будет если
+         * испортим видео, его могли долго качать.
          */
         File outputTemp = new File(videoFile.getParentFile(), "temp_" + videoFile.getName());
 
         try {
             FileUtils.writeStringToFile(TEMP_SUBTITLE_FILE, subtitles.toString(), StandardCharsets.UTF_8);
         } catch (IOException e) {
-            log.warn("failed to write merged subtiutles to the temp file: " + ExceptionUtils.getStackTrace(e));
+            log.warn("failed to write merged subtitles to the temp file: " + ExceptionUtils.getStackTrace(e));
             throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
         }
 
@@ -116,7 +116,6 @@ public class Ffmpeg {
                 ProcessRunner.run(
                         getArgumentsInjectToFile(
                                 videoFile,
-                                TEMP_SUBTITLE_FILE,
                                 outputTemp,
                                 existingSubtitlesLength,
                                 language
@@ -135,14 +134,13 @@ public class Ffmpeg {
             overwriteOriginalVideo(outputTemp, videoFile);
         } finally {
             if (outputTemp.exists() && !outputTemp.delete()) {
-                log.error("failed to delete temp video file " + outputTemp.getAbsolutePath());
+                log.warn("failed to delete temp video file " + outputTemp.getAbsolutePath());
             }
         }
     }
 
     private List<String> getArgumentsInjectToFile(
             File videoFile,
-            File subtitlesTemp,
             File outputTemp,
             int existingSubtitlesLength,
             LanguageAlpha3Code language
@@ -160,7 +158,7 @@ public class Ffmpeg {
         result.add("-copy_unknown");
 
         result.addAll(Arrays.asList("-i", videoFile.getAbsolutePath()));
-        result.addAll(Arrays.asList("-i", subtitlesTemp.getAbsolutePath()));
+        result.addAll(Arrays.asList("-i", Ffmpeg.TEMP_SUBTITLE_FILE.getAbsolutePath()));
         result.addAll(Arrays.asList("-c", "copy"));
 
         /*
