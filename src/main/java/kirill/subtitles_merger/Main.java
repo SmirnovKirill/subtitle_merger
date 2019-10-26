@@ -93,6 +93,7 @@ public class Main {
 
         while (StringUtils.isBlank(ffprobePath)) {
             System.out.println("please provide path to the ffprobe executable file");
+
             ffprobePath = scanner.nextLine();
             if (!StringUtils.isBlank(ffprobePath)) {
                 try {
@@ -106,34 +107,36 @@ public class Main {
 
         while (StringUtils.isBlank(ffmpegPath)) {
             System.out.println("please provide path to the ffmpeg executable file");
+
             ffmpegPath = scanner.nextLine();
             if (!StringUtils.isBlank(ffmpegPath)) {
                 try {
                     Ffmpeg.validate(ffmpegPath);
                 } catch (FfmpegException e) {
-                    ffmpegPath = null;
                     System.out.println("path to the ffmpeg executable file is incorrect");
+                    ffmpegPath = null;
                 }
             }
         }
 
         while (upperLanguage == null) {
             System.out.println("please provide preferred language (ISO 639-2) to upper subtitles");
-            String upperLanguageRaw = scanner.nextLine();
-            if (LanguageAlpha3Code.getByCodeIgnoreCase(upperLanguageRaw) == null) {
+
+            upperLanguage = LanguageAlpha3Code.getByCodeIgnoreCase(scanner.nextLine());
+            if (upperLanguage == null) {
                 System.out.println("incorrect language format");
-            } else {
-                upperLanguage = LanguageAlpha3Code.getByCodeIgnoreCase(upperLanguageRaw);
             }
         }
 
         while (lowerLanguage == null) {
             System.out.println("please provide preferred language (ISO 639-2) to lower subtitles");
-            String lowerLanguageRaw = scanner.nextLine();
-            if (LanguageAlpha3Code.getByCodeIgnoreCase(lowerLanguageRaw) == null) {
+
+            lowerLanguage = LanguageAlpha3Code.getByCodeIgnoreCase(scanner.nextLine());
+            if (lowerLanguage == null) {
                 System.out.println("incorrect language format");
-            } else {
-                lowerLanguage = LanguageAlpha3Code.getByCodeIgnoreCase(lowerLanguageRaw);
+            } else if (lowerLanguage == upperLanguage) {
+                System.out.println("preferred languages have to be different");
+                lowerLanguage = null;
             }
         }
 
@@ -155,7 +158,7 @@ public class Main {
             try {
                 Ffprobe.validate(ffprobePath);
             } catch (FfmpegException e) {
-                log.warn("incorrect ffprobe path in config: " + ffprobePath);
+                log.warn("incorrect ffprobe path in the preferences: " + ffprobePath);
                 ffprobePath = null;
             }
         }
@@ -167,7 +170,7 @@ public class Main {
             try {
                 Ffmpeg.validate(ffmpegPath);
             } catch (FfmpegException e) {
-                log.warn("incorrect ffmpeg path in config: " + ffmpegPath);
+                log.warn("incorrect ffmpeg path in the preferences: " + ffmpegPath);
                 ffmpegPath = null;
             }
         }
@@ -175,20 +178,20 @@ public class Main {
         LanguageAlpha3Code upperLanguage = null;
         String upperLanguageRaw = preferences.get("upper_language", "");
         if (!StringUtils.isBlank(upperLanguageRaw)) {
-            if (LanguageAlpha3Code.getByCodeIgnoreCase(upperLanguageRaw) == null) {
-                log.warn("incorrect upper language in config: " + upperLanguageRaw);
-            } else {
-                upperLanguage = LanguageAlpha3Code.getByCodeIgnoreCase(upperLanguageRaw);
+            upperLanguage = LanguageAlpha3Code.getByCodeIgnoreCase(upperLanguageRaw);
+            if (upperLanguage == null) {
+                log.warn("incorrect upper language in the preferences: " + upperLanguageRaw);
             }
         }
 
         LanguageAlpha3Code lowerLanguage = null;
         String lowerLanguageRaw = preferences.get("lower_language", "");
         if (!StringUtils.isBlank(lowerLanguageRaw)) {
-            if (LanguageAlpha3Code.getByCodeIgnoreCase(lowerLanguageRaw) == null) {
-                log.warn("incorrect lower language in config: " + lowerLanguageRaw);
-            } else {
-                lowerLanguage = LanguageAlpha3Code.getByCodeIgnoreCase(lowerLanguageRaw);
+            lowerLanguage = LanguageAlpha3Code.getByCodeIgnoreCase(lowerLanguageRaw);
+            if (lowerLanguage == null) {
+                log.warn("incorrect lower language in the preferences: " + lowerLanguageRaw);
+            } else if (lowerLanguage == upperLanguage) {
+                log.warn("languages are the same in the preferences: " + lowerLanguage);
             }
         }
 
@@ -201,8 +204,7 @@ public class Main {
         while (result == null) {
             System.out.println("please provide full path to the directory with video files");
 
-            String path = scanner.nextLine();
-            result = new File(path);
+            result = new File(scanner.nextLine());
             if (!result.exists()) {
                 System.out.println("directory does not exist");
                 result = null;
