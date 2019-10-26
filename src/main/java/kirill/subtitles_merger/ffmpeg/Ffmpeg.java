@@ -10,6 +10,8 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -84,7 +86,7 @@ public class Ffmpeg {
     /*
      * Synchronized потому что работаем с одним временным файлом для субтитров.
      */
-    public synchronized void addSubtitleToFile(
+    public synchronized void injectSubtitlesToFile(
             Subtitles subtitles,
             int existingSubtitlesLength,
             File videoFile
@@ -111,7 +113,7 @@ public class Ffmpeg {
 
         try {
             ProcessRunner.run(
-                    getArgumentsAddToFile(
+                    getArgumentsInjectToFile(
                             videoFile,
                             TEMP_SUBTITLE_FILE,
                             outputTemp,
@@ -120,7 +122,7 @@ public class Ffmpeg {
                     )
             );
         } catch (ProcessException e) {
-            log.warn("failed to add subtitles with ffmpeg: " + e.getCode());
+            log.warn("failed to inject subtitles with ffmpeg: " + e.getCode());
             throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
         }
 
@@ -128,9 +130,16 @@ public class Ffmpeg {
             log.warn("resulting file size is less than the original one");
             throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
         }
+
+        try {
+            Files.move(outputTemp.toPath(), videoFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            log.warn("failed to move temp video: " + ExceptionUtils.getStackTrace(e));
+            throw new FfmpegException(FfmpegException.Code.FAILED_TO_MOVE_TEMP_VIDEO);
+        }
     }
 
-    private List<String> getArgumentsAddToFile(
+    private List<String> getArgumentsInjectToFile(
             File videoFile,
             File subtitlesTemp,
             File outputTemp,

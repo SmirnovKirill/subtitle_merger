@@ -73,11 +73,21 @@ public class Main {
             if (merged == null) {
                 System.out.println("no merged subtitles");
             } else {
-                ffmpeg.addSubtitleToFile(
-                        merged,
-                        fullFileInfo.getAllSubtitles().size(),
-                        fullFileInfo.getBriefInfo().getFile()
-                );
+                try {
+                    ffmpeg.injectSubtitlesToFile(
+                            merged,
+                            fullFileInfo.getAllSubtitles().size(),
+                            fullFileInfo.getBriefInfo().getFile()
+                    );
+                } catch (FfmpegException e) {
+                    if (e.getCode() == FfmpegException.Code.FAILED_TO_MOVE_TEMP_VIDEO) {
+                        System.out.println("failed to move temp file for "
+                                + fullFileInfo.getBriefInfo().getFile().getAbsolutePath()
+                        );
+                    } else {
+                        throw e;
+                    }
+                }
             }
         }
     }
