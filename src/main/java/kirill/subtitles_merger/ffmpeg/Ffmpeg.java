@@ -12,9 +12,13 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.AclFileAttributeView;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 @CommonsLog
 public class Ffmpeg {
@@ -131,10 +135,17 @@ public class Ffmpeg {
             throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
         }
 
+        ensureVideoCanBeOverwritten(videoFile);
+
         try {
             Files.move(outputTemp.toPath(), videoFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             log.warn("failed to move temp video: " + ExceptionUtils.getStackTrace(e));
+
+            if (!outputTemp.delete()) {
+                log.error("failed to delete temp file " + outputTemp.getAbsolutePath());
+            }
+
             throw new FfmpegException(FfmpegException.Code.FAILED_TO_MOVE_TEMP_VIDEO);
         }
     }
@@ -178,5 +189,37 @@ public class Ffmpeg {
         result.add(outputTemp.getAbsolutePath());
 
         return result;
+    }
+
+    /**
+     * Метод обеспечивает модифицируемость файла с видео, чтобы потом временный файл можно было записать
+     * на место данного.
+     */
+    private static void ensureVideoCanBeOverwritten(File videoFile) {
+        PosixFileAttributeView posixFileAttributeView = Files.getFileAttributeView(
+                videoFile.toPath(),
+                PosixFileAttributeView.class
+        );
+        AclFileAttributeView aclFileAttributeView = Files.getFileAttributeView(
+                videoFile.toPath(),
+                AclFileAttributeView.class
+        );
+
+        try {
+            if (posixFileAttributeView != null) {
+                Set<PosixFilePermission> permissions = posixFileAttributeView.readAttributes().permissions();
+                permissions.add(PosixFilePermission.OWNER_WRITE);
+                posixFileAttributeView.setPermissions(permissions);
+            } else if (aclFileAttributeView != null) {
+                System.out.println("not ready");
+            } else {
+                log.error("file " + videoFile.getAbsolutePath() + " doesn't have any known attribute views");
+                throw new IllegalStateException();
+            }
+        } catch (IOException e) {
+            log.warn("failed to ensure that video can be overwritten, file " + videoFile.getAbsolutePath()
+                    + ": " + ExceptionUtils.getStackTrace(e)
+            );
+        }
     }
 }
