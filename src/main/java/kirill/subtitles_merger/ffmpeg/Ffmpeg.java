@@ -135,7 +135,10 @@ public class Ffmpeg {
             throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
         }
 
-        ensureVideoCanBeOverwritten(videoFile);
+        if (!videoFile.setWritable(true, true)) {
+            log.warn("failed to make video file " + videoFile.getAbsolutePath() + " writable");
+            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
+        }
 
         try {
             Files.move(outputTemp.toPath(), videoFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -189,37 +192,5 @@ public class Ffmpeg {
         result.add(outputTemp.getAbsolutePath());
 
         return result;
-    }
-
-    /**
-     * Метод обеспечивает модифицируемость файла с видео, чтобы потом временный файл можно было записать
-     * на место данного.
-     */
-    private static void ensureVideoCanBeOverwritten(File videoFile) {
-        PosixFileAttributeView posixFileAttributeView = Files.getFileAttributeView(
-                videoFile.toPath(),
-                PosixFileAttributeView.class
-        );
-        AclFileAttributeView aclFileAttributeView = Files.getFileAttributeView(
-                videoFile.toPath(),
-                AclFileAttributeView.class
-        );
-
-        try {
-            if (posixFileAttributeView != null) {
-                Set<PosixFilePermission> permissions = posixFileAttributeView.readAttributes().permissions();
-                permissions.add(PosixFilePermission.OWNER_WRITE);
-                posixFileAttributeView.setPermissions(permissions);
-            } else if (aclFileAttributeView != null) {
-                System.out.println("not ready");
-            } else {
-                log.error("file " + videoFile.getAbsolutePath() + " doesn't have any known attribute views");
-                throw new IllegalStateException();
-            }
-        } catch (IOException e) {
-            log.warn("failed to ensure that video can be overwritten, file " + videoFile.getAbsolutePath()
-                    + ": " + ExceptionUtils.getStackTrace(e)
-            );
-        }
     }
 }
