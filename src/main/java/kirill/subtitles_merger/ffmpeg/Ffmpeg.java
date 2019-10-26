@@ -135,6 +135,12 @@ public class Ffmpeg {
             throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
         }
 
+        /*
+         * Сохраним сначала этот признак чтобы потом вернуть все как было, а то если изначально файл рид онли
+         * а мы его в процессе работы сделаем записываемым, нехорошо это так оставлять.
+         */
+        boolean originallyWritable = videoFile.canWrite();
+
         if (!videoFile.setWritable(true, true)) {
             log.warn("failed to make video file " + videoFile.getAbsolutePath() + " writable");
             throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
@@ -150,6 +156,12 @@ public class Ffmpeg {
             }
 
             throw new FfmpegException(FfmpegException.Code.FAILED_TO_MOVE_TEMP_VIDEO);
+        }
+
+        if (!originallyWritable) {
+            if (!videoFile.setWritable(false, true)) {
+                log.warn("failed to make video file " + videoFile.getAbsolutePath() + " not writable");
+            }
         }
     }
 
