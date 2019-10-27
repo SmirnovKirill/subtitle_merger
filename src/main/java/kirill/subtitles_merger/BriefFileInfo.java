@@ -24,5 +24,5 @@ class BriefFileInfo {
 
     private VideoFormat videoContainer;
 
-    private List<BriefSingleSubtitlesInfo> allSubtitles;
+    private List<BriefSubtitlesStreamInfo> subtitlesStreams;
 }

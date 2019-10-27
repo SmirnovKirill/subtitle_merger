@@ -76,7 +76,7 @@ public class Main {
                 try {
                     ffmpeg.injectSubtitlesToFile(
                             merged,
-                            fullFileInfo.getAllSubtitles().size(),
+                            fullFileInfo.getSubtitlesStreams().size(),
                             fullFileInfo.getBriefInfo().getFile()
                     );
                 } catch (FfmpegException e) {
@@ -287,8 +287,8 @@ public class Main {
         return result;
     }
 
-    private static List<BriefSingleSubtitlesInfo> getBriefSubtitlesInfo(JsonFfprobeFileInfo ffprobeInfo) {
-        List<BriefSingleSubtitlesInfo> result = new ArrayList<>();
+    private static List<BriefSubtitlesStreamInfo> getBriefSubtitlesInfo(JsonFfprobeFileInfo ffprobeInfo) {
+        List<BriefSubtitlesStreamInfo> result = new ArrayList<>();
 
         for (JsonStream stream : ffprobeInfo.getStreams()) {
             if (!"subtitle".equals(stream.getCodecType())) {
@@ -298,7 +298,7 @@ public class Main {
             SubtitlesCodec codec = SubtitlesCodec.from(stream.getCodecName()).orElse(null);
             if (codec == null) {
                 result.add(
-                        new BriefSingleSubtitlesInfo(
+                        new BriefSubtitlesStreamInfo(
                                 stream.getIndex(),
                                 null,
                                 BriefSubtitlesUnavailabilityReason.NOT_ALLOWED_CODEC,
@@ -310,7 +310,7 @@ public class Main {
             }
 
             result.add(
-                    new BriefSingleSubtitlesInfo(
+                    new BriefSubtitlesStreamInfo(
                             stream.getIndex(),
                             codec,
                             null,
@@ -358,19 +358,19 @@ public class Main {
             return new FullFileInfo(
                     briefFileInfo,
                     FullFileUnavailabilityReason.FAILED_BEFORE,
-                    wrap(briefFileInfo.getAllSubtitles())
+                    wrap(briefFileInfo.getSubtitlesStreams())
             );
         }
 
         try {
-            List<FullSingleSubtitlesInfo> allSubtitles = new ArrayList<>();
+            List<FullSubtitlesStreamInfo> allSubtitles = new ArrayList<>();
 
-            for (BriefSingleSubtitlesInfo briefSubtitlesInfo : briefFileInfo.getAllSubtitles()) {
+            for (BriefSubtitlesStreamInfo briefSubtitlesStream : briefFileInfo.getSubtitlesStreams()) {
                 if (briefFileInfo.getUnavailabilityReason() != null) {
                     allSubtitles.add(
-                            new FullSingleSubtitlesInfo(
-                                    briefSubtitlesInfo,
-                                    briefSubtitlesInfo.getUnavailabilityReason() != null
+                            new FullSubtitlesStreamInfo(
+                                    briefSubtitlesStream,
+                                    briefSubtitlesStream.getUnavailabilityReason() != null
                                             ? FullSingleSubtitlesUnavailabilityReason.FAILED_BEFORE
                                             : null,
                                     null
@@ -379,15 +379,15 @@ public class Main {
                     continue;
                 }
 
-                String subtitlesText = ffmpeg.getSubtitlesText(briefSubtitlesInfo.getIndex(), briefFileInfo.getFile());
+                String subtitlesText = ffmpeg.getSubtitlesText(briefSubtitlesStream.getIndex(), briefFileInfo.getFile());
                 allSubtitles.add(
-                        new FullSingleSubtitlesInfo(
-                                briefSubtitlesInfo,
+                        new FullSubtitlesStreamInfo(
+                                briefSubtitlesStream,
                                 null,
                                 Parser.parseSubtitles(
                                         subtitlesText,
-                                        "subs-" + briefSubtitlesInfo.getIndex(),
-                                        briefSubtitlesInfo.getLanguage()
+                                        "subs-" + briefSubtitlesStream.getIndex(),
+                                        briefSubtitlesStream.getLanguage()
                                 )
                         )
                 );
@@ -398,23 +398,24 @@ public class Main {
             return new FullFileInfo(
                     briefFileInfo,
                     FullFileUnavailabilityReason.FFMPEG_FAILED,
-                    wrap(briefFileInfo.getAllSubtitles())
+                    wrap(briefFileInfo.getSubtitlesStreams())
             );
         }
     }
 
-    private static List<FullSingleSubtitlesInfo> wrap(List<BriefSingleSubtitlesInfo> allBiefSubtitlesInfo) {
-        if (allBiefSubtitlesInfo == null) {
+    private static List<FullSubtitlesStreamInfo> wrap(List<BriefSubtitlesStreamInfo> briefSubtitlesStreams) {
+        if (briefSubtitlesStreams == null) {
             return null;
         }
 
-        List<FullSingleSubtitlesInfo> result = new ArrayList<>();
+        List<FullSubtitlesStreamInfo> result = new ArrayList<>();
 
-        for (BriefSingleSubtitlesInfo briefSubtitlesInfo : allBiefSubtitlesInfo) {
+        for (BriefSubtitlesStreamInfo briefSubtitlesStream
+                : briefSubtitlesStreams) {
             result.add(
-                    new FullSingleSubtitlesInfo(
-                            briefSubtitlesInfo,
-                            briefSubtitlesInfo.getUnavailabilityReason() != null
+                    new FullSubtitlesStreamInfo(
+                            briefSubtitlesStream,
+                            briefSubtitlesStream.getUnavailabilityReason() != null
                                     ? FullSingleSubtitlesUnavailabilityReason.FAILED_BEFORE
                                     : null,
                             null

@@ -88,7 +88,7 @@ public class Ffmpeg {
      */
     public synchronized void injectSubtitlesToFile(
             Subtitles subtitles,
-            int existingSubtitlesLength,
+            int subtitlesStreamsAmount,
             File videoFile
     ) throws FfmpegException {
         /*
@@ -117,7 +117,7 @@ public class Ffmpeg {
                         getArgumentsInjectToFile(
                                 videoFile,
                                 outputTemp,
-                                existingSubtitlesLength,
+                                subtitlesStreamsAmount,
                                 language
                         )
                 );
@@ -142,7 +142,7 @@ public class Ffmpeg {
     private List<String> getArgumentsInjectToFile(
             File videoFile,
             File outputTemp,
-            int existingSubtitlesLength,
+            int subtitlesStreamsAmount,
             LanguageAlpha3Code language
     ) {
         List<String> result = new ArrayList<>();
@@ -168,10 +168,10 @@ public class Ffmpeg {
         result.addAll(Arrays.asList("-max_interleave_delta", "0"));
 
         if (language != null) {
-            result.addAll(Arrays.asList("-metadata:s:s:" + existingSubtitlesLength, "language=" + language.toString()));
+            result.addAll(Arrays.asList("-metadata:s:s:" + subtitlesStreamsAmount, "language=" + language.toString()));
         }
-        result.addAll(Arrays.asList("-metadata:s:s:" + existingSubtitlesLength, "title=Merged subtitles"));
-        result.addAll(Arrays.asList("-disposition:s:" + existingSubtitlesLength, "default"));
+        result.addAll(Arrays.asList("-metadata:s:s:" + subtitlesStreamsAmount, "title=Merged subtitles"));
+        result.addAll(Arrays.asList("-disposition:s:" + subtitlesStreamsAmount, "default"));
         result.addAll(Arrays.asList("-map", "0"));
         result.addAll(Arrays.asList("-map", "1"));
         result.add(outputTemp.getAbsolutePath());

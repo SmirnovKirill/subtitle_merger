@@ -10,7 +10,7 @@ import lombok.Getter;
  */
 @AllArgsConstructor
 @Getter
-class BriefSingleSubtitlesInfo {
+class BriefSubtitlesStreamInfo {
     private int index;
 
     private SubtitlesCodec codec;
