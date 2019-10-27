@@ -57,7 +57,7 @@ public class Ffmpeg {
         try {
             ProcessRunner.run(
                     /*
-                     * We have to pass -y to agree for file overwriting, it's always required
+                     * We have to pass -y to agree with file overwriting, it's always required
                      * because java will have created temporary file by the time ffmpeg is called.
                      */
                     Arrays.asList(
@@ -162,7 +162,7 @@ public class Ffmpeg {
         result.addAll(Arrays.asList("-c", "copy"));
 
         /*
-         * Очень важный аргумент, без него во многих видео может быть проблема.
+         * Very important! Without this argument many videos won't work:
          * https://video.stackexchange.com/questions/28719/srt-subtitles-added-to-mkv-with-ffmpeg-are-not-displayed
          */
         result.addAll(Arrays.asList("-max_interleave_delta", "0"));
