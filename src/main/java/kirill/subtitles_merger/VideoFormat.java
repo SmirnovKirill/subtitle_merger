@@ -6,7 +6,7 @@ public enum VideoFormat {
     MATROSKA;
 
     /**
-     * Получение енума по строке из json-ответа ffprobe.
+     * get enum by a string from ffprobe's json response
      */
     public static Optional<VideoFormat> from(String rawContainer) {
         if ("matroska,webm".equals(rawContainer)) {

@@ -334,11 +334,11 @@ public class Main {
         }
 
         /*
-         * В описании формата https://www.ffmpeg.org/ffmpeg-formats.html#matroska сказано:
+         * https://www.ffmpeg.org/ffmpeg-formats.html#matroska says:
          * The language can be either the 3 letters bibliographic ISO-639-2 (ISO 639-2/B) form (like "fre" for French),
          * or a language code mixed with a country code for specialities in languages
          * (like "fre-ca" for Canadian French).
-         * Поэтому можно засплиттить по дефису и использовать первую часть как код в ISO-639.
+         * So we can split by the hyphen and use the first part as an ISO-639 code.
          */
         languageRaw = languageRaw.split("-")[0];
 

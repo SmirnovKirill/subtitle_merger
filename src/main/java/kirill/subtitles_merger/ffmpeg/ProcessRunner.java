@@ -10,10 +10,10 @@ import java.util.concurrent.TimeUnit;
 class ProcessRunner {
     /**
      *
-     * @param arguments аргументы командной строки для запуска
-     * @return строку содержащую вывод из консоли (стандартный поток и поток с ошибками
-     * объединены, это подходит для задач приложения).
-     * @throws ProcessException с кодами внутри при разных ошибках выполнения.
+     * @param arguments command line arguments to start the process
+     * @return string containing the console output (standard and error streams are combined, it's convenient
+     * for out goals)
+     * @throws ProcessException with different codes inside when errors happen
      */
     static String run(List<String> arguments) throws ProcessException {
         ProcessBuilder processBuilder = new ProcessBuilder(arguments);

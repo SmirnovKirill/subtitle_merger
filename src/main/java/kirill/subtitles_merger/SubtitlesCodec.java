@@ -6,7 +6,7 @@ public enum SubtitlesCodec {
     SUBRIP;
 
     /**
-     * Получение енума по строке из json-ответа ffprobe.
+     * get enum by a string from ffprobe's json response
      */
     public static Optional<SubtitlesCodec> from(String rawCodec) {
         if ("subrip".equals(rawCodec)) {

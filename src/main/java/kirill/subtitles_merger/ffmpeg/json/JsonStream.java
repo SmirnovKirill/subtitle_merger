@@ -20,9 +20,9 @@ public class JsonStream {
     private String codecName;
 
     /*
-     * Ffmpeg использует ISO 639-2 в качестве кода языка, ниже ответ на SO разработчика ffmpeg
+     * Ffmpeg uses ISO 639-2 for language codes, below is the SO answer of one of the ffmpeg's developers.
      * https://stackoverflow.com/questions/44351606/ffmpeg-set-the-language-of-an-audio-stream.
-     * Потом оказалось что не только такой формат, есть еще через дефис, это есть в документации
+     * Later it turned out that there's more to the format, it's possible to use hyphens as well, see the documentation
      * https://www.ffmpeg.org/ffmpeg-formats.html#matroska.
      */
     @JsonProperty(value = "tags")

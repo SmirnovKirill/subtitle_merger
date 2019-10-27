@@ -21,7 +21,10 @@ public class Parser {
         ParsingStage parsingStage = ParsingStage.HAVE_NOT_STARTED;
 
         for (String currentLine : subtitlesUnprocessed.split("\\r?\\n")) {
-            /* Этот спец, символ может быть в начале самой первой строки, надо убрать а то не распарсится инт. */
+            /*
+             * This special character can be found at the beginning of the very first line so we have to remove it
+             * in order to parse int correctly.
+             */
             currentLine = currentLine.replace("\uFEFF", "").trim();
             if (parsingStage == ParsingStage.HAVE_NOT_STARTED) {
                 if (StringUtils.isBlank(currentLine)) {

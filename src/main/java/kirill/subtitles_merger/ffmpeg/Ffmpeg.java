@@ -51,14 +51,14 @@ public class Ffmpeg {
     }
 
     /*
-     * Synchronized потому что работаем с одним временным файлом.
+     * Synchronized because we use one temporary file with subtitles.
      */
     public synchronized String getSubtitlesText(int streamIndex, File videoFile) throws FfmpegException {
         try {
             ProcessRunner.run(
                     /*
-                     * -y нужно передавать чтобы дать согласие на перезаписывание файла, это всегда нужно делать
-                     * потому что временный файл уже будет создан джавой на момент вызова ffmpeg.
+                     * We have to pass -y to agree for file overwriting, it's always required
+                     * because java will have created temporary file by the time ffmpeg is called.
                      */
                     Arrays.asList(
                             path,
@@ -84,7 +84,7 @@ public class Ffmpeg {
     }
 
     /*
-     * Synchronized потому что работаем с одним временным файлом для субтитров.
+     * Synchronized because we use one temporary file with subtitles.
      */
     public synchronized void injectSubtitlesToFile(
             Subtitles subtitles,
