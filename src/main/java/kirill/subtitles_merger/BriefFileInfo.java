@@ -7,9 +7,9 @@ import java.io.File;
 import java.util.List;
 
 /**
- * В классе содержится основная информация о файле, в общем-то вся информация кроме той которую можно получить с
- * запуском ffmpeg (потому что это долго). В частности, тут хранится список субтитров и информация о них из ffprobe.
- * Для заполнения объектов данного класса как следует из вышенаписанного нужно вызывать ffprobe.
+ * This class contains basic information about the file, basically all information we can get without using ffmpeg
+ * (because it takes much time). In particular this class contains the list with subtitles streams and their
+ * information taken with ffprobe.
  */
 @AllArgsConstructor
 @Getter
@@ -17,8 +17,9 @@ class BriefFileInfo {
     private File file;
 
     /**
-     * Информация о всех файлах в выбранной папке будет храниться, даже для тех которые не подходят для использования
-     * в данной программе. В этом енуме содержатся причины непригодности к использованию для лучшей диагностики.
+     * We will keep track of all files from the selected directory even if they can't be used for subtitles merging
+     * (for better diagnostics).
+     * Enum contains the reason why this file can't be used for subtitles merging.
      */
     private BriefFileUnavailabilityReason unavailabilityReason;
 
