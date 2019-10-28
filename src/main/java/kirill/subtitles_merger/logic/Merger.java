@@ -30,9 +30,10 @@ public class Merger {
         );
     }
 
-    /*
-     * Самый первый и простой этап объединения - делаем список всех упомянутых точек времени и на каждом отрезке
-     * смотрим есть ли текст в объединяемых субтитров, если есть, то объединяем.
+    /**
+     * The first and the simplest merging stage - we make a list of all mentioned points of time and for each segment
+     * we see whether there is text in any of the merging subtitles and if there is we add this segment and
+     * its text,
      */
     private static Subtitles makeInitialMerge(Subtitles upperSubtitles, Subtitles lowerSubtitles) {
         List<SubtitlesElement> result = new ArrayList<>();
@@ -271,8 +272,9 @@ public class Merger {
         }
     }
 
-    /*
-     * Метод объединяет повторяющиеся элементы субтитров если они одинаковые и идут строго подряд.
+    /**
+     * This method combines consecutive subtitles elements that have the same text (to simply make the result
+     * more compact).
      */
     private static Subtitles getCombinedSubtitles(Subtitles merged) {
         List<SubtitlesElement> result = new ArrayList<>();
