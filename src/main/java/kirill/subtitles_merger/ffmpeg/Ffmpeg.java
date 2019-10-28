@@ -92,10 +92,9 @@ public class Ffmpeg {
             File videoFile
     ) throws FfmpegException {
         /*
-         * Ffmpeg не может добавить к файлу субтитры и записать это в тот же файл.
-         * Поэтому нужно сначала записать результат во временный файл а потом его переименовать.
-         * На всякий случай еще потом сделаем проверку что новый файл больше чем старый, а то нехорошо будет если
-         * испортим видео, его могли долго качать.
+         * Ffmpeg can't add subtitles on the fly. So we need to add subtitles to some temporary file
+         * and then rename it. Later we'll also check that the size of the new file is bigger than the size of the
+         * original one because it's important not to spoil the original video file, it may be valuable.
          */
         File outputTemp = new File(videoFile.getParentFile(), "temp_" + videoFile.getName());
 
@@ -151,9 +150,9 @@ public class Ffmpeg {
         result.add("-y");
 
         /*
-         * Не сталкивался с таким, но прочел в документации ffmpeg и мне показалось что стоит добавить.
-         * Потому что вдруг есть какие то неизвестные стримы в файле, пусть они без изменений копируются,
-         * потому что задача метода просто добавить субтитры не меняя ничего другого.
+         * Haven't seen such scenario in practice but I've looked this argument up in the ffmpeg documentation
+         * and decided that it's worth adding. Because if there are some unknown streams in the file it's better
+         * to add them as is, our program is designed just for injecting subtitles, leave everything else untouched.
          */
         result.add("-copy_unknown");
 
@@ -181,8 +180,8 @@ public class Ffmpeg {
 
     private static void overwriteOriginalVideo(File outputTemp, File videoFile) throws FfmpegException {
         /*
-         * Сохраним сначала этот признак чтобы потом вернуть все как было, а то если изначально файл рид онли
-         * а мы его в процессе работы сделаем записываемым, нехорошо это так оставлять.
+         * Save this flag here to restore it at the end of the method. Because otherwise if the file has had only
+         * read access initially we will give it write access as well before renaming, and leave it like that.
          */
         boolean originallyWritable = videoFile.canWrite();
 
