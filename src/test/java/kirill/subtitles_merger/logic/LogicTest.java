@@ -22,10 +22,10 @@ public class LogicTest {
                 LanguageAlpha3Code.rus
         );
 
-        assertThat(subtitles.getElements()).hasSize(10);
+        assertThat(subtitles.getSubtitles()).hasSize(10);
 
-        assertThat(subtitles.getElements().get(0).getLines()).hasSize(2);
-        assertThat(subtitles.getElements().get(1).getLines()).hasSize(1);
+        assertThat(subtitles.getSubtitles().get(0).getLines()).hasSize(2);
+        assertThat(subtitles.getSubtitles().get(1).getLines()).hasSize(1);
     }
 
     @Test

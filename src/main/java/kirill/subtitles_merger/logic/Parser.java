@@ -2,8 +2,8 @@ package kirill.subtitles_merger.logic;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitles_merger.logic.data.Subtitles;
-import kirill.subtitles_merger.logic.data.SubtitlesElement;
-import kirill.subtitles_merger.logic.data.SubtitlesElementLine;
+import kirill.subtitles_merger.logic.data.Subtitle;
+import kirill.subtitles_merger.logic.data.SubtitleLine;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.format.DateTimeFormat;
@@ -18,9 +18,9 @@ public class Parser {
             String subtitlesName,
             LanguageAlpha3Code language
     ) {
-        List<SubtitlesElement> result = new ArrayList<>();
+        List<Subtitle> result = new ArrayList<>();
 
-        SubtitlesElement currentElement = null;
+        Subtitle currentSubtitle = null;
         ParsingStage parsingStage = ParsingStage.HAVE_NOT_STARTED;
 
         for (String currentLine : subtitlesUnprocessed.split("\\r?\\n")) {
@@ -34,8 +34,8 @@ public class Parser {
                     continue;
                 }
 
-                currentElement = new SubtitlesElement();
-                currentElement.setNumber(Integer.parseInt(currentLine));
+                currentSubtitle = new Subtitle();
+                currentSubtitle.setNumber(Integer.parseInt(currentLine));
                 parsingStage = ParsingStage.PARSED_NUMBER;
             } else if (parsingStage == ParsingStage.PARSED_NUMBER) {
                 if (StringUtils.isBlank(currentLine)) {
@@ -45,8 +45,8 @@ public class Parser {
                 String fromText = currentLine.substring(0, currentLine.indexOf("-")).trim();
                 String toText = currentLine.substring(currentLine.indexOf(">") + 1).trim();
 
-                currentElement.setFrom(DateTimeFormat.forPattern("HH:mm:ss,SSS").parseLocalTime(fromText));
-                currentElement.setTo(DateTimeFormat.forPattern("HH:mm:ss,SSS").parseLocalTime(toText));
+                currentSubtitle.setFrom(DateTimeFormat.forPattern("HH:mm:ss,SSS").parseLocalTime(fromText));
+                currentSubtitle.setTo(DateTimeFormat.forPattern("HH:mm:ss,SSS").parseLocalTime(toText));
 
                 parsingStage = ParsingStage.PARSED_DURATION;
             } else if (parsingStage == ParsingStage.PARSED_DURATION) {
@@ -54,16 +54,16 @@ public class Parser {
                     continue;
                 }
 
-                currentElement.getLines().add(new SubtitlesElementLine(currentLine, subtitlesName));
+                currentSubtitle.getLines().add(new SubtitleLine(currentLine, subtitlesName));
                 parsingStage = ParsingStage.PARSED_FIRST_LINE;
             } else {
                 if (StringUtils.isBlank(currentLine)) {
-                    result.add(currentElement);
+                    result.add(currentSubtitle);
 
-                    currentElement = null;
+                    currentSubtitle = null;
                     parsingStage = ParsingStage.HAVE_NOT_STARTED;
                 } else {
-                    currentElement.getLines().add(new SubtitlesElementLine(currentLine, subtitlesName));
+                    currentSubtitle.getLines().add(new SubtitleLine(currentLine, subtitlesName));
                 }
             }
         }
@@ -73,7 +73,7 @@ public class Parser {
         }
 
         if (parsingStage == ParsingStage.PARSED_FIRST_LINE) {
-            result.add(currentElement);
+            result.add(currentSubtitle);
         }
 
         List<LanguageAlpha3Code> languages = new ArrayList<>();

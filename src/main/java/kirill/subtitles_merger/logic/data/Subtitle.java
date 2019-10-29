@@ -12,12 +12,12 @@ import java.util.List;
 @Getter
 @Setter
 public
-class SubtitlesElement {
+class Subtitle {
     private int number;
 
     private LocalTime from;
 
     private LocalTime to;
 
-    private List<SubtitlesElementLine> lines = new ArrayList<>();
+    private List<SubtitleLine> lines = new ArrayList<>();
 }

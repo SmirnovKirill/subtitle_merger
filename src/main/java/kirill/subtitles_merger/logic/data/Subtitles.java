@@ -10,7 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 public class Subtitles {
-    private List<SubtitlesElement> elements;
+    private List<Subtitle> subtitles;
 
     private List<LanguageAlpha3Code> languages;
 
@@ -18,28 +18,28 @@ public class Subtitles {
     public String toString() {
         StringBuilder result = new StringBuilder();
 
-        for (int i = 0; i < elements.size(); i++) {
-            SubtitlesElement subtitlesElement = elements.get(i);
+        for (int i = 0; i < subtitles.size(); i++) {
+            Subtitle subtitle = subtitles.get(i);
 
-            result.append(subtitlesElement.getNumber());
+            result.append(subtitle.getNumber());
             result.append("\n");
 
-            result.append(DateTimeFormat.forPattern("HH:mm:ss,SSS").print(subtitlesElement.getFrom()));
+            result.append(DateTimeFormat.forPattern("HH:mm:ss,SSS").print(subtitle.getFrom()));
             result.append(" --> ");
-            result.append(DateTimeFormat.forPattern("HH:mm:ss,SSS").print(subtitlesElement.getTo()));
+            result.append(DateTimeFormat.forPattern("HH:mm:ss,SSS").print(subtitle.getTo()));
             result.append("\n");
 
-            for (int j = 0; j < subtitlesElement.getLines().size(); j++) {
-                SubtitlesElementLine line = subtitlesElement.getLines().get(j);
+            for (int j = 0; j < subtitle.getLines().size(); j++) {
+                SubtitleLine line = subtitle.getLines().get(j);
 
                 result.append(line.getText());
 
-                if (j != subtitlesElement.getLines().size() - 1 || i != elements.size() - 1) {
+                if (j != subtitle.getLines().size() - 1 || i != subtitles.size() - 1) {
                     result.append("\n");
                 }
             }
 
-            if (i != elements.size() - 1) {
+            if (i != subtitles.size() - 1) {
                 result.append("\n");
             }
         }

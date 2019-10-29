@@ -8,7 +8,7 @@ import lombok.Getter;
 @Getter
 @EqualsAndHashCode
 public
-class SubtitlesElementLine {
+class SubtitleLine {
     private String text;
 
     private String source;
