@@ -16,7 +16,7 @@ public class Merger {
         List<String> sortedSources = getSortedSources(upperSubtitles, lowerSubtitles);
 
         Subtitles result = makeInitialMerge(upperSubtitles, lowerSubtitles);
-        result = getExtendedSubtitles(result, sortedSources);
+        result = getExpandedSubtitles(result, sortedSources);
         sortSubtitleLines(result, sortedSources);
         result = getCombinedSubtitles(result);
 
@@ -33,7 +33,7 @@ public class Merger {
     /**
      * The first and the simplest merging stage - we make a list of all mentioned points of time and for each segment
      * we see whether there is text in any of the merging subtitles and if there is we add this segment and
-     * its text,
+     * its text.
      */
     private static Subtitles makeInitialMerge(Subtitles upperSubtitles, Subtitles lowerSubtitles) {
         List<SubtitlesElement> result = new ArrayList<>();
@@ -106,15 +106,16 @@ public class Merger {
     }
 
     /*
-     * Метод устраняет "скачки". Они появляются если в процессе разбиения на маленькие отрезки какой-то блок сначала
-     * идет только в одном источнике, а потом появляется в другом. Получается очень маленький промежуток времени
-     * субтитры одни, проходят, потом добавляется второй источник и те субтитры "скачут" вверх. Метод исправляет
-     * это путем добавления строк субтитров из второго источника к строкам субтитров из первого в моменты когда они
-     * не идут вместе. При этом если какие-то строки все время идут только одни, то добавления не происходит.
-     * Это часто бывает когда в английских субтитрах идет описание звуков, оно присутствует только в одном языке,
-     * расширять и добавлять строки из второго языка не надо.
+     * This method fixes "jumps" that appear after splitting to small segments. If for example for some segment
+     * there are lines from only one source (upper) and on the next segment lines from the other source (lower)
+     * are added it looks like the jump of the upper subtitles because for some period of time they go alone and
+     * later when lines from the other source are added they are not alone anymore and are moved to the top. This method
+     * kind of "expands" subtitles so they start and end together at the same time if there
+     * appear together somewhere. If some lines are taken from the only one source no expanding happens - this is the
+     * common case for english subtitles when there are descriptions of the sounds that usually are not present for
+     * other languages, so no expanding happens there.
      */
-    private static Subtitles getExtendedSubtitles(Subtitles merged, List<String> sortedSources) {
+    private static Subtitles getExpandedSubtitles(Subtitles merged, List<String> sortedSources) {
         List<SubtitlesElement> result = new ArrayList<>();
 
         int i = 0;
