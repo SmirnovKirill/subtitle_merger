@@ -154,10 +154,11 @@ public class Merger {
         return new Subtitles(result, merged.getLanguages());
     }
 
-    /*
-     * Возвращает true если строки субтитров с данным индексом везде присутствуют одни, без строк из другого источника.
-     * Для этого первым делом отматываемся в самое начало когда данные строки появляются, потому что если просто
-     * смотреть последующие элементы можно пропустить случай когда строки из другого источника были раньше.
+    /**
+     * Checks whether lines of the subtitles with the given index always go "alone", without lines from the other
+     * source. To do this we have to go back to the index where these lines first appear and start from there
+     * because if we simply start from the given index we will get incorrect result when lines from the other source
+     * go before the provided index.
      */
     private static boolean currentLinesAlwaysGoInOneSource(
             List<SubtitlesElementLine> lines,
@@ -190,11 +191,11 @@ public class Merger {
 
             if (!Objects.equals(subtitlesElement.getLines(), lines)) {
                 /*
-                 * Если попали сюда, то значит строки поменялись. Либо они поменялись потому что добавился новый
-                 * источник, либо потому что изменились строки исходного источника. Если изменились строки исходного
-                 * источника, надо вернуть true, значит что исходные строки все время шли одни, а если строки исходого
-                 * источника те же но получилось что все строки не совпадают с исходными, значит добавился
-                 * новый источник и надо вернуть false.
+                 * If we got here it means that lines have changed. It can be because the lines from the original source
+                 * have changed and in that case we return true because it means that with all previous indices lines
+                 * from the source were the same and there weren't lines from the other source. Or if lines from the
+                 * original source stay the same it means that lines from the other source have been added so the method
+                 * has to return false.
                  */
                 List<SubtitlesElementLine> linesFromOriginalSource = subtitlesElement.getLines().stream()
                         .filter(currentLine -> Objects.equals(currentLine.getSource(), linesSource))
