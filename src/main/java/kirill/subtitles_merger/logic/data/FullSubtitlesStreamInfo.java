@@ -1,4 +1,4 @@
-package kirill.subtitles_merger.logic;
+package kirill.subtitles_merger.logic.data;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,7 +11,7 @@ class FullSubtitlesStreamInfo {
 
     private UnavailabilityReason unavailabilityReason;
 
-    private Subtitles content;
+    private Subtitles subtitles;
 
     public enum UnavailabilityReason {
         FAILED_BEFORE // means that an error has happened before, at previous stage when we were obtaining brief info

@@ -1,4 +1,4 @@
-package kirill.subtitles_merger.logic;
+package kirill.subtitles_merger.logic.data;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import lombok.AllArgsConstructor;

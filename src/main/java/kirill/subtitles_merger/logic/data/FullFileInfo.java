@@ -1,5 +1,6 @@
-package kirill.subtitles_merger.logic;
+package kirill.subtitles_merger.logic.data;
 
+import kirill.subtitles_merger.logic.Merger;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
@@ -39,19 +40,19 @@ class FullFileInfo {
         }
 
         streamsUpperLanguage.sort(
-                Comparator.comparing((FullSubtitlesStreamInfo stream) -> stream.getContent().toString().length())
+                Comparator.comparing((FullSubtitlesStreamInfo stream) -> stream.getSubtitles().toString().length())
                         .reversed()
         );
 
         streamsLowerLanguage.sort(
-                Comparator.comparing((FullSubtitlesStreamInfo stream) -> stream.getContent().toString().length())
+                Comparator.comparing((FullSubtitlesStreamInfo stream) -> stream.getSubtitles().toString().length())
                         .reversed()
         );
 
         return Optional.of(
                 Merger.mergeSubtitles(
-                        streamsUpperLanguage.get(0).getContent(),
-                        streamsLowerLanguage.get(0).getContent()
+                        streamsUpperLanguage.get(0).getSubtitles(),
+                        streamsLowerLanguage.get(0).getSubtitles()
                 )
         );
     }

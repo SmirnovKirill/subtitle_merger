@@ -1,4 +1,4 @@
-package kirill.subtitles_merger.logic;
+package kirill.subtitles_merger.logic.data;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,6 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Setter
+public
 class SubtitlesElement {
     private int number;
 

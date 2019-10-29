@@ -2,6 +2,7 @@ package kirill.subtitles_merger;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitles_merger.logic.*;
+import kirill.subtitles_merger.logic.data.*;
 import kirill.subtitles_merger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitles_merger.logic.ffmpeg.FfmpegException;
 import kirill.subtitles_merger.logic.ffmpeg.Ffprobe;
@@ -19,7 +20,7 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.prefs.Preferences;
 
-import static kirill.subtitles_merger.logic.BriefFileInfo.UnavailabilityReason.*;
+import static kirill.subtitles_merger.logic.data.BriefFileInfo.UnavailabilityReason.*;
 
 @CommonsLog
 public class Main {
