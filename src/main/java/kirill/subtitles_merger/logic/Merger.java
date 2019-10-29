@@ -106,7 +106,7 @@ public class Merger {
     }
 
     /*
-     * This method fixes "jumps" that appear after splitting to small segments. If for example for some segment
+     * This method fixes "jumps" that appear after splitting into small segments. If for example for some segment
      * there are lines from only one source (upper) and on the next segment lines from the other source (lower)
      * are added it looks like the jump of the upper subtitles because for some period of time they go alone and
      * later when lines from the other source are added they are not alone anymore and are moved to the top. This method
