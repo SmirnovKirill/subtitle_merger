@@ -1,7 +1,5 @@
-package kirill.subtitles_merger;
+package kirill.subtitles_merger.logic;
 
-import kirill.subtitles_merger.logic.Merger;
-import kirill.subtitles_merger.logic.Subtitles;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
@@ -13,14 +11,15 @@ import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Getter
+public
 class FullFileInfo {
     private BriefFileInfo briefInfo;
 
-    private FullFileUnavailabilityReason unavailabilityReason;
+    private UnavailabilityReason unavailabilityReason;
 
     private List<FullSubtitlesStreamInfo> subtitlesStreams;
 
-    Optional<Subtitles> getMerged(Config config) {
+    public Optional<Subtitles> getMerged(Config config) {
         if (unavailabilityReason != null || CollectionUtils.isEmpty(subtitlesStreams)) {
             return Optional.empty();
         }
@@ -55,5 +54,10 @@ class FullFileInfo {
                         streamsLowerLanguage.get(0).getContent()
                 )
         );
+    }
+
+    public enum UnavailabilityReason {
+        FAILED_BEFORE, // means that an error has happened before, at previous stage when we were obtaining brief info
+        FFMPEG_FAILED
     }
 }

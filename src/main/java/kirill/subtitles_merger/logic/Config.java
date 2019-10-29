@@ -1,4 +1,4 @@
-package kirill.subtitles_merger;
+package kirill.subtitles_merger.logic;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import lombok.AllArgsConstructor;
@@ -6,6 +6,7 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
+public
 class Config {
     private String ffmpegPath;
 

@@ -1,13 +1,12 @@
 package kirill.subtitles_merger;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
-import kirill.subtitles_merger.ffmpeg.Ffmpeg;
-import kirill.subtitles_merger.ffmpeg.FfmpegException;
-import kirill.subtitles_merger.ffmpeg.Ffprobe;
-import kirill.subtitles_merger.ffmpeg.json.JsonFfprobeFileInfo;
-import kirill.subtitles_merger.ffmpeg.json.JsonStream;
-import kirill.subtitles_merger.logic.Parser;
-import kirill.subtitles_merger.logic.Subtitles;
+import kirill.subtitles_merger.logic.*;
+import kirill.subtitles_merger.logic.ffmpeg.Ffmpeg;
+import kirill.subtitles_merger.logic.ffmpeg.FfmpegException;
+import kirill.subtitles_merger.logic.ffmpeg.Ffprobe;
+import kirill.subtitles_merger.logic.ffmpeg.json.JsonFfprobeFileInfo;
+import kirill.subtitles_merger.logic.ffmpeg.json.JsonStream;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -20,7 +19,7 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.prefs.Preferences;
 
-import static kirill.subtitles_merger.BriefFileUnavailabilityReason.*;
+import static kirill.subtitles_merger.logic.BriefFileInfo.UnavailabilityReason.*;
 
 @CommonsLog
 public class Main {
@@ -301,7 +300,7 @@ public class Main {
                         new BriefSubtitlesStreamInfo(
                                 stream.getIndex(),
                                 null,
-                                BriefSubtitlesUnavailabilityReason.NOT_ALLOWED_CODEC,
+                                BriefSubtitlesStreamInfo.UnavailabilityReason.NOT_ALLOWED_CODEC,
                                 getLanguage(stream).orElse(null),
                                 getTitle(stream).orElse(null)
                         )
@@ -357,7 +356,7 @@ public class Main {
         if (briefFileInfo.getUnavailabilityReason() != null) {
             return new FullFileInfo(
                     briefFileInfo,
-                    FullFileUnavailabilityReason.FAILED_BEFORE,
+                    FullFileInfo.UnavailabilityReason.FAILED_BEFORE,
                     wrap(briefFileInfo.getSubtitlesStreams())
             );
         }
@@ -371,7 +370,7 @@ public class Main {
                             new FullSubtitlesStreamInfo(
                                     briefSubtitlesStream,
                                     briefSubtitlesStream.getUnavailabilityReason() != null
-                                            ? FullSingleSubtitlesUnavailabilityReason.FAILED_BEFORE
+                                            ? FullSubtitlesStreamInfo.UnavailabilityReason.FAILED_BEFORE
                                             : null,
                                     null
                             )
@@ -397,7 +396,7 @@ public class Main {
         } catch (FfmpegException e) {
             return new FullFileInfo(
                     briefFileInfo,
-                    FullFileUnavailabilityReason.FFMPEG_FAILED,
+                    FullFileInfo.UnavailabilityReason.FFMPEG_FAILED,
                     wrap(briefFileInfo.getSubtitlesStreams())
             );
         }
@@ -416,7 +415,7 @@ public class Main {
                     new FullSubtitlesStreamInfo(
                             briefSubtitlesStream,
                             briefSubtitlesStream.getUnavailabilityReason() != null
-                                    ? FullSingleSubtitlesUnavailabilityReason.FAILED_BEFORE
+                                    ? FullSubtitlesStreamInfo.UnavailabilityReason.FAILED_BEFORE
                                     : null,
                             null
                     ));

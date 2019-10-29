@@ -1,4 +1,4 @@
-package kirill.subtitles_merger;
+package kirill.subtitles_merger.logic;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import lombok.AllArgsConstructor;
@@ -10,6 +10,7 @@ import lombok.Getter;
  */
 @AllArgsConstructor
 @Getter
+public
 class BriefSubtitlesStreamInfo {
     private int index;
 
@@ -20,9 +21,13 @@ class BriefSubtitlesStreamInfo {
      * (for better diagnostics).
      * Enum contains the reason why these subtitles can't be used for subtitles merging.
      */
-    private BriefSubtitlesUnavailabilityReason unavailabilityReason;
+    private UnavailabilityReason unavailabilityReason;
 
     private LanguageAlpha3Code language;
 
     private String title;
+
+    public enum UnavailabilityReason {
+        NOT_ALLOWED_CODEC
+    }
 }
