@@ -1,13 +1,13 @@
-package kirill.subtitles_merger;
+package kirill.subtitlesmerger;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
-import kirill.subtitles_merger.logic.*;
-import kirill.subtitles_merger.logic.data.*;
-import kirill.subtitles_merger.logic.ffmpeg.Ffmpeg;
-import kirill.subtitles_merger.logic.ffmpeg.FfmpegException;
-import kirill.subtitles_merger.logic.ffmpeg.Ffprobe;
-import kirill.subtitles_merger.logic.ffmpeg.json.JsonFfprobeFileInfo;
-import kirill.subtitles_merger.logic.ffmpeg.json.JsonStream;
+import kirill.subtitlesmerger.logic.*;
+import kirill.subtitlesmerger.logic.data.*;
+import kirill.subtitlesmerger.logic.ffmpeg.Ffmpeg;
+import kirill.subtitlesmerger.logic.ffmpeg.FfmpegException;
+import kirill.subtitlesmerger.logic.ffmpeg.Ffprobe;
+import kirill.subtitlesmerger.logic.ffmpeg.json.JsonFfprobeFileInfo;
+import kirill.subtitlesmerger.logic.ffmpeg.json.JsonStream;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -20,7 +20,7 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.prefs.Preferences;
 
-import static kirill.subtitles_merger.logic.data.BriefFileInfo.UnavailabilityReason.*;
+import static kirill.subtitlesmerger.logic.data.BriefFileInfo.UnavailabilityReason.*;
 
 @CommonsLog
 public class Main {

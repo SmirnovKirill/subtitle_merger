@@ -1,4 +1,4 @@
-module subtitles.merger {
+module kirill.subtitlesmerger {
     requires static lombok;
 
     requires com.fasterxml.jackson.core;

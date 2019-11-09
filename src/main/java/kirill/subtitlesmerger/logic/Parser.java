@@ -1,9 +1,9 @@
-package kirill.subtitles_merger.logic;
+package kirill.subtitlesmerger.logic;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
-import kirill.subtitles_merger.logic.data.Subtitles;
-import kirill.subtitles_merger.logic.data.Subtitle;
-import kirill.subtitles_merger.logic.data.SubtitleLine;
+import kirill.subtitlesmerger.logic.data.Subtitles;
+import kirill.subtitlesmerger.logic.data.Subtitle;
+import kirill.subtitlesmerger.logic.data.SubtitleLine;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.format.DateTimeFormat;

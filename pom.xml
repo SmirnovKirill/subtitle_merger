@@ -70,7 +70,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>kirill.subtitles_merger.Main</mainClass>
+                            <mainClass>kirill.subtitlesmerger.Main</mainClass>
                         </manifest>
                         <manifestEntries>
                             <!-- Otherwise log4j will produce warnings at runtime. -->

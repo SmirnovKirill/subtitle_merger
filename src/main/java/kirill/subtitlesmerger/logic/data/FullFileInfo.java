@@ -1,6 +1,6 @@
-package kirill.subtitles_merger.logic.data;
+package kirill.subtitlesmerger.logic.data;
 
-import kirill.subtitles_merger.logic.Merger;
+import kirill.subtitlesmerger.logic.Merger;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;

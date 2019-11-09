@@ -1,7 +1,7 @@
-package kirill.subtitles_merger.logic.ffmpeg;
+package kirill.subtitlesmerger.logic.ffmpeg;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
-import kirill.subtitles_merger.logic.data.Subtitles;
+import kirill.subtitlesmerger.logic.data.Subtitles;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
