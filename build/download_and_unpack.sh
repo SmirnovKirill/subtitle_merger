@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 function need_to_download {
   if [[ $DOWNLOAD_EVERY_TIME == "y" ]]; then
     echo "y"
@@ -11,17 +13,17 @@ function need_to_download {
 }
 
 function download_and_unpack {
-  rm "${1:?}/*" -rf
+  rm "${1:?}/"* -rf
   create_git_ignore "$1/.gitignore"
 
   wget -P "$1" "$2"
 
-  if [[ -n $(find "$1" -maxdepth 1 -name "*.gz") ]]; then
-    bsdtar --strip-components=1 -xzf "${1:?}/*.gz" -C "$1"
-    rm "{$1:?}/*.gz"
-  elif [[ -n $(find "$1" -maxdepth 1 -name "*.zip") ]]; then
-    bsdtar --strip-components=1 -xzf "${1:?}/*.zip" -C "$1"
-    rm "{$1:?}/*.zip"
+  if [[ -n $(find "$1" -maxdepth 1 -name '*.gz') ]]; then
+    bsdtar --strip-components=1 -xzf "$1/"*.gz -C "$1"
+    rm "${1:?}/"*.gz
+  elif [[ -n $(find "$1" -maxdepth 1 -name '*.zip') ]]; then
+    bsdtar --strip-components=1 -xzf "$1/"*.zip -C "$1"
+    rm "${1:?}/"*.zip
   else
     echo "unknown archive format in $1"
     exit 1
