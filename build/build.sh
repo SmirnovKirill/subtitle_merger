@@ -13,3 +13,4 @@ EndOfText
 
 source "$CURRENT_DIRECTORY/settings.sh"
 source "$CURRENT_DIRECTORY/download_and_unpack.sh"
+source "$CURRENT_DIRECTORY/make_custom_jre.sh"
