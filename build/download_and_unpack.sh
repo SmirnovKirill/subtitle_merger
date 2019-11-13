@@ -16,7 +16,7 @@ function download_and_unpack {
   rm "${1:?}/"* -rf
   create_git_ignore "$1/.gitignore"
 
-  wget -P "$1" "$2"
+  wget --content-disposition -P "$1" "$2"
 
   if [[ -n $(find "$1" -maxdepth 1 -name '*.gz') ]]; then
     bsdtar --strip-components=1 -xzf "$1/"*.gz -C "$1"
@@ -24,6 +24,9 @@ function download_and_unpack {
   elif [[ -n $(find "$1" -maxdepth 1 -name '*.zip') ]]; then
     bsdtar --strip-components=1 -xzf "$1/"*.zip -C "$1"
     rm "${1:?}/"*.zip
+  elif [[ -n $(find "$1" -maxdepth 1 -name '*.xz') ]]; then
+    bsdtar --strip-components=1 -xzf "$1/"*.xz -C "$1"
+    rm "${1:?}/"*.xz
   else
     echo "unknown archive format in $1"
     exit 1
