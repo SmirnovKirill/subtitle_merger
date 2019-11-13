@@ -2,10 +2,10 @@
 
 set -e
 
-CURRENT_DIRECTORY="$(dirname "$0")"
+CURRENT_DIRECTORY=$(dirname "$0")
 
 function create_git_ignore {
-  cat << EndOfText | head -c -1 > $1
+  cat << EndOfText | head -c -1 > "$1"
 *
 !.gitignore
 EndOfText
