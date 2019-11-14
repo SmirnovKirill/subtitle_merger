@@ -2,7 +2,8 @@
 
 set -e
 
-CURRENT_DIRECTORY=$(dirname "$0")
+CURRENT_DIRECTORY="$(dirname "$0")"
+PROJECT_BASE_DIR="$(dirname "$(dirname "$(dirname "$(dirname "$CURRENT_DIRECTORY")")")")"
 
 function create_git_ignore {
   cat << EndOfText | head -c -1 > "$1"
