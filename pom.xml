@@ -61,34 +61,6 @@
             </plugin>
 
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.1.1</version>
-                <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                    <archive>
-                        <manifest>
-                            <mainClass>kirill.subtitlesmerger.Main</mainClass>
-                        </manifest>
-                        <manifestEntries>
-                            <!-- Otherwise log4j will produce warnings at runtime. -->
-                            <Multi-Release>true</Multi-Release>
-                        </manifestEntries>
-                    </archive>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
                 <groupId>com.akathist.maven.plugins.launch4j</groupId>
                 <artifactId>launch4j-maven-plugin</artifactId>
                 <version>1.7.25</version>
@@ -100,11 +72,47 @@
                         </goals>
                         <configuration>
                             <headerType>console</headerType>
-                            <outfile>target/subtitles-merger.exe</outfile>
-                            <jar>target/${project.build.finalName}.jar</jar>
+                            <outfile>${project.build.directory}/subtitles-merger.exe</outfile>
+                            <jar>${project.build.directory}/${project.build.finalName}.jar</jar>
                             <jre>
-                                <minVersion>11</minVersion>
+                                <path>../jre</path>
                             </jre>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.1.1</version>
+                <executions>
+                    <execution>
+                        <id>zip_linux_64</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <descriptors>
+                                <descriptor>src/main/for_build/assembly_plugin_descriptors/zip_linux_64.xml</descriptor>
+                            </descriptors>
+                            <finalName>${project.artifactId}_${project.version}_build_linux_64</finalName>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>zip_win_64</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <descriptors>
+                                <descriptor>src/main/for_build/assembly_plugin_descriptors/zip_win_64.xml</descriptor>
+                            </descriptors>
+                            <finalName>${project.artifactId}_${project.version}_build_win_64</finalName>
                         </configuration>
                     </execution>
                 </executions>
