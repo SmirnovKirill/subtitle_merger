@@ -76,7 +76,7 @@
                             <headerType>console</headerType>
                             <outfile>${project.build.directory}/subtitles-merger.exe</outfile>
                             <jre>
-                                <path>../jre</path>
+                                <path>jre</path>
                             </jre>
                         </configuration>
                     </execution>
@@ -205,6 +205,13 @@
             <groupId>com.neovisionaries</groupId>
             <artifactId>nv-i18n</artifactId>
             <version>1.27</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>11.0.2</version>
+            <scope>provided</scope>
         </dependency>
 
 
