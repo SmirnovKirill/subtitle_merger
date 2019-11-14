@@ -6,6 +6,10 @@ BUILD_LINUX_64="y"
 BUILD_WIN_64="y"
 INCLUDE_FFMPEG="y"
 DOWNLOAD_EVERY_TIME="n" #for debug mostly
+CUSTOM_JRE_BASE_MODULES="java.base,java.prefs,java.management" #java.management is required for log4j
+CUSTOM_JRE_LIB_MODULES="javafx.base,javafx.controls,javafx.graphics"
+CUSTOM_JRE_IDEA_MODULES="java.instrument,jdk.jdwp.agent"
+CUSTOM_JRE_ALL_MODULES="$CUSTOM_JRE_BASE_MODULES,$CUSTOM_JRE_LIB_MODULES,$CUSTOM_JRE_IDEA_MODULES"
 
 #https://jdk.java.net/archive/
 JDK_LINUX_64_DOWNLOAD_URL="https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_linux-x64_bin.tar.gz"
