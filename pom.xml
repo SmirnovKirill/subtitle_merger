@@ -69,6 +69,10 @@
                         <manifest>
                             <mainClass>kirill.subtitlesmerger.Main</mainClass>
                         </manifest>
+                        <manifestEntries>
+                            <!-- Otherwise log4j will produce warnings at runtime. -->
+                            <Multi-Release>true</Multi-Release>
+                        </manifestEntries>
                     </archive>
                 </configuration>
             </plugin>
@@ -90,6 +94,8 @@
                                     <artifact>*:*</artifact>
                                     <excludes>
                                         <exclude>module-info.class</exclude>
+                                        <exclude>META-INF/maven/**</exclude>
+                                        <exclude>META-INF/versions/**/module-info.class</exclude>
                                     </excludes>
                                 </filter>
                             </filters>
