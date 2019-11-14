@@ -1,3 +1,4 @@
 #!/bin/bash
 
-jre/bin/java -jar ./*.jar
+CURRENT_DIRECTORY="$(dirname "$0")"
+"$CURRENT_DIRECTORY/jre/bin/java" -jar "$CURRENT_DIRECTORY/*.jar"
