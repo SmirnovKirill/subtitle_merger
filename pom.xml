@@ -73,7 +73,7 @@
                         <configuration>
                             <jar>${project.build.finalName}.jar</jar>
                             <dontWrapJar>true</dontWrapJar>
-                            <headerType>console</headerType>
+                            <headerType>gui</headerType>
                             <outfile>${project.build.directory}/subtitles-merger.exe</outfile>
                             <jre>
                                 <path>jre</path>
