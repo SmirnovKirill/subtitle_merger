@@ -89,6 +89,27 @@
                 <version>3.1.1</version>
                 <executions>
                     <execution>
+                        <id>jar-with-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                            <archive>
+                                <manifest>
+                                    <mainClass>kirill.subtitlesmerger.Main</mainClass>
+                                </manifest>
+                                <manifestEntries>
+                                    <!-- Otherwise log4j will produce warnings at runtime. -->
+                                    <Multi-Release>true</Multi-Release>
+                                </manifestEntries>
+                            </archive>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>zip_linux_64</id>
                         <phase>package</phase>
                         <goals>

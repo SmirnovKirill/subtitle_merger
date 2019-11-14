@@ -15,10 +15,13 @@
     </fileSets>
     <files>
         <file>
-            <source>${project.build.directory}/${project.build.finalName}.jar</source>
+            <source>${project.build.directory}/${project.build.finalName}-jar-with-dependencies.jar</source>
+            <destName>${project.build.finalName}.jar</destName>
+            <fileMode>744</fileMode>
         </file>
         <file>
             <source>${project.build.directory}/subtitles-merger.exe</source>
+            <fileMode>744</fileMode>
         </file>
     </files>
 </assembly>

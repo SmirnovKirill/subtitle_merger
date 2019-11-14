@@ -15,12 +15,14 @@
     </fileSets>
     <files>
         <file>
-            <source>${project.basedir}/src/main/for_build/run_scripts/run_linux.sh</source>
-            <destName>run.sh</destName>
+            <source>${project.build.directory}/${project.build.finalName}-jar-with-dependencies.jar</source>
+            <destName>${project.build.finalName}.jar</destName>
             <fileMode>744</fileMode>
         </file>
         <file>
-            <source>${project.build.directory}/${project.build.finalName}.jar</source>
+            <source>${project.basedir}/src/main/for_build/run_scripts/run_linux.sh</source>
+            <destName>run.sh</destName>
+            <fileMode>744</fileMode>
         </file>
     </files>
 </assembly>
