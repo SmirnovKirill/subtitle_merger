@@ -2,7 +2,7 @@
 
 set -e
 
-CURRENT_DIRECTORY="$(dirname "$0")"
+CURRENT_DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd )"
 PROJECT_BASE_DIR="$(dirname "$(dirname "$(dirname "$(dirname "$CURRENT_DIRECTORY")")")")"
 
 function create_git_ignore {
