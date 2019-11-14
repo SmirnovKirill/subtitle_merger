@@ -71,9 +71,10 @@
                             <goal>launch4j</goal>
                         </goals>
                         <configuration>
+                            <jar>${project.build.finalName}.jar</jar>
+                            <dontWrapJar>true</dontWrapJar>
                             <headerType>console</headerType>
                             <outfile>${project.build.directory}/subtitles-merger.exe</outfile>
-                            <jar>${project.build.directory}/${project.build.finalName}.jar</jar>
                             <jre>
                                 <path>../jre</path>
                             </jre>

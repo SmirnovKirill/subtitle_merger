@@ -15,6 +15,9 @@
     </fileSets>
     <files>
         <file>
+            <source>${project.build.directory}/${project.build.finalName}.jar</source>
+        </file>
+        <file>
             <source>${project.build.directory}/subtitles-merger.exe</source>
         </file>
     </files>
