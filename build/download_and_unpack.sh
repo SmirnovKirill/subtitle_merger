@@ -41,11 +41,11 @@ if [[ $BUILD_LINUX_64 == "y" ]]; then
     echo "jdk for linux x64 has already been downloaded"
   fi
 
-  DOWNLOAD_JAVAFX=$(need_to_download "$CURRENT_DIRECTORY/downloads/javafx/linux")
-  if [[ $DOWNLOAD_JAVAFX == "y" ]]; then
-    download_and_unpack "$CURRENT_DIRECTORY/downloads/javafx/linux" "$OPENJFX_LINUX_DOWNLOAD_URL"
+  DOWNLOAD_JAVAFX_JMODS=$(need_to_download "$CURRENT_DIRECTORY/downloads/javafx_jmods/linux")
+  if [[ $DOWNLOAD_JAVAFX_JMODS == "y" ]]; then
+    download_and_unpack "$CURRENT_DIRECTORY/downloads/javafx_jmods/linux" "$OPENJFX_JMODS_LINUX_DOWNLOAD_URL"
   else
-    echo "javafx for linux has already been downloaded"
+    echo "javafx jmods for linux has already been downloaded"
   fi
 
   if [[ $INCLUDE_FFMPEG == "y" ]]; then
@@ -68,11 +68,11 @@ if [[ $BUILD_WIN_64 == "y" ]]; then
     echo "jdk for windows x64 has already been downloaded"
   fi
 
-  DOWNLOAD_JAVAFX=$(need_to_download "$CURRENT_DIRECTORY/downloads/javafx/win")
-  if [[ $DOWNLOAD_JAVAFX == "y" ]]; then
-    download_and_unpack "$CURRENT_DIRECTORY/downloads/javafx/win" "$OPENJFX_WIN_DOWNLOAD_URL"
+  DOWNLOAD_JAVAFX_JMODS=$(need_to_download "$CURRENT_DIRECTORY/downloads/javafx_jmods/win")
+  if [[ $DOWNLOAD_JAVAFX_JMODS == "y" ]]; then
+    download_and_unpack "$CURRENT_DIRECTORY/downloads/javafx_jmods/win" "$OPENJFX_JMODS_WIN_DOWNLOAD_URL"
   else
-    echo "javafx for windows has already been downloaded"
+    echo "javafx jmods for windows has already been downloaded"
   fi
 
   if [[ $INCLUDE_FFMPEG == "y" ]]; then
