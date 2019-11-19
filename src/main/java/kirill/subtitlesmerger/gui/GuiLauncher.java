@@ -22,7 +22,7 @@ public class GuiLauncher extends Application {
         mainPane.setMinHeight(480);
         mainPane.setPrefHeight(480);
 
-        MergeFilesTab mergeFilesTab = new MergeFilesTab(mainPane);
+        MergeFilesTab mergeFilesTab = new MergeFilesTab(stage, mainPane);
         mainPane.getTabs().add(mergeFilesTab.generateTab());
 
         MergeInVideosTab mergeInVideosTab = new MergeInVideosTab(mainPane);

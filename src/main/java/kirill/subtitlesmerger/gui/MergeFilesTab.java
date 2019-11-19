@@ -2,17 +2,24 @@ package kirill.subtitlesmerger.gui;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
-import javafx.scene.layout.*;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 
 class MergeFilesTab {
+    private Stage stage;
+
     private TabPane mainPane;
 
-    MergeFilesTab(TabPane mainPane) {
+    MergeFilesTab(Stage stage, TabPane mainPane) {
+        this.stage = stage;
         this.mainPane = mainPane;
     }
 
@@ -21,7 +28,7 @@ class MergeFilesTab {
 
         GridPane contentPane = new GridPane();
 
-        contentPane.setVgap(30);
+        contentPane.setVgap(40);
         contentPane.setPadding(new Insets(20));
 
         ColumnConstraints firstColumn = new ColumnConstraints();
@@ -30,22 +37,29 @@ class MergeFilesTab {
         secondColumn.setPercentWidth(30);
         contentPane.getColumnConstraints().addAll(firstColumn, secondColumn);
 
-        Region topSpacer = new Region();
-        contentPane.addRow(0, topSpacer);
-        GridPane.setColumnSpan(topSpacer, 2);
-        GridPane.setVgrow(topSpacer, Priority.ALWAYS);
-
-        addRowWithLabelAndButton("Please choose the file with the upper subtitles", 1, contentPane);
-        addRowWithLabelAndButton("Please choose the file with the lower subtitles", 2, contentPane);
-        addRowWithLabelAndButton("Please choose where to save the result", 3, contentPane);
+        addRowWithLabelAndButton(
+                "Please choose the file with the upper subtitles",
+                contentPane.getRowCount(),
+                contentPane
+        );
+        addRowWithLabelAndButton(
+                "Please choose the file with the lower subtitles",
+                contentPane.getRowCount(),
+                contentPane
+        );
+        addRowWithLabelAndButton(
+                "Please choose where to save the result",
+                contentPane.getRowCount(),
+                contentPane
+        );
 
         Button mergeButton = new Button("Merge subtitles");
-        contentPane.addRow(4, mergeButton);
-        GridPane.setColumnSpan(mergeButton, 2);
+        contentPane.addRow(contentPane.getRowCount(), mergeButton);
+        GridPane.setColumnSpan(mergeButton, contentPane.getColumnCount());
 
         Region bottomSpacer = new Region();
-        contentPane.addRow(5, bottomSpacer);
-        GridPane.setColumnSpan(bottomSpacer, 2);
+        contentPane.addRow(contentPane.getRowCount(), bottomSpacer);
+        GridPane.setColumnSpan(bottomSpacer, contentPane.getColumnCount());
         GridPane.setVgrow(bottomSpacer, Priority.ALWAYS);
 
         result.setContent(contentPane);
@@ -59,6 +73,8 @@ class MergeFilesTab {
 
         GridPane.setHalignment(label, HPos.LEFT);
         GridPane.setHalignment(button, HPos.RIGHT);
+
+        button.setOnAction(e -> new FileChooser().showOpenDialog(stage));
 
         pane.addRow(index, label, button);
     }
