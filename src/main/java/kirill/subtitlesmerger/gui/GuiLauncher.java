@@ -7,7 +7,7 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 public class GuiLauncher extends Application {
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     public static void main(String[] args) {
         launch();
@@ -18,6 +18,7 @@ public class GuiLauncher extends Application {
         TabPane mainPane = generateMainPane(stage);
 
         Scene scene = new Scene(mainPane);
+        scene.getStylesheets().add("style.css");
         stage.setScene(scene);
 
         stage.setMinWidth(mainPane.getMinWidth());
@@ -43,6 +44,9 @@ public class GuiLauncher extends Application {
 
         MergeFilesTab mergeFilesTab = new MergeFilesTab(stage, result, DEBUG);
         result.getTabs().add(mergeFilesTab.generateTab());
+
+        MergeFilesTabInteractions mergeFilesTabInteractions = new MergeFilesTabInteractions(mergeFilesTab);
+        mergeFilesTabInteractions.addCallbacks();
 
         MergeInVideosTab mergeInVideosTab = new MergeInVideosTab(result);
         result.getTabs().add(mergeInVideosTab.generateTab());
