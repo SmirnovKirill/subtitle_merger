@@ -6,6 +6,7 @@ import javafx.scene.control.TabPane;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import kirill.subtitlesmerger.logic.Constants;
+import kirill.subtitlesmerger.logic.data.Config;
 
 public class GuiLauncher extends Application {
     public static void main(String[] args) {
@@ -14,7 +15,9 @@ public class GuiLauncher extends Application {
 
     @Override
     public void start(Stage stage) {
-        TabPane mainPane = generateMainPane(stage);
+        Config config = new Config();
+
+        TabPane mainPane = generateMainPane(stage, config);
 
         Scene scene = new Scene(mainPane);
         scene.getStylesheets().add("style.css");
@@ -30,7 +33,7 @@ public class GuiLauncher extends Application {
         stage.show();
     }
 
-    private TabPane generateMainPane(Stage stage) {
+    private TabPane generateMainPane(Stage stage, Config config) {
         TabPane result = new TabPane();
 
         result.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
@@ -44,7 +47,7 @@ public class GuiLauncher extends Application {
         MergeFilesTab mergeFilesTab = new MergeFilesTab(stage, result, Constants.DEBUG);
         result.getTabs().add(mergeFilesTab.generateTab());
 
-        MergeFilesTabInteractions mergeFilesTabInteractions = new MergeFilesTabInteractions(mergeFilesTab);
+        MergeFilesTabInteractions mergeFilesTabInteractions = new MergeFilesTabInteractions(mergeFilesTab, config);
         mergeFilesTabInteractions.addCallbacks();
 
         MergeInVideosTab mergeInVideosTab = new MergeInVideosTab(result);

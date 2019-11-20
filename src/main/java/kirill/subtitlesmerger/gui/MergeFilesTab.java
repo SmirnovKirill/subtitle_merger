@@ -39,11 +39,11 @@ class MergeFilesTab {
 
     private FileChooser lowerSubtitlesFileChooser;
 
-    private Button resultFileChooseButton;
+    private Button mergedSubtitlesFileChooseButton;
 
-    private Label resultPathLabel;
+    private Label mergedSubtitlesPathLabel;
 
-    private FileChooser resultFileChooser;
+    private FileChooser mergedSubtitlesFileChooser;
 
     private Button mergeButton;
 
@@ -72,7 +72,7 @@ class MergeFilesTab {
         contentPane.getColumnConstraints().addAll(generateColumnConstraints());
         addRowForUpperSubtitlesFile(contentPane);
         addRowForLowerSubtitlesFile(contentPane);
-        addRowForResultFile(contentPane);
+        addRowForMergedSubtitlesFile(contentPane);
         addMergeButton(contentPane);
         addSpacer(contentPane);
 
@@ -146,18 +146,23 @@ class MergeFilesTab {
         GridPane.setHalignment(lowerSubtitlesPathLabel, HPos.LEFT);
     }
 
-    private void addRowForResultFile(GridPane contentPane) {
+    private void addRowForMergedSubtitlesFile(GridPane contentPane) {
         Label descriptionLabel = new Label("Please choose where to save the result");
 
-        resultFileChooseButton = new Button("Choose file");
-        resultPathLabel = new Label("not selected");
-        resultFileChooser = getFileChooser("Please choose where to save the result");
+        mergedSubtitlesFileChooseButton = new Button("Choose file");
+        mergedSubtitlesPathLabel = new Label("not selected");
+        mergedSubtitlesFileChooser = getFileChooser("Please choose where to save the result");
 
-        contentPane.addRow(contentPane.getRowCount(), descriptionLabel, resultFileChooseButton, resultPathLabel);
+        contentPane.addRow(
+                contentPane.getRowCount(),
+                descriptionLabel,
+                mergedSubtitlesFileChooseButton,
+                mergedSubtitlesPathLabel
+        );
 
         GridPane.setHalignment(descriptionLabel, HPos.LEFT);
-        GridPane.setHalignment(resultFileChooseButton, HPos.RIGHT);
-        GridPane.setHalignment(resultPathLabel, HPos.LEFT);
+        GridPane.setHalignment(mergedSubtitlesFileChooseButton, HPos.RIGHT);
+        GridPane.setHalignment(mergedSubtitlesPathLabel, HPos.LEFT);
     }
 
     private void addMergeButton(GridPane contentPane) {
@@ -173,5 +178,11 @@ class MergeFilesTab {
         contentPane.addRow(contentPane.getRowCount(), bottomSpacer);
         GridPane.setColumnSpan(bottomSpacer, contentPane.getColumnCount());
         GridPane.setVgrow(bottomSpacer, Priority.ALWAYS);
+    }
+
+    enum FileType {
+        UPPER_SUBTITLES,
+        LOWER_SUBTITLES,
+        MERGED_SUBTITLES
     }
 }
