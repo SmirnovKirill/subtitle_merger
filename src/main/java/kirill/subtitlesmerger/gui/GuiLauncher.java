@@ -3,6 +3,7 @@ package kirill.subtitlesmerger.gui;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.TabPane;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 public class GuiLauncher extends Application {
@@ -12,29 +13,38 @@ public class GuiLauncher extends Application {
 
     @Override
     public void start(Stage stage) {
-        TabPane mainPane = new TabPane();
-
-        mainPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
-        mainPane.setTabDragPolicy(TabPane.TabDragPolicy.FIXED);
-
-        mainPane.setMinWidth(640);
-        mainPane.setPrefWidth(640);
-        mainPane.setMinHeight(480);
-        mainPane.setPrefHeight(480);
-
-        MergeFilesTab mergeFilesTab = new MergeFilesTab(stage, mainPane);
-        mainPane.getTabs().add(mergeFilesTab.generateTab());
-
-        MergeInVideosTab mergeInVideosTab = new MergeInVideosTab(mainPane);
-        mainPane.getTabs().add(mergeInVideosTab.generateTab());
+        TabPane mainPane = generateMainPane(stage);
 
         Scene scene = new Scene(mainPane);
+        stage.setScene(scene);
 
         stage.setMinWidth(mainPane.getMinWidth());
         stage.setMinHeight(mainPane.getMinHeight());
         stage.setResizable(true);
-        stage.setScene(scene);
+        stage.getIcons().add(new Image(GuiLauncher.class.getResourceAsStream("/icon.jpg")));
         stage.setTitle("Subtitles merger");
+        Application.setUserAgentStylesheet(STYLESHEET_MODENA);
+
         stage.show();
+    }
+
+    private TabPane generateMainPane(Stage stage) {
+        TabPane result = new TabPane();
+
+        result.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
+        result.setTabDragPolicy(TabPane.TabDragPolicy.FIXED);
+
+        result.setMinWidth(640);
+        result.setPrefWidth(640);
+        result.setMinHeight(480);
+        result.setPrefHeight(480);
+
+        MergeFilesTab mergeFilesTab = new MergeFilesTab(stage, result);
+        result.getTabs().add(mergeFilesTab.generateTab());
+
+        MergeInVideosTab mergeInVideosTab = new MergeInVideosTab(result);
+        result.getTabs().add(mergeInVideosTab.generateTab());
+
+        return result;
     }
 }
