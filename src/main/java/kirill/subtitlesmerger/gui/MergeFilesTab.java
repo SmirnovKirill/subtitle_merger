@@ -1,18 +1,17 @@
 package kirill.subtitlesmerger.gui;
 
+import javafx.event.ActionEvent;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
+import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +19,18 @@ class MergeFilesTab {
     private Stage stage;
 
     private TabPane mainPane;
+
+    private Label upperSubtitlesPathLabel;
+
+    private Label lowerSubtitlesPathLabel;
+
+    private Label resultPathLabel;
+
+    private File fileWithUpperSubtitles;
+
+    private File fileWithLowerSubtitles;
+
+    private File resultFile;
 
     MergeFilesTab(Stage stage, TabPane mainPane) {
         this.stage = stage;
@@ -37,13 +48,14 @@ class MergeFilesTab {
     private GridPane generateContentPane() {
         GridPane contentPane = new GridPane();
 
+        contentPane.setHgap(30);
         contentPane.setVgap(40);
         contentPane.setPadding(new Insets(20));
 
         contentPane.getColumnConstraints().addAll(generateColumnConstraints());
-        addRowForUpperSubtitles(contentPane);
-        addRowForLowerSubtitles(contentPane);
-        addRowForResult(contentPane);
+        addRowForUpperSubtitlesFile(contentPane);
+        addRowForLowerSubtitlesFile(contentPane);
+        addRowForResultFile(contentPane);
         addMergeButton(contentPane);
         addSpacer(contentPane);
 
@@ -54,50 +66,96 @@ class MergeFilesTab {
         List<ColumnConstraints> result = new ArrayList<>();
 
         ColumnConstraints firstColumn = new ColumnConstraints();
-        firstColumn.setPercentWidth(70);
+        firstColumn.setPrefWidth(400);
         result.add(firstColumn);
 
         ColumnConstraints secondColumn = new ColumnConstraints();
-        secondColumn.setPercentWidth(30);
+        secondColumn.setPrefWidth(100);
         result.add(secondColumn);
+
+        ColumnConstraints thirdColumn = new ColumnConstraints();
+        thirdColumn.setHgrow(Priority.ALWAYS);
+        result.add(thirdColumn);
 
         return result;
     }
 
-    private void addRowForUpperSubtitles(GridPane contentPane) {
-        Label label = new Label("Please choose the file with the upper subtitle");
+    private void addRowForUpperSubtitlesFile(GridPane contentPane) {
+        Label descriptionLabel = new Label("Please choose the file with the upper subtitle");
+
         Button button = new Button("Choose file");
+        button.setOnAction(this::upperSubtitlesFileButtonClicked);
 
-        GridPane.setHalignment(label, HPos.LEFT);
+        upperSubtitlesPathLabel = new Label("not selected");
+
+        contentPane.addRow(contentPane.getRowCount(), descriptionLabel, button, upperSubtitlesPathLabel);
+
+        GridPane.setHalignment(descriptionLabel, HPos.LEFT);
         GridPane.setHalignment(button, HPos.RIGHT);
-
-        button.setOnAction(e -> new FileChooser().showOpenDialog(stage));
-
-        contentPane.addRow(contentPane.getRowCount(), label, button);
+        GridPane.setHalignment(upperSubtitlesPathLabel, HPos.LEFT);
     }
 
-    private void addRowForLowerSubtitles(GridPane contentPane) {
-        Label label = new Label("Please choose the file with the lower subtitle");
-        Button button = new Button("Choose file");
+    private void upperSubtitlesFileButtonClicked(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
 
-        GridPane.setHalignment(label, HPos.LEFT);
-        GridPane.setHalignment(button, HPos.RIGHT);
-
-        button.setOnAction(e -> new FileChooser().showOpenDialog(stage));
-
-        contentPane.addRow(contentPane.getRowCount(), label, button);
+        fileWithUpperSubtitles = fileChooser.showOpenDialog(stage);
+        if (fileWithUpperSubtitles == null) {
+            upperSubtitlesPathLabel.setText("not selected");
+        } else {
+            upperSubtitlesPathLabel.setText(fileWithUpperSubtitles.getAbsolutePath());
+        }
     }
 
-    private void addRowForResult(GridPane contentPane) {
-        Label label = new Label("Please choose where to save the result");
+    private void addRowForLowerSubtitlesFile(GridPane contentPane) {
+        Label descriptionLabel = new Label("Please choose the file with the lower subtitle");
+
         Button button = new Button("Choose file");
+        button.setOnAction(this::lowerSubtitlesFileButtonClicked);
 
-        GridPane.setHalignment(label, HPos.LEFT);
+        upperSubtitlesPathLabel = new Label("not selected");
+
+        contentPane.addRow(contentPane.getRowCount(), descriptionLabel, button, upperSubtitlesPathLabel);
+
+        GridPane.setHalignment(descriptionLabel, HPos.LEFT);
         GridPane.setHalignment(button, HPos.RIGHT);
+        GridPane.setHalignment(upperSubtitlesPathLabel, HPos.LEFT);
+    }
 
-        button.setOnAction(e -> new FileChooser().showOpenDialog(stage));
+    private void lowerSubtitlesFileButtonClicked(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
 
-        contentPane.addRow(contentPane.getRowCount(), label, button);
+        fileWithUpperSubtitles = fileChooser.showOpenDialog(stage);
+        if (fileWithUpperSubtitles == null) {
+            upperSubtitlesPathLabel.setText("not selected");
+        } else {
+            upperSubtitlesPathLabel.setText(fileWithUpperSubtitles.getAbsolutePath());
+        }
+    }
+
+    private void addRowForResultFile(GridPane contentPane) {
+        Label descriptionLabel = new Label("Please choose where to save the result");
+
+        Button button = new Button("Choose file");
+        button.setOnAction(this::resultFileButtonClicked);
+
+        upperSubtitlesPathLabel = new Label("not selected");
+
+        contentPane.addRow(contentPane.getRowCount(), descriptionLabel, button, upperSubtitlesPathLabel);
+
+        GridPane.setHalignment(descriptionLabel, HPos.LEFT);
+        GridPane.setHalignment(button, HPos.RIGHT);
+        GridPane.setHalignment(upperSubtitlesPathLabel, HPos.LEFT);
+    }
+
+    private void resultFileButtonClicked(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+
+        fileWithUpperSubtitles = fileChooser.showOpenDialog(stage);
+        if (fileWithUpperSubtitles == null) {
+            upperSubtitlesPathLabel.setText("not selected");
+        } else {
+            upperSubtitlesPathLabel.setText(fileWithUpperSubtitles.getAbsolutePath());
+        }
     }
 
     private void addMergeButton(GridPane contentPane) {
