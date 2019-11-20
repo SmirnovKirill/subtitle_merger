@@ -20,21 +20,24 @@ class MergeFilesTab {
 
     private TabPane mainPane;
 
+    private boolean debug;
+
     private Label upperSubtitlesPathLabel;
 
     private Label lowerSubtitlesPathLabel;
 
     private Label resultPathLabel;
 
-    private File fileWithUpperSubtitles;
+    private File upperSubtitlesFile;
 
-    private File fileWithLowerSubtitles;
+    private File lowerSubtitlesFile;
 
     private File resultFile;
 
-    MergeFilesTab(Stage stage, TabPane mainPane) {
+    MergeFilesTab(Stage stage, TabPane mainPane, boolean debug) {
         this.stage = stage;
         this.mainPane = mainPane;
+        this.debug = debug;
     }
 
     Tab generateTab() {
@@ -51,6 +54,7 @@ class MergeFilesTab {
         contentPane.setHgap(30);
         contentPane.setVgap(40);
         contentPane.setPadding(new Insets(20));
+        contentPane.setGridLinesVisible(debug);
 
         contentPane.getColumnConstraints().addAll(generateColumnConstraints());
         addRowForUpperSubtitlesFile(contentPane);
@@ -81,7 +85,7 @@ class MergeFilesTab {
     }
 
     private void addRowForUpperSubtitlesFile(GridPane contentPane) {
-        Label descriptionLabel = new Label("Please choose the file with the upper subtitle");
+        Label descriptionLabel = new Label("Please choose the file with the upper subtitles");
 
         Button button = new Button("Choose file");
         button.setOnAction(this::upperSubtitlesFileButtonClicked);
@@ -96,40 +100,51 @@ class MergeFilesTab {
     }
 
     private void upperSubtitlesFileButtonClicked(ActionEvent event) {
-        FileChooser fileChooser = new FileChooser();
+        FileChooser fileChooser = getFileChooser("Please choose the file with the upper subtitles");
 
-        fileWithUpperSubtitles = fileChooser.showOpenDialog(stage);
-        if (fileWithUpperSubtitles == null) {
-            upperSubtitlesPathLabel.setText("not selected");
-        } else {
-            upperSubtitlesPathLabel.setText(fileWithUpperSubtitles.getAbsolutePath());
+        upperSubtitlesFile = fileChooser.showOpenDialog(stage);
+        upperSubtitlesPathLabel.setText(getPathLabelText(upperSubtitlesFile));
+    }
+
+    private FileChooser getFileChooser(String title) {
+        FileChooser result = new FileChooser();
+
+        result.setTitle(title);
+        result.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("subrip files *.srt", "*.srt")
+        );
+
+        return result;
+    }
+
+    private static String getPathLabelText(File file) {
+        if (file == null) {
+            return "not selected";
         }
+
+        return file.getAbsolutePath();
     }
 
     private void addRowForLowerSubtitlesFile(GridPane contentPane) {
-        Label descriptionLabel = new Label("Please choose the file with the lower subtitle");
+        Label descriptionLabel = new Label("Please choose the file with the lower subtitles");
 
         Button button = new Button("Choose file");
         button.setOnAction(this::lowerSubtitlesFileButtonClicked);
 
-        upperSubtitlesPathLabel = new Label("not selected");
+        lowerSubtitlesPathLabel = new Label("not selected");
 
-        contentPane.addRow(contentPane.getRowCount(), descriptionLabel, button, upperSubtitlesPathLabel);
+        contentPane.addRow(contentPane.getRowCount(), descriptionLabel, button, lowerSubtitlesPathLabel);
 
         GridPane.setHalignment(descriptionLabel, HPos.LEFT);
         GridPane.setHalignment(button, HPos.RIGHT);
-        GridPane.setHalignment(upperSubtitlesPathLabel, HPos.LEFT);
+        GridPane.setHalignment(lowerSubtitlesPathLabel, HPos.LEFT);
     }
 
     private void lowerSubtitlesFileButtonClicked(ActionEvent event) {
-        FileChooser fileChooser = new FileChooser();
+        FileChooser fileChooser = getFileChooser("Please choose the file with the lower subtitles");
 
-        fileWithUpperSubtitles = fileChooser.showOpenDialog(stage);
-        if (fileWithUpperSubtitles == null) {
-            upperSubtitlesPathLabel.setText("not selected");
-        } else {
-            upperSubtitlesPathLabel.setText(fileWithUpperSubtitles.getAbsolutePath());
-        }
+        lowerSubtitlesFile = fileChooser.showOpenDialog(stage);
+        lowerSubtitlesPathLabel.setText(getPathLabelText(lowerSubtitlesFile));
     }
 
     private void addRowForResultFile(GridPane contentPane) {
@@ -138,24 +153,20 @@ class MergeFilesTab {
         Button button = new Button("Choose file");
         button.setOnAction(this::resultFileButtonClicked);
 
-        upperSubtitlesPathLabel = new Label("not selected");
+        resultPathLabel = new Label("not selected");
 
-        contentPane.addRow(contentPane.getRowCount(), descriptionLabel, button, upperSubtitlesPathLabel);
+        contentPane.addRow(contentPane.getRowCount(), descriptionLabel, button, resultPathLabel);
 
         GridPane.setHalignment(descriptionLabel, HPos.LEFT);
         GridPane.setHalignment(button, HPos.RIGHT);
-        GridPane.setHalignment(upperSubtitlesPathLabel, HPos.LEFT);
+        GridPane.setHalignment(resultPathLabel, HPos.LEFT);
     }
 
     private void resultFileButtonClicked(ActionEvent event) {
-        FileChooser fileChooser = new FileChooser();
+        FileChooser fileChooser = getFileChooser("Please choose where to save the result");
 
-        fileWithUpperSubtitles = fileChooser.showOpenDialog(stage);
-        if (fileWithUpperSubtitles == null) {
-            upperSubtitlesPathLabel.setText("not selected");
-        } else {
-            upperSubtitlesPathLabel.setText(fileWithUpperSubtitles.getAbsolutePath());
-        }
+        resultFile = fileChooser.showSaveDialog(stage);
+        resultPathLabel.setText(getPathLabelText(resultFile));
     }
 
     private void addMergeButton(GridPane contentPane) {
