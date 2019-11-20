@@ -1,7 +1,8 @@
 package kirill.subtitlesmerger;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
-import kirill.subtitlesmerger.logic.*;
+import kirill.subtitlesmerger.logic.Constants;
+import kirill.subtitlesmerger.logic.Parser;
 import kirill.subtitlesmerger.logic.data.*;
 import kirill.subtitlesmerger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitlesmerger.logic.ffmpeg.FfmpegException;
@@ -17,23 +18,19 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.*;
-import java.util.prefs.Preferences;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Scanner;
 
 import static kirill.subtitlesmerger.logic.data.BriefFileInfo.UnavailabilityReason.*;
 
 @CommonsLog
 public class Main {
-    private static final String PREFERENCES_ROOT_NODE = "subtitlesmerger";
-
-    private static final List<String> ALLOWED_VIDEO_EXTENSIONS = Collections.singletonList("mkv");
-
-    private static final List<String> ALLOWED_VIDEO_MIME_TYPES = Collections.singletonList("video/x-matroska");
-
     public static void main(String[] args) throws FfmpegException {
         Scanner scanner = new Scanner(System.in);
 
-        Config config = getConfig(scanner);
+        Config config = new Config();
         File directoryWithVideos = getDirectoryWithVideos(scanner);
 
         File[] directoryFiles = directoryWithVideos.listFiles();
@@ -42,8 +39,8 @@ public class Main {
             throw new IllegalStateException();
         }
 
-        Ffprobe ffprobe = new Ffprobe(config.getFfprobePath());
-        Ffmpeg ffmpeg = new Ffmpeg(config.getFfmpegPath());
+        Ffprobe ffprobe = new Ffprobe(config.getFfprobeFile());
+        Ffmpeg ffmpeg = new Ffmpeg(config.getFfmpegFile());
 
         List<BriefFileInfo> briefFilesInfo = getBriefFilesInfo(directoryFiles, ffprobe);
 
@@ -92,122 +89,6 @@ public class Main {
         }
     }
 
-    private static Config getConfig(Scanner scanner) {
-        Preferences preferences = Preferences.userRoot().node(PREFERENCES_ROOT_NODE);
-        Config fromPreferences = getValidatedConfigFromPreferences();
-
-        String ffmpegPath = fromPreferences.getFfmpegPath();
-        String ffprobePath = fromPreferences.getFfprobePath();
-        LanguageAlpha3Code upperLanguage = fromPreferences.getUpperLanguage();
-        LanguageAlpha3Code lowerLanguage = fromPreferences.getLowerLanguage();
-
-        while (StringUtils.isBlank(ffprobePath)) {
-            System.out.println("please provide path to the ffprobe executable file");
-
-            ffprobePath = scanner.nextLine();
-            if (!StringUtils.isBlank(ffprobePath)) {
-                try {
-                    Ffprobe.validate(ffprobePath);
-                } catch (FfmpegException e) {
-                    System.out.println("path to the ffprobe executable file is incorrect");
-                    ffprobePath = null;
-                }
-            }
-        }
-
-        while (StringUtils.isBlank(ffmpegPath)) {
-            System.out.println("please provide path to the ffmpeg executable file");
-
-            ffmpegPath = scanner.nextLine();
-            if (!StringUtils.isBlank(ffmpegPath)) {
-                try {
-                    Ffmpeg.validate(ffmpegPath);
-                } catch (FfmpegException e) {
-                    System.out.println("path to the ffmpeg executable file is incorrect");
-                    ffmpegPath = null;
-                }
-            }
-        }
-
-        while (upperLanguage == null) {
-            System.out.println("please provide preferred language (ISO 639-2) to upper subtitles");
-
-            upperLanguage = LanguageAlpha3Code.getByCodeIgnoreCase(scanner.nextLine());
-            if (upperLanguage == null) {
-                System.out.println("incorrect language format");
-            }
-        }
-
-        while (lowerLanguage == null) {
-            System.out.println("please provide preferred language (ISO 639-2) to lower subtitles");
-
-            lowerLanguage = LanguageAlpha3Code.getByCodeIgnoreCase(scanner.nextLine());
-            if (lowerLanguage == null) {
-                System.out.println("incorrect language format");
-            } else if (lowerLanguage == upperLanguage) {
-                System.out.println("preferred languages have to be different");
-                lowerLanguage = null;
-            }
-        }
-
-        preferences.put("ffprobe_path", ffprobePath);
-        preferences.put("ffmpeg_path", ffmpegPath);
-        preferences.put("upper_language", upperLanguage.toString());
-        preferences.put("lower_language", lowerLanguage.toString());
-
-        return new Config(ffmpegPath, ffprobePath, upperLanguage, lowerLanguage);
-    }
-
-    private static Config getValidatedConfigFromPreferences() {
-        Preferences preferences = Preferences.userRoot().node(PREFERENCES_ROOT_NODE);
-
-        String ffprobePath = preferences.get("ffprobe_path", "");
-        if (StringUtils.isBlank(ffprobePath)) {
-            ffprobePath = null;
-        } else {
-            try {
-                Ffprobe.validate(ffprobePath);
-            } catch (FfmpegException e) {
-                log.warn("incorrect ffprobe path in the preferences: " + ffprobePath);
-                ffprobePath = null;
-            }
-        }
-
-        String ffmpegPath = preferences.get("ffmpeg_path", "");
-        if (StringUtils.isBlank(ffmpegPath)) {
-            ffmpegPath = null;
-        } else {
-            try {
-                Ffmpeg.validate(ffmpegPath);
-            } catch (FfmpegException e) {
-                log.warn("incorrect ffmpeg path in the preferences: " + ffmpegPath);
-                ffmpegPath = null;
-            }
-        }
-
-        LanguageAlpha3Code upperLanguage = null;
-        String upperLanguageRaw = preferences.get("upper_language", "");
-        if (!StringUtils.isBlank(upperLanguageRaw)) {
-            upperLanguage = LanguageAlpha3Code.getByCodeIgnoreCase(upperLanguageRaw);
-            if (upperLanguage == null) {
-                log.warn("incorrect upper language in the preferences: " + upperLanguageRaw);
-            }
-        }
-
-        LanguageAlpha3Code lowerLanguage = null;
-        String lowerLanguageRaw = preferences.get("lower_language", "");
-        if (!StringUtils.isBlank(lowerLanguageRaw)) {
-            lowerLanguage = LanguageAlpha3Code.getByCodeIgnoreCase(lowerLanguageRaw);
-            if (lowerLanguage == null) {
-                log.warn("incorrect lower language in the preferences: " + lowerLanguageRaw);
-            } else if (lowerLanguage == upperLanguage) {
-                log.warn("languages are the same in the preferences: " + lowerLanguage);
-            }
-        }
-
-        return new Config(ffmpegPath, ffprobePath, upperLanguage, lowerLanguage);
-    }
-
     private static File getDirectoryWithVideos(Scanner scanner) {
         File result = null;
 
@@ -241,7 +122,7 @@ public class Main {
                 continue;
             }
 
-            if (!ALLOWED_VIDEO_EXTENSIONS.contains(extension.toLowerCase())) {
+            if (!Constants.ALLOWED_VIDEO_EXTENSIONS.contains(extension.toLowerCase())) {
                 result.add(new BriefFileInfo(file, NOT_ALLOWED_EXTENSION, null, null));
                 continue;
             }
@@ -257,7 +138,7 @@ public class Main {
                 continue;
             }
 
-            if (!ALLOWED_VIDEO_MIME_TYPES.contains(mimeType)) {
+            if (!Constants.ALLOWED_VIDEO_MIME_TYPES.contains(mimeType)) {
                 result.add(new BriefFileInfo(file, NOT_ALLOWED_MIME_TYPE, null, null));
                 continue;
             }

@@ -23,19 +23,19 @@ public class Ffmpeg {
             "subtitles_merger_temp.srt"
     );
 
-    private String path;
+    private File ffmpegFile;
 
-    public Ffmpeg(String path) throws FfmpegException {
-        validate(path);
+    public Ffmpeg(File ffmpegFile) throws FfmpegException {
+        validate(ffmpegFile);
 
-        this.path = path;
+        this.ffmpegFile = ffmpegFile;
     }
 
-    public static void validate(String ffmpegPath) throws FfmpegException {
+    public static void validate(File ffmpegFile) throws FfmpegException {
         try {
             String consoleOutput = ProcessRunner.run(
                     Arrays.asList(
-                            ffmpegPath,
+                            ffmpegFile.getAbsolutePath(),
                             "-version"
                     )
             );
@@ -61,7 +61,7 @@ public class Ffmpeg {
                      * because java will have created temporary file by the time ffmpeg is called.
                      */
                     Arrays.asList(
-                            path,
+                            ffmpegFile.getAbsolutePath(),
                             "-y",
                             "-i",
                             videoFile.getAbsolutePath(),
@@ -76,7 +76,7 @@ public class Ffmpeg {
         }
 
         try {
-            return FileUtils.readFileToString(TEMP_SUBTITLE_FILE);
+            return FileUtils.readFileToString(TEMP_SUBTITLE_FILE, StandardCharsets.UTF_8);
         } catch (IOException e) {
             log.warn("failed to read subtitles from the file: " + ExceptionUtils.getStackTrace(e));
             throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
@@ -146,7 +146,7 @@ public class Ffmpeg {
     ) {
         List<String> result = new ArrayList<>();
 
-        result.add(path);
+        result.add(ffmpegFile.getAbsolutePath());
         result.add("-y");
 
         /*

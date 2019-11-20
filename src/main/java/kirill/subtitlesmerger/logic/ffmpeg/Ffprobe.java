@@ -15,7 +15,7 @@ import java.util.Arrays;
 public class Ffprobe {
     private static final ObjectMapper JSON_OBJECT_MAPPER;
 
-    private String path;
+    private File ffprobeFile;
 
     static {
         JSON_OBJECT_MAPPER = new ObjectMapper();
@@ -27,17 +27,17 @@ public class Ffprobe {
         JSON_OBJECT_MAPPER.configure(MapperFeature.AUTO_DETECT_CREATORS, false);
     }
 
-    public Ffprobe(String path) throws FfmpegException {
-        validate(path);
+    public Ffprobe(File ffprobeFile) throws FfmpegException {
+        validate(ffprobeFile);
 
-        this.path = path;
+        this.ffprobeFile = ffprobeFile;
     }
 
-    public static void validate(String ffprobePath) throws FfmpegException {
+    public static void validate(File ffprobeFile) throws FfmpegException {
         try {
             String consoleOutput = ProcessRunner.run(
                     Arrays.asList(
-                            ffprobePath,
+                            ffprobeFile.getAbsolutePath(),
                             "-version"
                     )
             );
@@ -57,7 +57,7 @@ public class Ffprobe {
         try {
             consoleOutput = ProcessRunner.run(
                     Arrays.asList(
-                            path,
+                            ffprobeFile.getAbsolutePath(),
                             "-v",
                             "quiet",
                             "-show_format",

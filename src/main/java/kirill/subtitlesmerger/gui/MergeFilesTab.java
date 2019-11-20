@@ -19,6 +19,8 @@ import java.util.List;
 
 @Getter
 class MergeFilesTab {
+    static final String BUTTON_ERROR_CLASS = "button-error";
+
     private Stage stage;
 
     private TabPane mainPane;

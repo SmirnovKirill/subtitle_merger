@@ -5,10 +5,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.TabPane;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import kirill.subtitlesmerger.logic.Constants;
 
 public class GuiLauncher extends Application {
-    private static final boolean DEBUG = false;
-
     public static void main(String[] args) {
         launch();
     }
@@ -42,7 +41,7 @@ public class GuiLauncher extends Application {
         result.setMinHeight(480);
         result.setPrefHeight(480);
 
-        MergeFilesTab mergeFilesTab = new MergeFilesTab(stage, result, DEBUG);
+        MergeFilesTab mergeFilesTab = new MergeFilesTab(stage, result, Constants.DEBUG);
         result.getTabs().add(mergeFilesTab.generateTab());
 
         MergeFilesTabInteractions mergeFilesTabInteractions = new MergeFilesTabInteractions(mergeFilesTab);
