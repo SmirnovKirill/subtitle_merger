@@ -13,6 +13,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -85,15 +86,20 @@ class MergeFilesTabInteractions {
     private void upperSubtitlesFileButtonClicked(ActionEvent event) {
         upperSubtitlesFile = tab.getUpperSubtitlesFileChooser().showOpenDialog(tab.getStage());
 
-        tab.clearPreviousResults();
-        updatePathLabelText(MergeFilesTab.FileType.UPPER_SUBTITLES);
+        redrawAfterFileChosen(MergeFilesTab.FileType.UPPER_SUBTITLES);
+
         saveLastDirectoryInConfigIfNecessary(MergeFilesTab.FileType.UPPER_SUBTITLES);
         updateFileChooserInitialDirectories();
-        updateErrors();
+    }
+
+    private void redrawAfterFileChosen(MergeFilesTab.FileType fileType) {
+        tab.removeErrorsAndResult();
+        updatePathLabels(fileType);
+        showErrorsIfNecessary();
         updateMergeButtonVisibility();
     }
 
-    private void updatePathLabelText(MergeFilesTab.FileType fileType) {
+    private void updatePathLabels(MergeFilesTab.FileType fileType) {
         Label label;
         File file;
         switch (fileType) {
@@ -120,33 +126,7 @@ class MergeFilesTabInteractions {
         }
     }
 
-    private void saveLastDirectoryInConfigIfNecessary(MergeFilesTab.FileType fileType) {
-        try {
-            switch (fileType) {
-                case UPPER_SUBTITLES:
-                    if (upperSubtitlesFile != null) {
-                        config.saveUpperSubtitlesLastDirectory(upperSubtitlesFile.getParent());
-                    }
-                    break;
-                case LOWER_SUBTITLES:
-                    if (lowerSubtitlesFile != null) {
-                        config.saveLowerSubtitlesLastDirectory(lowerSubtitlesFile.getParent());
-                    }
-                    break;
-                case MERGED_SUBTITLES:
-                    if (mergedSubtitlesFile != null) {
-                        config.saveMergedSubtitlesLastDirectory(mergedSubtitlesFile.getParent());
-                    }
-                    break;
-                default:
-                    throw new IllegalStateException();
-            }
-        } catch (Config.ConfigException e) {
-            throw new IllegalStateException();
-        }
-    }
-
-    private void updateErrors() {
+    private void showErrorsIfNecessary() {
         String upperSubtitlesFileErrorMessage = null;
         if (upperSubtitlesFile != null && !CollectionUtils.isEmpty(incorrectInputFiles)) {
             IncorrectInputFile incorrectInputFile = incorrectInputFiles.stream()
@@ -178,13 +158,18 @@ class MergeFilesTabInteractions {
             }
         }
 
-        tab.updateErrors(
-                upperSubtitlesFileErrorMessage,
-                lowerSubtitlesFileErrorMessage,
-                mergedSubtitlesFileErrorMessage
-        );
-    }
+        boolean atLeastOneError = !StringUtils.isBlank(upperSubtitlesFileErrorMessage)
+                || !StringUtils.isBlank(lowerSubtitlesFileErrorMessage)
+                || !StringUtils.isBlank(mergedSubtitlesFileErrorMessage);
 
+        if (atLeastOneError) {
+            tab.showErrors(
+                    upperSubtitlesFileErrorMessage,
+                    lowerSubtitlesFileErrorMessage,
+                    mergedSubtitlesFileErrorMessage
+            );
+        }
+    }
     private boolean inputFilesTheSame() {
         if (upperSubtitlesFile == null || lowerSubtitlesFile == null) {
             return false;
@@ -235,15 +220,39 @@ class MergeFilesTabInteractions {
         );
     }
 
+    private void saveLastDirectoryInConfigIfNecessary(MergeFilesTab.FileType fileType) {
+        try {
+            switch (fileType) {
+                case UPPER_SUBTITLES:
+                    if (upperSubtitlesFile != null) {
+                        config.saveUpperSubtitlesLastDirectory(upperSubtitlesFile.getParent());
+                    }
+                    break;
+                case LOWER_SUBTITLES:
+                    if (lowerSubtitlesFile != null) {
+                        config.saveLowerSubtitlesLastDirectory(lowerSubtitlesFile.getParent());
+                    }
+                    break;
+                case MERGED_SUBTITLES:
+                    if (mergedSubtitlesFile != null) {
+                        config.saveMergedSubtitlesLastDirectory(mergedSubtitlesFile.getParent());
+                    }
+                    break;
+                default:
+                    throw new IllegalStateException();
+            }
+        } catch (Config.ConfigException e) {
+            throw new IllegalStateException();
+        }
+    }
+
     private void lowerSubtitlesFileButtonClicked(ActionEvent event) {
         lowerSubtitlesFile = tab.getLowerSubtitlesFileChooser().showOpenDialog(tab.getStage());
 
-        tab.clearPreviousResults();
-        updatePathLabelText(MergeFilesTab.FileType.LOWER_SUBTITLES);
+        redrawAfterFileChosen(MergeFilesTab.FileType.LOWER_SUBTITLES);
+
         saveLastDirectoryInConfigIfNecessary(MergeFilesTab.FileType.LOWER_SUBTITLES);
         updateFileChooserInitialDirectories();
-        updateErrors();
-        updateMergeButtonVisibility();
     }
 
     private void mergedSubtitlesFileButtonClicked(ActionEvent event) {
@@ -252,22 +261,22 @@ class MergeFilesTabInteractions {
             mergedSubtitlesFile = new File(mergedSubtitlesFile.getAbsolutePath() + ".srt");
         }
 
-        tab.clearPreviousResults();
-        updatePathLabelText(MergeFilesTab.FileType.MERGED_SUBTITLES);
+        redrawAfterFileChosen(MergeFilesTab.FileType.MERGED_SUBTITLES);
+
         saveLastDirectoryInConfigIfNecessary(MergeFilesTab.FileType.MERGED_SUBTITLES);
         updateFileChooserInitialDirectories();
-        updateErrors();
-        updateMergeButtonVisibility();
     }
 
     private void mergeButtonClicked(ActionEvent event) {
-        clearPreviousResults();
+        this.incorrectInputFiles = new ArrayList<>();
+        this.incorrectOutputFile = null;
+        tab.removeErrorsAndResult();
 
         List<ParsedSubtitlesInfo> allParsedSubtitles = getAllParsedSubtitles();
 
         this.incorrectInputFiles = getIncorrectInputFiles(allParsedSubtitles);
         if (!CollectionUtils.isEmpty(incorrectInputFiles)) {
-            updateErrors();
+            showErrorsIfNecessary();
             return;
         }
 
@@ -283,17 +292,11 @@ class MergeFilesTabInteractions {
                     mergedSubtitlesFile,
                     IncorrectOutputFileReason.CAN_NOT_WRITE_TO_FILE
             );
-            updateErrors();
+            showErrorsIfNecessary();
             return;
         }
 
         tab.showSuccessMessage();
-    }
-
-    private void clearPreviousResults() {
-        this.incorrectInputFiles = new ArrayList<>();
-        this.incorrectOutputFile = null;
-        tab.clearPreviousResults();
     }
 
     private List<ParsedSubtitlesInfo> getAllParsedSubtitles() {

@@ -192,28 +192,51 @@ class MergeFilesTab {
         GridPane.setVgrow(bottomSpacer, Priority.ALWAYS);
     }
 
-    void clearPreviousResults() {
-        updateButtonErrorClass(upperSubtitlesFileChooseButton, false);
-        updateButtonErrorClass(lowerSubtitlesFileChooseButton, false);
-        updateButtonErrorClass(mergedSubtitlesFileChooseButton, false);
+    void removeErrorsAndResult() {
+        removeButtonErrorClass(upperSubtitlesFileChooseButton);
+        removeButtonErrorClass(lowerSubtitlesFileChooseButton);
+        removeButtonErrorClass(mergedSubtitlesFileChooseButton);
         clearResult();
     }
 
-    void updateErrors(
+    private void removeButtonErrorClass(Button button) {
+        button.getStyleClass().remove(MergeFilesTab.BUTTON_ERROR_CLASS);
+    }
+
+    private void clearResult() {
+        resultLabel.setText("");
+        resultLabel.getStyleClass().remove("label-success");
+        resultLabel.getStyleClass().remove("label-error");
+    }
+
+    void showErrors(
             String upperSubtitlesFileErrorMessage,
             String lowerSubtitlesFileErrorMessage,
             String mergedSubtitlesFileErrorMessage
     ) {
-        updateButtonErrorClass(upperSubtitlesFileChooseButton, !StringUtils.isBlank(upperSubtitlesFileErrorMessage));
-        updateButtonErrorClass(lowerSubtitlesFileChooseButton, !StringUtils.isBlank(lowerSubtitlesFileErrorMessage));
-        updateButtonErrorClass(mergedSubtitlesFileChooseButton, !StringUtils.isBlank(mergedSubtitlesFileErrorMessage));
+        if (!StringUtils.isBlank(upperSubtitlesFileErrorMessage)) {
+            addButtonErrorClass(upperSubtitlesFileChooseButton);
+        } else {
+            removeButtonErrorClass(upperSubtitlesFileChooseButton);
+        }
+
+        if (!StringUtils.isBlank(lowerSubtitlesFileErrorMessage)) {
+            addButtonErrorClass(lowerSubtitlesFileChooseButton);
+        } else {
+            removeButtonErrorClass(lowerSubtitlesFileChooseButton);
+        }
+
+        if (!StringUtils.isBlank(mergedSubtitlesFileErrorMessage)) {
+            addButtonErrorClass(mergedSubtitlesFileChooseButton);
+        } else {
+            removeButtonErrorClass(mergedSubtitlesFileChooseButton);
+        }
 
         boolean atLeastOneError = !StringUtils.isBlank(upperSubtitlesFileErrorMessage)
                 || !StringUtils.isBlank(lowerSubtitlesFileErrorMessage)
                 || !StringUtils.isBlank(mergedSubtitlesFileErrorMessage);
         if (!atLeastOneError) {
-            clearResult();
-            return;
+            throw new IllegalStateException();
         }
 
         StringBuilder combinedErrorsMessage = new StringBuilder("Can't merge subtitles:");
@@ -234,18 +257,10 @@ class MergeFilesTab {
         showErrorMessage(combinedErrorsMessage.toString());
     }
 
-    private static void updateButtonErrorClass(Button button, boolean hasErrors) {
-        if (hasErrors && !button.getStyleClass().contains(MergeFilesTab.BUTTON_ERROR_CLASS)) {
+    private static void addButtonErrorClass(Button button) {
+        if (!button.getStyleClass().contains(MergeFilesTab.BUTTON_ERROR_CLASS)) {
             button.getStyleClass().add(MergeFilesTab.BUTTON_ERROR_CLASS);
-        } else if (!hasErrors) {
-            button.getStyleClass().remove(MergeFilesTab.BUTTON_ERROR_CLASS);
         }
-    }
-
-    private void clearResult() {
-        resultLabel.setText("");
-        resultLabel.getStyleClass().remove("label-success");
-        resultLabel.getStyleClass().remove("label-error");
     }
 
     private void showErrorMessage(String text) {
