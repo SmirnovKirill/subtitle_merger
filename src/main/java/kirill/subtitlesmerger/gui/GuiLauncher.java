@@ -42,7 +42,7 @@ public class GuiLauncher extends Application {
         result.setPrefWidth(800);
         result.setMinWidth(result.getPrefWidth());
         result.setPrefHeight(480);
-        result.setMinHeight(result.getPrefWidth());
+        result.setMinHeight(result.getPrefHeight());
 
         MergeFilesTab mergeFilesTab = new MergeFilesTab(stage, result, Constants.DEBUG);
         result.getTabs().add(mergeFilesTab.generateTab());
