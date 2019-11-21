@@ -84,10 +84,12 @@ class MergeFilesTab {
 
         ColumnConstraints firstColumn = new ColumnConstraints();
         firstColumn.setPrefWidth(400);
+        firstColumn.setMinWidth(firstColumn.getPrefWidth());
         result.add(firstColumn);
 
         ColumnConstraints secondColumn = new ColumnConstraints();
         secondColumn.setPrefWidth(100);
+        secondColumn.setMinWidth(secondColumn.getPrefWidth());
         result.add(secondColumn);
 
         ColumnConstraints thirdColumn = new ColumnConstraints();

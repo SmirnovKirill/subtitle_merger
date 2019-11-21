@@ -39,10 +39,10 @@ public class GuiLauncher extends Application {
         result.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         result.setTabDragPolicy(TabPane.TabDragPolicy.FIXED);
 
-        result.setMinWidth(800);
         result.setPrefWidth(800);
-        result.setMinHeight(480);
+        result.setMinWidth(result.getPrefWidth());
         result.setPrefHeight(480);
+        result.setMinHeight(result.getPrefWidth());
 
         MergeFilesTab mergeFilesTab = new MergeFilesTab(stage, result, Constants.DEBUG);
         result.getTabs().add(mergeFilesTab.generateTab());
