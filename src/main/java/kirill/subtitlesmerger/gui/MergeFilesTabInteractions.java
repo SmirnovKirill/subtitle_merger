@@ -85,6 +85,7 @@ class MergeFilesTabInteractions {
     private void upperSubtitlesFileButtonClicked(ActionEvent event) {
         upperSubtitlesFile = tab.getUpperSubtitlesFileChooser().showOpenDialog(tab.getStage());
 
+        tab.clearPreviousResults();
         updatePathLabelText(MergeFilesTab.FileType.UPPER_SUBTITLES);
         saveLastDirectoryInConfigIfNecessary(MergeFilesTab.FileType.UPPER_SUBTITLES);
         updateFileChooserInitialDirectories();
@@ -173,7 +174,7 @@ class MergeFilesTabInteractions {
         String mergedSubtitlesFileErrorMessage = null;
         if (mergedSubtitlesFile != null && incorrectOutputFile != null) {
             if (Objects.equals(mergedSubtitlesFile, incorrectOutputFile.getFile())) {
-                mergedSubtitlesFileErrorMessage = getErrorText(lowerSubtitlesFile, incorrectOutputFile.getReason());
+                mergedSubtitlesFileErrorMessage = getErrorText(mergedSubtitlesFile, incorrectOutputFile.getReason());
             }
         }
 
@@ -237,6 +238,7 @@ class MergeFilesTabInteractions {
     private void lowerSubtitlesFileButtonClicked(ActionEvent event) {
         lowerSubtitlesFile = tab.getLowerSubtitlesFileChooser().showOpenDialog(tab.getStage());
 
+        tab.clearPreviousResults();
         updatePathLabelText(MergeFilesTab.FileType.LOWER_SUBTITLES);
         saveLastDirectoryInConfigIfNecessary(MergeFilesTab.FileType.LOWER_SUBTITLES);
         updateFileChooserInitialDirectories();
@@ -250,6 +252,7 @@ class MergeFilesTabInteractions {
             mergedSubtitlesFile = new File(mergedSubtitlesFile.getAbsolutePath() + ".srt");
         }
 
+        tab.clearPreviousResults();
         updatePathLabelText(MergeFilesTab.FileType.MERGED_SUBTITLES);
         saveLastDirectoryInConfigIfNecessary(MergeFilesTab.FileType.MERGED_SUBTITLES);
         updateFileChooserInitialDirectories();
@@ -281,6 +284,7 @@ class MergeFilesTabInteractions {
                     IncorrectOutputFileReason.CAN_NOT_WRITE_TO_FILE
             );
             updateErrors();
+            return;
         }
 
         tab.showSuccessMessage();
@@ -300,7 +304,7 @@ class MergeFilesTabInteractions {
             throw new IllegalStateException();
         }
 
-        if (Objects.equals(upperSubtitlesFile, lowerSubtitlesFile)) {
+        if (inputFilesTheSame()) {
             result.add(new ParsedSubtitlesInfo(upperSubtitlesFile, null, IncorrectInputFileReason.DUPLICATE));
             result.add(new ParsedSubtitlesInfo(lowerSubtitlesFile, null, IncorrectInputFileReason.DUPLICATE));
             return result;

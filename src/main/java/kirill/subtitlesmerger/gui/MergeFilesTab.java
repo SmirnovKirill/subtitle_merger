@@ -48,9 +48,7 @@ class MergeFilesTab {
 
     private Button mergeButton;
 
-    private Label combinedErrorsLabel;
-
-    private Label successLabel;
+    private Label resultLabel;
 
     MergeFilesTab(Stage stage, TabPane mainPane, boolean debug) {
         this.stage = stage;
@@ -79,7 +77,7 @@ class MergeFilesTab {
         addRowForLowerSubtitlesFile(contentPane);
         addRowForMergedSubtitlesFile(contentPane);
         addMergeButton(contentPane);
-        addErrorAndSuccessLabels(contentPane);
+        addResultLabel(contentPane);
         addSpacer(contentPane);
 
         return contentPane;
@@ -181,17 +179,10 @@ class MergeFilesTab {
         GridPane.setColumnSpan(mergeButton, contentPane.getColumnCount());
     }
 
-    private void addErrorAndSuccessLabels(GridPane contentPane) {
-        successLabel = new Label();
-        successLabel.getStyleClass().add("label-success");
-        contentPane.addRow(contentPane.getRowCount(), successLabel);
-        GridPane.setColumnSpan(successLabel, contentPane.getColumnCount());
-
-        combinedErrorsLabel = new Label();
-        combinedErrorsLabel.setWrapText(true);
-        combinedErrorsLabel.getStyleClass().add("label-error");
-        contentPane.addRow(contentPane.getRowCount(), combinedErrorsLabel);
-        GridPane.setColumnSpan(combinedErrorsLabel, contentPane.getColumnCount());
+    private void addResultLabel(GridPane contentPane) {
+        resultLabel = new Label();
+        contentPane.addRow(contentPane.getRowCount(), resultLabel);
+        GridPane.setColumnSpan(resultLabel, contentPane.getColumnCount());
     }
 
     private void addSpacer(GridPane contentPane) {
@@ -202,8 +193,10 @@ class MergeFilesTab {
     }
 
     void clearPreviousResults() {
-        updateErrors(null, null, null);
-        clearSuccessMessage();
+        updateButtonErrorClass(upperSubtitlesFileChooseButton, false);
+        updateButtonErrorClass(lowerSubtitlesFileChooseButton, false);
+        updateButtonErrorClass(mergedSubtitlesFileChooseButton, false);
+        clearResult();
     }
 
     void updateErrors(
@@ -219,7 +212,7 @@ class MergeFilesTab {
                 || !StringUtils.isBlank(lowerSubtitlesFileErrorMessage)
                 || !StringUtils.isBlank(mergedSubtitlesFileErrorMessage);
         if (!atLeastOneError) {
-            clearCombinedErrorsMessage();
+            clearResult();
             return;
         }
 
@@ -238,7 +231,7 @@ class MergeFilesTab {
             combinedErrorsMessage.append("\n").append(errorNumber).append(") ").append(mergedSubtitlesFileErrorMessage);
         }
 
-        showCombinedErrorsMessage(combinedErrorsMessage.toString());
+        showErrorMessage(combinedErrorsMessage.toString());
     }
 
     private static void updateButtonErrorClass(Button button, boolean hasErrors) {
@@ -249,20 +242,22 @@ class MergeFilesTab {
         }
     }
 
-    private void clearCombinedErrorsMessage() {
-        combinedErrorsLabel.setText("");
+    private void clearResult() {
+        resultLabel.setText("");
+        resultLabel.getStyleClass().remove("label-success");
+        resultLabel.getStyleClass().remove("label-error");
     }
 
-    private void showCombinedErrorsMessage(String text) {
-        combinedErrorsLabel.setText(text);
-    }
-
-    private void clearSuccessMessage() {
-        successLabel.setText("");
+    private void showErrorMessage(String text) {
+        clearResult();
+        resultLabel.getStyleClass().add("label-error");
+        resultLabel.setText(text);
     }
 
     void showSuccessMessage() {
-        successLabel.setText("Subtitles have been merged successfully!");
+        clearResult();
+        resultLabel.getStyleClass().add("label-success");
+        resultLabel.setText("Subtitles have been merged successfully!");
     }
 
     enum FileType {
