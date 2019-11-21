@@ -12,7 +12,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 public class LogicTest {
     @Test
-    public void testParseFromFileToSubtitles() throws IOException {
+    public void testParseFromFileToSubtitles() throws IOException, Parser.IncorrectFormatException {
         Subtitles subtitles = Parser.parseSubtitles(
                 IOUtils.toString(
                         LogicTest.class.getResourceAsStream("/MainTest/testParseFromFileToSubtitles/sub.srt"),
@@ -29,7 +29,7 @@ public class LogicTest {
     }
 
     @Test
-    public void testMerge() throws IOException {
+    public void testMerge() throws IOException, Parser.IncorrectFormatException {
         Subtitles upperSubtitles = Parser.parseSubtitles(
                 IOUtils.toString(
                         LogicTest.class.getResourceAsStream("/MainTest/testMerged/upper.srt"),

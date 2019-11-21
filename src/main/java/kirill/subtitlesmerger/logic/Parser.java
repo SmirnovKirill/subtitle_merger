@@ -6,6 +6,7 @@ import kirill.subtitlesmerger.logic.data.Subtitle;
 import kirill.subtitlesmerger.logic.data.SubtitleLine;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.LocalTime;
 import org.joda.time.format.DateTimeFormat;
 
 import java.util.ArrayList;
@@ -17,7 +18,7 @@ public class Parser {
             String subtitlesUnprocessed,
             String subtitlesName,
             LanguageAlpha3Code language
-    ) {
+    ) throws IncorrectFormatException {
         List<Subtitle> result = new ArrayList<>();
 
         Subtitle currentSubtitle = null;
@@ -34,19 +35,23 @@ public class Parser {
                     continue;
                 }
 
+                int subtitleNumber;
+                try {
+                    subtitleNumber = Integer.parseInt(currentLine);
+                } catch (NumberFormatException e) {
+                    throw new IncorrectFormatException();
+                }
+
                 currentSubtitle = new Subtitle();
-                currentSubtitle.setNumber(Integer.parseInt(currentLine));
+                currentSubtitle.setNumber(subtitleNumber);
                 parsingStage = ParsingStage.PARSED_NUMBER;
             } else if (parsingStage == ParsingStage.PARSED_NUMBER) {
                 if (StringUtils.isBlank(currentLine)) {
                     continue;
                 }
 
-                String fromText = currentLine.substring(0, currentLine.indexOf("-")).trim();
-                String toText = currentLine.substring(currentLine.indexOf(">") + 1).trim();
-
-                currentSubtitle.setFrom(DateTimeFormat.forPattern("HH:mm:ss,SSS").parseLocalTime(fromText));
-                currentSubtitle.setTo(DateTimeFormat.forPattern("HH:mm:ss,SSS").parseLocalTime(toText));
+                currentSubtitle.setFrom(getFromTime(currentLine));
+                currentSubtitle.setTo(getToTime(currentLine));
 
                 parsingStage = ParsingStage.PARSED_DURATION;
             } else if (parsingStage == ParsingStage.PARSED_DURATION) {
@@ -69,7 +74,7 @@ public class Parser {
         }
 
         if (parsingStage != ParsingStage.HAVE_NOT_STARTED && parsingStage != ParsingStage.PARSED_FIRST_LINE) {
-            throw new IllegalStateException();
+            throw new IncorrectFormatException();
         }
 
         if (parsingStage == ParsingStage.PARSED_FIRST_LINE) {
@@ -80,7 +85,40 @@ public class Parser {
         if (language != null) {
             languages.add(language);
         }
+
         return new Subtitles(result, languages);
+    }
+
+    private static LocalTime getFromTime(String currentLine) throws IncorrectFormatException {
+        int delimiterIndex = currentLine.indexOf("-");
+        if (delimiterIndex == -1) {
+            throw new IncorrectFormatException();
+        }
+
+        String fromText = currentLine.substring(0, delimiterIndex).trim();
+        try {
+            return DateTimeFormat.forPattern("HH:mm:ss,SSS").parseLocalTime(fromText);
+        } catch (IllegalArgumentException e) {
+            throw new IncorrectFormatException();
+        }
+    }
+
+    private static LocalTime getToTime(String currentLine) throws IncorrectFormatException {
+        int delimiterIndex = currentLine.indexOf(">");
+        if (delimiterIndex == -1) {
+            throw new IncorrectFormatException();
+        }
+
+        if ((delimiterIndex + 1) >= currentLine.length()) {
+            throw new IncorrectFormatException();
+        }
+
+        String toText = currentLine.substring(delimiterIndex + 1).trim();
+        try {
+            return DateTimeFormat.forPattern("HH:mm:ss,SSS").parseLocalTime(toText);
+        } catch (IllegalArgumentException e) {
+            throw new IncorrectFormatException();
+        }
     }
 
     private enum ParsingStage {
@@ -88,5 +126,8 @@ public class Parser {
         PARSED_NUMBER,
         PARSED_DURATION,
         PARSED_FIRST_LINE,
+    }
+
+    public static class IncorrectFormatException extends Exception {
     }
 }

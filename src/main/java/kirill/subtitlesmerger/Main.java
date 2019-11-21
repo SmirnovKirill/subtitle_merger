@@ -275,7 +275,7 @@ public class Main {
             }
 
             return new FullFileInfo(briefFileInfo, null, allSubtitles);
-        } catch (FfmpegException e) {
+        } catch (FfmpegException | Parser.IncorrectFormatException e) {
             return new FullFileInfo(
                     briefFileInfo,
                     FullFileInfo.UnavailabilityReason.FFMPEG_FAILED,

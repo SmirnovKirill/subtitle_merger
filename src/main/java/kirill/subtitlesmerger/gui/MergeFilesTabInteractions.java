@@ -3,12 +3,18 @@ package kirill.subtitlesmerger.gui;
 import javafx.event.ActionEvent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import kirill.subtitlesmerger.logic.Parser;
 import kirill.subtitlesmerger.logic.data.Config;
+import kirill.subtitlesmerger.logic.data.Subtitles;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ObjectUtils;
 
 import java.io.File;
-import java.util.Arrays;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -179,6 +185,9 @@ class MergeFilesTabInteractions {
 
     private void mergedSubtitlesFileButtonClicked(ActionEvent event) {
         mergedSubtitlesFile = tab.getMergedSubtitlesFileChooser().showSaveDialog(tab.getStage());
+        if (mergedSubtitlesFile != null && !mergedSubtitlesFile.getAbsolutePath().endsWith(".srt")) {
+            mergedSubtitlesFile = new File(mergedSubtitlesFile.getAbsolutePath() + ".srt");
+        }
 
         updatePathLabelText(MergeFilesTab.FileType.MERGED_SUBTITLES);
         saveLastDirectoryInConfigIfNecessary(MergeFilesTab.FileType.MERGED_SUBTITLES);
@@ -188,10 +197,39 @@ class MergeFilesTabInteractions {
     }
 
     private void mergeButtonClicked(ActionEvent event) {
-        incorrectFiles = new HashSet<>(Arrays.asList(lowerSubtitlesFile, upperSubtitlesFile, mergedSubtitlesFile));
+        incorrectFiles = new HashSet<>();
 
         updateButtonErrorClass(MergeFilesTab.FileType.UPPER_SUBTITLES);
         updateButtonErrorClass(MergeFilesTab.FileType.LOWER_SUBTITLES);
         updateButtonErrorClass(MergeFilesTab.FileType.MERGED_SUBTITLES);
+    }
+
+    private static ParsedSubtitlesInfo getParsedSubtitles(File file, String name) {
+        try {
+            Subtitles subtitles = Parser.parseSubtitles(
+                    FileUtils.readFileToString(file, StandardCharsets.UTF_8),
+                    name,
+                    null
+            );
+
+            return new ParsedSubtitlesInfo(subtitles, null);
+        } catch (IOException e) {
+            return new ParsedSubtitlesInfo(null, SubtitlesUnavailabilityReason.COULD_NOT_READ_FILE);
+        } catch (Parser.IncorrectFormatException e) {
+            return new ParsedSubtitlesInfo(null, SubtitlesUnavailabilityReason.INCORRECT_FORMAT);
+        }
+    }
+
+    @AllArgsConstructor
+    @Getter
+    private static class ParsedSubtitlesInfo {
+        private Subtitles subtitles;
+
+        private SubtitlesUnavailabilityReason unavailabilityReason;
+    }
+
+    private enum SubtitlesUnavailabilityReason {
+        COULD_NOT_READ_FILE,
+        INCORRECT_FORMAT
     }
 }
