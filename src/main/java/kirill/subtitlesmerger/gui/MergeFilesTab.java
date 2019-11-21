@@ -108,7 +108,7 @@ class MergeFilesTab {
 
         upperSubtitlesFileChooseButton = new Button("Choose file");
         upperSubtitlesPathLabel = new Label("not selected");
-        upperSubtitlesFileChooser = getFileChooser("Please choose the file with the upper subtitles");
+        upperSubtitlesFileChooser = generateFileChooser("Please choose the file with the upper subtitles");
 
         contentPane.addRow(
                 contentPane.getRowCount(),
@@ -122,7 +122,7 @@ class MergeFilesTab {
         GridPane.setHalignment(upperSubtitlesPathLabel, HPos.LEFT);
     }
 
-    private static FileChooser getFileChooser(String title) {
+    private static FileChooser generateFileChooser(String title) {
         FileChooser result = new FileChooser();
 
         result.setTitle(title);
@@ -138,7 +138,7 @@ class MergeFilesTab {
 
         lowerSubtitlesFileChooseButton = new Button("Choose file");
         lowerSubtitlesPathLabel = new Label("not selected");
-        lowerSubtitlesFileChooser = getFileChooser("Please choose the file with the lower subtitles");
+        lowerSubtitlesFileChooser = generateFileChooser("Please choose the file with the lower subtitles");
 
         contentPane.addRow(
                 contentPane.getRowCount(),
@@ -157,7 +157,7 @@ class MergeFilesTab {
 
         mergedSubtitlesFileChooseButton = new Button("Choose file");
         mergedSubtitlesPathLabel = new Label("not selected");
-        mergedSubtitlesFileChooser = getFileChooser("Please choose where to save the result");
+        mergedSubtitlesFileChooser = generateFileChooser("Please choose where to save the result");
 
         contentPane.addRow(
                 contentPane.getRowCount(),

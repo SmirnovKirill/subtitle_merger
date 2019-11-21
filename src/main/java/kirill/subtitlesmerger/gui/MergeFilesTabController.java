@@ -24,7 +24,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @CommonsLog
-class MergeFilesTabInteractions {
+class MergeFilesTabController {
     private MergeFilesTab tab;
 
     private Config config;
@@ -39,12 +39,12 @@ class MergeFilesTabInteractions {
 
     private IncorrectOutputFile incorrectOutputFile;
 
-    MergeFilesTabInteractions(MergeFilesTab tab, Config config) {
+    MergeFilesTabController(MergeFilesTab tab, Config config) {
         this.tab = tab;
         this.config = config;
     }
 
-    void addCallbacks() {
+    void initialize() {
         updateFileChooserInitialDirectories();
 
         tab.getUpperSubtitlesFileChooseButton().setOnAction(this::upperSubtitlesFileButtonClicked);
