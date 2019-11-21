@@ -121,7 +121,7 @@ class MergeFilesTab {
 
         result.setTitle(title);
         result.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("subrip files *.srt", "*.srt")
+                new FileChooser.ExtensionFilter("subrip files (*.srt)", "*.srt")
         );
 
         return result;
