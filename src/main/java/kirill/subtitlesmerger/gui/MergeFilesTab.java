@@ -13,6 +13,7 @@ import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.Getter;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +48,10 @@ class MergeFilesTab {
 
     private Button mergeButton;
 
+    private Label combinedErrorsLabel;
+
+    private Label successLabel;
+
     MergeFilesTab(Stage stage, TabPane mainPane, boolean debug) {
         this.stage = stage;
         this.mainPane = mainPane;
@@ -74,6 +79,7 @@ class MergeFilesTab {
         addRowForLowerSubtitlesFile(contentPane);
         addRowForMergedSubtitlesFile(contentPane);
         addMergeButton(contentPane);
+        addErrorAndSuccessLabels(contentPane);
         addSpacer(contentPane);
 
         return contentPane;
@@ -175,11 +181,88 @@ class MergeFilesTab {
         GridPane.setColumnSpan(mergeButton, contentPane.getColumnCount());
     }
 
+    private void addErrorAndSuccessLabels(GridPane contentPane) {
+        successLabel = new Label();
+        successLabel.getStyleClass().add("label-success");
+        contentPane.addRow(contentPane.getRowCount(), successLabel);
+        GridPane.setColumnSpan(successLabel, contentPane.getColumnCount());
+
+        combinedErrorsLabel = new Label();
+        combinedErrorsLabel.setWrapText(true);
+        combinedErrorsLabel.getStyleClass().add("label-error");
+        contentPane.addRow(contentPane.getRowCount(), combinedErrorsLabel);
+        GridPane.setColumnSpan(combinedErrorsLabel, contentPane.getColumnCount());
+    }
+
     private void addSpacer(GridPane contentPane) {
         Region bottomSpacer = new Region();
         contentPane.addRow(contentPane.getRowCount(), bottomSpacer);
         GridPane.setColumnSpan(bottomSpacer, contentPane.getColumnCount());
         GridPane.setVgrow(bottomSpacer, Priority.ALWAYS);
+    }
+
+    void clearPreviousResults() {
+        updateErrors(null, null, null);
+        clearSuccessMessage();
+    }
+
+    void updateErrors(
+            String upperSubtitlesFileErrorMessage,
+            String lowerSubtitlesFileErrorMessage,
+            String mergedSubtitlesFileErrorMessage
+    ) {
+        updateButtonErrorClass(upperSubtitlesFileChooseButton, !StringUtils.isBlank(upperSubtitlesFileErrorMessage));
+        updateButtonErrorClass(lowerSubtitlesFileChooseButton, !StringUtils.isBlank(lowerSubtitlesFileErrorMessage));
+        updateButtonErrorClass(mergedSubtitlesFileChooseButton, !StringUtils.isBlank(mergedSubtitlesFileErrorMessage));
+
+        boolean atLeastOneError = !StringUtils.isBlank(upperSubtitlesFileErrorMessage)
+                || !StringUtils.isBlank(lowerSubtitlesFileErrorMessage)
+                || !StringUtils.isBlank(mergedSubtitlesFileErrorMessage);
+        if (!atLeastOneError) {
+            clearCombinedErrorsMessage();
+            return;
+        }
+
+        StringBuilder combinedErrorsMessage = new StringBuilder("Can't merge subtitles:");
+
+        int errorNumber = 1;
+        if (!StringUtils.isBlank(upperSubtitlesFileErrorMessage)) {
+            combinedErrorsMessage.append("\n").append(errorNumber).append(") ").append(upperSubtitlesFileErrorMessage);
+            errorNumber++;
+        }
+        if (!StringUtils.isBlank(lowerSubtitlesFileErrorMessage)) {
+            combinedErrorsMessage.append("\n").append(errorNumber).append(") ").append(lowerSubtitlesFileErrorMessage);
+            errorNumber++;
+        }
+        if (!StringUtils.isBlank(mergedSubtitlesFileErrorMessage)) {
+            combinedErrorsMessage.append("\n").append(errorNumber).append(") ").append(mergedSubtitlesFileErrorMessage);
+        }
+
+        showCombinedErrorsMessage(combinedErrorsMessage.toString());
+    }
+
+    private static void updateButtonErrorClass(Button button, boolean hasErrors) {
+        if (hasErrors && !button.getStyleClass().contains(MergeFilesTab.BUTTON_ERROR_CLASS)) {
+            button.getStyleClass().add(MergeFilesTab.BUTTON_ERROR_CLASS);
+        } else if (!hasErrors) {
+            button.getStyleClass().remove(MergeFilesTab.BUTTON_ERROR_CLASS);
+        }
+    }
+
+    private void clearCombinedErrorsMessage() {
+        combinedErrorsLabel.setText("");
+    }
+
+    private void showCombinedErrorsMessage(String text) {
+        combinedErrorsLabel.setText(text);
+    }
+
+    private void clearSuccessMessage() {
+        successLabel.setText("");
+    }
+
+    void showSuccessMessage() {
+        successLabel.setText("Subtitles have been merged successfully!");
     }
 
     enum FileType {

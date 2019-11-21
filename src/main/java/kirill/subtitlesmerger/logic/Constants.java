@@ -11,4 +11,6 @@ public class Constants {
     public static final List<String> ALLOWED_VIDEO_MIME_TYPES = Collections.singletonList("video/x-matroska");
 
     public static final boolean DEBUG = false;
+
+    public static final int INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES = 10;
 }

@@ -2,3 +2,11 @@
     -fx-border-color: red;
     -fx-border-width: 2px;
 }
+
+.label-success {
+    -fx-text-fill: green;
+}
+
+.label-error {
+    -fx-text-fill: red;
+}
