@@ -72,6 +72,7 @@ class MergeFilesTab {
         contentPane.setGridLinesVisible(debug);
 
         contentPane.getColumnConstraints().addAll(generateColumnConstraints());
+
         addRowForUpperSubtitlesFile(contentPane);
         addRowForLowerSubtitlesFile(contentPane);
         addRowForMergedSubtitlesFile(contentPane);
