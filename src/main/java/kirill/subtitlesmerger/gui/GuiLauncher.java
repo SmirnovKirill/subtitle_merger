@@ -53,6 +53,9 @@ public class GuiLauncher extends Application {
         MergeInVideosTab mergeInVideosTab = new MergeInVideosTab(result);
         result.getTabs().add(mergeInVideosTab.generateTab());
 
+        SettingsTab settingsTab = new SettingsTab(result, Constants.DEBUG);
+        result.getTabs().add(settingsTab.generateTab());
+
         return result;
     }
 }

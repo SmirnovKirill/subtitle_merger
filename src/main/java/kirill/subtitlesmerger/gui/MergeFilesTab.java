@@ -9,7 +9,6 @@ import javafx.scene.control.TabPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.Getter;
@@ -78,7 +77,6 @@ class MergeFilesTab {
         addRowForMergedSubtitlesFile(contentPane);
         addMergeButton(contentPane);
         addResultLabel(contentPane);
-        addSpacer(contentPane);
 
         return contentPane;
     }
@@ -183,13 +181,6 @@ class MergeFilesTab {
         resultLabel = new Label();
         contentPane.addRow(contentPane.getRowCount(), resultLabel);
         GridPane.setColumnSpan(resultLabel, contentPane.getColumnCount());
-    }
-
-    private void addSpacer(GridPane contentPane) {
-        Region bottomSpacer = new Region();
-        contentPane.addRow(contentPane.getRowCount(), bottomSpacer);
-        GridPane.setColumnSpan(bottomSpacer, contentPane.getColumnCount());
-        GridPane.setVgrow(bottomSpacer, Priority.ALWAYS);
     }
 
     void removeErrorsAndResult() {
