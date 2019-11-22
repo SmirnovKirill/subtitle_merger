@@ -21,7 +21,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @CommonsLog
@@ -128,9 +127,19 @@ class MergeFilesTabController {
     }
 
     private void showErrorsIfNecessary() {
+        if (inputFilesTheSame()) {
+            tab.showErrors(
+                    null,
+                    "you can't use the same file twice",
+                    null
+            );
+
+            return;
+        }
+
         String upperSubtitlesFileErrorMessage = null;
         if (upperSubtitlesFile != null && !CollectionUtils.isEmpty(incorrectInputFiles)) {
-            Set<IncorrectInputFileReason> incorrectInputFileReasons = incorrectInputFiles.stream()
+            IncorrectInputFile incorrectInputFile = incorrectInputFiles.stream()
                     .filter(file -> Objects.equals(file.getFile(), upperSubtitlesFile))
                     .findAny().orElse(null);
             if (incorrectInputFile != null) {
@@ -144,9 +153,7 @@ class MergeFilesTabController {
                     .filter(file -> Objects.equals(file.getFile(), lowerSubtitlesFile))
                     .findAny().orElse(null);
             if (incorrectInputFile != null) {
-                if (incorrectInputFile.getReason() != IncorrectInputFileReason.DUPLICATE || inputFilesTheSame()) {
-                    lowerSubtitlesFileErrorMessage = getErrorText(lowerSubtitlesFile, incorrectInputFile.getReason());
-                }
+                lowerSubtitlesFileErrorMessage = getErrorText(lowerSubtitlesFile, incorrectInputFile.getReason());
             }
         }
 
@@ -181,9 +188,6 @@ class MergeFilesTabController {
         StringBuilder result = new StringBuilder("file ").append(file.getAbsolutePath()).append(" is incorrect: ");
 
         switch (reason) {
-            case DUPLICATE:
-                result.append("you have selected the same files");
-                break;
             case CAN_NOT_READ_FILE:
                 result.append("can't read the file");
                 break;
@@ -214,9 +218,11 @@ class MergeFilesTabController {
     }
 
     private void updateMergeButtonVisibility() {
-        tab.getMergeButton().setDisable(
-                upperSubtitlesFile == null || lowerSubtitlesFile == null || mergedSubtitlesFile == null
-        );
+        boolean disable = upperSubtitlesFile == null
+                || lowerSubtitlesFile == null
+                || mergedSubtitlesFile == null
+                || inputFilesTheSame();
+        tab.getMergeButton().setDisable(disable);
     }
 
     private void saveLastDirectoryInConfigIfNecessary(MergeFilesTab.FileType fileType) {
@@ -307,12 +313,7 @@ class MergeFilesTabController {
         }
 
         result.add(getParsedSubtitlesSingleFile(upperSubtitlesFile, "upper"));
-
-        if (inputFilesTheSame()) {
-            result.add(new ParsedSubtitlesInfo(lowerSubtitlesFile, null, IncorrectInputFileReason.DUPLICATE));
-        } else {
-            result.add(getParsedSubtitlesSingleFile(lowerSubtitlesFile, "lower"));
-        }
+        result.add(getParsedSubtitlesSingleFile(lowerSubtitlesFile, "lower"));
 
         return result;
     }
@@ -373,8 +374,7 @@ class MergeFilesTabController {
     private enum IncorrectInputFileReason {
         CAN_NOT_READ_FILE,
         INCORRECT_SUBTITLES_FORMAT,
-        FILE_IS_TOO_BIG,
-        DUPLICATE
+        FILE_IS_TOO_BIG
     }
 
     private enum IncorrectOutputFileReason {
