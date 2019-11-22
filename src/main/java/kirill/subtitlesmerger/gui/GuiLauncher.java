@@ -23,14 +23,15 @@ public class GuiLauncher extends Application {
         scene.getStylesheets().add("style.css");
         stage.setScene(scene);
 
-        stage.setMinWidth(mainPane.getMinWidth());
-        stage.setMinHeight(mainPane.getMinHeight());
         stage.setResizable(true);
         stage.getIcons().add(new Image(GuiLauncher.class.getResourceAsStream("/icon.jpg")));
         stage.setTitle("Subtitles merger");
         Application.setUserAgentStylesheet(STYLESHEET_MODENA);
 
         stage.show();
+
+        stage.setMinWidth(stage.getWidth());
+        stage.setMinHeight(stage.getHeight());
     }
 
     private TabPane generateMainPane(Stage stage, Config config) {
