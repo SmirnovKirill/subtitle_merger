@@ -21,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @CommonsLog
@@ -129,13 +130,11 @@ class MergeFilesTabController {
     private void showErrorsIfNecessary() {
         String upperSubtitlesFileErrorMessage = null;
         if (upperSubtitlesFile != null && !CollectionUtils.isEmpty(incorrectInputFiles)) {
-            IncorrectInputFile incorrectInputFile = incorrectInputFiles.stream()
+            Set<IncorrectInputFileReason> incorrectInputFileReasons = incorrectInputFiles.stream()
                     .filter(file -> Objects.equals(file.getFile(), upperSubtitlesFile))
                     .findAny().orElse(null);
             if (incorrectInputFile != null) {
-                if (incorrectInputFile.getReason() != IncorrectInputFileReason.DUPLICATE || inputFilesTheSame()) {
-                    upperSubtitlesFileErrorMessage = getErrorText(upperSubtitlesFile, incorrectInputFile.getReason());
-                }
+                upperSubtitlesFileErrorMessage = getErrorText(upperSubtitlesFile, incorrectInputFile.getReason());
             }
         }
 
@@ -307,14 +306,13 @@ class MergeFilesTabController {
             throw new IllegalStateException();
         }
 
-        if (inputFilesTheSame()) {
-            result.add(new ParsedSubtitlesInfo(upperSubtitlesFile, null, IncorrectInputFileReason.DUPLICATE));
-            result.add(new ParsedSubtitlesInfo(lowerSubtitlesFile, null, IncorrectInputFileReason.DUPLICATE));
-            return result;
-        }
-
         result.add(getParsedSubtitlesSingleFile(upperSubtitlesFile, "upper"));
-        result.add(getParsedSubtitlesSingleFile(lowerSubtitlesFile, "lower"));
+
+        if (inputFilesTheSame()) {
+            result.add(new ParsedSubtitlesInfo(lowerSubtitlesFile, null, IncorrectInputFileReason.DUPLICATE));
+        } else {
+            result.add(getParsedSubtitlesSingleFile(lowerSubtitlesFile, "lower"));
+        }
 
         return result;
     }

@@ -241,17 +241,16 @@ class MergeFilesTab {
 
         StringBuilder combinedErrorsMessage = new StringBuilder("Can't merge subtitles:");
 
-        int errorNumber = 1;
         if (!StringUtils.isBlank(upperSubtitlesFileErrorMessage)) {
-            combinedErrorsMessage.append("\n").append(errorNumber).append(") ").append(upperSubtitlesFileErrorMessage);
-            errorNumber++;
+            combinedErrorsMessage.append("\n").append("\u2022").append(" ").append(upperSubtitlesFileErrorMessage);
         }
+
         if (!StringUtils.isBlank(lowerSubtitlesFileErrorMessage)) {
-            combinedErrorsMessage.append("\n").append(errorNumber).append(") ").append(lowerSubtitlesFileErrorMessage);
-            errorNumber++;
+            combinedErrorsMessage.append("\n").append("\u2022").append(" ").append(lowerSubtitlesFileErrorMessage);
         }
+
         if (!StringUtils.isBlank(mergedSubtitlesFileErrorMessage)) {
-            combinedErrorsMessage.append("\n").append(errorNumber).append(") ").append(mergedSubtitlesFileErrorMessage);
+            combinedErrorsMessage.append("\n").append("\u2022").append(" ").append(mergedSubtitlesFileErrorMessage);
         }
 
         showErrorMessage(combinedErrorsMessage.toString());
