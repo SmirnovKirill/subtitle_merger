@@ -19,33 +19,38 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Getter
 class SettingsTab {
+    @Getter
     private Stage stage;
-
-    private TabPane mainPane;
 
     private boolean debug;
 
+    @Getter
     private TextField ffprobeField;
 
+    @Getter
     private Button ffprobeSetButton;
 
+    @Getter
     private FileChooser ffprobeFileChooser;
 
+    @Getter
     private TextField ffmpegField;
 
+    @Getter
     private Button ffmpegSetButton;
 
+    @Getter
     private FileChooser ffmpegFileChooser;
 
     private ComboBox<String> upperSubtitlesLanguageComboBox;
 
     private ComboBox<String> lowerSubtitlesLanguageComboBox;
 
-    SettingsTab(Stage stage, TabPane mainPane, boolean debug) {
+    private Label resultLabel;
+
+    SettingsTab(Stage stage, boolean debug) {
         this.stage = stage;
-        this.mainPane = mainPane;
         this.debug = debug;
     }
 
@@ -76,6 +81,7 @@ class SettingsTab {
         addRowForFfmpeg(contentPane);
         addRowForUpperSubtitlesLanguage(contentPane);
         addRowForLowerSubtitlesLanguage(contentPane);
+        addResultLabel(contentPane);
 
         return contentPane;
     }
@@ -177,6 +183,12 @@ class SettingsTab {
         GridPane.setHalignment(lowerSubtitlesLanguageComboBox, HPos.RIGHT);
     }
 
+    private void addResultLabel(GridPane contentPane) {
+        resultLabel = new Label();
+        contentPane.addRow(contentPane.getRowCount(), resultLabel);
+        GridPane.setColumnSpan(resultLabel, contentPane.getColumnCount());
+    }
+
     //todo move to controls
     private static List<String> getLanguagesList() {
         return Arrays.stream(LanguageAlpha3Code.values())
@@ -184,5 +196,23 @@ class SettingsTab {
                 .map(code -> code.getName() + " (" + code.name() + ")")
                 .sorted()
                 .collect(Collectors.toList());
+    }
+
+    void clearResult() {
+        resultLabel.setText("");
+        resultLabel.getStyleClass().remove(GuiLauncher.LABEL_SUCCESS_CLASS);
+        resultLabel.getStyleClass().remove(GuiLauncher.LABEL_ERROR_CLASS);
+    }
+
+    void showErrorMessage(String text) {
+        clearResult();
+        resultLabel.getStyleClass().add(GuiLauncher.LABEL_ERROR_CLASS);
+        resultLabel.setText(text);
+    }
+
+    void showSuccessMessage(String text) {
+        clearResult();
+        resultLabel.getStyleClass().add(GuiLauncher.LABEL_SUCCESS_CLASS);
+        resultLabel.setText(text);
     }
 }

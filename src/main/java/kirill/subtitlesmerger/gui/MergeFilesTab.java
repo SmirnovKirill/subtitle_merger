@@ -5,7 +5,6 @@ import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
@@ -17,41 +16,46 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter
 class MergeFilesTab {
-    static final String BUTTON_ERROR_CLASS = "button-error";
-
+    @Getter
     private Stage stage;
-
-    private TabPane mainPane;
 
     private boolean debug;
 
+    @Getter
     private Button upperSubtitlesFileChooseButton;
 
+    @Getter
     private Label upperSubtitlesPathLabel;
 
+    @Getter
     private FileChooser upperSubtitlesFileChooser;
 
+    @Getter
     private Button lowerSubtitlesFileChooseButton;
 
+    @Getter
     private Label lowerSubtitlesPathLabel;
 
+    @Getter
     private FileChooser lowerSubtitlesFileChooser;
 
+    @Getter
     private Button mergedSubtitlesFileChooseButton;
 
+    @Getter
     private Label mergedSubtitlesPathLabel;
 
+    @Getter
     private FileChooser mergedSubtitlesFileChooser;
 
+    @Getter
     private Button mergeButton;
 
     private Label resultLabel;
 
-    MergeFilesTab(Stage stage, TabPane mainPane, boolean debug) {
+    MergeFilesTab(Stage stage, boolean debug) {
         this.stage = stage;
-        this.mainPane = mainPane;
         this.debug = debug;
     }
 
@@ -192,13 +196,13 @@ class MergeFilesTab {
     }
 
     private void removeButtonErrorClass(Button button) {
-        button.getStyleClass().remove(MergeFilesTab.BUTTON_ERROR_CLASS);
+        button.getStyleClass().remove(GuiLauncher.BUTTON_ERROR_CLASS);
     }
 
     private void clearResult() {
         resultLabel.setText("");
-        resultLabel.getStyleClass().remove("label-success");
-        resultLabel.getStyleClass().remove("label-error");
+        resultLabel.getStyleClass().remove(GuiLauncher.LABEL_SUCCESS_CLASS);
+        resultLabel.getStyleClass().remove(GuiLauncher.LABEL_ERROR_CLASS);
     }
 
     void showErrors(
@@ -249,21 +253,21 @@ class MergeFilesTab {
     }
 
     private static void addButtonErrorClass(Button button) {
-        if (!button.getStyleClass().contains(MergeFilesTab.BUTTON_ERROR_CLASS)) {
-            button.getStyleClass().add(MergeFilesTab.BUTTON_ERROR_CLASS);
+        if (!button.getStyleClass().contains(GuiLauncher.BUTTON_ERROR_CLASS)) {
+            button.getStyleClass().add(GuiLauncher.BUTTON_ERROR_CLASS);
         }
     }
 
     private void showErrorMessage(String text) {
         clearResult();
-        resultLabel.getStyleClass().add("label-error");
+        resultLabel.getStyleClass().add(GuiLauncher.LABEL_ERROR_CLASS);
         resultLabel.setText(text);
     }
 
-    void showSuccessMessage() {
+    void showSuccessMessage(String text) {
         clearResult();
-        resultLabel.getStyleClass().add("label-success");
-        resultLabel.setText("Subtitles have been merged successfully!");
+        resultLabel.getStyleClass().add(GuiLauncher.LABEL_SUCCESS_CLASS);
+        resultLabel.setText(text);
     }
 
     enum FileType {

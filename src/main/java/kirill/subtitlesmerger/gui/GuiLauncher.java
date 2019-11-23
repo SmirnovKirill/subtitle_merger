@@ -9,6 +9,12 @@ import kirill.subtitlesmerger.logic.Constants;
 import kirill.subtitlesmerger.logic.data.Config;
 
 public class GuiLauncher extends Application {
+    static final String BUTTON_ERROR_CLASS = "button-error";
+
+    static final String LABEL_SUCCESS_CLASS = "label-success";
+
+    static final String LABEL_ERROR_CLASS = "label-error";
+
     public static void main(String[] args) {
         launch();
     }
@@ -45,7 +51,7 @@ public class GuiLauncher extends Application {
         result.setPrefHeight(480);
         result.setMinHeight(result.getPrefHeight());
 
-        MergeFilesTab mergeFilesTab = new MergeFilesTab(stage, result, Constants.DEBUG);
+        MergeFilesTab mergeFilesTab = new MergeFilesTab(stage, Constants.DEBUG);
         result.getTabs().add(mergeFilesTab.generateTab());
 
         MergeFilesTabController mergeFilesTabController = new MergeFilesTabController(mergeFilesTab, config);
@@ -54,7 +60,7 @@ public class GuiLauncher extends Application {
         MergeInVideosTab mergeInVideosTab = new MergeInVideosTab(result);
         result.getTabs().add(mergeInVideosTab.generateTab());
 
-        SettingsTab settingsTab = new SettingsTab(stage, result, Constants.DEBUG);
+        SettingsTab settingsTab = new SettingsTab(stage, Constants.DEBUG);
         result.getTabs().add(settingsTab.generateTab());
 
         SettingsTabController settingsTabController = new SettingsTabController(settingsTab, config);

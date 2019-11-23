@@ -301,7 +301,7 @@ class MergeFilesTabController {
             return;
         }
 
-        tab.showSuccessMessage();
+        tab.showSuccessMessage("Subtitles have been merged successfully!");
     }
 
     private List<ParsedSubtitlesInfo> getAllParsedSubtitles() {

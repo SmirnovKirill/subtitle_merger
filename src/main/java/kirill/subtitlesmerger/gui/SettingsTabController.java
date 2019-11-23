@@ -2,11 +2,10 @@ package kirill.subtitlesmerger.gui;
 
 import javafx.event.ActionEvent;
 import kirill.subtitlesmerger.logic.data.Config;
-import kirill.subtitlesmerger.logic.ffmpeg.Ffprobe;
 
 import java.io.File;
 
-public class SettingsTabController {
+ class SettingsTabController {
     private SettingsTab tab;
 
     private Config config;
@@ -55,6 +54,7 @@ public class SettingsTabController {
     private void ffprobeFileButtonClicked(ActionEvent event) {
         File ffprobeFile = tab.getFfprobeFileChooser().showOpenDialog(tab.getStage());
         if (ffprobeFile == null) {
+            tab.clearResult();
             return;
         }
 
@@ -62,8 +62,26 @@ public class SettingsTabController {
             config.saveFfprobeFile(ffprobeFile.getAbsolutePath());
             updateFileChoosersAndFields();
 
+            tab.showSuccessMessage("ffprobe path has been saved successfully");
         } catch (Config.ConfigException e) {
-            e.printStackTrace();
+            tab.showErrorMessage("incorrect path to ffprobe");
+        }
+    }
+
+    private void ffmpegFileButtonClicked(ActionEvent event) {
+        File ffmpegFile = tab.getFfmpegFileChooser().showOpenDialog(tab.getStage());
+        if (ffmpegFile == null) {
+            tab.clearResult();
+            return;
+        }
+
+        try {
+            config.saveFfmpegFile(ffmpegFile.getAbsolutePath());
+            updateFileChoosersAndFields();
+
+            tab.showSuccessMessage("ffmpeg path has been saved successfully");
+        } catch (Config.ConfigException e) {
+            tab.showErrorMessage("incorrect path to ffmpeg");
         }
     }
 }
