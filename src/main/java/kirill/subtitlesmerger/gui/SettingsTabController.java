@@ -69,7 +69,7 @@ import java.io.File;
             config.saveFfprobeFile(ffprobeFile.getAbsolutePath());
             updateFileChoosersAndFields();
 
-            tab.showSuccessMessage("ffprobe path has been saved successfully");
+            tab.showSuccessMessage("path to ffprobe has been saved successfully");
         } catch (Config.ConfigException e) {
             tab.showErrorMessage("incorrect path to ffprobe");
         }
@@ -86,7 +86,7 @@ import java.io.File;
             config.saveFfmpegFile(ffmpegFile.getAbsolutePath());
             updateFileChoosersAndFields();
 
-            tab.showSuccessMessage("ffmpeg path has been saved successfully");
+            tab.showSuccessMessage("path to ffmpeg has been saved successfully");
         } catch (Config.ConfigException e) {
             tab.showErrorMessage("incorrect path to ffmpeg");
         }
