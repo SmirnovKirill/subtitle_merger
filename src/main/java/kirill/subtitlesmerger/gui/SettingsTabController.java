@@ -45,7 +45,7 @@ import java.io.File;
             tab.getFfmpegFileChooser().setInitialDirectory(ffmpegFile.getParentFile());
             tab.getFfmpegFileChooser().setTitle("update path to ffmpeg");
         } else {
-            tab.getFfmpegSetButton().setText("update path to ffmpeg");
+            tab.getFfmpegSetButton().setText("choose path to ffmpeg");
 
             tab.getFfmpegFileChooser().setTitle("choose path to ffmpeg");
         }
