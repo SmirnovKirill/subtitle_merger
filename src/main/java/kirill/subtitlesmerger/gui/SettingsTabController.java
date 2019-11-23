@@ -23,6 +23,8 @@ import java.io.File;
 
     private void updateFileChoosersAndFields() {
         File ffprobeFile = config.getFfprobeFile();
+        File ffmpegFile = config.getFfmpegFile();
+
         if (ffprobeFile != null) {
             tab.getFfprobeField().setText(ffprobeFile.getAbsolutePath());
 
@@ -33,10 +35,12 @@ import java.io.File;
         } else {
             tab.getFfprobeSetButton().setText("choose path to ffprobe");
 
+            if (ffmpegFile != null) {
+                tab.getFfprobeFileChooser().setInitialDirectory(ffmpegFile.getParentFile());
+            }
             tab.getFfprobeFileChooser().setTitle("choose path to ffprobe");
         }
 
-        File ffmpegFile = config.getFfmpegFile();
         if (ffmpegFile != null) {
             tab.getFfmpegField().setText(ffmpegFile.getAbsolutePath());
 
@@ -47,6 +51,9 @@ import java.io.File;
         } else {
             tab.getFfmpegSetButton().setText("choose path to ffmpeg");
 
+            if (ffprobeFile != null) {
+                tab.getFfmpegFileChooser().setInitialDirectory(ffprobeFile.getParentFile());
+            }
             tab.getFfmpegFileChooser().setTitle("choose path to ffmpeg");
         }
     }
