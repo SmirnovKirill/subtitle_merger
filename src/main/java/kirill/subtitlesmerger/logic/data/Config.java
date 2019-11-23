@@ -190,7 +190,7 @@ class Config {
     }
 
     public void saveFfmpegFile(String rawValue) throws ConfigException {
-        File ffmpegFile = getValidatedFfprobeFile(rawValue).orElse(null);
+        File ffmpegFile = getValidatedFfmpegFile(rawValue).orElse(null);
         if (ffmpegFile == null) {
             throw new EmptyValueException();
         }

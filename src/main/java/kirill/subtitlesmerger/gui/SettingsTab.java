@@ -1,5 +1,6 @@
 package kirill.subtitlesmerger.gui;
 
+import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
@@ -10,11 +11,18 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+import lombok.Getter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
+@Getter
 class SettingsTab {
+    private Stage stage;
+
     private TabPane mainPane;
 
     private boolean debug;
@@ -31,11 +39,12 @@ class SettingsTab {
 
     private FileChooser ffmpegFileChooser;
 
-    private TextField upperSubtitlesLanguageField;
+    private ComboBox<String> upperSubtitlesLanguageComboBox;
 
-    private TextField lowerSubtitlesLanguageField;
+    private ComboBox<String> lowerSubtitlesLanguageComboBox;
 
-    SettingsTab(TabPane mainPane, boolean debug) {
+    SettingsTab(Stage stage, TabPane mainPane, boolean debug) {
+        this.stage = stage;
         this.mainPane = mainPane;
         this.debug = debug;
     }
@@ -65,8 +74,8 @@ class SettingsTab {
 
         addRowForFfprobe(contentPane);
         addRowForFfmpeg(contentPane);
-       // addRowForUpperSubtitlesLanguage(contentPane);
-       // addRowForLowerSubtitlesLanguage(contentPane);
+        addRowForUpperSubtitlesLanguage(contentPane);
+        addRowForLowerSubtitlesLanguage(contentPane);
 
         return contentPane;
     }
@@ -75,7 +84,7 @@ class SettingsTab {
         List<ColumnConstraints> result = new ArrayList<>();
 
         ColumnConstraints firstColumn = new ColumnConstraints();
-        firstColumn.setPrefWidth(200);
+        firstColumn.setPrefWidth(300);
         firstColumn.setMinWidth(firstColumn.getPrefWidth());
         result.add(firstColumn);
 
@@ -92,14 +101,13 @@ class SettingsTab {
         ffprobeField = new TextField();
         ffprobeField.setEditable(false);
 
-        ffprobeSetButton = new Button("Choose file"); //todo modify
+        ffprobeSetButton = new Button();
 
         HBox fieldButtonBox = new HBox(ffprobeField, ffprobeSetButton);
         fieldButtonBox.setSpacing(20);
         HBox.setHgrow(ffprobeField, Priority.ALWAYS);
 
         ffprobeFileChooser = new FileChooser();
-        ffprobeFileChooser.setTitle("choose file"); //todo modify
 
         contentPane.addRow(
                 contentPane.getRowCount(),
@@ -117,14 +125,13 @@ class SettingsTab {
         ffmpegField = new TextField();
         ffmpegField.setEditable(false);
 
-        ffmpegSetButton = new Button("Choose file"); //todo modify
+        ffmpegSetButton = new Button();
 
         HBox fieldButtonBox = new HBox(ffmpegField, ffmpegSetButton);
         fieldButtonBox.setSpacing(20);
         HBox.setHgrow(ffmpegField, Priority.ALWAYS);
 
         ffmpegFileChooser = new FileChooser();
-        ffmpegFileChooser.setTitle("choose file"); //todo modify
 
         contentPane.addRow(
                 contentPane.getRowCount(),
@@ -134,5 +141,48 @@ class SettingsTab {
 
         GridPane.setHalignment(descriptionLabel, HPos.LEFT);
         GridPane.setHalignment(fieldButtonBox, HPos.RIGHT);
+    }
+
+    //todo make editable with drop-down
+    private void addRowForUpperSubtitlesLanguage(GridPane contentPane) {
+        Label descriptionLabel = new Label("Preferred language for upper subtitles");
+
+        upperSubtitlesLanguageComboBox = new ComboBox<>();
+        upperSubtitlesLanguageComboBox.getItems().addAll(getLanguagesList());
+
+        contentPane.addRow(
+                contentPane.getRowCount(),
+                descriptionLabel,
+                upperSubtitlesLanguageComboBox
+        );
+
+        GridPane.setHalignment(descriptionLabel, HPos.LEFT);
+        GridPane.setHalignment(upperSubtitlesLanguageComboBox, HPos.RIGHT);
+    }
+
+    //todo make editable with drop-down
+    private void addRowForLowerSubtitlesLanguage(GridPane contentPane) {
+        Label descriptionLabel = new Label("Preferred language for lower subtitles");
+
+        lowerSubtitlesLanguageComboBox = new ComboBox<>();
+        lowerSubtitlesLanguageComboBox.getItems().addAll(getLanguagesList());
+
+        contentPane.addRow(
+                contentPane.getRowCount(),
+                descriptionLabel,
+                lowerSubtitlesLanguageComboBox
+        );
+
+        GridPane.setHalignment(descriptionLabel, HPos.LEFT);
+        GridPane.setHalignment(lowerSubtitlesLanguageComboBox, HPos.RIGHT);
+    }
+
+    //todo move to controls
+    private static List<String> getLanguagesList() {
+        return Arrays.stream(LanguageAlpha3Code.values())
+                .filter(code -> code != LanguageAlpha3Code.undefined)
+                .map(code -> code.getName() + " (" + code.name() + ")")
+                .sorted()
+                .collect(Collectors.toList());
     }
 }

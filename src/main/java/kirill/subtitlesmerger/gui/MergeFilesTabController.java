@@ -45,7 +45,7 @@ class MergeFilesTabController {
     }
 
     void initialize() {
-        updateFileChooserInitialDirectories();
+        updateFileChoosers();
 
         tab.getUpperSubtitlesFileChooseButton().setOnAction(this::upperSubtitlesFileButtonClicked);
         tab.getLowerSubtitlesFileChooseButton().setOnAction(this::lowerSubtitlesFileButtonClicked);
@@ -53,7 +53,7 @@ class MergeFilesTabController {
         tab.getMergeButton().setOnAction(this::mergeButtonClicked);
     }
 
-    private void updateFileChooserInitialDirectories() {
+    private void updateFileChoosers() {
         File upperSubtitlesDirectory = ObjectUtils.firstNonNull(
                 config.getUpperSubtitlesLastDirectory(),
                 config.getLowerSubtitlesLastDirectory(),
@@ -89,7 +89,7 @@ class MergeFilesTabController {
         redrawAfterFileChosen(MergeFilesTab.FileType.UPPER_SUBTITLES);
 
         saveLastDirectoryInConfigIfNecessary(MergeFilesTab.FileType.UPPER_SUBTITLES);
-        updateFileChooserInitialDirectories();
+        updateFileChoosers();
     }
 
     private void redrawAfterFileChosen(MergeFilesTab.FileType fileType) {
@@ -257,7 +257,7 @@ class MergeFilesTabController {
         redrawAfterFileChosen(MergeFilesTab.FileType.LOWER_SUBTITLES);
 
         saveLastDirectoryInConfigIfNecessary(MergeFilesTab.FileType.LOWER_SUBTITLES);
-        updateFileChooserInitialDirectories();
+        updateFileChoosers();
     }
 
     private void mergedSubtitlesFileButtonClicked(ActionEvent event) {
@@ -269,7 +269,7 @@ class MergeFilesTabController {
         redrawAfterFileChosen(MergeFilesTab.FileType.MERGED_SUBTITLES);
 
         saveLastDirectoryInConfigIfNecessary(MergeFilesTab.FileType.MERGED_SUBTITLES);
-        updateFileChooserInitialDirectories();
+        updateFileChoosers();
     }
 
     private void mergeButtonClicked(ActionEvent event) {
