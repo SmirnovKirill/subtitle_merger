@@ -1,5 +1,7 @@
 package kirill.subtitlesmerger.gui;
 
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -13,43 +15,34 @@ import javafx.stage.Stage;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 class MergeFilesTab {
-    @Getter
     private Stage stage;
 
     private boolean debug;
 
-    @Getter
     private Button upperSubtitlesFileChooseButton;
 
-    @Getter
     private Label upperSubtitlesPathLabel;
 
-    @Getter
     private FileChooser upperSubtitlesFileChooser;
 
-    @Getter
     private Button lowerSubtitlesFileChooseButton;
 
-    @Getter
     private Label lowerSubtitlesPathLabel;
 
-    @Getter
     private FileChooser lowerSubtitlesFileChooser;
 
-    @Getter
     private Button mergedSubtitlesFileChooseButton;
 
-    @Getter
     private Label mergedSubtitlesPathLabel;
 
-    @Getter
     private FileChooser mergedSubtitlesFileChooser;
 
-    @Getter
     private Button mergeButton;
 
     private Label resultLabel;
@@ -186,6 +179,66 @@ class MergeFilesTab {
         resultLabel = new Label();
         contentPane.addRow(contentPane.getRowCount(), resultLabel);
         GridPane.setColumnSpan(resultLabel, contentPane.getColumnCount());
+    }
+
+    void setUpperSubtitlesFileChooseButtonHandler(EventHandler<ActionEvent> handler) {
+        upperSubtitlesFileChooseButton.setOnAction(handler);
+    }
+
+    void setLowerSubtitlesFileChooseButtonHandler(EventHandler<ActionEvent> handler) {
+        lowerSubtitlesFileChooseButton.setOnAction(handler);
+    }
+
+    void setMergedSubtitlesFileChooseButtonHandler(EventHandler<ActionEvent> handler) {
+        mergedSubtitlesFileChooseButton.setOnAction(handler);
+    }
+
+    void setMergeButtonHandler(EventHandler<ActionEvent> handler) {
+        mergeButton.setOnAction(handler);
+    }
+
+    void updateFileChooserInitialDirectories(
+            File upperSubtitlesDirectory,
+            File lowerSubtitlesDirectory,
+            File mergedSubtitlesDirectory
+    ) {
+        if (upperSubtitlesDirectory != null) {
+            upperSubtitlesFileChooser.setInitialDirectory(upperSubtitlesDirectory);
+        }
+        if (lowerSubtitlesDirectory != null) {
+            lowerSubtitlesFileChooser.setInitialDirectory(lowerSubtitlesDirectory);
+        }
+        if (mergedSubtitlesDirectory != null) {
+            mergedSubtitlesFileChooser.setInitialDirectory(mergedSubtitlesDirectory);
+        }
+    }
+
+    Optional<File> getSelectedUpperSubtitlesFile() {
+        return Optional.ofNullable(upperSubtitlesFileChooser.showOpenDialog(stage));
+    }
+
+    Optional<File> getSelectedLowerSubtitlesFile() {
+        return Optional.ofNullable(lowerSubtitlesFileChooser.showOpenDialog(stage));
+    }
+
+    Optional<File> getSelectedMergedSubtitlesFile() {
+        return Optional.ofNullable(mergedSubtitlesFileChooser.showSaveDialog(stage));
+    }
+
+    void setMergeButtonDisable(boolean disable) {
+        mergeButton.setDisable(disable);
+    }
+
+    void setUpperSubtitlesPathLabel(String text) {
+        this.upperSubtitlesPathLabel.setText(text);
+    }
+
+    void setLowerSubtitlesPathLabel(String text) {
+        this.lowerSubtitlesPathLabel.setText(text);
+    }
+
+    void setMergedSubtitlesPathLabel(String text) {
+        this.mergedSubtitlesPathLabel.setText(text);
     }
 
     void removeErrorsAndResult() {
