@@ -17,8 +17,8 @@ import java.io.File;
 
     void initialize() {
         updateFileChoosersAndFields();
-        tab.getFfprobeSetButton().setOnAction(this::ffprobeFileButtonClicked);
-        tab.getFfmpegSetButton().setOnAction(this::ffmpegFileButtonClicked);
+        tab.setFfprobeSetButtonHandler(this::ffprobeFileButtonClicked);
+        tab.setFfmpegSetButtonHandler(this::ffmpegFileButtonClicked);
     }
 
     private void updateFileChoosersAndFields() {
@@ -26,40 +26,40 @@ import java.io.File;
         File ffmpegFile = config.getFfmpegFile();
 
         if (ffprobeFile != null) {
-            tab.getFfprobeField().setText(ffprobeFile.getAbsolutePath());
-
-            tab.getFfprobeSetButton().setText("update path to ffprobe");
-
-            tab.getFfprobeFileChooser().setInitialDirectory(ffprobeFile.getParentFile());
-            tab.getFfprobeFileChooser().setTitle("update path to ffprobe");
+            tab.updateFfprobeInfo(
+                    ffprobeFile.getAbsolutePath(),
+                    "update path to ffprobe",
+                    "update path to ffprobe",
+                    ffprobeFile.getParentFile()
+            );
         } else {
-            tab.getFfprobeSetButton().setText("choose path to ffprobe");
-
-            if (ffmpegFile != null) {
-                tab.getFfprobeFileChooser().setInitialDirectory(ffmpegFile.getParentFile());
-            }
-            tab.getFfprobeFileChooser().setTitle("choose path to ffprobe");
+            tab.updateFfprobeInfo(
+                    "",
+                    "choose path to ffprobe",
+                    "choose path to ffprobe",
+                    ffmpegFile != null ? ffmpegFile.getParentFile() : null
+            );
         }
 
         if (ffmpegFile != null) {
-            tab.getFfmpegField().setText(ffmpegFile.getAbsolutePath());
-
-            tab.getFfmpegSetButton().setText("update path to ffmpeg");
-
-            tab.getFfmpegFileChooser().setInitialDirectory(ffmpegFile.getParentFile());
-            tab.getFfmpegFileChooser().setTitle("update path to ffmpeg");
+            tab.updateFfmpegInfo(
+                    ffmpegFile.getAbsolutePath(),
+                    "update path to ffmpeg",
+                    "update path to ffmpeg",
+                    ffmpegFile.getParentFile()
+            );
         } else {
-            tab.getFfmpegSetButton().setText("choose path to ffmpeg");
-
-            if (ffprobeFile != null) {
-                tab.getFfmpegFileChooser().setInitialDirectory(ffprobeFile.getParentFile());
-            }
-            tab.getFfmpegFileChooser().setTitle("choose path to ffmpeg");
+            tab.updateFfmpegInfo(
+                    "",
+                    "choose path to ffmpeg",
+                    "choose path to ffmpeg",
+                    ffprobeFile != null ? ffprobeFile.getParentFile() : null
+            );
         }
     }
 
     private void ffprobeFileButtonClicked(ActionEvent event) {
-        File ffprobeFile = tab.getFfprobeFileChooser().showOpenDialog(tab.getStage());
+        File ffprobeFile = tab.getSelectedFfprobeFile().orElse(null);
         if (ffprobeFile == null) {
             tab.clearResult();
             return;
@@ -76,7 +76,7 @@ import java.io.File;
     }
 
     private void ffmpegFileButtonClicked(ActionEvent event) {
-        File ffmpegFile = tab.getFfmpegFileChooser().showOpenDialog(tab.getStage());
+        File ffmpegFile = tab.getSelectedFfmpegFile().orElse(null);
         if (ffmpegFile == null) {
             tab.clearResult();
             return;

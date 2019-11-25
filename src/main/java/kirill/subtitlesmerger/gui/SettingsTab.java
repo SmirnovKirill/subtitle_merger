@@ -1,6 +1,8 @@
 package kirill.subtitlesmerger.gui;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
@@ -14,9 +16,11 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.Getter;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 class SettingsTab {
@@ -180,6 +184,46 @@ class SettingsTab {
         resultLabel = new Label();
         contentPane.addRow(contentPane.getRowCount(), resultLabel);
         GridPane.setColumnSpan(resultLabel, contentPane.getColumnCount());
+    }
+
+    void setFfprobeSetButtonHandler(EventHandler<ActionEvent> handler) {
+        ffprobeSetButton.setOnAction(handler);
+    }
+
+    void setFfmpegSetButtonHandler(EventHandler<ActionEvent> handler) {
+        ffmpegSetButton.setOnAction(handler);
+    }
+
+    Optional<File> getSelectedFfprobeFile() {
+        return Optional.ofNullable(ffprobeFileChooser.showOpenDialog(stage));
+    }
+
+    Optional<File> getSelectedFfmpegFile() {
+        return Optional.ofNullable(ffmpegFileChooser.showOpenDialog(stage));
+    }
+
+    void updateFfprobeInfo(
+            String fieldText,
+            String buttonText,
+            String fileChooserTitle,
+            File fileChooserInitialDirectory
+    ) {
+        ffprobeField.setText(fieldText);
+        ffprobeSetButton.setText(buttonText);
+        ffprobeFileChooser.setTitle(fileChooserTitle);
+        ffprobeFileChooser.setInitialDirectory(fileChooserInitialDirectory);
+    }
+
+    void updateFfmpegInfo(
+            String fieldText,
+            String buttonText,
+            String fileChooserTitle,
+            File fileChooserInitialDirectory
+    ) {
+        ffmpegField.setText(fieldText);
+        ffmpegSetButton.setText(buttonText);
+        ffmpegFileChooser.setTitle(fileChooserTitle);
+        ffmpegFileChooser.setInitialDirectory(fileChooserInitialDirectory);
     }
 
     //todo move to controls
