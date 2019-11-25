@@ -20,27 +20,20 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 class SettingsTab {
-    @Getter
     private Stage stage;
 
     private boolean debug;
 
-    @Getter
     private TextField ffprobeField;
 
-    @Getter
     private Button ffprobeSetButton;
 
-    @Getter
     private FileChooser ffprobeFileChooser;
 
-    @Getter
     private TextField ffmpegField;
 
-    @Getter
     private Button ffmpegSetButton;
 
-    @Getter
     private FileChooser ffmpegFileChooser;
 
     private ComboBox<String> upperSubtitlesLanguageComboBox;

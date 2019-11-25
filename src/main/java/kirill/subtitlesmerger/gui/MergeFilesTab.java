@@ -12,7 +12,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -317,10 +316,10 @@ class MergeFilesTab {
         resultLabel.setText(text);
     }
 
-    void showSuccessMessage(String text) {
+    void showSuccessMessage() {
         clearResult();
         resultLabel.getStyleClass().add(GuiLauncher.LABEL_SUCCESS_CLASS);
-        resultLabel.setText(text);
+        resultLabel.setText("Subtitles have been merged successfully!");
     }
 
     enum FileType {
