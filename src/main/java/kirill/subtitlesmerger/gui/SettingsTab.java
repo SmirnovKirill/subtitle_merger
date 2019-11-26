@@ -1,6 +1,7 @@
 package kirill.subtitlesmerger.gui;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
+import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.HPos;
@@ -41,9 +42,9 @@ class SettingsTab {
 
     private FileChooser ffmpegFileChooser;
 
-    private ComboBox<LanguageAlpha3Code> upperSubtitlesLanguageComboBox;
+    private ComboBox<LanguageAlpha3Code> upperLanguageComboBox;
 
-    private ComboBox<LanguageAlpha3Code> lowerSubtitlesLanguageComboBox;
+    private ComboBox<LanguageAlpha3Code> lowerLanguageComboBox;
 
     private Label resultLabel;
 
@@ -77,8 +78,8 @@ class SettingsTab {
 
         addRowForFfprobe(contentPane);
         addRowForFfmpeg(contentPane);
-        addRowForUpperSubtitlesLanguage(contentPane);
-        addRowForLowerSubtitlesLanguage(contentPane);
+        addRowForUpperLanguage(contentPane);
+        addRowForLowerLanguage(contentPane);
         addResultLabel(contentPane);
 
         return contentPane;
@@ -148,37 +149,37 @@ class SettingsTab {
     }
 
     //todo make editable with drop-down
-    private void addRowForUpperSubtitlesLanguage(GridPane contentPane) {
+    private void addRowForUpperLanguage(GridPane contentPane) {
         Label descriptionLabel = new Label("Preferred language for upper subtitles");
 
-        upperSubtitlesLanguageComboBox = new ComboBox<>();
-        upperSubtitlesLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
+        upperLanguageComboBox = new ComboBox<>();
+        upperLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
 
         contentPane.addRow(
                 contentPane.getRowCount(),
                 descriptionLabel,
-                upperSubtitlesLanguageComboBox
+                upperLanguageComboBox
         );
 
         GridPane.setHalignment(descriptionLabel, HPos.LEFT);
-        GridPane.setHalignment(upperSubtitlesLanguageComboBox, HPos.RIGHT);
+        GridPane.setHalignment(upperLanguageComboBox, HPos.RIGHT);
     }
 
     //todo make editable with drop-down
-    private void addRowForLowerSubtitlesLanguage(GridPane contentPane) {
+    private void addRowForLowerLanguage(GridPane contentPane) {
         Label descriptionLabel = new Label("Preferred language for lower subtitles");
 
-        lowerSubtitlesLanguageComboBox = new ComboBox<>();
-        lowerSubtitlesLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
+        lowerLanguageComboBox = new ComboBox<>();
+        lowerLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
 
         contentPane.addRow(
                 contentPane.getRowCount(),
                 descriptionLabel,
-                lowerSubtitlesLanguageComboBox
+                lowerLanguageComboBox
         );
 
         GridPane.setHalignment(descriptionLabel, HPos.LEFT);
-        GridPane.setHalignment(lowerSubtitlesLanguageComboBox, HPos.RIGHT);
+        GridPane.setHalignment(lowerLanguageComboBox, HPos.RIGHT);
     }
 
     private void addResultLabel(GridPane contentPane) {
@@ -188,8 +189,8 @@ class SettingsTab {
     }
 
     void setLanguageCodesForComboBoxes(List<LanguageAlpha3Code> languageCodes) {
-        upperSubtitlesLanguageComboBox.getItems().setAll(languageCodes);
-        lowerSubtitlesLanguageComboBox.getItems().setAll(languageCodes);
+        upperLanguageComboBox.getItems().setAll(languageCodes);
+        lowerLanguageComboBox.getItems().setAll(languageCodes);
     }
 
     void setFfprobeSetButtonHandler(EventHandler<ActionEvent> handler) {
@@ -198,6 +199,14 @@ class SettingsTab {
 
     void setFfmpegSetButtonHandler(EventHandler<ActionEvent> handler) {
         ffmpegSetButton.setOnAction(handler);
+    }
+
+    void setUpperLanguageListener(ChangeListener<LanguageAlpha3Code> listener) {
+        upperLanguageComboBox.getSelectionModel().selectedItemProperty().addListener(listener);
+    }
+
+    void setLowerLanguageListener(ChangeListener<LanguageAlpha3Code> listener) {
+        lowerLanguageComboBox.getSelectionModel().selectedItemProperty().addListener(listener);
     }
 
     Optional<File> getSelectedFfprobeFile() {

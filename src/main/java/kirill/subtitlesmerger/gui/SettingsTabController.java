@@ -1,8 +1,10 @@
 package kirill.subtitlesmerger.gui;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import kirill.subtitlesmerger.logic.data.Config;
+import lombok.extern.apachecommons.CommonsLog;
 
 import java.io.File;
 import java.util.Arrays;
@@ -11,6 +13,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@CommonsLog
 class SettingsTabController {
     private SettingsTab tab;
 
@@ -37,6 +40,8 @@ class SettingsTabController {
         updateFileChoosersAndFields();
         tab.setFfprobeSetButtonHandler(this::ffprobeFileButtonClicked);
         tab.setFfmpegSetButtonHandler(this::ffmpegFileButtonClicked);
+        tab.setUpperLanguageListener(this::upperLanguageListener);
+        tab.setLowerLanguageListener(this::lowerLanguageListener);
     }
 
     private void updateFileChoosersAndFields() {
@@ -129,6 +134,58 @@ class SettingsTabController {
             }
         } catch (Config.ConfigException e) {
             tab.showErrorMessage("incorrect path to ffmpeg");
+        }
+    }
+
+    private void upperLanguageListener(
+            ObservableValue<? extends LanguageAlpha3Code> observable,
+            LanguageAlpha3Code oldValue,
+            LanguageAlpha3Code newValue
+    ) {
+        if (newValue == null) {
+            throw new IllegalStateException();
+        }
+
+        boolean hadValueBefore = config.getUpperLanguage() != null;
+
+        try {
+            config.saveUpperLanguage(newValue.toString());
+
+            if (hadValueBefore) {
+                tab.showSuccessMessage("language for upper subtitles has been updated successfully");
+            } else {
+                tab.showSuccessMessage("language for upper subtitles has been saved successfully");
+            }
+        } catch (Config.ConfigException e) {
+            log.error("language for upper subtitles has not been saved, that shouldn't be possible, code " + newValue);
+
+            tab.showErrorMessage("something bad has happened, language hasn't been saved");
+        }
+    }
+
+    private void lowerLanguageListener(
+            ObservableValue<? extends LanguageAlpha3Code> observable,
+            LanguageAlpha3Code oldValue,
+            LanguageAlpha3Code newValue
+    ) {
+        if (newValue == null) {
+            throw new IllegalStateException();
+        }
+
+        boolean hadValueBefore = config.getLowerLanguage() != null;
+
+        try {
+            config.saveLowerLanguage(newValue.toString());
+
+            if (hadValueBefore) {
+                tab.showSuccessMessage("language for lower subtitles has been updated successfully");
+            } else {
+                tab.showSuccessMessage("language for lower subtitles has been saved successfully");
+            }
+        } catch (Config.ConfigException e) {
+            log.error("language for lower subtitles has not been saved, that shouldn't be possible, code " + newValue);
+
+            tab.showErrorMessage("something bad has happened, language hasn't been saved");
         }
     }
 }
