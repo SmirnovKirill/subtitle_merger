@@ -156,6 +156,12 @@ class SettingsTabController {
             throw new IllegalStateException();
         }
 
+        if (Objects.equals(newValue, config.getLowerLanguage())) {
+            updateFileChoosersAndFields();
+            tab.showErrorMessage("you have to select different language");
+            return;
+        }
+
         boolean hadValueBefore = config.getUpperLanguage() != null;
 
         try {
@@ -181,6 +187,12 @@ class SettingsTabController {
     ) {
         if (newValue == null) {
             throw new IllegalStateException();
+        }
+
+        if (Objects.equals(newValue, config.getUpperLanguage())) {
+            updateFileChoosersAndFields();
+            tab.showErrorMessage("you have to select different language");
+            return;
         }
 
         boolean hadValueBefore = config.getLowerLanguage() != null;
