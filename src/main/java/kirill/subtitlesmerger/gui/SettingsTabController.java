@@ -158,7 +158,7 @@ class SettingsTabController {
 
         if (Objects.equals(newValue, config.getLowerLanguage())) {
             updateFileChoosersAndFields();
-            tab.showErrorMessage("you have to select different language");
+            tab.showErrorMessage("languages have to be different, please select another one");
             return;
         }
 
@@ -191,7 +191,7 @@ class SettingsTabController {
 
         if (Objects.equals(newValue, config.getUpperLanguage())) {
             updateFileChoosersAndFields();
-            tab.showErrorMessage("you have to select different language");
+            tab.showErrorMessage("languages have to be different, please select another one");
             return;
         }
 

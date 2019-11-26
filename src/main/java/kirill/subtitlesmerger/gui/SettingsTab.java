@@ -70,7 +70,6 @@ class SettingsTab {
         GridPane contentPane = new GridPane();
 
         contentPane.setHgap(30);
-        contentPane.setVgap(40);
         contentPane.setPadding(new Insets(20));
         contentPane.setGridLinesVisible(debug);
 
@@ -120,6 +119,8 @@ class SettingsTab {
                 fieldButtonBox
         );
 
+        GridPane.setMargin(descriptionLabel, new Insets(0, 0, 20, 0));
+        GridPane.setMargin(fieldButtonBox, new Insets(0, 0, 20, 0));
         GridPane.setHalignment(descriptionLabel, HPos.LEFT);
         GridPane.setHalignment(fieldButtonBox, HPos.RIGHT);
     }
@@ -144,6 +145,8 @@ class SettingsTab {
                 fieldButtonBox
         );
 
+        GridPane.setMargin(descriptionLabel, new Insets(20, 0, 20, 0));
+        GridPane.setMargin(fieldButtonBox, new Insets(20, 0, 20, 0));
         GridPane.setHalignment(descriptionLabel, HPos.LEFT);
         GridPane.setHalignment(fieldButtonBox, HPos.RIGHT);
     }
@@ -161,6 +164,8 @@ class SettingsTab {
                 upperLanguageComboBox
         );
 
+        GridPane.setMargin(descriptionLabel, new Insets(20, 0, 20, 0));
+        GridPane.setMargin(upperLanguageComboBox, new Insets(20, 0, 20, 0));
         GridPane.setHalignment(descriptionLabel, HPos.LEFT);
         GridPane.setHalignment(upperLanguageComboBox, HPos.RIGHT);
     }
@@ -178,6 +183,8 @@ class SettingsTab {
                 lowerLanguageComboBox
         );
 
+        GridPane.setMargin(descriptionLabel, new Insets(20, 0, 20, 0));
+        GridPane.setMargin(lowerLanguageComboBox, new Insets(20, 0, 20, 0));
         GridPane.setHalignment(descriptionLabel, HPos.LEFT);
         GridPane.setHalignment(lowerLanguageComboBox, HPos.RIGHT);
     }
@@ -186,6 +193,7 @@ class SettingsTab {
         resultLabel = new Label();
         contentPane.addRow(contentPane.getRowCount(), resultLabel);
         GridPane.setColumnSpan(resultLabel, contentPane.getColumnCount());
+        GridPane.setMargin(resultLabel, new Insets(20, 0, 0, 0));
     }
 
     void setLanguageCodesForComboBoxes(List<LanguageAlpha3Code> languageCodes) {
