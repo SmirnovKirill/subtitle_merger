@@ -186,7 +186,8 @@ class SettingsTab {
 
     private static Tooltip generateLanguageTooltip() {
         Tooltip result = new Tooltip(
-                "this setting will be used to auto-detect subtitles for merging when working in the directory mode"
+                "this setting will be used to auto-detect subtitles\n"
+                        + "for merging when working with videos"
         );
 
         result.setShowDelay(Duration.ZERO);
