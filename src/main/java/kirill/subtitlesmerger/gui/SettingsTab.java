@@ -241,6 +241,14 @@ class SettingsTab {
         ffmpegFileChooser.setInitialDirectory(fileChooserInitialDirectory);
     }
 
+    void setSelectedUpperLanguage(LanguageAlpha3Code languageCode) {
+        upperLanguageComboBox.getSelectionModel().select(languageCode);
+    }
+
+    void setSelectedLowerLanguage(LanguageAlpha3Code languageCode) {
+        lowerLanguageComboBox.getSelectionModel().select(languageCode);
+    }
+
     void clearResult() {
         resultLabel.setText("");
         resultLabel.getStyleClass().remove(GuiLauncher.LABEL_SUCCESS_CLASS);

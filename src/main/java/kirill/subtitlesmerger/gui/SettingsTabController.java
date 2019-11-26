@@ -79,6 +79,16 @@ class SettingsTabController {
                     ffprobeFile != null ? ffprobeFile.getParentFile() : null
             );
         }
+
+        LanguageAlpha3Code upperLanguage = config.getUpperLanguage();
+        if (upperLanguage != null) {
+            tab.setSelectedUpperLanguage(upperLanguage);
+        }
+
+        LanguageAlpha3Code lowerLanguage = config.getLowerLanguage();
+        if (lowerLanguage != null) {
+            tab.setSelectedLowerLanguage(lowerLanguage);
+        }
     }
 
     private void ffprobeFileButtonClicked(ActionEvent event) {
@@ -150,6 +160,7 @@ class SettingsTabController {
 
         try {
             config.saveUpperLanguage(newValue.toString());
+            updateFileChoosersAndFields();
 
             if (hadValueBefore) {
                 tab.showSuccessMessage("language for upper subtitles has been updated successfully");
@@ -176,6 +187,7 @@ class SettingsTabController {
 
         try {
             config.saveLowerLanguage(newValue.toString());
+            updateFileChoosersAndFields();
 
             if (hadValueBefore) {
                 tab.showSuccessMessage("language for lower subtitles has been updated successfully");
