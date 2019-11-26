@@ -12,6 +12,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import javafx.util.StringConverter;
 
 import java.io.File;
@@ -153,7 +154,19 @@ class SettingsTab {
 
     //todo make editable with drop-down
     private void addRowForUpperLanguage(GridPane contentPane) {
-        Label descriptionLabel = new Label("Preferred language for upper subtitles");
+        HBox descriptionAndInfo = new HBox();
+
+        Image infoImage = new Image(SettingsTab.class.getResourceAsStream("/info.png"));
+        ImageView imageView = new ImageView(infoImage);
+        imageView.setFitHeight(16);
+        imageView.setFitWidth(16);
+        Tooltip.install(imageView, generateLanguageTooltip());
+
+        descriptionAndInfo.setSpacing(10);
+        descriptionAndInfo.getChildren().addAll(
+                new Label("Preferred language for upper subtitles"),
+                imageView
+        );
 
         upperLanguageComboBox = new ComboBox<>();
         upperLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
@@ -161,14 +174,24 @@ class SettingsTab {
 
         contentPane.addRow(
                 contentPane.getRowCount(),
-                descriptionLabel,
+                descriptionAndInfo,
                 upperLanguageComboBox
         );
 
-        GridPane.setMargin(descriptionLabel, new Insets(20, 0, 0, 0));
+        GridPane.setMargin(descriptionAndInfo, new Insets(20, 0, 0, 0));
         GridPane.setMargin(upperLanguageComboBox, new Insets(20, 0, 0, 0));
-        GridPane.setHalignment(descriptionLabel, HPos.LEFT);
+        GridPane.setHalignment(descriptionAndInfo, HPos.LEFT);
         GridPane.setHalignment(upperLanguageComboBox, HPos.RIGHT);
+    }
+
+    private static Tooltip generateLanguageTooltip() {
+        Tooltip result = new Tooltip(
+                "this setting will be used to auto-detect subtitles for merging when working in the directory mode"
+        );
+
+        result.setShowDelay(Duration.ZERO);
+
+        return result;
     }
 
     private void addRowForSwapLanguagesButton(GridPane contentPane) {
@@ -192,7 +215,19 @@ class SettingsTab {
 
     //todo make editable with drop-down
     private void addRowForLowerLanguage(GridPane contentPane) {
-        Label descriptionLabel = new Label("Preferred language for lower subtitles");
+        HBox descriptionAndInfo = new HBox();
+
+        Image infoImage = new Image(SettingsTab.class.getResourceAsStream("/info.png"));
+        ImageView imageView = new ImageView(infoImage);
+        imageView.setFitHeight(16);
+        imageView.setFitWidth(16);
+        Tooltip.install(imageView, generateLanguageTooltip());
+
+        descriptionAndInfo.setSpacing(10);
+        descriptionAndInfo.getChildren().addAll(
+                new Label("Preferred language for lower subtitles"),
+                imageView
+        );
 
         lowerLanguageComboBox = new ComboBox<>();
         lowerLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
@@ -200,13 +235,13 @@ class SettingsTab {
 
         contentPane.addRow(
                 contentPane.getRowCount(),
-                descriptionLabel,
+                descriptionAndInfo,
                 lowerLanguageComboBox
         );
 
-        GridPane.setMargin(descriptionLabel, new Insets(0, 0, 20, 0));
+        GridPane.setMargin(descriptionAndInfo, new Insets(0, 0, 20, 0));
         GridPane.setMargin(lowerLanguageComboBox, new Insets(0, 0, 20, 0));
-        GridPane.setHalignment(descriptionLabel, HPos.LEFT);
+        GridPane.setHalignment(descriptionAndInfo, HPos.LEFT);
         GridPane.setHalignment(lowerLanguageComboBox, HPos.RIGHT);
     }
 
