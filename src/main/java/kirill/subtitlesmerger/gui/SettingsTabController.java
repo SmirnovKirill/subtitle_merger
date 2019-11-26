@@ -1,22 +1,39 @@
 package kirill.subtitlesmerger.gui;
 
+import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.event.ActionEvent;
 import kirill.subtitlesmerger.logic.data.Config;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 class SettingsTabController {
     private SettingsTab tab;
 
     private Config config;
 
+    private List<LanguageAlpha3Code> allLanguageCodes;
+
     SettingsTabController(SettingsTab tab, Config config) {
         this.tab = tab;
         this.config = config;
+        this.allLanguageCodes = getAllLanguageCodes();
+    }
+
+    private static List<LanguageAlpha3Code> getAllLanguageCodes() {
+        return Arrays.stream(LanguageAlpha3Code.values())
+                .filter(code -> code != LanguageAlpha3Code.undefined)
+                .filter(code -> code.getUsage() != LanguageAlpha3Code.Usage.TERMINOLOGY)
+                .sorted(Comparator.comparing(LanguageAlpha3Code::getName))
+                .collect(Collectors.toList());
     }
 
     void initialize() {
+        tab.setLanguageCodesForComboBoxes(allLanguageCodes);
         updateFileChoosersAndFields();
         tab.setFfprobeSetButtonHandler(this::ffprobeFileButtonClicked);
         tab.setFfmpegSetButtonHandler(this::ffmpegFileButtonClicked);

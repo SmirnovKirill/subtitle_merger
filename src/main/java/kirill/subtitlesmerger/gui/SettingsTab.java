@@ -14,16 +14,17 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import lombok.Getter;
+import javafx.util.StringConverter;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 class SettingsTab {
+    private static final LanguageCodeStringConverter LANGUAGE_CODE_STRING_CONVERTER = new LanguageCodeStringConverter();
+
     private Stage stage;
 
     private boolean debug;
@@ -40,9 +41,9 @@ class SettingsTab {
 
     private FileChooser ffmpegFileChooser;
 
-    private ComboBox<String> upperSubtitlesLanguageComboBox;
+    private ComboBox<LanguageAlpha3Code> upperSubtitlesLanguageComboBox;
 
-    private ComboBox<String> lowerSubtitlesLanguageComboBox;
+    private ComboBox<LanguageAlpha3Code> lowerSubtitlesLanguageComboBox;
 
     private Label resultLabel;
 
@@ -151,7 +152,7 @@ class SettingsTab {
         Label descriptionLabel = new Label("Preferred language for upper subtitles");
 
         upperSubtitlesLanguageComboBox = new ComboBox<>();
-        upperSubtitlesLanguageComboBox.getItems().addAll(getLanguagesList());
+        upperSubtitlesLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
 
         contentPane.addRow(
                 contentPane.getRowCount(),
@@ -168,7 +169,7 @@ class SettingsTab {
         Label descriptionLabel = new Label("Preferred language for lower subtitles");
 
         lowerSubtitlesLanguageComboBox = new ComboBox<>();
-        lowerSubtitlesLanguageComboBox.getItems().addAll(getLanguagesList());
+        lowerSubtitlesLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
 
         contentPane.addRow(
                 contentPane.getRowCount(),
@@ -184,6 +185,11 @@ class SettingsTab {
         resultLabel = new Label();
         contentPane.addRow(contentPane.getRowCount(), resultLabel);
         GridPane.setColumnSpan(resultLabel, contentPane.getColumnCount());
+    }
+
+    void setLanguageCodesForComboBoxes(List<LanguageAlpha3Code> languageCodes) {
+        upperSubtitlesLanguageComboBox.getItems().setAll(languageCodes);
+        lowerSubtitlesLanguageComboBox.getItems().setAll(languageCodes);
     }
 
     void setFfprobeSetButtonHandler(EventHandler<ActionEvent> handler) {
@@ -226,15 +232,6 @@ class SettingsTab {
         ffmpegFileChooser.setInitialDirectory(fileChooserInitialDirectory);
     }
 
-    //todo move to controls
-    private static List<String> getLanguagesList() {
-        return Arrays.stream(LanguageAlpha3Code.values())
-                .filter(code -> code != LanguageAlpha3Code.undefined)
-                .map(code -> code.getName() + " (" + code.name() + ")")
-                .sorted()
-                .collect(Collectors.toList());
-    }
-
     void clearResult() {
         resultLabel.setText("");
         resultLabel.getStyleClass().remove(GuiLauncher.LABEL_SUCCESS_CLASS);
@@ -251,5 +248,30 @@ class SettingsTab {
         clearResult();
         resultLabel.getStyleClass().add(GuiLauncher.LABEL_SUCCESS_CLASS);
         resultLabel.setText(text);
+    }
+
+    private static class LanguageCodeStringConverter extends StringConverter<LanguageAlpha3Code> {
+        private static final String LANGUAGE_NOT_SET = "language code is not set";
+
+        @Override
+        public String toString(LanguageAlpha3Code languageCode) {
+            if (languageCode == null) {
+                return LANGUAGE_NOT_SET;
+            }
+
+            return languageCode.getName() + " (" + languageCode.toString() + ")";
+        }
+
+        @Override
+        public LanguageAlpha3Code fromString(String rawCode) {
+            if (Objects.equals(rawCode, LANGUAGE_NOT_SET)) {
+                return null;
+            }
+
+            int leftBracketIndex = rawCode.indexOf("(");
+
+            /* + 4 because every code is 3 symbol long. */
+            return LanguageAlpha3Code.getByCode(rawCode.substring(leftBracketIndex + 1, leftBracketIndex + 4));
+        }
     }
 }
