@@ -146,6 +146,10 @@ class Config {
             throw new ConfigException("language code " + rawValue + " is not valid");
         }
 
+        if (result.getUsage() == LanguageAlpha3Code.Usage.TERMINOLOGY) {
+            throw new ConfigException("language code " + rawValue + " is a terminology code");
+        }
+
         return Optional.of(result);
     }
 
