@@ -4,8 +4,9 @@ import javafx.event.ActionEvent;
 import kirill.subtitlesmerger.logic.data.Config;
 
 import java.io.File;
+import java.util.Objects;
 
- class SettingsTabController {
+class SettingsTabController {
     private SettingsTab tab;
 
     private Config config;
@@ -65,11 +66,22 @@ import java.io.File;
             return;
         }
 
+        if (Objects.equals(ffprobeFile, config.getFfprobeFile())) {
+            tab.showSuccessMessage("path to ffprobe has stayed the same");
+            return;
+        }
+
+        boolean hadValueBefore = config.getFfmpegFile() != null;
+
         try {
             config.saveFfprobeFile(ffprobeFile.getAbsolutePath());
             updateFileChoosersAndFields();
 
-            tab.showSuccessMessage("path to ffprobe has been saved successfully");
+            if (hadValueBefore) {
+                tab.showSuccessMessage("path to ffprobe has been updated successfully");
+            } else {
+                tab.showSuccessMessage("path to ffprobe has been saved successfully");
+            }
         } catch (Config.ConfigException e) {
             tab.showErrorMessage("incorrect path to ffprobe");
         }
@@ -82,11 +94,22 @@ import java.io.File;
             return;
         }
 
+        if (Objects.equals(ffmpegFile, config.getFfmpegFile())) {
+            tab.showSuccessMessage("path to ffmpeg has stayed the same");
+            return;
+        }
+
+        boolean hadValueBefore = config.getFfmpegFile() != null;
+
         try {
             config.saveFfmpegFile(ffmpegFile.getAbsolutePath());
             updateFileChoosersAndFields();
 
-            tab.showSuccessMessage("path to ffmpeg has been saved successfully");
+            if (hadValueBefore) {
+                tab.showSuccessMessage("path to ffmpeg has been updated successfully");
+            } else {
+                tab.showSuccessMessage("path to ffmpeg has been saved successfully");
+            }
         } catch (Config.ConfigException e) {
             tab.showErrorMessage("incorrect path to ffmpeg");
         }
