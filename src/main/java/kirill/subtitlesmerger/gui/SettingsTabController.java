@@ -174,7 +174,7 @@ class SettingsTabController {
                 tab.showSuccessMessage("language for upper subtitles has been saved successfully");
             }
         } catch (Config.ConfigException e) {
-            log.error("language for upper subtitles has not been saved, that shouldn't be possible, code " + newValue);
+            log.error("language for upper subtitles has not been saved: " + ExceptionUtils.getStackTrace(e));
 
             tab.showErrorMessage("something bad has happened, language hasn't been saved");
         }
@@ -191,9 +191,9 @@ class SettingsTabController {
 
             tab.showSuccessMessage("languages have been swapped successfully");
         } catch (Config.ConfigException e) {
-            log.error("languages have not been swapped, " + ExceptionUtils.getStackTrace(e));
+            log.error("languages haven't been swapped: " + ExceptionUtils.getStackTrace(e));
 
-            tab.showErrorMessage("something bad has happened, language haven't been swapped");
+            tab.showErrorMessage("something bad has happened, languages haven't been swapped");
         }
     }
 
