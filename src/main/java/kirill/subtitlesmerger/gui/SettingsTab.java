@@ -9,10 +9,7 @@ import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
+import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
@@ -43,6 +40,8 @@ class SettingsTab {
     private FileChooser ffmpegFileChooser;
 
     private ComboBox<LanguageAlpha3Code> upperLanguageComboBox;
+
+    private Button swapLanguagesButton;
 
     private ComboBox<LanguageAlpha3Code> lowerLanguageComboBox;
 
@@ -78,6 +77,7 @@ class SettingsTab {
         addRowForFfprobe(contentPane);
         addRowForFfmpeg(contentPane);
         addRowForUpperLanguage(contentPane);
+        addRowForSwapLanguagesButton(contentPane);
         addRowForLowerLanguage(contentPane);
         addResultLabel(contentPane);
 
@@ -165,10 +165,29 @@ class SettingsTab {
                 upperLanguageComboBox
         );
 
-        GridPane.setMargin(descriptionLabel, new Insets(20, 0, 20, 0));
-        GridPane.setMargin(upperLanguageComboBox, new Insets(20, 0, 20, 0));
+        GridPane.setMargin(descriptionLabel, new Insets(20, 0, 0, 0));
+        GridPane.setMargin(upperLanguageComboBox, new Insets(20, 0, 0, 0));
         GridPane.setHalignment(descriptionLabel, HPos.LEFT);
         GridPane.setHalignment(upperLanguageComboBox, HPos.RIGHT);
+    }
+
+    private void addRowForSwapLanguagesButton(GridPane contentPane) {
+        Image image = new Image(SettingsTab.class.getResourceAsStream("/swap.png"));
+        ImageView imageView = new ImageView(image);
+        imageView.setFitHeight(24);
+        imageView.setFitWidth(24);
+
+        swapLanguagesButton = new Button("", imageView);
+        swapLanguagesButton.setPadding(new Insets(0));
+
+        contentPane.addRow(
+                contentPane.getRowCount(),
+                new Region(),
+                swapLanguagesButton
+        );
+
+        GridPane.setMargin(swapLanguagesButton, new Insets(8, 0, 8, 10));
+        GridPane.setHalignment(swapLanguagesButton, HPos.LEFT);
     }
 
     //todo make editable with drop-down
@@ -185,8 +204,8 @@ class SettingsTab {
                 lowerLanguageComboBox
         );
 
-        GridPane.setMargin(descriptionLabel, new Insets(20, 0, 20, 0));
-        GridPane.setMargin(lowerLanguageComboBox, new Insets(20, 0, 20, 0));
+        GridPane.setMargin(descriptionLabel, new Insets(0, 0, 20, 0));
+        GridPane.setMargin(lowerLanguageComboBox, new Insets(0, 0, 20, 0));
         GridPane.setHalignment(descriptionLabel, HPos.LEFT);
         GridPane.setHalignment(lowerLanguageComboBox, HPos.RIGHT);
     }
@@ -215,16 +234,12 @@ class SettingsTab {
         upperLanguageComboBox.getSelectionModel().selectedItemProperty().addListener(listener);
     }
 
+    void setSwapLanguagesButtonHandler(EventHandler<ActionEvent> handler) {
+        swapLanguagesButton.setOnAction(handler);
+    }
+
     void setLowerLanguageListener(ChangeListener<LanguageAlpha3Code> listener) {
         lowerLanguageComboBox.getSelectionModel().selectedItemProperty().addListener(listener);
-    }
-
-    Optional<File> getSelectedFfprobeFile() {
-        return Optional.ofNullable(ffprobeFileChooser.showOpenDialog(stage));
-    }
-
-    Optional<File> getSelectedFfmpegFile() {
-        return Optional.ofNullable(ffmpegFileChooser.showOpenDialog(stage));
     }
 
     void updateFfprobeInfo(
@@ -257,6 +272,18 @@ class SettingsTab {
 
     void setSelectedLowerLanguage(LanguageAlpha3Code languageCode) {
         lowerLanguageComboBox.getSelectionModel().select(languageCode);
+    }
+
+    void setSwapLanguagesButtonVisible(boolean visible) {
+        swapLanguagesButton.setVisible(visible);
+    }
+
+    Optional<File> getSelectedFfprobeFile() {
+        return Optional.ofNullable(ffprobeFileChooser.showOpenDialog(stage));
+    }
+
+    Optional<File> getSelectedFfmpegFile() {
+        return Optional.ofNullable(ffmpegFileChooser.showOpenDialog(stage));
     }
 
     void clearResult() {

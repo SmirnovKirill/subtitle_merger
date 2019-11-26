@@ -5,6 +5,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import kirill.subtitlesmerger.logic.data.Config;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
 import java.util.Arrays;
@@ -41,6 +42,7 @@ class SettingsTabController {
         tab.setFfprobeSetButtonHandler(this::ffprobeFileButtonClicked);
         tab.setFfmpegSetButtonHandler(this::ffmpegFileButtonClicked);
         tab.setUpperLanguageListener(this::upperLanguageListener);
+        tab.setSwapLanguagesButtonHandler(this::swapLanguagesButtonClicked);
         tab.setLowerLanguageListener(this::lowerLanguageListener);
     }
 
@@ -89,6 +91,8 @@ class SettingsTabController {
         if (lowerLanguage != null) {
             tab.setSelectedLowerLanguage(lowerLanguage);
         }
+
+        tab.setSwapLanguagesButtonVisible(config.getUpperLanguage() != null && config.getLowerLanguage() != null);
     }
 
     private void ffprobeFileButtonClicked(ActionEvent event) {
@@ -152,10 +156,6 @@ class SettingsTabController {
             LanguageAlpha3Code oldValue,
             LanguageAlpha3Code newValue
     ) {
-        if (newValue == null) {
-            throw new IllegalStateException();
-        }
-
         if (Objects.equals(newValue, config.getLowerLanguage())) {
             updateFileChoosersAndFields();
             tab.showErrorMessage("languages have to be different, please select another one");
@@ -177,6 +177,23 @@ class SettingsTabController {
             log.error("language for upper subtitles has not been saved, that shouldn't be possible, code " + newValue);
 
             tab.showErrorMessage("something bad has happened, language hasn't been saved");
+        }
+    }
+
+    private void swapLanguagesButtonClicked(ActionEvent event) {
+        LanguageAlpha3Code oldUpperLanguage = config.getUpperLanguage();
+        LanguageAlpha3Code oldLowerLanguage = config.getLowerLanguage();
+
+        try {
+            config.saveUpperLanguage(oldLowerLanguage.toString());
+            config.saveLowerLanguage(oldUpperLanguage.toString());
+            updateFileChoosersAndFields();
+
+            tab.showSuccessMessage("languages have been swapped successfully");
+        } catch (Config.ConfigException e) {
+            log.error("languages have not been swapped, " + ExceptionUtils.getStackTrace(e));
+
+            tab.showErrorMessage("something bad has happened, language haven't been swapped");
         }
     }
 
