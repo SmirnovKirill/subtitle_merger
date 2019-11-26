@@ -157,6 +157,7 @@ class SettingsTab {
 
         upperLanguageComboBox = new ComboBox<>();
         upperLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
+        upperLanguageComboBox.setMaxWidth(Double.MAX_VALUE);
 
         contentPane.addRow(
                 contentPane.getRowCount(),
@@ -176,6 +177,7 @@ class SettingsTab {
 
         lowerLanguageComboBox = new ComboBox<>();
         lowerLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
+        lowerLanguageComboBox.setMaxWidth(Double.MAX_VALUE);
 
         contentPane.addRow(
                 contentPane.getRowCount(),
