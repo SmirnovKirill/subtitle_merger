@@ -1,1 +1,1 @@
-Программа умеет работать только с видео в формате mkv и субтитрами в формате subrip (.srt).
+some icons have been taken from https://www.flaticon.com/authors/freepik

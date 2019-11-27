@@ -68,6 +68,7 @@ class SettingsTab {
 
         result.setFitHeight(16);
         result.setFitWidth(16);
+        result.setSmooth(true);
 
         return result;
     }
@@ -166,6 +167,7 @@ class SettingsTab {
         ImageView imageView = new ImageView(infoImage);
         imageView.setFitHeight(16);
         imageView.setFitWidth(16);
+        imageView.setSmooth(true);
         Tooltip.install(imageView, generateLanguageTooltip());
 
         descriptionAndInfo.setFillHeight(true);
@@ -199,6 +201,7 @@ class SettingsTab {
         );
 
         result.setShowDelay(Duration.ZERO);
+        result.setShowDuration(Duration.INDEFINITE);
 
         return result;
     }
@@ -208,6 +211,7 @@ class SettingsTab {
         ImageView imageView = new ImageView(image);
         imageView.setFitHeight(24);
         imageView.setFitWidth(24);
+        imageView.setSmooth(true);
 
         swapLanguagesButton = new Button("", imageView);
         swapLanguagesButton.setPadding(new Insets(0));
@@ -230,6 +234,7 @@ class SettingsTab {
         ImageView imageView = new ImageView(infoImage);
         imageView.setFitHeight(16);
         imageView.setFitWidth(16);
+        imageView.setSmooth(true);
         Tooltip.install(imageView, generateLanguageTooltip());
 
         descriptionAndInfo.setFillHeight(true);
