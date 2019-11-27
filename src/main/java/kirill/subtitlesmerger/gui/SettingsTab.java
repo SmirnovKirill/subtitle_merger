@@ -183,9 +183,15 @@ class SettingsTab {
         HBox result = new HBox();
 
         ImageView imageView = getInfoImageView();
-        Tooltip.install(imageView, generateLanguageTooltip());
 
-        result.setFillHeight(true);
+        /*
+         * Have to use the wrapper for the image view because otherwise the tooltip won't be shown when hovering over
+         * transparent parts of the image.
+         */
+        HBox imageViewWrapper = new HBox(imageView);
+        imageViewWrapper.setAlignment(Pos.CENTER);
+        Tooltip.install(imageViewWrapper, generateLanguageTooltip());
+
         result.setAlignment(Pos.CENTER_LEFT);
 
         Region spacer = new Region();
@@ -193,7 +199,7 @@ class SettingsTab {
         result.getChildren().addAll(
                 new Label(description),
                 spacer,
-                imageView
+                imageViewWrapper
         );
 
         HBox.setHgrow(spacer, Priority.ALWAYS);
