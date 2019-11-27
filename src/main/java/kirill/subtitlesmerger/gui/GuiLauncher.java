@@ -57,8 +57,14 @@ public class GuiLauncher extends Application {
         MergeFilesTabController mergeFilesTabController = new MergeFilesTabController(mergeFilesTab, config);
         mergeFilesTabController.initialize();
 
-        MergeInVideosTab mergeInVideosTab = new MergeInVideosTab(result);
+        MergeInVideosTab mergeInVideosTab = new MergeInVideosTab(stage, Constants.DEBUG);
         result.getTabs().add(mergeInVideosTab.generateTab());
+
+        MergeInVideosTabController mergeInVideosTabController = new MergeInVideosTabController(
+                mergeInVideosTab,
+                config
+        );
+        mergeInVideosTabController.initialize();
 
         SettingsTab settingsTab = new SettingsTab(stage, Constants.DEBUG);
         result.getTabs().add(settingsTab.generateTab());
