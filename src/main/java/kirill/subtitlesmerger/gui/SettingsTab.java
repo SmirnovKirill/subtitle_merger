@@ -76,7 +76,7 @@ class SettingsTab {
     private GridPane generateContentPane() {
         GridPane contentPane = new GridPane();
 
-        contentPane.setHgap(30);
+        contentPane.setHgap(55);
         contentPane.setPadding(new Insets(20));
         contentPane.setGridLinesVisible(debug);
 
@@ -96,7 +96,7 @@ class SettingsTab {
         List<ColumnConstraints> result = new ArrayList<>();
 
         ColumnConstraints firstColumn = new ColumnConstraints();
-        firstColumn.setPrefWidth(300);
+        firstColumn.setPrefWidth(275);
         firstColumn.setMinWidth(firstColumn.getPrefWidth());
         result.add(firstColumn);
 
@@ -161,22 +161,7 @@ class SettingsTab {
 
     //todo make editable with drop-down
     private void addRowForUpperLanguage(GridPane contentPane) {
-        HBox descriptionAndInfo = new HBox();
-
-        Image infoImage = new Image(SettingsTab.class.getResourceAsStream("/info.png"));
-        ImageView imageView = new ImageView(infoImage);
-        imageView.setFitHeight(16);
-        imageView.setFitWidth(16);
-        imageView.setSmooth(true);
-        Tooltip.install(imageView, generateLanguageTooltip());
-
-        descriptionAndInfo.setFillHeight(true);
-        descriptionAndInfo.setAlignment(Pos.CENTER_LEFT);
-        descriptionAndInfo.setSpacing(10);
-        descriptionAndInfo.getChildren().addAll(
-                new Label("Preferred language for upper subtitles"),
-                imageView
-        );
+        HBox descriptionAndInfo = generateDescriptionAndInfoIcon("Preferred language for upper subtitles");
 
         upperLanguageComboBox = new ComboBox<>();
         upperLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
@@ -192,6 +177,39 @@ class SettingsTab {
         GridPane.setMargin(upperLanguageComboBox, new Insets(0, 0, 0, 0));
         GridPane.setHalignment(descriptionAndInfo, HPos.LEFT);
         GridPane.setHalignment(upperLanguageComboBox, HPos.RIGHT);
+    }
+
+    private HBox generateDescriptionAndInfoIcon(String description) {
+        HBox result = new HBox();
+
+        ImageView imageView = getInfoImageView();
+        Tooltip.install(imageView, generateLanguageTooltip());
+
+        result.setFillHeight(true);
+        result.setAlignment(Pos.CENTER_LEFT);
+
+        Region spacer = new Region();
+
+        result.getChildren().addAll(
+                new Label(description),
+                spacer,
+                imageView
+        );
+
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        return result;
+    }
+
+    private ImageView getInfoImageView() {
+        Image result = new Image(SettingsTab.class.getResourceAsStream("/info.png"));
+
+        ImageView imageView = new ImageView(result);
+        imageView.setFitHeight(16);
+        imageView.setFitWidth(16);
+        imageView.setSmooth(true);
+
+        return imageView;
     }
 
     private static Tooltip generateLanguageTooltip() {
@@ -228,22 +246,7 @@ class SettingsTab {
 
     //todo make editable with drop-down
     private void addRowForLowerLanguage(GridPane contentPane) {
-        HBox descriptionAndInfo = new HBox();
-
-        Image infoImage = new Image(SettingsTab.class.getResourceAsStream("/info.png"));
-        ImageView imageView = new ImageView(infoImage);
-        imageView.setFitHeight(16);
-        imageView.setFitWidth(16);
-        imageView.setSmooth(true);
-        Tooltip.install(imageView, generateLanguageTooltip());
-
-        descriptionAndInfo.setFillHeight(true);
-        descriptionAndInfo.setAlignment(Pos.CENTER_LEFT);
-        descriptionAndInfo.setSpacing(10);
-        descriptionAndInfo.getChildren().addAll(
-                new Label("Preferred language for lower subtitles"),
-                imageView
-        );
+        HBox descriptionAndInfo = generateDescriptionAndInfoIcon("Preferred language for lower subtitles");
 
         lowerLanguageComboBox = new ComboBox<>();
         lowerLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
