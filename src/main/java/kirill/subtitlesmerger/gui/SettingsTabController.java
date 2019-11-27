@@ -92,7 +92,7 @@ class SettingsTabController {
             tab.setSelectedLowerLanguage(lowerLanguage);
         }
 
-        tab.setSwapLanguagesButtonVisible(config.getUpperLanguage() != null && config.getLowerLanguage() != null);
+        tab.setSwapLanguagesButtonDisable(config.getUpperLanguage() == null || config.getLowerLanguage() == null);
     }
 
     private void ffprobeFileButtonClicked(ActionEvent event) {

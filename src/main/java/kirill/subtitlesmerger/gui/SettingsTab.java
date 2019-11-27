@@ -328,8 +328,8 @@ class SettingsTab {
         lowerLanguageComboBox.getSelectionModel().select(languageCode);
     }
 
-    void setSwapLanguagesButtonVisible(boolean visible) {
-        swapLanguagesButton.setVisible(visible);
+    void setSwapLanguagesButtonDisable(boolean disable) {
+        swapLanguagesButton.setDisable(disable);
     }
 
     Optional<File> getSelectedFfprobeFile() {
