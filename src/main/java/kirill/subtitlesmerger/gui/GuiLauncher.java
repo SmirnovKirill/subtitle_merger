@@ -30,7 +30,7 @@ public class GuiLauncher extends Application {
         stage.setScene(scene);
 
         stage.setResizable(true);
-        stage.getIcons().add(new Image(GuiLauncher.class.getResourceAsStream("/icon.jpg")));
+        stage.getIcons().add(new Image(GuiLauncher.class.getResourceAsStream("/icon.png")));
         stage.setTitle("Subtitles merger");
         Application.setUserAgentStylesheet(STYLESHEET_MODENA);
 

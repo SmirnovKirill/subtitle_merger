@@ -6,6 +6,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -63,7 +64,12 @@ class SettingsTab {
     }
 
     private static ImageView generateTabGraphic() {
-        return new ImageView(new Image(SettingsTab.class.getResourceAsStream("/settings.png")));
+        ImageView result = new ImageView(new Image(SettingsTab.class.getResourceAsStream("/settings.png")));
+
+        result.setFitHeight(16);
+        result.setFitWidth(16);
+
+        return result;
     }
 
     private GridPane generateContentPane() {
@@ -146,8 +152,8 @@ class SettingsTab {
                 fieldButtonBox
         );
 
-        GridPane.setMargin(descriptionLabel, new Insets(20, 0, 20, 0));
-        GridPane.setMargin(fieldButtonBox, new Insets(20, 0, 20, 0));
+        GridPane.setMargin(descriptionLabel, new Insets(20, 0, 40, 0));
+        GridPane.setMargin(fieldButtonBox, new Insets(20, 0, 40, 0));
         GridPane.setHalignment(descriptionLabel, HPos.LEFT);
         GridPane.setHalignment(fieldButtonBox, HPos.RIGHT);
     }
@@ -162,6 +168,8 @@ class SettingsTab {
         imageView.setFitWidth(16);
         Tooltip.install(imageView, generateLanguageTooltip());
 
+        descriptionAndInfo.setFillHeight(true);
+        descriptionAndInfo.setAlignment(Pos.CENTER_LEFT);
         descriptionAndInfo.setSpacing(10);
         descriptionAndInfo.getChildren().addAll(
                 new Label("Preferred language for upper subtitles"),
@@ -178,8 +186,8 @@ class SettingsTab {
                 upperLanguageComboBox
         );
 
-        GridPane.setMargin(descriptionAndInfo, new Insets(20, 0, 0, 0));
-        GridPane.setMargin(upperLanguageComboBox, new Insets(20, 0, 0, 0));
+        GridPane.setMargin(descriptionAndInfo, new Insets(0, 0, 0, 0));
+        GridPane.setMargin(upperLanguageComboBox, new Insets(0, 0, 0, 0));
         GridPane.setHalignment(descriptionAndInfo, HPos.LEFT);
         GridPane.setHalignment(upperLanguageComboBox, HPos.RIGHT);
     }
@@ -224,6 +232,8 @@ class SettingsTab {
         imageView.setFitWidth(16);
         Tooltip.install(imageView, generateLanguageTooltip());
 
+        descriptionAndInfo.setFillHeight(true);
+        descriptionAndInfo.setAlignment(Pos.CENTER_LEFT);
         descriptionAndInfo.setSpacing(10);
         descriptionAndInfo.getChildren().addAll(
                 new Label("Preferred language for lower subtitles"),
@@ -240,8 +250,8 @@ class SettingsTab {
                 lowerLanguageComboBox
         );
 
-        GridPane.setMargin(descriptionAndInfo, new Insets(0, 0, 20, 0));
-        GridPane.setMargin(lowerLanguageComboBox, new Insets(0, 0, 20, 0));
+        GridPane.setMargin(descriptionAndInfo, new Insets(0, 0, 0, 0));
+        GridPane.setMargin(lowerLanguageComboBox, new Insets(0, 0, 0, 0));
         GridPane.setHalignment(descriptionAndInfo, HPos.LEFT);
         GridPane.setHalignment(lowerLanguageComboBox, HPos.RIGHT);
     }
