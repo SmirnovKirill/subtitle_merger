@@ -77,7 +77,7 @@ class SettingsTab {
         GridPane contentPane = new GridPane();
 
         contentPane.setHgap(55);
-        contentPane.setPadding(new Insets(20));
+        contentPane.setPadding(GuiLauncher.TAB_PADDING);
         contentPane.setGridLinesVisible(debug);
 
         contentPane.getColumnConstraints().addAll(generateColumnConstraints());

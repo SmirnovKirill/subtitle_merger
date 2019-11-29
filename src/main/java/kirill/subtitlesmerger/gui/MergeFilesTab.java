@@ -64,7 +64,7 @@ class MergeFilesTab {
 
         contentPane.setHgap(30);
         contentPane.setVgap(40);
-        contentPane.setPadding(new Insets(20));
+        contentPane.setPadding(GuiLauncher.TAB_PADDING);
         contentPane.setGridLinesVisible(debug);
 
         contentPane.getColumnConstraints().addAll(generateColumnConstraints());

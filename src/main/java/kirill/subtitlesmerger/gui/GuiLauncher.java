@@ -1,6 +1,7 @@
 package kirill.subtitlesmerger.gui;
 
 import javafx.application.Application;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.TabPane;
 import javafx.scene.image.Image;
@@ -14,6 +15,8 @@ public class GuiLauncher extends Application {
     static final String LABEL_SUCCESS_CLASS = "label-success";
 
     static final String LABEL_ERROR_CLASS = "label-error";
+
+    static final Insets TAB_PADDING = new Insets(20);
 
     public static void main(String[] args) {
         launch();
