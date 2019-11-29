@@ -166,6 +166,10 @@ class SettingsTabController implements TabController{
             LanguageAlpha3Code oldValue,
             LanguageAlpha3Code newValue
     ) {
+        if (Objects.equals(newValue, config.getUpperLanguage())) {
+            return;
+        }
+
         if (Objects.equals(newValue, config.getLowerLanguage())) {
             updateFileChoosersAndFields();
             tabView.showErrorMessage("languages have to be different, please select another one");
@@ -214,6 +218,10 @@ class SettingsTabController implements TabController{
     ) {
         if (newValue == null) {
             throw new IllegalStateException();
+        }
+
+        if (Objects.equals(newValue, config.getLowerLanguage())) {
+            return;
         }
 
         if (Objects.equals(newValue, config.getUpperLanguage())) {
