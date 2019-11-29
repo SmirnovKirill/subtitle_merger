@@ -10,7 +10,9 @@ import javafx.stage.Stage;
 
 import java.util.List;
 
-class MergeInVideosTab {
+class MergeInVideosTabView implements TabView {
+    private static final String TAB_NAME = "Merge subtitles in videos";
+
     private Stage stage;
 
     private boolean debug;
@@ -19,15 +21,20 @@ class MergeInVideosTab {
 
     private Hyperlink goToSettingsLink;
 
-    MergeInVideosTab(Stage stage, boolean debug) {
+    MergeInVideosTabView(Stage stage, boolean debug) {
         this.stage = stage;
         this.debug = debug;
     }
 
     Tab generateTab() {
-        tab = new Tab("Merge subtitles in videos");
+        tab = new Tab(TAB_NAME);
 
         return tab;
+    }
+
+    @Override
+    public String getTabName() {
+        return TAB_NAME;
     }
 
     void showMissingSettings(

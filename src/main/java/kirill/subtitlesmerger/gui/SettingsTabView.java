@@ -22,7 +22,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-class SettingsTab {
+class SettingsTabView implements TabView {
+    private static final String TAB_NAME = "Settings";
+
     private static final LanguageCodeStringConverter LANGUAGE_CODE_STRING_CONVERTER = new LanguageCodeStringConverter();
 
     private Stage stage;
@@ -49,13 +51,13 @@ class SettingsTab {
 
     private Label resultLabel;
 
-    SettingsTab(Stage stage, boolean debug) {
+    SettingsTabView(Stage stage, boolean debug) {
         this.stage = stage;
         this.debug = debug;
     }
 
     Tab generateTab() {
-        Tab result = new Tab("Settings");
+        Tab result = new Tab(TAB_NAME);
 
         result.setGraphic(generateTabGraphic());
         result.setContent(generateContentPane());
@@ -63,8 +65,13 @@ class SettingsTab {
         return result;
     }
 
+    @Override
+    public String getTabName() {
+        return TAB_NAME;
+    }
+
     private static ImageView generateTabGraphic() {
-        ImageView result = new ImageView(new Image(SettingsTab.class.getResourceAsStream("/settings.png")));
+        ImageView result = new ImageView(new Image(SettingsTabView.class.getResourceAsStream("/settings.png")));
 
         result.setFitHeight(16);
         result.setFitWidth(16);
@@ -208,7 +215,7 @@ class SettingsTab {
     }
 
     private ImageView getInfoImageView() {
-        Image result = new Image(SettingsTab.class.getResourceAsStream("/info.png"));
+        Image result = new Image(SettingsTabView.class.getResourceAsStream("/info.png"));
 
         ImageView imageView = new ImageView(result);
         imageView.setFitHeight(16);
@@ -231,7 +238,7 @@ class SettingsTab {
     }
 
     private void addRowForSwapLanguagesButton(GridPane contentPane) {
-        Image image = new Image(SettingsTab.class.getResourceAsStream("/swap.png"));
+        Image image = new Image(SettingsTabView.class.getResourceAsStream("/swap.png"));
         ImageView imageView = new ImageView(image);
         imageView.setFitHeight(24);
         imageView.setFitWidth(24);

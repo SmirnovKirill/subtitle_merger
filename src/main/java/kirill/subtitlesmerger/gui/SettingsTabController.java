@@ -15,15 +15,15 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @CommonsLog
-class SettingsTabController {
-    private SettingsTab tab;
+class SettingsTabController implements TabController{
+    private SettingsTabView tabView;
 
     private Config config;
 
     private List<LanguageAlpha3Code> allLanguageCodes;
 
-    SettingsTabController(SettingsTab tab, Config config) {
-        this.tab = tab;
+    SettingsTabController(SettingsTabView tabView, Config config) {
+        this.tabView = tabView;
         this.config = config;
         this.allLanguageCodes = getAllLanguageCodes();
     }
@@ -36,14 +36,24 @@ class SettingsTabController {
                 .collect(Collectors.toList());
     }
 
-    void initialize() {
-        tab.setLanguageCodesForComboBoxes(allLanguageCodes);
+    @Override
+    public void initialize() {
+        tabView.setLanguageCodesForComboBoxes(allLanguageCodes);
+        tabView.setFfprobeSetButtonHandler(this::ffprobeFileButtonClicked);
+        tabView.setFfmpegSetButtonHandler(this::ffmpegFileButtonClicked);
+        tabView.setUpperLanguageListener(this::upperLanguageListener);
+        tabView.setSwapLanguagesButtonHandler(this::swapLanguagesButtonClicked);
+        tabView.setLowerLanguageListener(this::lowerLanguageListener);
+    }
+
+    @Override
+    public TabView getTabView() {
+        return tabView;
+    }
+
+    @Override
+    public void tabClicked() {
         updateFileChoosersAndFields();
-        tab.setFfprobeSetButtonHandler(this::ffprobeFileButtonClicked);
-        tab.setFfmpegSetButtonHandler(this::ffmpegFileButtonClicked);
-        tab.setUpperLanguageListener(this::upperLanguageListener);
-        tab.setSwapLanguagesButtonHandler(this::swapLanguagesButtonClicked);
-        tab.setLowerLanguageListener(this::lowerLanguageListener);
     }
 
     private void updateFileChoosersAndFields() {
@@ -51,14 +61,14 @@ class SettingsTabController {
         File ffmpegFile = config.getFfmpegFile();
 
         if (ffprobeFile != null) {
-            tab.updateFfprobeInfo(
+            tabView.updateFfprobeInfo(
                     ffprobeFile.getAbsolutePath(),
                     "update path to ffprobe",
                     "update path to ffprobe",
                     ffprobeFile.getParentFile()
             );
         } else {
-            tab.updateFfprobeInfo(
+            tabView.updateFfprobeInfo(
                     "",
                     "choose path to ffprobe",
                     "choose path to ffprobe",
@@ -67,14 +77,14 @@ class SettingsTabController {
         }
 
         if (ffmpegFile != null) {
-            tab.updateFfmpegInfo(
+            tabView.updateFfmpegInfo(
                     ffmpegFile.getAbsolutePath(),
                     "update path to ffmpeg",
                     "update path to ffmpeg",
                     ffmpegFile.getParentFile()
             );
         } else {
-            tab.updateFfmpegInfo(
+            tabView.updateFfmpegInfo(
                     "",
                     "choose path to ffmpeg",
                     "choose path to ffmpeg",
@@ -84,26 +94,26 @@ class SettingsTabController {
 
         LanguageAlpha3Code upperLanguage = config.getUpperLanguage();
         if (upperLanguage != null) {
-            tab.setSelectedUpperLanguage(upperLanguage);
+            tabView.setSelectedUpperLanguage(upperLanguage);
         }
 
         LanguageAlpha3Code lowerLanguage = config.getLowerLanguage();
         if (lowerLanguage != null) {
-            tab.setSelectedLowerLanguage(lowerLanguage);
+            tabView.setSelectedLowerLanguage(lowerLanguage);
         }
 
-        tab.setSwapLanguagesButtonDisable(config.getUpperLanguage() == null || config.getLowerLanguage() == null);
+        tabView.setSwapLanguagesButtonDisable(config.getUpperLanguage() == null || config.getLowerLanguage() == null);
     }
 
     private void ffprobeFileButtonClicked(ActionEvent event) {
-        File ffprobeFile = tab.getSelectedFfprobeFile().orElse(null);
+        File ffprobeFile = tabView.getSelectedFfprobeFile().orElse(null);
         if (ffprobeFile == null) {
-            tab.clearResult();
+            tabView.clearResult();
             return;
         }
 
         if (Objects.equals(ffprobeFile, config.getFfprobeFile())) {
-            tab.showSuccessMessage("path to ffprobe has stayed the same");
+            tabView.showSuccessMessage("path to ffprobe has stayed the same");
             return;
         }
 
@@ -114,24 +124,24 @@ class SettingsTabController {
             updateFileChoosersAndFields();
 
             if (hadValueBefore) {
-                tab.showSuccessMessage("path to ffprobe has been updated successfully");
+                tabView.showSuccessMessage("path to ffprobe has been updated successfully");
             } else {
-                tab.showSuccessMessage("path to ffprobe has been saved successfully");
+                tabView.showSuccessMessage("path to ffprobe has been saved successfully");
             }
         } catch (Config.ConfigException e) {
-            tab.showErrorMessage("incorrect path to ffprobe");
+            tabView.showErrorMessage("incorrect path to ffprobe");
         }
     }
 
     private void ffmpegFileButtonClicked(ActionEvent event) {
-        File ffmpegFile = tab.getSelectedFfmpegFile().orElse(null);
+        File ffmpegFile = tabView.getSelectedFfmpegFile().orElse(null);
         if (ffmpegFile == null) {
-            tab.clearResult();
+            tabView.clearResult();
             return;
         }
 
         if (Objects.equals(ffmpegFile, config.getFfmpegFile())) {
-            tab.showSuccessMessage("path to ffmpeg has stayed the same");
+            tabView.showSuccessMessage("path to ffmpeg has stayed the same");
             return;
         }
 
@@ -142,12 +152,12 @@ class SettingsTabController {
             updateFileChoosersAndFields();
 
             if (hadValueBefore) {
-                tab.showSuccessMessage("path to ffmpeg has been updated successfully");
+                tabView.showSuccessMessage("path to ffmpeg has been updated successfully");
             } else {
-                tab.showSuccessMessage("path to ffmpeg has been saved successfully");
+                tabView.showSuccessMessage("path to ffmpeg has been saved successfully");
             }
         } catch (Config.ConfigException e) {
-            tab.showErrorMessage("incorrect path to ffmpeg");
+            tabView.showErrorMessage("incorrect path to ffmpeg");
         }
     }
 
@@ -158,7 +168,7 @@ class SettingsTabController {
     ) {
         if (Objects.equals(newValue, config.getLowerLanguage())) {
             updateFileChoosersAndFields();
-            tab.showErrorMessage("languages have to be different, please select another one");
+            tabView.showErrorMessage("languages have to be different, please select another one");
             return;
         }
 
@@ -169,14 +179,14 @@ class SettingsTabController {
             updateFileChoosersAndFields();
 
             if (hadValueBefore) {
-                tab.showSuccessMessage("language for upper subtitles has been updated successfully");
+                tabView.showSuccessMessage("language for upper subtitles has been updated successfully");
             } else {
-                tab.showSuccessMessage("language for upper subtitles has been saved successfully");
+                tabView.showSuccessMessage("language for upper subtitles has been saved successfully");
             }
         } catch (Config.ConfigException e) {
             log.error("language for upper subtitles has not been saved: " + ExceptionUtils.getStackTrace(e));
 
-            tab.showErrorMessage("something bad has happened, language hasn't been saved");
+            tabView.showErrorMessage("something bad has happened, language hasn't been saved");
         }
     }
 
@@ -189,11 +199,11 @@ class SettingsTabController {
             config.saveLowerLanguage(oldUpperLanguage.toString());
             updateFileChoosersAndFields();
 
-            tab.showSuccessMessage("languages have been swapped successfully");
+            tabView.showSuccessMessage("languages have been swapped successfully");
         } catch (Config.ConfigException e) {
             log.error("languages haven't been swapped: " + ExceptionUtils.getStackTrace(e));
 
-            tab.showErrorMessage("something bad has happened, languages haven't been swapped");
+            tabView.showErrorMessage("something bad has happened, languages haven't been swapped");
         }
     }
 
@@ -208,7 +218,7 @@ class SettingsTabController {
 
         if (Objects.equals(newValue, config.getUpperLanguage())) {
             updateFileChoosersAndFields();
-            tab.showErrorMessage("languages have to be different, please select another one");
+            tabView.showErrorMessage("languages have to be different, please select another one");
             return;
         }
 
@@ -219,14 +229,14 @@ class SettingsTabController {
             updateFileChoosersAndFields();
 
             if (hadValueBefore) {
-                tab.showSuccessMessage("language for lower subtitles has been updated successfully");
+                tabView.showSuccessMessage("language for lower subtitles has been updated successfully");
             } else {
-                tab.showSuccessMessage("language for lower subtitles has been saved successfully");
+                tabView.showSuccessMessage("language for lower subtitles has been saved successfully");
             }
         } catch (Config.ConfigException e) {
-            log.error("language for lower subtitles has not been saved, that shouldn't be possible, code " + newValue);
+            log.error("language for lower subtitles has not been saved: " + ExceptionUtils.getStackTrace(e));
 
-            tab.showErrorMessage("something bad has happened, language hasn't been saved");
+            tabView.showErrorMessage("something bad has happened, language hasn't been saved");
         }
     }
 }

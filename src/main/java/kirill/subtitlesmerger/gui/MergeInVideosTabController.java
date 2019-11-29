@@ -1,33 +1,40 @@
 package kirill.subtitlesmerger.gui;
 
-import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlesmerger.logic.data.Config;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @CommonsLog
-public class MergeInVideosTabController {
-    private MergeInVideosTab tab;
+public class MergeInVideosTabController implements TabController{
+    private MergeInVideosTabView tabView;
 
     private Config config;
 
-    MergeInVideosTabController(MergeInVideosTab tab, Config config) {
-        this.tab = tab;
+    MergeInVideosTabController(MergeInVideosTabView tabView, Config config) {
+        this.tabView = tabView;
         this.config = config;
     }
 
-    void initialize() {
+    @Override
+    public void initialize() {
+
+    }
+
+    @Override
+    public TabView getTabView() {
+        return tabView;
+    }
+
+    @Override
+    public void tabClicked() {
         List<String> missingSettings = getMissingSettings(config);
         if (!CollectionUtils.isEmpty(missingSettings)) {
-            tab.showMissingSettings(missingSettings);
+            tabView.showMissingSettings(missingSettings);
         } else {
-            tab.showRegularContent();
+            tabView.showRegularContent();
         }
     }
 
