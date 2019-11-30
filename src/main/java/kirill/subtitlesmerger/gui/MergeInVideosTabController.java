@@ -20,7 +20,16 @@ public class MergeInVideosTabController implements TabController{
 
     @Override
     public void initialize() {
+        updateView();
+    }
 
+    private void updateView() {
+        List<String> missingSettings = getMissingSettings(config);
+        if (!CollectionUtils.isEmpty(missingSettings)) {
+            tabView.showMissingSettings(missingSettings);
+        } else {
+            tabView.showRegularContent();
+        }
     }
 
     private static List<String> getMissingSettings(Config config) {
@@ -52,11 +61,6 @@ public class MergeInVideosTabController implements TabController{
 
     @Override
     public void tabClicked() {
-        List<String> missingSettings = getMissingSettings(config);
-        if (!CollectionUtils.isEmpty(missingSettings)) {
-            tabView.showMissingSettings(missingSettings);
-        } else {
-            tabView.showRegularContent();
-        }
+        updateView();
     }
 }
