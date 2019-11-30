@@ -26,6 +26,8 @@ public class GuiLauncher extends Application {
 
     static final Insets TAB_PADDING = new Insets(20);
 
+    private TabPane mainPane;
+
     private List<TabController> tabControllers;
 
     public static void main(String[] args) {
@@ -38,7 +40,7 @@ public class GuiLauncher extends Application {
 
         Config config = new Config();
 
-        TabPane mainPane = generateMainPane(stage, config);
+        mainPane = generateMainPane(stage, config);
 
         Scene scene = new Scene(mainPane);
         scene.getStylesheets().add("style.css");
@@ -67,7 +69,7 @@ public class GuiLauncher extends Application {
         result.setMinHeight(result.getPrefHeight());
 
         addMergeFilesTabViewAndController(result, stage, config);
-        addMergeInVideosTabViewAndController(result, stage, config);
+        addMergeInVideosTabViewAndController(result, config);
         addSettingsTabViewAndController(result, stage, config);
 
         result.getSelectionModel().selectedItemProperty().addListener(this::tabChangedListener);
@@ -77,7 +79,7 @@ public class GuiLauncher extends Application {
 
     private void addMergeFilesTabViewAndController(TabPane mainPane, Stage stage, Config config) {
         MergeFilesTabView tab = new MergeFilesTabView(stage, Constants.DEBUG);
-        mainPane.getTabs().add(tab.generateTab());
+        mainPane.getTabs().add(tab.getTab());
 
         MergeFilesTabController mergeFilesTabController = new MergeFilesTabController(tab, config);
         mergeFilesTabController.initialize();
@@ -85,11 +87,15 @@ public class GuiLauncher extends Application {
         tabControllers.add(mergeFilesTabController);
     }
 
-    private void addMergeInVideosTabViewAndController(TabPane mainPane, Stage stage, Config config) {
-        MergeInVideosTabView tab = new MergeInVideosTabView(stage, Constants.DEBUG);
-        mainPane.getTabs().add(tab.generateTab());
+    private void addMergeInVideosTabViewAndController(TabPane mainPane, Config config) {
+        MergeInVideosTabView tab = new MergeInVideosTabView(Constants.DEBUG);
+        mainPane.getTabs().add(tab.getTab());
 
-        MergeInVideosTabController mergeInVideosTabController = new MergeInVideosTabController(tab, config);
+        MergeInVideosTabController mergeInVideosTabController = new MergeInVideosTabController(
+                tab,
+                config,
+                this
+        );
         mergeInVideosTabController.initialize();
 
         tabControllers.add(mergeInVideosTabController);
@@ -97,7 +103,7 @@ public class GuiLauncher extends Application {
 
     private void addSettingsTabViewAndController(TabPane mainPane, Stage stage, Config config) {
         SettingsTabView tab = new SettingsTabView(stage, Constants.DEBUG);
-        mainPane.getTabs().add(tab.generateTab());
+        mainPane.getTabs().add(tab.getTab());
 
         SettingsTabController settingsTabController = new SettingsTabController(tab, config);
         settingsTabController.initialize();
@@ -118,6 +124,18 @@ public class GuiLauncher extends Application {
         }
 
         log.error("unknown tab " + newTab.getText());
+        throw new IllegalStateException();
+    }
+
+    void openSettingsTab() {
+        for (TabController controller : tabControllers) {
+            if (Objects.equals(controller.getTabView().getTabName(), SettingsTabView.TAB_NAME)) {
+                mainPane.getSelectionModel().select(controller.getTabView().getTab());
+                return;
+            }
+        }
+
+        log.error("failed to find settings tab");
         throw new IllegalStateException();
     }
 }

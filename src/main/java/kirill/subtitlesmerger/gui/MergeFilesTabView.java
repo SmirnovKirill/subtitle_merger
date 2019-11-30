@@ -25,6 +25,8 @@ class MergeFilesTabView implements TabView {
 
     private boolean debug;
 
+    private Tab tab;
+
     private Button upperSubtitlesFileChooseButton;
 
     private Label upperSubtitlesPathLabel;
@@ -50,19 +52,15 @@ class MergeFilesTabView implements TabView {
     MergeFilesTabView(Stage stage, boolean debug) {
         this.stage = stage;
         this.debug = debug;
+        this.tab = generateTab();
     }
 
-    Tab generateTab() {
+    private Tab generateTab() {
         Tab result = new Tab(TAB_NAME);
 
         result.setContent(generateContentPane());
 
         return result;
-    }
-
-    @Override
-    public String getTabName() {
-        return TAB_NAME;
     }
 
     private GridPane generateContentPane() {
@@ -184,6 +182,16 @@ class MergeFilesTabView implements TabView {
         resultLabel = new Label();
         contentPane.addRow(contentPane.getRowCount(), resultLabel);
         GridPane.setColumnSpan(resultLabel, contentPane.getColumnCount());
+    }
+
+    @Override
+    public String getTabName() {
+        return TAB_NAME;
+    }
+
+    @Override
+    public Tab getTab() {
+        return tab;
     }
 
     void setUpperSubtitlesFileChooseButtonHandler(EventHandler<ActionEvent> handler) {

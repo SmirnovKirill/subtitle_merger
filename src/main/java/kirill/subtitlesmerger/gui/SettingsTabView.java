@@ -23,13 +23,15 @@ import java.util.Objects;
 import java.util.Optional;
 
 class SettingsTabView implements TabView {
-    private static final String TAB_NAME = "Settings";
+    static final String TAB_NAME = "Settings";
 
     private static final LanguageCodeStringConverter LANGUAGE_CODE_STRING_CONVERTER = new LanguageCodeStringConverter();
 
     private Stage stage;
 
     private boolean debug;
+
+    private Tab tab;
 
     private TextField ffprobeField;
 
@@ -54,20 +56,16 @@ class SettingsTabView implements TabView {
     SettingsTabView(Stage stage, boolean debug) {
         this.stage = stage;
         this.debug = debug;
+        this.tab = generateTab();
     }
 
-    Tab generateTab() {
+    private Tab generateTab() {
         Tab result = new Tab(TAB_NAME);
 
         result.setGraphic(generateTabGraphic());
         result.setContent(generateContentPane());
 
         return result;
-    }
-
-    @Override
-    public String getTabName() {
-        return TAB_NAME;
     }
 
     private static ImageView generateTabGraphic() {
@@ -282,6 +280,16 @@ class SettingsTabView implements TabView {
         contentPane.addRow(contentPane.getRowCount(), resultLabel);
         GridPane.setColumnSpan(resultLabel, contentPane.getColumnCount());
         GridPane.setMargin(resultLabel, new Insets(20, 0, 0, 0));
+    }
+
+    @Override
+    public String getTabName() {
+        return TAB_NAME;
+    }
+
+    @Override
+    public Tab getTab() {
+        return tab;
     }
 
     void setLanguageCodesForComboBoxes(List<LanguageAlpha3Code> languageCodes) {

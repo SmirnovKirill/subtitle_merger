@@ -14,9 +14,12 @@ public class MergeInVideosTabController implements TabController{
 
     private Config config;
 
-    MergeInVideosTabController(MergeInVideosTabView tabView, Config config) {
+    private GuiLauncher guiLauncher;
+
+    MergeInVideosTabController(MergeInVideosTabView tabView, Config config, GuiLauncher guiLauncher) {
         this.tabView = tabView;
         this.config = config;
+        this.guiLauncher = guiLauncher;
     }
 
     @Override
@@ -27,7 +30,7 @@ public class MergeInVideosTabController implements TabController{
     }
 
     private void goToSettingsLinkClicked(ActionEvent event) {
-
+        guiLauncher.openSettingsTab();
     }
 
     private void updateView() {
