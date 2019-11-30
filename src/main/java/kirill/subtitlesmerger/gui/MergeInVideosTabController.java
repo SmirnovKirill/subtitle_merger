@@ -1,5 +1,6 @@
 package kirill.subtitlesmerger.gui;
 
+import javafx.event.ActionEvent;
 import kirill.subtitlesmerger.logic.data.Config;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
@@ -20,7 +21,13 @@ public class MergeInVideosTabController implements TabController{
 
     @Override
     public void initialize() {
+        tabView.setGoToSettingsLinkHandler(this::goToSettingsLinkClicked);
+
         updateView();
+    }
+
+    private void goToSettingsLinkClicked(ActionEvent event) {
+
     }
 
     private void updateView() {

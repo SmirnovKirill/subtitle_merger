@@ -1,5 +1,7 @@
 package kirill.subtitlesmerger.gui;
 
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
@@ -73,5 +75,9 @@ class MergeInVideosTabView implements TabView {
         result.getChildren().add(new Label("everything is ok"));
 
         return result;
+    }
+
+    void setGoToSettingsLinkHandler(EventHandler<ActionEvent> handler) {
+        goToSettingsLink.setOnAction(handler);
     }
 }
