@@ -44,16 +44,36 @@ class SettingsTabController implements TabController{
         tabView.setUpperLanguageListener(this::upperLanguageListener);
         tabView.setSwapLanguagesButtonHandler(this::swapLanguagesButtonClicked);
         tabView.setLowerLanguageListener(this::lowerLanguageListener);
-    }
 
-    @Override
-    public TabView getTabView() {
-        return tabView;
-    }
-
-    @Override
-    public void tabClicked() {
         updateFileChoosersAndFields();
+    }
+
+    private void ffprobeFileButtonClicked(ActionEvent event) {
+        File ffprobeFile = tabView.getSelectedFfprobeFile().orElse(null);
+        if (ffprobeFile == null) {
+            tabView.clearResult();
+            return;
+        }
+
+        if (Objects.equals(ffprobeFile, config.getFfprobeFile())) {
+            tabView.showSuccessMessage("path to ffprobe has stayed the same");
+            return;
+        }
+
+        boolean hadValueBefore = config.getFfmpegFile() != null;
+
+        try {
+            config.saveFfprobeFile(ffprobeFile.getAbsolutePath());
+            updateFileChoosersAndFields();
+
+            if (hadValueBefore) {
+                tabView.showSuccessMessage("path to ffprobe has been updated successfully");
+            } else {
+                tabView.showSuccessMessage("path to ffprobe has been saved successfully");
+            }
+        } catch (Config.ConfigException e) {
+            tabView.showErrorMessage("incorrect path to ffprobe");
+        }
     }
 
     private void updateFileChoosersAndFields() {
@@ -103,34 +123,6 @@ class SettingsTabController implements TabController{
         }
 
         tabView.setSwapLanguagesButtonDisable(config.getUpperLanguage() == null || config.getLowerLanguage() == null);
-    }
-
-    private void ffprobeFileButtonClicked(ActionEvent event) {
-        File ffprobeFile = tabView.getSelectedFfprobeFile().orElse(null);
-        if (ffprobeFile == null) {
-            tabView.clearResult();
-            return;
-        }
-
-        if (Objects.equals(ffprobeFile, config.getFfprobeFile())) {
-            tabView.showSuccessMessage("path to ffprobe has stayed the same");
-            return;
-        }
-
-        boolean hadValueBefore = config.getFfmpegFile() != null;
-
-        try {
-            config.saveFfprobeFile(ffprobeFile.getAbsolutePath());
-            updateFileChoosersAndFields();
-
-            if (hadValueBefore) {
-                tabView.showSuccessMessage("path to ffprobe has been updated successfully");
-            } else {
-                tabView.showSuccessMessage("path to ffprobe has been saved successfully");
-            }
-        } catch (Config.ConfigException e) {
-            tabView.showErrorMessage("incorrect path to ffprobe");
-        }
     }
 
     private void ffmpegFileButtonClicked(ActionEvent event) {
@@ -246,5 +238,15 @@ class SettingsTabController implements TabController{
 
             tabView.showErrorMessage("something bad has happened, language hasn't been saved");
         }
+    }
+
+    @Override
+    public TabView getTabView() {
+        return tabView;
+    }
+
+    @Override
+    public void tabClicked() {
+        updateFileChoosersAndFields();
     }
 }

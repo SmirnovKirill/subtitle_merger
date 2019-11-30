@@ -23,21 +23,6 @@ public class MergeInVideosTabController implements TabController{
 
     }
 
-    @Override
-    public TabView getTabView() {
-        return tabView;
-    }
-
-    @Override
-    public void tabClicked() {
-        List<String> missingSettings = getMissingSettings(config);
-        if (!CollectionUtils.isEmpty(missingSettings)) {
-            tabView.showMissingSettings(missingSettings);
-        } else {
-            tabView.showRegularContent();
-        }
-    }
-
     private static List<String> getMissingSettings(Config config) {
         List<String> result = new ArrayList<>();
 
@@ -58,5 +43,20 @@ public class MergeInVideosTabController implements TabController{
         }
 
         return result;
+    }
+
+    @Override
+    public TabView getTabView() {
+        return tabView;
+    }
+
+    @Override
+    public void tabClicked() {
+        List<String> missingSettings = getMissingSettings(config);
+        if (!CollectionUtils.isEmpty(missingSettings)) {
+            tabView.showMissingSettings(missingSettings);
+        } else {
+            tabView.showRegularContent();
+        }
     }
 }

@@ -81,6 +81,7 @@ public class GuiLauncher extends Application {
 
         MergeFilesTabController mergeFilesTabController = new MergeFilesTabController(tab, config);
         mergeFilesTabController.initialize();
+
         tabControllers.add(mergeFilesTabController);
     }
 
@@ -90,6 +91,7 @@ public class GuiLauncher extends Application {
 
         MergeInVideosTabController mergeInVideosTabController = new MergeInVideosTabController(tab, config);
         mergeInVideosTabController.initialize();
+
         tabControllers.add(mergeInVideosTabController);
     }
 
@@ -99,6 +101,7 @@ public class GuiLauncher extends Application {
 
         SettingsTabController settingsTabController = new SettingsTabController(tab, config);
         settingsTabController.initialize();
+
         tabControllers.add(settingsTabController);
     }
 
