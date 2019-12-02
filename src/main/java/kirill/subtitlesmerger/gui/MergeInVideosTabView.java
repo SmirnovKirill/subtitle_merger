@@ -1,22 +1,21 @@
 package kirill.subtitlesmerger.gui;
 
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.*;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import kirill.subtitlesmerger.logic.Constants;
 import kirill.subtitlesmerger.logic.data.BriefFileInfo;
-import kirill.subtitlesmerger.logic.data.VideoFormat;
-import kirill.subtitlesmerger.logic.ffmpeg.Ffprobe;
-import kirill.subtitlesmerger.logic.ffmpeg.json.JsonFfprobeFileInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static kirill.subtitlesmerger.logic.data.BriefFileInfo.UnavailabilityReason.*;
-import static kirill.subtitlesmerger.logic.data.BriefFileInfo.UnavailabilityReason.NOT_ALLOWED_CONTAINER;
 
 class MergeInVideosTabView implements TabView {
     private static final String TAB_NAME = "Merge subtitles in videos";
@@ -98,11 +96,23 @@ class MergeInVideosTabView implements TabView {
     private void addRowFileTable(GridPane contentPane) {
         TableView<TableFile> tableView = new TableView<>();
 
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
         TableColumn<TableFile, String> fileNameColumn = new TableColumn<>("filename");
-        fileNameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
+        fileNameColumn.setCellValueFactory(cellDataFeatures -> new ReadOnlyStringWrapper(cellDataFeatures.getValue().getName()));
+        fileNameColumn.setCellFactory(this::getFileNameCell);
+        fileNameColumn.setReorderable(false);
+        fileNameColumn.setResizable(true);
+        fileNameColumn.setMinWidth(200);
+        fileNameColumn.setMaxWidth(Double.MAX_VALUE);
 
         TableColumn<TableFile, String> modificationDateColumn = new TableColumn<>("modification date");
-        modificationDateColumn.setCellValueFactory(new PropertyValueFactory<>("modificationTime"));
+        modificationDateColumn.setCellValueFactory(cellDataFeatures -> new ReadOnlyStringWrapper(DateTimeFormat.forPattern("dd.MM.YYYY HH:mm").print(cellDataFeatures.getValue().getModificationTime())));
+        modificationDateColumn.setReorderable(false);
+        modificationDateColumn.setResizable(false);
+        modificationDateColumn.setMinWidth(150);
+        modificationDateColumn.setMaxWidth(modificationDateColumn.getMinWidth());
+        modificationDateColumn.setPrefWidth(modificationDateColumn.getMinWidth());
 
         tableView.getColumns().add(fileNameColumn);
         tableView.getColumns().add(modificationDateColumn);
@@ -113,8 +123,34 @@ class MergeInVideosTabView implements TabView {
         GridPane.setColumnSpan(tableView, contentPane.getColumnCount());
     }
 
+    private TableCell<TableFile, String> getFileNameCell(TableColumn<TableFile, String> column) {
+        return new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+
+                System.out.println("update called " + item);
+
+                if (empty || item == null) {
+                    System.out.println("empty");
+                    setText(null);
+                    setGraphic(null);
+                    return;
+                }
+
+                setText(item);
+
+                TableFile tableFile = getTableRow().getItem();
+                if (tableFile != null && !StringUtils.isBlank(tableFile.getUnavailabilityReason())) {
+                    setStyle("-fx-text-fill: grey");
+                    setTooltip(new Tooltip(tableFile.getUnavailabilityReason()));
+                }
+            }
+        };
+    }
+
     private List<TableFile> getData() {
-        File directoryWithVideos = new File("/home/kirill");
+        File directoryWithVideos = new File("/home/user");
         File[] directoryFiles = directoryWithVideos.listFiles();
 
         List<BriefFileInfo> briefFilesInfo = getBriefFilesInfo(directoryFiles);
@@ -122,7 +158,15 @@ class MergeInVideosTabView implements TabView {
         List<TableFile> result = new ArrayList<>();
 
         for (BriefFileInfo briefFileInfo : briefFilesInfo) {
-            result.add(new TableFile(briefFileInfo.getFile().getName(), new DateTime()));
+            result.add(
+                    new TableFile(
+                            briefFileInfo.getFile().getName(),
+                            briefFileInfo.getUnavailabilityReason() != null
+                                    ? briefFileInfo.getUnavailabilityReason().toString()
+                                    : null,
+                            new DateTime(briefFileInfo.getFile().lastModified())
+                    )
+            );
         }
 
         return result;
@@ -202,6 +246,8 @@ class MergeInVideosTabView implements TabView {
     @Getter
     private static class TableFile {
         private String name;
+
+        private String unavailabilityReason;
 
         private DateTime modificationTime;
     }
