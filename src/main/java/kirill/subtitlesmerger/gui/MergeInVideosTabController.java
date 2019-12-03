@@ -4,11 +4,13 @@ import javafx.event.ActionEvent;
 import kirill.subtitlesmerger.logic.data.Config;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
+import static java.util.stream.Collectors.toList;
 
 @CommonsLog
 public class MergeInVideosTabController implements TabController{
@@ -18,7 +20,7 @@ public class MergeInVideosTabController implements TabController{
 
     private GuiLauncher guiLauncher;
 
-    private File[] files;
+    private List<File> files;
 
     MergeInVideosTabController(MergeInVideosTabView tabView, Config config, GuiLauncher guiLauncher) {
         this.tabView = tabView;
@@ -44,14 +46,7 @@ public class MergeInVideosTabController implements TabController{
             return;
         }
 
-        files = directory.listFiles();
-        if (ArrayUtils.isEmpty(files)) {
-            tabView.showDirectoryErrorMessage("directory is empty");
-            return;
-        }
-
         tabView.setDirectoryPathLabel(directory.getAbsolutePath());
-        tabView.showTableWithFiles();
 
         try {
             config.saveLastDirectoryWithVideos(directory.getAbsolutePath());
@@ -60,6 +55,25 @@ public class MergeInVideosTabController implements TabController{
             throw new IllegalStateException();
         }
         tabView.setDirectoryChooserInitialDirectory(directory);
+
+        files = getAllFiles(directory);
+        if (CollectionUtils.isEmpty(files)) {
+            tabView.showDirectoryErrorMessage("directory is empty");
+            return;
+        }
+
+        tabView.showTableWithFiles();
+    }
+
+    private static List<File> getAllFiles(File directory) {
+        File[] allFilesUnprocessed = directory.listFiles();
+        if (allFilesUnprocessed == null) {
+            return new ArrayList<>();
+        }
+
+        return Arrays.stream(allFilesUnprocessed)
+                .filter(file -> !file.isDirectory())
+                .collect(toList());
     }
 
     private void updateView() {
