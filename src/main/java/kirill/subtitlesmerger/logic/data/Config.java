@@ -33,6 +33,8 @@ class Config {
 
     private LanguageAlpha3Code lowerLanguage;
 
+    private File lastDirectoryWithVideos;
+
     public Config() {
         preferences = Preferences.userRoot().node(Constants.PREFERENCES_ROOT_NODE);
 
@@ -90,6 +92,14 @@ class Config {
             ).orElse(null);
         } catch (ConfigException e) {
             log.warn("incorrect lower language in saved preference: " + e.getMessage());
+        }
+
+        try {
+            lastDirectoryWithVideos = getValidatedDirectory(
+                    preferences.get("last_directory_with_videos", "")
+            ).orElse(null);
+        } catch (ConfigException e) {
+            log.warn("incorrect last directory with videos in saved preference: " + e.getMessage());
         }
     }
 
@@ -221,6 +231,16 @@ class Config {
 
         this.lowerLanguage = language;
         preferences.put("lower_language", lowerLanguage.toString());
+    }
+
+    public void saveLastDirectoryWithVideos(String rawValue) throws ConfigException {
+        File directory = getValidatedDirectory(rawValue).orElse(null);
+        if (directory == null) {
+            throw new EmptyValueException();
+        }
+
+        this.lastDirectoryWithVideos = directory;
+        preferences.put("last_directory_with_videos", directory.getAbsolutePath());
     }
 
     public static class ConfigException extends Exception {

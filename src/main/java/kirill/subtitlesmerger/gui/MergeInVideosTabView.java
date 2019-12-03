@@ -309,7 +309,7 @@ class MergeInVideosTabView implements TabView {
         directoryChooser.setInitialDirectory(initialDirectory);
     }
 
-    Optional<File> getSelectedDirectory() {
+    Optional<File> getChosenDirectory() {
         return Optional.ofNullable(directoryChooser.showDialog(stage));
     }
 

@@ -5,6 +5,7 @@ import kirill.subtitlesmerger.logic.data.Config;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,6 +17,8 @@ public class MergeInVideosTabController implements TabController{
 
     private GuiLauncher guiLauncher;
 
+    private File directory;
+
     MergeInVideosTabController(MergeInVideosTabView tabView, Config config, GuiLauncher guiLauncher) {
         this.tabView = tabView;
         this.config = config;
@@ -25,12 +28,29 @@ public class MergeInVideosTabController implements TabController{
     @Override
     public void initialize() {
         tabView.setGoToSettingsLinkHandler(this::goToSettingsLinkClicked);
+        tabView.setDirectoryChooseButtonHandler(this::directoryButtonClicked);
 
         updateView();
     }
 
     private void goToSettingsLinkClicked(ActionEvent event) {
         guiLauncher.openSettingsTab();
+    }
+
+    private void directoryButtonClicked(ActionEvent event) {
+        directory = tabView.getChosenDirectory().orElse(null);
+        if (directory == null) {
+            return;
+        }
+
+        tabView.setDirectoryPathLabel(directory.getAbsolutePath());
+        try {
+            config.saveLastDirectoryWithVideos(directory.getAbsolutePath());
+        } catch (Config.ConfigException e) {
+            log.error("failed to save last directory with videos, that shouldn't be possible");
+            throw new IllegalStateException();
+        }
+        tabView.setDirectoryChooserInitialDirectory(directory);
     }
 
     private void updateView() {
