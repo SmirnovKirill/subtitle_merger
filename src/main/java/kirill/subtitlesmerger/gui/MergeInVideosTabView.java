@@ -3,10 +3,8 @@ package kirill.subtitlesmerger.gui;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import kirill.subtitlesmerger.logic.Constants;
 import kirill.subtitlesmerger.logic.data.BriefFileInfo;
@@ -32,68 +30,51 @@ class MergeInVideosTabView implements TabView {
 
     private Tab tab;
 
-    private VBox missingSettingsBox;
+    private Node missingSettingsContent;
 
-    private VBox missingSettingLabelsBox;
+    private VBox missingSettingLabels;
 
     private Hyperlink goToSettingsLink;
 
+    private Node regularContent;
+
     MergeInVideosTabView(boolean debug) {
         this.debug = debug;
-        this.tab = generateTab();
+        this.tab = new Tab(TAB_NAME);
+        this.missingSettingsContent = generateMissingSettingsContent();
+        this.regularContent = generateRegularContent();
     }
 
-    private Tab generateTab() {
-        Tab result = new Tab(TAB_NAME);
+    private Node generateMissingSettingsContent() {
+        VBox result = new VBox();
 
-        result.setContent(generateContentPane());
+        result.setPadding(GuiLauncher.TAB_PADDING);
+        result.setSpacing(10);
 
-        return result;
-    }
-
-    private GridPane generateContentPane() {
-        GridPane contentPane = new GridPane();
-
-        contentPane.setHgap(55);
-        contentPane.setPadding(GuiLauncher.TAB_PADDING);
-        contentPane.setGridLinesVisible(debug);
-
-        contentPane.getColumnConstraints().addAll(generateColumnConstraints());
-
-        addRowMissingSettings(contentPane);
-        addRowFileTable(contentPane);
-
-        return contentPane;
-    }
-
-    private static List<ColumnConstraints> generateColumnConstraints() {
-        List<ColumnConstraints> result = new ArrayList<>();
-
-        ColumnConstraints firstColumn = new ColumnConstraints();
-        firstColumn.setHgrow(Priority.ALWAYS);
-        result.add(firstColumn);
-
-        return result;
-    }
-
-    private void addRowMissingSettings(GridPane contentPane) {
-        missingSettingsBox = new VBox();
-        missingSettingsBox.setPadding(GuiLauncher.TAB_PADDING);
-        missingSettingsBox.setSpacing(10);
-
-        missingSettingLabelsBox = new VBox();
-        missingSettingLabelsBox.setSpacing(10);
+        missingSettingLabels = generateMissingSettingLabels();
 
         goToSettingsLink = new Hyperlink();
         goToSettingsLink.setText("open settings tab");
 
-        missingSettingsBox.getChildren().addAll(missingSettingLabelsBox, goToSettingsLink);
+        result.getChildren().addAll(missingSettingLabels, goToSettingsLink);
 
-        contentPane.addRow(contentPane.getRowCount(), missingSettingsBox);
-        GridPane.setColumnSpan(missingSettingsBox, contentPane.getColumnCount());
+        return result;
     }
 
-    private void addRowFileTable(GridPane contentPane) {
+    private VBox generateMissingSettingLabels() {
+        VBox result = new VBox();
+
+        result.setSpacing(10);
+
+        return result;
+    }
+
+    private Node generateRegularContent() {
+        VBox result = new VBox();
+
+        result.setPadding(GuiLauncher.TAB_PADDING);
+        result.setSpacing(10);
+
         TableView<TableFile> tableView = new TableView<>();
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -119,8 +100,9 @@ class MergeInVideosTabView implements TabView {
 
         tableView.getItems().addAll(getData());
 
-        contentPane.addRow(contentPane.getRowCount(), tableView);
-        GridPane.setColumnSpan(tableView, contentPane.getColumnCount());
+        result.getChildren().add(tableView);
+
+        return result;
     }
 
     private TableCell<TableFile, String> getFileNameCell(TableColumn<TableFile, String> column) {
@@ -229,17 +211,18 @@ class MergeInVideosTabView implements TabView {
     void showMissingSettings(
             List<String> missingSettings
     ) {
-        this.missingSettingsBox.setVisible(true);
-        this.missingSettingLabelsBox.getChildren().clear();
+        missingSettingLabels.getChildren().clear();
 
-        this.missingSettingLabelsBox.getChildren().add(new Label("The following settings are missing:"));
+        this.missingSettingLabels.getChildren().add(new Label("The following settings are missing:"));
         for (String setting : missingSettings) {
-            this.missingSettingLabelsBox.getChildren().add(new Label("\u2022 " + setting));
+            this.missingSettingLabels.getChildren().add(new Label("\u2022 " + setting));
         }
+
+        tab.setContent(missingSettingsContent);
     }
 
     void showRegularContent() {
-        this.missingSettingsBox.setVisible(false);
+        tab.setContent(regularContent);
     }
 
     @AllArgsConstructor
