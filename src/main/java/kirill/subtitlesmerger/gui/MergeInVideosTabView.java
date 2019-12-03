@@ -6,9 +6,11 @@ import javafx.event.EventHandler;
 import javafx.geometry.HPos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kirill.subtitlesmerger.logic.Constants;
 import kirill.subtitlesmerger.logic.data.BriefFileInfo;
@@ -164,6 +166,8 @@ class MergeInVideosTabView implements TabView {
         Label result = new Label();
 
         result.managedProperty().bind(result.visibleProperty());
+        result.getStyleClass().add(GuiLauncher.LABEL_ERROR_CLASS);
+        result.setVisible(false);
 
         return result;
     }
@@ -315,6 +319,17 @@ class MergeInVideosTabView implements TabView {
 
     void setDirectoryPathLabel(String text) {
         directoryPathLabel.setText(text);
+    }
+
+    void showDirectoryErrorMessage(String text) {
+        tableWithFiles.setVisible(false);
+        directoryIncorrectLabel.setVisible(true);
+        directoryIncorrectLabel.setText(text);
+    }
+
+    void showTableWithFiles() {
+        directoryIncorrectLabel.setVisible(false);
+        tableWithFiles.setVisible(true);
     }
 
     void showMissingSettings(

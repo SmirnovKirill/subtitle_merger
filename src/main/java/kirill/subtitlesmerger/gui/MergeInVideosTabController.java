@@ -4,6 +4,7 @@ import javafx.event.ActionEvent;
 import kirill.subtitlesmerger.logic.data.Config;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -17,7 +18,7 @@ public class MergeInVideosTabController implements TabController{
 
     private GuiLauncher guiLauncher;
 
-    private File directory;
+    private File[] files;
 
     MergeInVideosTabController(MergeInVideosTabView tabView, Config config, GuiLauncher guiLauncher) {
         this.tabView = tabView;
@@ -38,12 +39,20 @@ public class MergeInVideosTabController implements TabController{
     }
 
     private void directoryButtonClicked(ActionEvent event) {
-        directory = tabView.getChosenDirectory().orElse(null);
+        File directory = tabView.getChosenDirectory().orElse(null);
         if (directory == null) {
             return;
         }
 
+        files = directory.listFiles();
+        if (ArrayUtils.isEmpty(files)) {
+            tabView.showDirectoryErrorMessage("directory is empty");
+            return;
+        }
+
         tabView.setDirectoryPathLabel(directory.getAbsolutePath());
+        tabView.showTableWithFiles();
+
         try {
             config.saveLastDirectoryWithVideos(directory.getAbsolutePath());
         } catch (Config.ConfigException e) {
