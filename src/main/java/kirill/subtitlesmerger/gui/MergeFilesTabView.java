@@ -243,15 +243,15 @@ class MergeFilesTabView implements TabView {
     }
 
     void setUpperSubtitlesPathLabel(String text) {
-        this.upperSubtitlesPathLabel.setText(text);
+        upperSubtitlesPathLabel.setText(text);
     }
 
     void setLowerSubtitlesPathLabel(String text) {
-        this.lowerSubtitlesPathLabel.setText(text);
+        lowerSubtitlesPathLabel.setText(text);
     }
 
     void setMergedSubtitlesPathLabel(String text) {
-        this.mergedSubtitlesPathLabel.setText(text);
+        mergedSubtitlesPathLabel.setText(text);
     }
 
     void removeErrorsAndResult() {

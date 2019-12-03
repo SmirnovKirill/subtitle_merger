@@ -69,7 +69,7 @@ public class GuiLauncher extends Application {
         result.setMinHeight(result.getPrefHeight());
 
         addMergeFilesTabViewAndController(result, stage, config);
-        addMergeInVideosTabViewAndController(result, config);
+        addMergeInVideosTabViewAndController(result, stage, config);
         addSettingsTabViewAndController(result, stage, config);
 
         result.getSelectionModel().selectedItemProperty().addListener(this::tabChangedListener);
@@ -87,8 +87,8 @@ public class GuiLauncher extends Application {
         tabControllers.add(mergeFilesTabController);
     }
 
-    private void addMergeInVideosTabViewAndController(TabPane mainPane, Config config) {
-        MergeInVideosTabView tab = new MergeInVideosTabView(Constants.DEBUG);
+    private void addMergeInVideosTabViewAndController(TabPane mainPane, Stage stage, Config config) {
+        MergeInVideosTabView tab = new MergeInVideosTabView(stage, Constants.DEBUG);
         mainPane.getTabs().add(tab.getTab());
 
         MergeInVideosTabController mergeInVideosTabController = new MergeInVideosTabController(

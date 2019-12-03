@@ -3,10 +3,13 @@ package kirill.subtitlesmerger.gui;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.HPos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 import kirill.subtitlesmerger.logic.Constants;
 import kirill.subtitlesmerger.logic.data.BriefFileInfo;
 import lombok.AllArgsConstructor;
@@ -21,11 +24,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static kirill.subtitlesmerger.logic.data.BriefFileInfo.UnavailabilityReason.*;
 
 class MergeInVideosTabView implements TabView {
     private static final String TAB_NAME = "Merge subtitles in videos";
+
+    private Stage stage;
 
     private boolean debug;
 
@@ -39,7 +45,18 @@ class MergeInVideosTabView implements TabView {
 
     private Node regularContent;
 
-    MergeInVideosTabView(boolean debug) {
+    private Button directoryChooseButton;
+
+    private Label directoryPathLabel;
+
+    private DirectoryChooser directoryChooser;
+
+    private Label directoryIncorrectLabel;
+
+    private TableView<TableFile> tableWithFiles;
+
+    MergeInVideosTabView(Stage stage, boolean debug) {
+        this.stage = stage;
         this.debug = debug;
         this.tab = new Tab(TAB_NAME);
         this.missingSettingsContent = generateMissingSettingsContent();
@@ -76,10 +93,77 @@ class MergeInVideosTabView implements TabView {
         result.setPadding(GuiLauncher.TAB_PADDING);
         result.setSpacing(10);
 
-        TableView<TableFile> tableWithFiles = generateTableWithFiles();
+        Node controlsNode = generateControlsNode();
+        directoryIncorrectLabel = generateDirectoryIncorrectLabel();
+        tableWithFiles = generateTableWithFiles();
 
-        result.getChildren().add(tableWithFiles);
+        result.getChildren().addAll(controlsNode, directoryIncorrectLabel, tableWithFiles);
+
         VBox.setVgrow(tableWithFiles, Priority.ALWAYS);
+
+        return result;
+    }
+
+    private Node generateControlsNode() {
+        GridPane result = new GridPane();
+
+        result.setHgap(30);
+        result.setGridLinesVisible(debug);
+
+        result.getColumnConstraints().addAll(generateControlNodeColumns());
+
+        Label descriptionLabel = new Label("Please choose the directory with videos");
+
+        directoryChooseButton = new Button("Choose file");
+        directoryPathLabel = new Label("not selected");
+        directoryChooser = generateDirectoryChooser();
+
+        result.addRow(
+                result.getRowCount(),
+                descriptionLabel,
+                directoryChooseButton,
+                directoryPathLabel
+        );
+
+        GridPane.setHalignment(descriptionLabel, HPos.LEFT);
+        GridPane.setHalignment(directoryChooseButton, HPos.RIGHT);
+        GridPane.setHalignment(directoryPathLabel, HPos.LEFT);
+
+        return result;
+    }
+
+    private static List<ColumnConstraints> generateControlNodeColumns() {
+        List<ColumnConstraints> result = new ArrayList<>();
+
+        ColumnConstraints firstColumn = new ColumnConstraints();
+        firstColumn.setPrefWidth(400);
+        firstColumn.setMinWidth(firstColumn.getPrefWidth());
+        result.add(firstColumn);
+
+        ColumnConstraints secondColumn = new ColumnConstraints();
+        secondColumn.setPrefWidth(100);
+        secondColumn.setMinWidth(secondColumn.getPrefWidth());
+        result.add(secondColumn);
+
+        ColumnConstraints thirdColumn = new ColumnConstraints();
+        thirdColumn.setHgrow(Priority.ALWAYS);
+        result.add(thirdColumn);
+
+        return result;
+    }
+
+    private static DirectoryChooser generateDirectoryChooser() {
+        DirectoryChooser result = new DirectoryChooser();
+
+        result.setTitle("choose the directory with videos");
+
+        return result;
+    }
+
+    private static Label generateDirectoryIncorrectLabel() {
+        Label result = new Label();
+
+        result.managedProperty().bind(result.visibleProperty());
 
         return result;
     }
@@ -87,6 +171,7 @@ class MergeInVideosTabView implements TabView {
     private TableView<TableFile> generateTableWithFiles() {
         TableView<TableFile> result = new TableView<>();
 
+        result.managedProperty().bind(result.visibleProperty());
         result.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         TableColumn<TableFile, String> fileNameColumn = new TableColumn<>("filename");
@@ -214,6 +299,22 @@ class MergeInVideosTabView implements TabView {
 
     void setGoToSettingsLinkHandler(EventHandler<ActionEvent> handler) {
         goToSettingsLink.setOnAction(handler);
+    }
+
+    void setDirectoryChooseButtonHandler(EventHandler<ActionEvent> handler) {
+        directoryChooseButton.setOnAction(handler);
+    }
+
+    void setDirectoryChooserInitialDirectory(File initialDirectory) {
+        directoryChooser.setInitialDirectory(initialDirectory);
+    }
+
+    Optional<File> getSelectedDirectory() {
+        return Optional.ofNullable(directoryChooser.showDialog(stage));
+    }
+
+    void setDirectoryPathLabel(String text) {
+        directoryPathLabel.setText(text);
     }
 
     void showMissingSettings(
