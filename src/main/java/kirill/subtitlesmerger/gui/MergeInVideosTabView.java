@@ -5,6 +5,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import kirill.subtitlesmerger.logic.Constants;
 import kirill.subtitlesmerger.logic.data.BriefFileInfo;
@@ -75,9 +76,18 @@ class MergeInVideosTabView implements TabView {
         result.setPadding(GuiLauncher.TAB_PADDING);
         result.setSpacing(10);
 
-        TableView<TableFile> tableView = new TableView<>();
+        TableView<TableFile> tableWithFiles = generateTableWithFiles();
 
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        result.getChildren().add(tableWithFiles);
+        VBox.setVgrow(tableWithFiles, Priority.ALWAYS);
+
+        return result;
+    }
+
+    private TableView<TableFile> generateTableWithFiles() {
+        TableView<TableFile> result = new TableView<>();
+
+        result.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         TableColumn<TableFile, String> fileNameColumn = new TableColumn<>("filename");
         fileNameColumn.setCellValueFactory(cellDataFeatures -> new ReadOnlyStringWrapper(cellDataFeatures.getValue().getName()));
@@ -95,12 +105,10 @@ class MergeInVideosTabView implements TabView {
         modificationDateColumn.setMaxWidth(modificationDateColumn.getMinWidth());
         modificationDateColumn.setPrefWidth(modificationDateColumn.getMinWidth());
 
-        tableView.getColumns().add(fileNameColumn);
-        tableView.getColumns().add(modificationDateColumn);
+        result.getColumns().add(fileNameColumn);
+        result.getColumns().add(modificationDateColumn);
 
-        tableView.getItems().addAll(getData());
-
-        result.getChildren().add(tableView);
+        result.getItems().addAll(getData());
 
         return result;
     }
