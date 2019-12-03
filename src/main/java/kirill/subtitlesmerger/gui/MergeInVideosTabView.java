@@ -12,23 +12,17 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
-import kirill.subtitlesmerger.logic.Constants;
 import kirill.subtitlesmerger.logic.data.BriefFileInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-import static kirill.subtitlesmerger.logic.data.BriefFileInfo.UnavailabilityReason.*;
 
 class MergeInVideosTabView implements TabView {
     private static final String TAB_NAME = "Merge subtitles in videos";
@@ -177,6 +171,7 @@ class MergeInVideosTabView implements TabView {
 
         result.managedProperty().bind(result.visibleProperty());
         result.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        result.setVisible(false);
 
         TableColumn<TableFile, String> fileNameColumn = new TableColumn<>("filename");
         fileNameColumn.setCellValueFactory(cellDataFeatures -> new ReadOnlyStringWrapper(cellDataFeatures.getValue().getName()));
@@ -196,8 +191,6 @@ class MergeInVideosTabView implements TabView {
 
         result.getColumns().add(fileNameColumn);
         result.getColumns().add(modificationDateColumn);
-
-        result.getItems().addAll(getData());
 
         return result;
     }
@@ -226,69 +219,6 @@ class MergeInVideosTabView implements TabView {
                 }
             }
         };
-    }
-
-    private List<TableFile> getData() {
-        File directoryWithVideos = new File("/home/user");
-        File[] directoryFiles = directoryWithVideos.listFiles();
-
-        List<BriefFileInfo> briefFilesInfo = getBriefFilesInfo(directoryFiles);
-
-        List<TableFile> result = new ArrayList<>();
-
-        for (BriefFileInfo briefFileInfo : briefFilesInfo) {
-            result.add(
-                    new TableFile(
-                            briefFileInfo.getFile().getName(),
-                            briefFileInfo.getUnavailabilityReason() != null
-                                    ? briefFileInfo.getUnavailabilityReason().toString()
-                                    : null,
-                            new DateTime(briefFileInfo.getFile().lastModified())
-                    )
-            );
-        }
-
-        return result;
-    }
-
-    private static List<BriefFileInfo> getBriefFilesInfo(File[] files) {
-        List<BriefFileInfo> result = new ArrayList<>();
-
-        for (File file : files) {
-            if (!file.isFile()) {
-                continue;
-            }
-
-            String extension = FilenameUtils.getExtension(file.getName());
-            if (StringUtils.isBlank(extension)) {
-                result.add(new BriefFileInfo(file, NO_EXTENSION, null, null));
-                continue;
-            }
-
-            if (!Constants.ALLOWED_VIDEO_EXTENSIONS.contains(extension.toLowerCase())) {
-                result.add(new BriefFileInfo(file, NOT_ALLOWED_EXTENSION, null, null));
-                continue;
-            }
-
-            String mimeType;
-            try {
-                mimeType = Files.probeContentType(file.toPath());
-            } catch (IOException e) {
-                result.add(new BriefFileInfo(file, FAILED_TO_GET_MIME_TYPE, null, null));
-                continue;
-            }
-
-            if (!Constants.ALLOWED_VIDEO_MIME_TYPES.contains(mimeType)) {
-                result.add(new BriefFileInfo(file, NOT_ALLOWED_MIME_TYPE, null, null));
-                continue;
-            }
-
-            result.add(
-                    new BriefFileInfo(file, null, null, null)
-            );
-        }
-
-        return result;
     }
 
     @Override
@@ -327,9 +257,22 @@ class MergeInVideosTabView implements TabView {
         directoryIncorrectLabel.setText(text);
     }
 
-    void showTableWithFiles() {
+    void showTableWithFiles(List<BriefFileInfo> briefFilesInfo) {
         directoryIncorrectLabel.setVisible(false);
         tableWithFiles.setVisible(true);
+
+        tableWithFiles.getItems().clear();
+        for (BriefFileInfo briefFileInfo : briefFilesInfo) {
+            tableWithFiles.getItems().add(
+                    new TableFile(
+                            briefFileInfo.getFile().getName(),
+                            briefFileInfo.getUnavailabilityReason() != null
+                                    ? briefFileInfo.getUnavailabilityReason().toString()
+                                    : null,
+                            new DateTime(briefFileInfo.getFile().lastModified())
+                    )
+            );
+        }
     }
 
     void showMissingSettings(

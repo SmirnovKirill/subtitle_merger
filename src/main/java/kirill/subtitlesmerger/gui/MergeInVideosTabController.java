@@ -1,16 +1,24 @@
 package kirill.subtitlesmerger.gui;
 
 import javafx.event.ActionEvent;
+import kirill.subtitlesmerger.logic.Constants;
+import kirill.subtitlesmerger.logic.data.BriefFileInfo;
 import kirill.subtitlesmerger.logic.data.Config;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
+import static kirill.subtitlesmerger.logic.data.BriefFileInfo.UnavailabilityReason.*;
+import static kirill.subtitlesmerger.logic.data.BriefFileInfo.UnavailabilityReason.NOT_ALLOWED_MIME_TYPE;
 
 @CommonsLog
 public class MergeInVideosTabController implements TabController{
@@ -20,7 +28,7 @@ public class MergeInVideosTabController implements TabController{
 
     private GuiLauncher guiLauncher;
 
-    private List<File> files;
+    private List<BriefFileInfo> briefFilesInfo;
 
     MergeInVideosTabController(MergeInVideosTabView tabView, Config config, GuiLauncher guiLauncher) {
         this.tabView = tabView;
@@ -56,24 +64,57 @@ public class MergeInVideosTabController implements TabController{
         }
         tabView.setDirectoryChooserInitialDirectory(directory);
 
-        files = getAllFiles(directory);
-        if (CollectionUtils.isEmpty(files)) {
+        briefFilesInfo = getBriefFilesInfo(directory.listFiles());
+        if (CollectionUtils.isEmpty(briefFilesInfo)) {
             tabView.showDirectoryErrorMessage("directory is empty");
             return;
         }
 
-        tabView.showTableWithFiles();
+        tabView.showTableWithFiles(briefFilesInfo);
     }
 
-    private static List<File> getAllFiles(File directory) {
-        File[] allFilesUnprocessed = directory.listFiles();
-        if (allFilesUnprocessed == null) {
-            return new ArrayList<>();
+    private static List<BriefFileInfo> getBriefFilesInfo(File[] files) {
+        List<BriefFileInfo> result = new ArrayList<>();
+
+        if (files == null) {
+            return result;
         }
 
-        return Arrays.stream(allFilesUnprocessed)
-                .filter(file -> !file.isDirectory())
-                .collect(toList());
+        for (File file : files) {
+            if (!file.isFile()) {
+                continue;
+            }
+
+            String extension = FilenameUtils.getExtension(file.getName());
+            if (StringUtils.isBlank(extension)) {
+                result.add(new BriefFileInfo(file, NO_EXTENSION, null, null));
+                continue;
+            }
+
+            if (!Constants.ALLOWED_VIDEO_EXTENSIONS.contains(extension.toLowerCase())) {
+                result.add(new BriefFileInfo(file, NOT_ALLOWED_EXTENSION, null, null));
+                continue;
+            }
+
+            String mimeType;
+            try {
+                mimeType = Files.probeContentType(file.toPath());
+            } catch (IOException e) {
+                result.add(new BriefFileInfo(file, FAILED_TO_GET_MIME_TYPE, null, null));
+                continue;
+            }
+
+            if (!Constants.ALLOWED_VIDEO_MIME_TYPES.contains(mimeType)) {
+                result.add(new BriefFileInfo(file, NOT_ALLOWED_MIME_TYPE, null, null));
+                continue;
+            }
+
+            result.add(
+                    new BriefFileInfo(file, null, null, null)
+            );
+        }
+
+        return result;
     }
 
     private void updateView() {
