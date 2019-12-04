@@ -1,15 +1,16 @@
 package kirill.subtitlesmerger.gui;
 
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.HPos;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.*;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import kirill.subtitlesmerger.logic.data.BriefFileInfo;
@@ -17,6 +18,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
+import org.joda.time.LocalDateTime;
 import org.joda.time.format.DateTimeFormat;
 
 import java.io.File;
@@ -104,18 +106,26 @@ class MergeInVideosTabView implements TabView {
         GridPane result = new GridPane();
 
         result.setHgap(30);
+        result.setVgap(40); //todo remove
         result.setGridLinesVisible(debug);
 
         result.getColumnConstraints().addAll(generateControlNodeColumns());
 
+        addFirstControlsRow(result);
+        addSecondControlsRow(result);
+
+        return result;
+    }
+
+    private void addFirstControlsRow(GridPane pane) {
         Label descriptionLabel = new Label("Please choose the directory with videos");
 
         directoryChooseButton = new Button("Choose file");
         directoryPathLabel = new Label("not selected");
         directoryChooser = generateDirectoryChooser();
 
-        result.addRow(
-                result.getRowCount(),
+        pane.addRow(
+                pane.getRowCount(),
                 descriptionLabel,
                 directoryChooseButton,
                 directoryPathLabel
@@ -124,8 +134,37 @@ class MergeInVideosTabView implements TabView {
         GridPane.setHalignment(descriptionLabel, HPos.LEFT);
         GridPane.setHalignment(directoryChooseButton, HPos.RIGHT);
         GridPane.setHalignment(directoryPathLabel, HPos.LEFT);
+    }
 
-        return result;
+    private void addSecondControlsRow(GridPane pane) {
+        HBox row = new HBox();
+
+        row.setSpacing(20);
+        row.setAlignment(Pos.CENTER_LEFT);
+
+        CheckBox showOnlyValidCheckBox = new CheckBox("Show only valid video files");
+
+        Image image = new Image(SettingsTabView.class.getResourceAsStream("/refresh.png"));
+        ImageView imageView = new ImageView(image);
+        imageView.setFitHeight(16);
+        imageView.setFitWidth(16);
+        imageView.setSmooth(true);
+
+        Button refreshButton = new Button("Refresh", imageView);
+
+        Button getSubtitleSizesButton = new Button("Get subtitle sizes");
+
+        Button injectSubtitlesButton = new Button("Inject subtitles");
+
+        row.getChildren().addAll(showOnlyValidCheckBox, refreshButton, getSubtitleSizesButton, injectSubtitlesButton);
+
+        pane.addRow(
+                pane.getRowCount(),
+                row
+        );
+
+        GridPane.setHalignment(row, HPos.LEFT);
+        GridPane.setColumnSpan(row, pane.getColumnCount());
     }
 
     private static List<ColumnConstraints> generateControlNodeColumns() {
@@ -181,16 +220,24 @@ class MergeInVideosTabView implements TabView {
         fileNameColumn.setMinWidth(200);
         fileNameColumn.setMaxWidth(Double.MAX_VALUE);
 
-        TableColumn<TableFile, String> modificationDateColumn = new TableColumn<>("modification date");
-        modificationDateColumn.setCellValueFactory(cellDataFeatures -> new ReadOnlyStringWrapper(DateTimeFormat.forPattern("dd.MM.YYYY HH:mm").print(cellDataFeatures.getValue().getModificationTime())));
+        TableColumn<TableFile, LocalDateTime> modificationDateColumn = new TableColumn<>("modification date");
+        modificationDateColumn.setCellValueFactory(cellDataFeatures -> new ReadOnlyObjectWrapper<>(cellDataFeatures.getValue().getModificationTime()));
         modificationDateColumn.setReorderable(false);
         modificationDateColumn.setResizable(false);
         modificationDateColumn.setMinWidth(150);
         modificationDateColumn.setMaxWidth(modificationDateColumn.getMinWidth());
         modificationDateColumn.setPrefWidth(modificationDateColumn.getMinWidth());
 
+        TableColumn<TableFile, String> subtitlesColumn = new TableColumn<>("subtitles");
+        subtitlesColumn.setReorderable(false);
+        subtitlesColumn.setResizable(true);
+        subtitlesColumn.setSortable(false);
+        subtitlesColumn.setMinWidth(200);
+        subtitlesColumn.setMaxWidth(Double.MAX_VALUE);
+
         result.getColumns().add(fileNameColumn);
         result.getColumns().add(modificationDateColumn);
+        result.getColumns().add(subtitlesColumn);
 
         return result;
     }
@@ -201,10 +248,7 @@ class MergeInVideosTabView implements TabView {
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
 
-                System.out.println("update called " + item);
-
                 if (empty || item == null) {
-                    System.out.println("empty");
                     setText(null);
                     setGraphic(null);
                     return;
@@ -213,9 +257,16 @@ class MergeInVideosTabView implements TabView {
                 setText(item);
 
                 TableFile tableFile = getTableRow().getItem();
-                if (tableFile != null && !StringUtils.isBlank(tableFile.getUnavailabilityReason())) {
-                    setStyle("-fx-text-fill: grey");
-                    setTooltip(new Tooltip(tableFile.getUnavailabilityReason()));
+                if (tableFile != null) {
+                    System.out.println("file is not null " + item);
+                    if (!StringUtils.isBlank(tableFile.getUnavailabilityReason())) {
+                        setStyle("-fx-text-fill: grey");
+                        setTooltip(new Tooltip(tableFile.getUnavailabilityReason()));
+                    } else {
+
+                    }
+                } else {
+                    System.out.println("file is null " + item);
                 }
             }
         };
@@ -269,7 +320,7 @@ class MergeInVideosTabView implements TabView {
                             briefFileInfo.getUnavailabilityReason() != null
                                     ? briefFileInfo.getUnavailabilityReason().toString()
                                     : null,
-                            new DateTime(briefFileInfo.getFile().lastModified())
+                            new LocalDateTime(briefFileInfo.getFile().lastModified())
                     )
             );
         }
@@ -299,6 +350,6 @@ class MergeInVideosTabView implements TabView {
 
         private String unavailabilityReason;
 
-        private DateTime modificationTime;
+        private LocalDateTime modificationTime;
     }
 }
