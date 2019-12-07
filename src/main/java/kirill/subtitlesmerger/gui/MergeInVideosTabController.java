@@ -1,5 +1,6 @@
 package kirill.subtitlesmerger.gui;
 
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import kirill.subtitlesmerger.logic.Constants;
 import kirill.subtitlesmerger.logic.data.BriefFileInfo;
@@ -13,12 +14,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import static java.util.stream.Collectors.toList;
 import static kirill.subtitlesmerger.logic.data.BriefFileInfo.UnavailabilityReason.*;
-import static kirill.subtitlesmerger.logic.data.BriefFileInfo.UnavailabilityReason.NOT_ALLOWED_MIME_TYPE;
 
 @CommonsLog
 public class MergeInVideosTabController implements TabController{
@@ -40,6 +39,7 @@ public class MergeInVideosTabController implements TabController{
     public void initialize() {
         tabView.setGoToSettingsLinkHandler(this::goToSettingsLinkClicked);
         tabView.setDirectoryChooseButtonHandler(this::directoryButtonClicked);
+        tabView.setShowOnlyValidCheckBoxChangeListener(this::showOnlyValidCheckBoxChanged);
 
         updateView();
     }
@@ -115,6 +115,22 @@ public class MergeInVideosTabController implements TabController{
         }
 
         return result;
+    }
+
+    private void showOnlyValidCheckBoxChanged(
+            ObservableValue<? extends Boolean> observable,
+            Boolean oldValue,
+            Boolean newValue
+    ) {
+        if (Boolean.TRUE.equals(newValue)) {
+            tabView.showTableWithFiles(
+                    briefFilesInfo.stream()
+                    .filter(file -> file.getUnavailabilityReason() == null)
+                    .collect(Collectors.toList())
+            );
+        } else {
+            tabView.showTableWithFiles(briefFilesInfo);
+        }
     }
 
     private void updateView() {

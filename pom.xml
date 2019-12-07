@@ -100,7 +100,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>kirill.subtitlesmerger.Main</mainClass>
+                            <mainClass>kirill.subtitlesmerger.gui.GuiLauncher</mainClass>
                         </manifest>
                         <manifestEntries>
                             <!-- Otherwise log4j will produce warnings at runtime. -->

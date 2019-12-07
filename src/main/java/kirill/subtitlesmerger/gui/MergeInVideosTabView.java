@@ -1,7 +1,8 @@
 package kirill.subtitlesmerger.gui;
 
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.HPos;
@@ -17,12 +18,13 @@ import kirill.subtitlesmerger.logic.data.BriefFileInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
-import org.joda.time.DateTime;
 import org.joda.time.LocalDateTime;
 import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,6 +52,8 @@ class MergeInVideosTabView implements TabView {
     private DirectoryChooser directoryChooser;
 
     private Label directoryIncorrectLabel;
+
+    private CheckBox showOnlyValidCheckBox;
 
     private TableView<TableFile> tableWithFiles;
 
@@ -142,7 +146,7 @@ class MergeInVideosTabView implements TabView {
         row.setSpacing(20);
         row.setAlignment(Pos.CENTER_LEFT);
 
-        CheckBox showOnlyValidCheckBox = new CheckBox("Show only valid video files");
+        showOnlyValidCheckBox = new CheckBox("Show only valid video files");
 
         Image image = new Image(SettingsTabView.class.getResourceAsStream("/refresh.png"));
         ImageView imageView = new ImageView(image);
@@ -208,20 +212,22 @@ class MergeInVideosTabView implements TabView {
     private TableView<TableFile> generateTableWithFiles() {
         TableView<TableFile> result = new TableView<>();
 
+        result.setPlaceholder(new Label("no files to display for this directory"));
         result.managedProperty().bind(result.visibleProperty());
         result.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         result.setVisible(false);
 
         TableColumn<TableFile, String> fileNameColumn = new TableColumn<>("filename");
-        fileNameColumn.setCellValueFactory(cellDataFeatures -> new ReadOnlyStringWrapper(cellDataFeatures.getValue().getName()));
+        fileNameColumn.setCellValueFactory(cellDataFeatures -> cellDataFeatures.getValue().getFileNameProperty());
         fileNameColumn.setCellFactory(this::getFileNameCell);
         fileNameColumn.setReorderable(false);
         fileNameColumn.setResizable(true);
         fileNameColumn.setMinWidth(200);
         fileNameColumn.setMaxWidth(Double.MAX_VALUE);
 
-        TableColumn<TableFile, LocalDateTime> modificationDateColumn = new TableColumn<>("modification date");
-        modificationDateColumn.setCellValueFactory(cellDataFeatures -> new ReadOnlyObjectWrapper<>(cellDataFeatures.getValue().getModificationTime()));
+        TableColumn<TableFile, String> modificationDateColumn = new TableColumn<>("modification date");
+        modificationDateColumn.setCellValueFactory(cellDataFeatures -> cellDataFeatures.getValue().getModificationTimeProperty());
+        modificationDateColumn.setComparator(Comparator.comparing(TableFile.FORMATTER::parseLocalDateTime));
         modificationDateColumn.setReorderable(false);
         modificationDateColumn.setResizable(false);
         modificationDateColumn.setMinWidth(150);
@@ -263,7 +269,8 @@ class MergeInVideosTabView implements TabView {
                         setStyle("-fx-text-fill: grey");
                         setTooltip(new Tooltip(tableFile.getUnavailabilityReason()));
                     } else {
-
+                        setTooltip(null);
+                        setStyle("-fx-text-fill: black");
                     }
                 } else {
                     System.out.println("file is null " + item);
@@ -294,6 +301,10 @@ class MergeInVideosTabView implements TabView {
         directoryChooser.setInitialDirectory(initialDirectory);
     }
 
+    void setShowOnlyValidCheckBoxChangeListener(ChangeListener<Boolean> listener) {
+        showOnlyValidCheckBox.selectedProperty().addListener(listener);
+    }
+
     Optional<File> getChosenDirectory() {
         return Optional.ofNullable(directoryChooser.showDialog(stage));
     }
@@ -316,11 +327,15 @@ class MergeInVideosTabView implements TabView {
         for (BriefFileInfo briefFileInfo : briefFilesInfo) {
             tableWithFiles.getItems().add(
                     new TableFile(
-                            briefFileInfo.getFile().getName(),
-                            briefFileInfo.getUnavailabilityReason() != null
-                                    ? briefFileInfo.getUnavailabilityReason().toString()
-                                    : null,
-                            new LocalDateTime(briefFileInfo.getFile().lastModified())
+                            new SimpleStringProperty(briefFileInfo.getFile().getName()),
+                            new SimpleStringProperty(
+                                    briefFileInfo.getUnavailabilityReason() != null
+                                            ? briefFileInfo.getUnavailabilityReason().toString()
+                                            : null
+                            ),
+                            new SimpleStringProperty(
+                                    TableFile.FORMATTER.print(new LocalDateTime(briefFileInfo.getFile().lastModified()))
+                            )
                     )
             );
         }
@@ -346,10 +361,36 @@ class MergeInVideosTabView implements TabView {
     @AllArgsConstructor
     @Getter
     private static class TableFile {
-        private String name;
+        static final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern("dd.MM.YYYY HH:mm:ss");
 
-        private String unavailabilityReason;
+        private StringProperty fileNameProperty;
 
-        private LocalDateTime modificationTime;
+        final void setFileName(String value) {
+            fileNameProperty.set(value);
+        }
+
+        final String getFileName() {
+            return fileNameProperty == null ? null : fileNameProperty.get();
+        }
+
+        private StringProperty unavailabilityReasonProperty;
+
+        final void setUnavailabilityReason(String value) {
+            unavailabilityReasonProperty.set(value);
+        }
+
+        final String getUnavailabilityReason() {
+            return unavailabilityReasonProperty == null ? null : unavailabilityReasonProperty.get();
+        }
+
+        private StringProperty modificationTimeProperty;
+
+        final void setModificationTime(String value) {
+            modificationTimeProperty.set(value);
+        }
+
+        final String getModificationTime() {
+            return modificationTimeProperty == null ? null : modificationTimeProperty.get();
+        }
     }
 }
