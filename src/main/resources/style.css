@@ -10,3 +10,37 @@
 .label-error {
     -fx-text-fill: red;
 }
+
+.file-table-header {
+    -fx-background-color: -fx-box-border, -fx-inner-border, -fx-body-color;
+    -fx-background-insets: 0, 1, 2 0 2 2;
+    -fx-font-weight: bold;
+    -fx-padding: 0.166667em;
+    -fx-pref-height: 2em;
+}
+
+.last-file-table-header {
+    -fx-background-color: -fx-box-border, -fx-inner-border, -fx-body-color;
+    -fx-background-insets: 0, 1, 2;
+}
+
+.file-table-cell {
+    -fx-background-color: -fx-box-border, -fx-inner-border, white;
+    -fx-background-insets: 0, 1, 0 0 2 2;
+    -fx-padding: 5px;
+}
+
+.first-file-table-cell {
+    -fx-background-color: -fx-box-border, -fx-inner-border, white;
+    -fx-background-insets: 0, 1, 0 0 2 0;
+}
+
+.lowest-file-table-cell {
+    -fx-background-color: -fx-box-border, -fx-inner-border, white;
+    -fx-background-insets: 0, 1, 0 0 0 2;
+}
+
+.first-lowest-file-table-cell {
+    -fx-background-color: white;
+    -fx-background-insets: 0;
+}
