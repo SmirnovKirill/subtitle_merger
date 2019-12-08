@@ -21,6 +21,20 @@ import java.util.stream.Collectors;
 public class TableWithFiles {
     private static final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern("dd.MM.YYYY HH:mm:ss");
 
+    private static final String TABLE_HEADER_CLASS = "file-table-header";
+
+    private static final String LAST_TABLE_HEADER_CLASS = "last-file-table-header";
+
+    private static final String TABLE_CELL_CLASS = "file-table-cell";
+
+    private static final String FIRST_TABLE_CELL_CLASS = "first-file-table-cell";
+
+    private static final String LOWEST_TABLE_CELL_CLASS = "lowest-file-table-cell";
+
+    private static final String FIRST_LOWEST_TABLE_CELL_CLASS = "first-lowest-file-table-cell";
+
+    private static final String SCROLL_CLASS = "file-table-scroll";
+
     private GridPane headerPane;
 
     private GridPane contentPane;
@@ -33,15 +47,9 @@ public class TableWithFiles {
 
     TableWithFiles(boolean debug) {
         this.headerPane = generateHeaderPane(debug);
-        this.contentPane = generateContentPane(debug);
+        this.contentPane = generateContentPane(debug, this.headerPane);
         this.contentScrollPane = generateContentScrollPane(this.contentPane);
         this.mainNode = generateMainNode(this.headerPane, this.contentScrollPane);
-
-        for (int i = 0; i < 3; i++) {
-            this.contentPane.getColumnConstraints().get(i).prefWidthProperty().bind(((HBox) headerPane.getChildren().get(i)).widthProperty());
-            this.contentPane.getColumnConstraints().get(i).minWidthProperty().bind(((HBox) headerPane.getChildren().get(i)).widthProperty());
-            this.contentPane.getColumnConstraints().get(i).maxWidthProperty().bind(((HBox) headerPane.getChildren().get(i)).widthProperty());
-        }
 
         this.files = FXCollections.observableArrayList();
         this.files.addListener(this::filesChanged);
@@ -93,44 +101,51 @@ public class TableWithFiles {
         return result;
     }
 
-    private static Node generateHeaderNode(
-            String title,
-            boolean last
-    ) {
+    private static Node generateHeaderNode(String title, boolean last) {
         HBox result = new HBox();
 
-        result.setAlignment(Pos.CENTER_LEFT);
+        result.setAlignment(Pos.CENTER);
         result.getChildren().add(new Label(title));
-        result.getStyleClass().add("file-table-header");
+        result.getStyleClass().add(TABLE_HEADER_CLASS);
         if (last) {
-            result.getStyleClass().add("last-file-table-header");
+            result.getStyleClass().add(LAST_TABLE_HEADER_CLASS);
         }
 
         return result;
     }
 
-    private static GridPane generateContentPane(boolean debug) {
+    private static GridPane generateContentPane(boolean debug, GridPane headerPane) {
         GridPane result = new GridPane();
 
         result.setGridLinesVisible(debug);
-        result.getColumnConstraints().addAll(generateContentColumnConstraints());
+        result.getColumnConstraints().addAll(generateContentColumnConstraints(headerPane));
 
         return result;
     }
 
-    private static List<ColumnConstraints> generateContentColumnConstraints() {
+    private static List<ColumnConstraints> generateContentColumnConstraints(GridPane headerPane) {
         List<ColumnConstraints> result = new ArrayList<>();
 
         ColumnConstraints fileNameColumn = new ColumnConstraints();
-        fileNameColumn.setHgrow(Priority.ALWAYS);
+        HBox fileNameHeader = (HBox) headerPane.getChildren().get(0);
+        /* Minus 1 because of the scroll pane outer border. */
+        fileNameColumn.prefWidthProperty().bind(fileNameHeader.widthProperty().subtract(1));
+        fileNameColumn.minWidthProperty().bind(fileNameHeader.widthProperty().subtract(1));
+        fileNameColumn.maxWidthProperty().bind(fileNameHeader.widthProperty().subtract(1));
         result.add(fileNameColumn);
 
         ColumnConstraints upperSubtitlesColumn = new ColumnConstraints();
-        upperSubtitlesColumn.setHgrow(Priority.ALWAYS);
+        HBox upperSubtitlesHeader = (HBox) headerPane.getChildren().get(1);
+        upperSubtitlesColumn.prefWidthProperty().bind(upperSubtitlesHeader.widthProperty());
+        upperSubtitlesColumn.minWidthProperty().bind(upperSubtitlesHeader.widthProperty());
+        upperSubtitlesColumn.maxWidthProperty().bind(upperSubtitlesHeader.widthProperty());
         result.add(upperSubtitlesColumn);
 
         ColumnConstraints lowerSubtitlesColumn = new ColumnConstraints();
-        lowerSubtitlesColumn.setHgrow(Priority.ALWAYS);
+        HBox lowerSubtitlesHeader = (HBox) headerPane.getChildren().get(1);
+        lowerSubtitlesColumn.prefWidthProperty().bind(lowerSubtitlesHeader.widthProperty());
+        lowerSubtitlesColumn.minWidthProperty().bind(lowerSubtitlesHeader.widthProperty());
+        lowerSubtitlesColumn.maxWidthProperty().bind(lowerSubtitlesHeader.widthProperty());
         result.add(lowerSubtitlesColumn);
 
         ColumnConstraints actionColumn = new ColumnConstraints();
@@ -147,6 +162,7 @@ public class TableWithFiles {
         result.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         result.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         result.setFitToWidth(true);
+        result.getStyleClass().add(SCROLL_CLASS);
 
         return result;
     }
@@ -170,23 +186,23 @@ public class TableWithFiles {
 
             contentPane.addRow(
                     contentPane.getRowCount(),
-                    generateFilenameCellNode(file, lowest),
-                    generateSubtitlesCellNode(file, lowest),
-                    generateSubtitlesCellNode(file, lowest),
-                    generateActionsCellNode(lowest)
+                    generateFilenameCell(file, lowest),
+                    generateSubtitlesCell(file, lowest),
+                    generateSubtitlesCell(file, lowest),
+                    generateActionsCell(lowest)
             );
 
             i++;
         }
     }
 
-    private static Node generateFilenameCellNode(BriefFileInfo fileInfo, boolean lowest) {
+    private static Node generateFilenameCell(BriefFileInfo fileInfo, boolean lowest) {
         VBox result = new VBox();
 
         result.setAlignment(Pos.CENTER_LEFT);
-        result.getStyleClass().add("first-file-table-cell");
+        result.getStyleClass().add(FIRST_TABLE_CELL_CLASS);
         if (lowest) {
-            result.getStyleClass().add("first-lowest-file-table-cell");
+            result.getStyleClass().add(FIRST_LOWEST_TABLE_CELL_CLASS);
         }
         result.setSpacing(10);
 
@@ -198,13 +214,13 @@ public class TableWithFiles {
         return result;
     }
 
-    private static Node generateSubtitlesCellNode(BriefFileInfo fileInfo, boolean lowest) {
+    private static Node generateSubtitlesCell(BriefFileInfo fileInfo, boolean lowest) {
         VBox result = new VBox();
 
         result.setAlignment(Pos.CENTER_LEFT);
-        result.getStyleClass().add("file-table-cell");
+        result.getStyleClass().add(TABLE_CELL_CLASS);
         if (lowest) {
-            result.getStyleClass().add("lowest-file-table-cell");
+            result.getStyleClass().add(LOWEST_TABLE_CELL_CLASS);
         }
         result.setSpacing(10);
 
@@ -239,13 +255,13 @@ public class TableWithFiles {
         return result;
     }
 
-    private static Node generateActionsCellNode(boolean lowest) {
+    private static Node generateActionsCell(boolean lowest) {
         VBox result = new VBox();
 
         result.setAlignment(Pos.CENTER_LEFT);
-        result.getStyleClass().add("file-table-cell");
+        result.getStyleClass().add(TABLE_CELL_CLASS);
         if (lowest) {
-            result.getStyleClass().add("lowest-file-table-cell");
+            result.getStyleClass().add(LOWEST_TABLE_CELL_CLASS);
         }
         result.setSpacing(10);
 
