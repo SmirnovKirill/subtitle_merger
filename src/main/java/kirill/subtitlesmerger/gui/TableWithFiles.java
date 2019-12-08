@@ -31,9 +31,9 @@ public class TableWithFiles {
 
     private ObservableList<BriefFileInfo> files;
 
-    public TableWithFiles() {
-        this.headerPane = generateHeaderPane();
-        this.contentPane = generateContentPane();
+    TableWithFiles(boolean debug) {
+        this.headerPane = generateHeaderPane(debug);
+        this.contentPane = generateContentPane(debug);
         this.contentScrollPane = generateContentScrollPane(this.contentPane);
         this.mainNode = generateMainNode(this.headerPane, this.contentScrollPane);
 
@@ -47,18 +47,18 @@ public class TableWithFiles {
         this.files.addListener(this::filesChanged);
     }
 
-    private static GridPane generateHeaderPane() {
+    private static GridPane generateHeaderPane(boolean debug) {
         GridPane result = new GridPane();
 
-        result.setGridLinesVisible(false);
+        result.setGridLinesVisible(debug);
         result.getColumnConstraints().addAll(generateHeaderColumnConstraints());
 
         result.addRow(
                 result.getRowCount(),
-                generateColumnHeaderNode("filename", false),
-                generateColumnHeaderNode("upper subtitles", false),
-                generateColumnHeaderNode("lower subtitles", false),
-                generateColumnHeaderNode("action", true)
+                generateHeaderNode("filename", false),
+                generateHeaderNode("upper subtitles", false),
+                generateHeaderNode("lower subtitles", false),
+                generateHeaderNode("action", true)
         );
 
         return result;
@@ -67,39 +67,39 @@ public class TableWithFiles {
     private static List<ColumnConstraints> generateHeaderColumnConstraints() {
         List<ColumnConstraints> result = new ArrayList<>();
 
-        ColumnConstraints firstColumn = new ColumnConstraints();
-        firstColumn.setPrefWidth(150);
-        firstColumn.setMinWidth(firstColumn.getPrefWidth());
-        firstColumn.setHgrow(Priority.ALWAYS);
-        result.add(firstColumn);
+        ColumnConstraints fileNameColumn = new ColumnConstraints();
+        fileNameColumn.setPrefWidth(150);
+        fileNameColumn.setMinWidth(fileNameColumn.getPrefWidth());
+        fileNameColumn.setHgrow(Priority.ALWAYS);
+        result.add(fileNameColumn);
 
-        ColumnConstraints secondColumn = new ColumnConstraints();
-        secondColumn.setPrefWidth(200);
-        secondColumn.setMinWidth(secondColumn.getPrefWidth());
-        secondColumn.setHgrow(Priority.ALWAYS);
-        result.add(secondColumn);
+        ColumnConstraints upperSubtitlesColumn = new ColumnConstraints();
+        upperSubtitlesColumn.setPrefWidth(200);
+        upperSubtitlesColumn.setMinWidth(upperSubtitlesColumn.getPrefWidth());
+        upperSubtitlesColumn.setHgrow(Priority.ALWAYS);
+        result.add(upperSubtitlesColumn);
 
-        ColumnConstraints thirdColumn = new ColumnConstraints();
-        thirdColumn.setPrefWidth(200);
-        thirdColumn.setMinWidth(thirdColumn.getPrefWidth());
-        thirdColumn.setHgrow(Priority.ALWAYS);
-        result.add(thirdColumn);
+        ColumnConstraints lowerSubtitlesColumn = new ColumnConstraints();
+        lowerSubtitlesColumn.setPrefWidth(200);
+        lowerSubtitlesColumn.setMinWidth(lowerSubtitlesColumn.getPrefWidth());
+        lowerSubtitlesColumn.setHgrow(Priority.ALWAYS);
+        result.add(lowerSubtitlesColumn);
 
-        ColumnConstraints fourthColumn = new ColumnConstraints();
-        fourthColumn.setPrefWidth(100);
-        fourthColumn.setMinWidth(secondColumn.getPrefWidth());
-        result.add(fourthColumn);
+        ColumnConstraints actionColumn = new ColumnConstraints();
+        actionColumn.setPrefWidth(100);
+        actionColumn.setMinWidth(upperSubtitlesColumn.getPrefWidth());
+        result.add(actionColumn);
 
         return result;
     }
 
-    private static Node generateColumnHeaderNode(
+    private static Node generateHeaderNode(
             String title,
             boolean last
     ) {
         HBox result = new HBox();
 
-        result.setAlignment(Pos.CENTER);
+        result.setAlignment(Pos.CENTER_LEFT);
         result.getChildren().add(new Label(title));
         result.getStyleClass().add("file-table-header");
         if (last) {
@@ -109,16 +109,33 @@ public class TableWithFiles {
         return result;
     }
 
-    private static GridPane generateContentPane() {
+    private static GridPane generateContentPane(boolean debug) {
         GridPane result = new GridPane();
 
-        result.setGridLinesVisible(false);
-        result.getColumnConstraints().addAll(
-                new ColumnConstraints(),
-                new ColumnConstraints(),
-                new ColumnConstraints(),
-                new ColumnConstraints()
-        );
+        result.setGridLinesVisible(debug);
+        result.getColumnConstraints().addAll(generateContentColumnConstraints());
+
+        return result;
+    }
+
+    private static List<ColumnConstraints> generateContentColumnConstraints() {
+        List<ColumnConstraints> result = new ArrayList<>();
+
+        ColumnConstraints fileNameColumn = new ColumnConstraints();
+        fileNameColumn.setHgrow(Priority.ALWAYS);
+        result.add(fileNameColumn);
+
+        ColumnConstraints upperSubtitlesColumn = new ColumnConstraints();
+        upperSubtitlesColumn.setHgrow(Priority.ALWAYS);
+        result.add(upperSubtitlesColumn);
+
+        ColumnConstraints lowerSubtitlesColumn = new ColumnConstraints();
+        lowerSubtitlesColumn.setHgrow(Priority.ALWAYS);
+        result.add(lowerSubtitlesColumn);
+
+        ColumnConstraints actionColumn = new ColumnConstraints();
+        actionColumn.setHgrow(Priority.ALWAYS);
+        result.add(actionColumn);
 
         return result;
     }
@@ -130,7 +147,6 @@ public class TableWithFiles {
         result.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         result.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         result.setFitToWidth(true);
-        result.getStyleClass().add("file-table-scroll");
 
         return result;
     }
@@ -236,8 +252,18 @@ public class TableWithFiles {
         return result;
     }
 
-    public Node getMainNode() {
+    Node getMainNode() {
         return mainNode;
+    }
+
+    public void hide() {
+        headerPane.setVisible(false);
+        contentScrollPane.setVisible(false);
+    }
+
+    public void show() {
+        headerPane.setVisible(true);
+        contentScrollPane.setVisible(true);
     }
 
     void setFiles(Collection<BriefFileInfo> files) {

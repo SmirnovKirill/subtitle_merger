@@ -53,7 +53,7 @@ class MergeInVideosTabView implements TabView {
         this.debug = debug;
         this.tab = new Tab(TAB_NAME);
         this.missingSettingsContent = generateMissingSettingsContent();
-        this.tableWithFiles = new TableWithFiles();
+        this.tableWithFiles = new TableWithFiles(debug);
         this.regularContent = generateRegularContent();
     }
 
@@ -236,14 +236,14 @@ class MergeInVideosTabView implements TabView {
     }
 
     void showDirectoryErrorMessage(String text) {
-        tableWithFiles.getMainNode().setVisible(false);
+        tableWithFiles.hide();
         directoryIncorrectLabel.setVisible(true);
         directoryIncorrectLabel.setText(text);
     }
 
     void showTableWithFiles(List<BriefFileInfo> briefFilesInfo) {
         directoryIncorrectLabel.setVisible(false);
-        tableWithFiles.getMainNode().setVisible(true);
+        tableWithFiles.show();
 
         tableWithFiles.setFiles(briefFilesInfo);
     }
