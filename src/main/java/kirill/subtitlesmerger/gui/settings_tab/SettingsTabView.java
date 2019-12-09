@@ -78,6 +78,45 @@ public class SettingsTabView implements TabView {
         );
     }
 
+    private static TextField generateFfprobeField() {
+        TextField result = new TextField();
+
+        result.setEditable(false);
+
+        return result;
+    }
+
+    private static TextField generateFfmpegField() {
+        TextField result = new TextField();
+
+        result.setEditable(false);
+
+        return result;
+    }
+
+    private static ComboBox<LanguageAlpha3Code> generateLanguageComboBox() {
+        ComboBox<LanguageAlpha3Code> result = new ComboBox<>();
+
+        result.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
+        result.setMaxWidth(Double.MAX_VALUE);
+
+        return result;
+    }
+
+    private static Button generateSwapLanguagesButton() {
+        Image image = new Image(SettingsTabView.class.getResourceAsStream("/swap.png"));
+        ImageView imageView = new ImageView(image);
+        imageView.setFitHeight(24);
+        imageView.setFitWidth(24);
+        imageView.setSmooth(true);
+
+        Button result = new Button("", imageView);
+
+        result.setPadding(new Insets(0));
+
+        return result;
+    }
+
     private static Tab generateTab(
             boolean debug,
             TextField ffprobeField,
@@ -115,45 +154,6 @@ public class SettingsTabView implements TabView {
         result.setFitHeight(16);
         result.setFitWidth(16);
         result.setSmooth(true);
-
-        return result;
-    }
-
-    private static TextField generateFfprobeField() {
-        TextField result = new TextField();
-
-        result.setEditable(false);
-
-        return result;
-    }
-
-    private static TextField generateFfmpegField() {
-        TextField result = new TextField();
-
-        result.setEditable(false);
-
-        return result;
-    }
-
-    private static ComboBox<LanguageAlpha3Code> generateLanguageComboBox() {
-        ComboBox<LanguageAlpha3Code> result = new ComboBox<>();
-
-        result.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
-        result.setMaxWidth(Double.MAX_VALUE);
-
-        return result;
-    }
-
-    private static Button generateSwapLanguagesButton() {
-        Image image = new Image(SettingsTabView.class.getResourceAsStream("/swap.png"));
-        ImageView imageView = new ImageView(image);
-        imageView.setFitHeight(24);
-        imageView.setFitWidth(24);
-        imageView.setSmooth(true);
-
-        Button result = new Button("", imageView);
-
-        result.setPadding(new Insets(0));
 
         return result;
     }
