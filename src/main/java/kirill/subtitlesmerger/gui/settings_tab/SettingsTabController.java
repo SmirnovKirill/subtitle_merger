@@ -1,8 +1,10 @@
-package kirill.subtitlesmerger.gui;
+package kirill.subtitlesmerger.gui.settings_tab;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
+import kirill.subtitlesmerger.gui.TabController;
+import kirill.subtitlesmerger.gui.TabView;
 import kirill.subtitlesmerger.logic.data.Config;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -15,14 +17,14 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @CommonsLog
-class SettingsTabController implements TabController{
+public class SettingsTabController implements TabController {
     private SettingsTabView tabView;
 
     private Config config;
 
     private List<LanguageAlpha3Code> allLanguageCodes;
 
-    SettingsTabController(SettingsTabView tabView, Config config) {
+    public SettingsTabController(SettingsTabView tabView, Config config) {
         this.tabView = tabView;
         this.config = config;
         this.allLanguageCodes = getAllLanguageCodes();

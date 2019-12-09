@@ -1,7 +1,10 @@
-package kirill.subtitlesmerger.gui;
+package kirill.subtitlesmerger.gui.merge_in_videos_tab;
 
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
+import kirill.subtitlesmerger.gui.GuiLauncher;
+import kirill.subtitlesmerger.gui.TabController;
+import kirill.subtitlesmerger.gui.TabView;
 import kirill.subtitlesmerger.logic.Constants;
 import kirill.subtitlesmerger.logic.data.BriefFileInfo;
 import kirill.subtitlesmerger.logic.data.Config;
@@ -20,7 +23,7 @@ import java.util.stream.Collectors;
 import static kirill.subtitlesmerger.logic.data.BriefFileInfo.UnavailabilityReason.*;
 
 @CommonsLog
-public class MergeInVideosTabController implements TabController{
+public class MergeInVideosTabController implements TabController {
     private MergeInVideosTabView tabView;
 
     private Config config;
@@ -29,7 +32,7 @@ public class MergeInVideosTabController implements TabController{
 
     private List<BriefFileInfo> briefFilesInfo;
 
-    MergeInVideosTabController(MergeInVideosTabView tabView, Config config, GuiLauncher guiLauncher) {
+    public MergeInVideosTabController(MergeInVideosTabView tabView, Config config, GuiLauncher guiLauncher) {
         this.tabView = tabView;
         this.config = config;
         this.guiLauncher = guiLauncher;

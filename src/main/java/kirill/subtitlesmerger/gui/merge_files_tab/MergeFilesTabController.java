@@ -1,6 +1,8 @@
-package kirill.subtitlesmerger.gui;
+package kirill.subtitlesmerger.gui.merge_files_tab;
 
 import javafx.event.ActionEvent;
+import kirill.subtitlesmerger.gui.TabController;
+import kirill.subtitlesmerger.gui.TabView;
 import kirill.subtitlesmerger.logic.Constants;
 import kirill.subtitlesmerger.logic.Merger;
 import kirill.subtitlesmerger.logic.Parser;
@@ -23,7 +25,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @CommonsLog
-class MergeFilesTabController implements TabController {
+public class MergeFilesTabController implements TabController {
     private MergeFilesTabView tabView;
 
     private Config config;
@@ -38,7 +40,7 @@ class MergeFilesTabController implements TabController {
 
     private IncorrectOutputFile incorrectOutputFile;
 
-    MergeFilesTabController(MergeFilesTabView tabView, Config config) {
+    public MergeFilesTabController(MergeFilesTabView tabView, Config config) {
         this.tabView = tabView;
         this.config = config;
     }

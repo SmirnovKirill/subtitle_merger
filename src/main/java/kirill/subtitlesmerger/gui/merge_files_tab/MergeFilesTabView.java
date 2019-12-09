@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.gui;
+package kirill.subtitlesmerger.gui.merge_files_tab;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -11,6 +11,8 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import kirill.subtitlesmerger.gui.GuiLauncher;
+import kirill.subtitlesmerger.gui.TabView;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -18,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-class MergeFilesTabView implements TabView {
+public class MergeFilesTabView implements TabView {
     private static final String TAB_NAME = "Merge subtitle files";
 
     private Stage stage;
@@ -49,7 +51,7 @@ class MergeFilesTabView implements TabView {
 
     private Label resultLabel;
 
-    MergeFilesTabView(Stage stage, boolean debug) {
+    public MergeFilesTabView(Stage stage, boolean debug) {
         this.stage = stage;
         this.debug = debug;
         this.tab = generateTab();

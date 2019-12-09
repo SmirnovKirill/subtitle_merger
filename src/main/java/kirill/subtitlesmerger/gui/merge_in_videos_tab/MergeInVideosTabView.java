@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.gui;
+package kirill.subtitlesmerger.gui.merge_in_videos_tab;
 
 import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
@@ -12,6 +12,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
+import kirill.subtitlesmerger.gui.GuiLauncher;
+import kirill.subtitlesmerger.gui.TabView;
 import kirill.subtitlesmerger.logic.data.BriefFileInfo;
 
 import java.io.File;
@@ -19,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-class MergeInVideosTabView implements TabView {
+public class MergeInVideosTabView implements TabView {
     private static final String TAB_NAME = "Merge subtitles in videos";
 
     private Stage stage;
@@ -48,7 +50,7 @@ class MergeInVideosTabView implements TabView {
 
     private TableWithFiles tableWithFiles;
 
-    MergeInVideosTabView(Stage stage, boolean debug) {
+    public MergeInVideosTabView(Stage stage, boolean debug) {
         this.stage = stage;
         this.debug = debug;
         this.tab = new Tab(TAB_NAME);
@@ -140,7 +142,7 @@ class MergeInVideosTabView implements TabView {
 
         showOnlyValidCheckBox = new CheckBox("Show only valid video files");
 
-        Image image = new Image(SettingsTabView.class.getResourceAsStream("/refresh.png"));
+        Image image = new Image(MergeInVideosTabView.class.getResourceAsStream("/refresh.png"));
         ImageView imageView = new ImageView(image);
         imageView.setFitHeight(16);
         imageView.setFitWidth(16);

@@ -8,6 +8,12 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import kirill.subtitlesmerger.gui.merge_files_tab.MergeFilesTabController;
+import kirill.subtitlesmerger.gui.merge_files_tab.MergeFilesTabView;
+import kirill.subtitlesmerger.gui.merge_in_videos_tab.MergeInVideosTabController;
+import kirill.subtitlesmerger.gui.merge_in_videos_tab.MergeInVideosTabView;
+import kirill.subtitlesmerger.gui.settings_tab.SettingsTabController;
+import kirill.subtitlesmerger.gui.settings_tab.SettingsTabView;
 import kirill.subtitlesmerger.logic.Constants;
 import kirill.subtitlesmerger.logic.data.Config;
 import lombok.extern.apachecommons.CommonsLog;
@@ -18,13 +24,13 @@ import java.util.Objects;
 
 @CommonsLog
 public class GuiLauncher extends Application {
-    static final String BUTTON_ERROR_CLASS = "button-error";
+    public static final String BUTTON_ERROR_CLASS = "button-error";
 
-    static final String LABEL_SUCCESS_CLASS = "label-success";
+    public static final String LABEL_SUCCESS_CLASS = "label-success";
 
-    static final String LABEL_ERROR_CLASS = "label-error";
+    public static final String LABEL_ERROR_CLASS = "label-error";
 
-    static final Insets TAB_PADDING = new Insets(20);
+    public static final Insets TAB_PADDING = new Insets(20);
 
     private TabPane mainPane;
 
@@ -127,7 +133,7 @@ public class GuiLauncher extends Application {
         throw new IllegalStateException();
     }
 
-    void openSettingsTab() {
+    public void openSettingsTab() {
         for (TabController controller : tabControllers) {
             if (Objects.equals(controller.getTabView().getTabName(), SettingsTabView.TAB_NAME)) {
                 mainPane.getSelectionModel().select(controller.getTabView().getTab());

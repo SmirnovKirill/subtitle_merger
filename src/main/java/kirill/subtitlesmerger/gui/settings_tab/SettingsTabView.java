@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.gui;
+package kirill.subtitlesmerger.gui.settings_tab;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.beans.value.ChangeListener;
@@ -15,6 +15,8 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
+import kirill.subtitlesmerger.gui.GuiLauncher;
+import kirill.subtitlesmerger.gui.TabView;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -22,8 +24,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-class SettingsTabView implements TabView {
-    static final String TAB_NAME = "Settings";
+public class SettingsTabView implements TabView {
+    public static final String TAB_NAME = "Settings";
 
     private static final LanguageCodeStringConverter LANGUAGE_CODE_STRING_CONVERTER = new LanguageCodeStringConverter();
 
@@ -53,7 +55,7 @@ class SettingsTabView implements TabView {
 
     private Label resultLabel;
 
-    SettingsTabView(Stage stage, boolean debug) {
+    public SettingsTabView(Stage stage, boolean debug) {
         this.stage = stage;
         this.debug = debug;
         this.tab = generateTab();

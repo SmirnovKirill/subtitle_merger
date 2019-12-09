@@ -1,6 +1,6 @@
 package kirill.subtitlesmerger.gui;
 
-interface TabController {
+public interface TabController {
     void initialize();
 
     TabView getTabView();
