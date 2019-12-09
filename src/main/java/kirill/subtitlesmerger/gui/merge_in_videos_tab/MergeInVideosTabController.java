@@ -2,6 +2,7 @@ package kirill.subtitlesmerger.gui.merge_in_videos_tab;
 
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
+import javafx.stage.Stage;
 import kirill.subtitlesmerger.gui.GuiLauncher;
 import kirill.subtitlesmerger.gui.TabController;
 import kirill.subtitlesmerger.gui.TabView;
@@ -24,6 +25,8 @@ import static kirill.subtitlesmerger.logic.data.BriefFileInfo.UnavailabilityReas
 
 @CommonsLog
 public class MergeInVideosTabController implements TabController {
+    private Stage stage;
+
     private MergeInVideosTabView tabView;
 
     private Config config;
@@ -32,7 +35,13 @@ public class MergeInVideosTabController implements TabController {
 
     private List<BriefFileInfo> briefFilesInfo;
 
-    public MergeInVideosTabController(MergeInVideosTabView tabView, Config config, GuiLauncher guiLauncher) {
+    public MergeInVideosTabController(
+            Stage stage,
+            MergeInVideosTabView tabView,
+            Config config,
+            GuiLauncher guiLauncher
+    ) {
+        this.stage = stage;
         this.tabView = tabView;
         this.config = config;
         this.guiLauncher = guiLauncher;
@@ -40,9 +49,9 @@ public class MergeInVideosTabController implements TabController {
 
     @Override
     public void initialize() {
-        tabView.setGoToSettingsLinkHandler(this::goToSettingsLinkClicked);
-        tabView.setDirectoryChooseButtonHandler(this::directoryButtonClicked);
-        tabView.setShowOnlyValidCheckBoxChangeListener(this::showOnlyValidCheckBoxChanged);
+        tabView.getMissingSettingsPane().setGoToSettingsLinkHandler(this::goToSettingsLinkClicked);
+        tabView.getRegularContentPane().setDirectoryChooseButtonHandler(this::directoryButtonClicked);
+        tabView.getRegularContentPane().setShowOnlyValidCheckBoxChangeListener(this::showOnlyValidCheckBoxChanged);
 
         updateView();
     }
@@ -52,12 +61,12 @@ public class MergeInVideosTabController implements TabController {
     }
 
     private void directoryButtonClicked(ActionEvent event) {
-        File directory = tabView.getChosenDirectory().orElse(null);
+        File directory = tabView.getRegularContentPane().getChosenDirectory(stage).orElse(null);
         if (directory == null) {
             return;
         }
 
-        tabView.setDirectoryPathLabel(directory.getAbsolutePath());
+        tabView.getRegularContentPane().setDirectoryPathLabel(directory.getAbsolutePath());
 
         try {
             config.saveLastDirectoryWithVideos(directory.getAbsolutePath());
@@ -65,15 +74,13 @@ public class MergeInVideosTabController implements TabController {
             log.error("failed to save last directory with videos, that shouldn't be possible");
             throw new IllegalStateException();
         }
-        tabView.setDirectoryChooserInitialDirectory(directory);
+        tabView.getRegularContentPane().setDirectoryChooserInitialDirectory(directory);
 
         briefFilesInfo = getBriefFilesInfo(directory.listFiles());
-        if (CollectionUtils.isEmpty(briefFilesInfo)) {
-            tabView.showDirectoryErrorMessage("directory is empty");
-            return;
-        }
 
-        tabView.showTableWithFiles(briefFilesInfo);
+        tabView.getMissingSettingsPane().hide();
+        tabView.getRegularContentPane().setFiles(briefFilesInfo);
+        tabView.getRegularContentPane().show();
     }
 
     private static List<BriefFileInfo> getBriefFilesInfo(File[] files) {
@@ -126,22 +133,25 @@ public class MergeInVideosTabController implements TabController {
             Boolean newValue
     ) {
         if (Boolean.TRUE.equals(newValue)) {
-            tabView.showTableWithFiles(
+            tabView.getRegularContentPane().setFiles(
                     briefFilesInfo.stream()
                     .filter(file -> file.getUnavailabilityReason() == null)
                     .collect(Collectors.toList())
             );
         } else {
-            tabView.showTableWithFiles(briefFilesInfo);
+            tabView.getRegularContentPane().setFiles(briefFilesInfo);
         }
     }
 
     private void updateView() {
         List<String> missingSettings = getMissingSettings(config);
         if (!CollectionUtils.isEmpty(missingSettings)) {
-            tabView.showMissingSettings(missingSettings);
+            tabView.getRegularContentPane().hide();
+            tabView.getMissingSettingsPane().setMissingSettings(missingSettings);
+            tabView.getMissingSettingsPane().show();
         } else {
-            tabView.showRegularContent();
+            tabView.getMissingSettingsPane().hide();
+            tabView.getRegularContentPane().show();
         }
     }
 

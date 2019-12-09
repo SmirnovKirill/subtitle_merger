@@ -56,7 +56,15 @@ class MissingSettingsPane {
         goToSettingsLink.setOnAction(handler);
     }
 
-    void showMissingSettings(List<String> missingSettings) {
+    void hide() {
+        this.missingSettingsPane.setVisible(false);
+    }
+
+    void show() {
+        this.missingSettingsPane.setVisible(true);
+    }
+
+    void setMissingSettings(List<String> missingSettings) {
         labelsPane.getChildren().clear();
 
         labelsPane.getChildren().add(new Label("The following settings are missing:"));

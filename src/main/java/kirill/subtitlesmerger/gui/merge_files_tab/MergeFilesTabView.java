@@ -135,22 +135,22 @@ public class MergeFilesTabView implements TabView {
             Button mergeButton,
             Label resultLabel
     ) {
-        GridPane contentPane = new GridPane();
+        GridPane result = new GridPane();
 
-        contentPane.setHgap(30);
-        contentPane.setVgap(40);
-        contentPane.setPadding(GuiLauncher.TAB_PADDING);
-        contentPane.setGridLinesVisible(debug);
+        result.setHgap(30);
+        result.setVgap(40);
+        result.setPadding(GuiLauncher.TAB_PADDING);
+        result.setGridLinesVisible(debug);
 
-        contentPane.getColumnConstraints().addAll(generateColumnConstraints());
+        result.getColumnConstraints().addAll(generateColumnConstraints());
 
-        addRowForUpperSubtitlesFile(upperSubtitlesFileChooseButton, upperSubtitlesPathLabel, contentPane);
-        addRowForLowerSubtitlesFile(lowerSubtitlesFileChooseButton, lowerSubtitlesPathLabel, contentPane);
-        addRowForMergedSubtitlesFile(mergedSubtitlesFileChooseButton, mergedSubtitlesPathLabel, contentPane);
-        addMergeButton(mergeButton, contentPane);
-        addResultLabel(resultLabel, contentPane);
+        addRowForUpperSubtitlesFile(upperSubtitlesFileChooseButton, upperSubtitlesPathLabel, result);
+        addRowForLowerSubtitlesFile(lowerSubtitlesFileChooseButton, lowerSubtitlesPathLabel, result);
+        addRowForMergedSubtitlesFile(mergedSubtitlesFileChooseButton, mergedSubtitlesPathLabel, result);
+        addMergeButton(mergeButton, result);
+        addResultLabel(resultLabel, result);
 
-        return contentPane;
+        return result;
     }
 
     private static List<ColumnConstraints> generateColumnConstraints() {
@@ -176,12 +176,12 @@ public class MergeFilesTabView implements TabView {
     private static void addRowForUpperSubtitlesFile(
             Button upperSubtitlesFileChooseButton,
             Label upperSubtitlesPathLabel,
-            GridPane contentPane
+            GridPane pane
     ) {
         Label descriptionLabel = new Label("Please choose the file with the upper subtitles");
 
-        contentPane.addRow(
-                contentPane.getRowCount(),
+        pane.addRow(
+                pane.getRowCount(),
                 descriptionLabel,
                 upperSubtitlesFileChooseButton,
                 upperSubtitlesPathLabel
@@ -195,12 +195,12 @@ public class MergeFilesTabView implements TabView {
     private static void addRowForLowerSubtitlesFile(
             Button lowerSubtitlesFileChooseButton,
             Label lowerSubtitlesPathLabel,
-            GridPane contentPane
+            GridPane pane
     ) {
         Label descriptionLabel = new Label("Please choose the file with the lower subtitles");
 
-        contentPane.addRow(
-                contentPane.getRowCount(),
+        pane.addRow(
+                pane.getRowCount(),
                 descriptionLabel,
                 lowerSubtitlesFileChooseButton,
                 lowerSubtitlesPathLabel
@@ -214,12 +214,12 @@ public class MergeFilesTabView implements TabView {
     private static void addRowForMergedSubtitlesFile(
             Button mergedSubtitlesFileChooseButton,
             Label mergedSubtitlesPathLabel,
-            GridPane contentPane
+            GridPane pane
     ) {
         Label descriptionLabel = new Label("Please choose where to save the result");
 
-        contentPane.addRow(
-                contentPane.getRowCount(),
+        pane.addRow(
+                pane.getRowCount(),
                 descriptionLabel,
                 mergedSubtitlesFileChooseButton,
                 mergedSubtitlesPathLabel
@@ -230,14 +230,14 @@ public class MergeFilesTabView implements TabView {
         GridPane.setHalignment(mergedSubtitlesPathLabel, HPos.LEFT);
     }
 
-    private static void addMergeButton(Button mergeButton, GridPane contentPane) {
-        contentPane.addRow(contentPane.getRowCount(), mergeButton);
-        GridPane.setColumnSpan(mergeButton, contentPane.getColumnCount());
+    private static void addMergeButton(Button mergeButton, GridPane pane) {
+        pane.addRow(pane.getRowCount(), mergeButton);
+        GridPane.setColumnSpan(mergeButton, pane.getColumnCount());
     }
 
-    private static void addResultLabel(Label resultLabel, GridPane contentPane) {
-        contentPane.addRow(contentPane.getRowCount(), resultLabel);
-        GridPane.setColumnSpan(resultLabel, contentPane.getColumnCount());
+    private static void addResultLabel(Label resultLabel, GridPane pane) {
+        pane.addRow(pane.getRowCount(), resultLabel);
+        GridPane.setColumnSpan(resultLabel, pane.getColumnCount());
     }
 
     @Override

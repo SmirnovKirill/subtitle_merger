@@ -98,6 +98,7 @@ public class GuiLauncher extends Application {
         mainPane.getTabs().add(tab.getTab());
 
         MergeInVideosTabController mergeInVideosTabController = new MergeInVideosTabController(
+                stage,
                 tab,
                 config,
                 this

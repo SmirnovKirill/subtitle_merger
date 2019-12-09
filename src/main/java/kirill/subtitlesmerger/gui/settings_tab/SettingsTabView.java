@@ -169,22 +169,22 @@ public class SettingsTabView implements TabView {
             Button swapLanguagesButton,
             Label resultLabel
     ) {
-        GridPane contentPane = new GridPane();
+        GridPane result = new GridPane();
 
-        contentPane.setHgap(55);
-        contentPane.setPadding(GuiLauncher.TAB_PADDING);
-        contentPane.setGridLinesVisible(debug);
+        result.setHgap(55);
+        result.setPadding(GuiLauncher.TAB_PADDING);
+        result.setGridLinesVisible(debug);
 
-        contentPane.getColumnConstraints().addAll(generateColumnConstraints());
+        result.getColumnConstraints().addAll(generateColumnConstraints());
 
-        addRowForFfprobe(ffprobeField, ffprobeSetButton, contentPane);
-        addRowForFfmpeg(ffmpegField, ffmpegSetButton, contentPane);
-        addRowForUpperLanguage(upperLanguageComboBox, contentPane);
-        addRowForSwapLanguagesButton(swapLanguagesButton, contentPane);
-        addRowForLowerLanguage(lowerLanguageComboBox, contentPane);
-        addResultLabel(resultLabel, contentPane);
+        addRowForFfprobe(ffprobeField, ffprobeSetButton, result);
+        addRowForFfmpeg(ffmpegField, ffmpegSetButton, result);
+        addRowForUpperLanguage(upperLanguageComboBox, result);
+        addRowForSwapLanguagesButton(swapLanguagesButton, result);
+        addRowForLowerLanguage(lowerLanguageComboBox, result);
+        addResultLabel(resultLabel, result);
 
-        return contentPane;
+        return result;
     }
 
     private static List<ColumnConstraints> generateColumnConstraints() {
@@ -202,15 +202,15 @@ public class SettingsTabView implements TabView {
         return result;
     }
 
-    private static void addRowForFfprobe(TextField ffprobeField, Button ffprobeSetButton, GridPane contentPane) {
+    private static void addRowForFfprobe(TextField ffprobeField, Button ffprobeSetButton, GridPane pane) {
         Label descriptionLabel = new Label("Path to ffprobe");
 
         HBox fieldButtonBox = new HBox(ffprobeField, ffprobeSetButton);
         fieldButtonBox.setSpacing(20);
         HBox.setHgrow(ffprobeField, Priority.ALWAYS);
 
-        contentPane.addRow(
-                contentPane.getRowCount(),
+        pane.addRow(
+                pane.getRowCount(),
                 descriptionLabel,
                 fieldButtonBox
         );
@@ -221,15 +221,15 @@ public class SettingsTabView implements TabView {
         GridPane.setHalignment(fieldButtonBox, HPos.RIGHT);
     }
 
-    private static void addRowForFfmpeg(TextField ffmpegField, Button ffmpegSetButton, GridPane contentPane) {
+    private static void addRowForFfmpeg(TextField ffmpegField, Button ffmpegSetButton, GridPane pane) {
         Label descriptionLabel = new Label("Path to ffmpeg");
 
         HBox fieldButtonBox = new HBox(ffmpegField, ffmpegSetButton);
         fieldButtonBox.setSpacing(20);
         HBox.setHgrow(ffmpegField, Priority.ALWAYS);
 
-        contentPane.addRow(
-                contentPane.getRowCount(),
+        pane.addRow(
+                pane.getRowCount(),
                 descriptionLabel,
                 fieldButtonBox
         );
@@ -243,12 +243,12 @@ public class SettingsTabView implements TabView {
     //todo make editable with drop-down
     private static void addRowForUpperLanguage(
             ComboBox<LanguageAlpha3Code> upperLanguageComboBox,
-            GridPane contentPane
+            GridPane pane
     ) {
         HBox descriptionAndInfo = generateDescriptionAndInfoIcon("Preferred language for upper subtitles");
 
-        contentPane.addRow(
-                contentPane.getRowCount(),
+        pane.addRow(
+                pane.getRowCount(),
                 descriptionAndInfo,
                 upperLanguageComboBox
         );
@@ -310,9 +310,9 @@ public class SettingsTabView implements TabView {
         return result;
     }
 
-    private static void addRowForSwapLanguagesButton(Button swapLanguagesButton, GridPane contentPane) {
-        contentPane.addRow(
-                contentPane.getRowCount(),
+    private static void addRowForSwapLanguagesButton(Button swapLanguagesButton, GridPane pane) {
+        pane.addRow(
+                pane.getRowCount(),
                 new Region(),
                 swapLanguagesButton
         );
@@ -324,12 +324,12 @@ public class SettingsTabView implements TabView {
     //todo make editable with drop-down
     private static void addRowForLowerLanguage(
             ComboBox<LanguageAlpha3Code> lowerLanguageComboBox,
-            GridPane contentPane
+            GridPane pane
     ) {
         HBox descriptionAndInfo = generateDescriptionAndInfoIcon("Preferred language for lower subtitles");
 
-        contentPane.addRow(
-                contentPane.getRowCount(),
+        pane.addRow(
+                pane.getRowCount(),
                 descriptionAndInfo,
                 lowerLanguageComboBox
         );
@@ -340,9 +340,9 @@ public class SettingsTabView implements TabView {
         GridPane.setHalignment(lowerLanguageComboBox, HPos.RIGHT);
     }
 
-    private static void addResultLabel(Label resultLabel, GridPane contentPane) {
-        contentPane.addRow(contentPane.getRowCount(), resultLabel);
-        GridPane.setColumnSpan(resultLabel, contentPane.getColumnCount());
+    private static void addResultLabel(Label resultLabel, GridPane pane) {
+        pane.addRow(pane.getRowCount(), resultLabel);
+        GridPane.setColumnSpan(resultLabel, pane.getColumnCount());
         GridPane.setMargin(resultLabel, new Insets(20, 0, 0, 0));
     }
 
