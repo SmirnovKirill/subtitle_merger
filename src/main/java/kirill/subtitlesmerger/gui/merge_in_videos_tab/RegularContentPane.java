@@ -38,7 +38,7 @@ class RegularContentPane {
     @Getter
     private Pane regularContentPane;
 
-    public RegularContentPane(boolean debug) {
+    RegularContentPane(boolean debug) {
         this.directoryChooseButton = new Button("Choose file");
         this.directoryPathLabel = new Label("not selected");
         this.directoryChooser = generateDirectoryChooser();

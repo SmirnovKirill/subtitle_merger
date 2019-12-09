@@ -132,7 +132,7 @@ public class SettingsTabView implements TabView {
 
         result.setGraphic(generateTabGraphic());
         result.setContent(
-                generateContentPane(
+                generateTabContent(
                         debug,
                         ffprobeField,
                         ffprobeSetButton,
@@ -158,7 +158,7 @@ public class SettingsTabView implements TabView {
         return result;
     }
 
-    private static GridPane generateContentPane(
+    private static GridPane generateTabContent(
             boolean debug,
             TextField ffprobeField,
             Button ffprobeSetButton,

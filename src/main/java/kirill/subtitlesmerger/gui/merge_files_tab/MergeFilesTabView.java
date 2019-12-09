@@ -108,7 +108,7 @@ public class MergeFilesTabView implements TabView {
         Tab result = new Tab(TAB_NAME);
 
         result.setContent(
-                generateContentPane(
+                generateTabContent(
                         debug,
                         upperSubtitlesFileChooseButton,
                         upperSubtitlesPathLabel,
@@ -124,7 +124,7 @@ public class MergeFilesTabView implements TabView {
         return result;
     }
 
-    private static GridPane generateContentPane(
+    private static GridPane generateTabContent(
             boolean debug,
             Button upperSubtitlesFileChooseButton,
             Label upperSubtitlesPathLabel,

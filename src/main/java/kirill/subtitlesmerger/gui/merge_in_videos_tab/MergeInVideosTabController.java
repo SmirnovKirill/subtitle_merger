@@ -66,6 +66,8 @@ public class MergeInVideosTabController implements TabController {
             return;
         }
 
+        tabView.showProgressIndicator();
+
         tabView.getRegularContentPane().setDirectoryPathLabel(directory.getAbsolutePath());
 
         try {
@@ -78,9 +80,9 @@ public class MergeInVideosTabController implements TabController {
 
         briefFilesInfo = getBriefFilesInfo(directory.listFiles());
 
-        tabView.getMissingSettingsPane().hide();
         tabView.getRegularContentPane().setFiles(briefFilesInfo);
-        tabView.getRegularContentPane().show();
+
+        tabView.hideProgressIndicator();
     }
 
     private static List<BriefFileInfo> getBriefFilesInfo(File[] files) {
@@ -132,6 +134,7 @@ public class MergeInVideosTabController implements TabController {
             Boolean oldValue,
             Boolean newValue
     ) {
+        tabView.showProgressIndicator();
         if (Boolean.TRUE.equals(newValue)) {
             tabView.getRegularContentPane().setFiles(
                     briefFilesInfo.stream()
@@ -141,6 +144,7 @@ public class MergeInVideosTabController implements TabController {
         } else {
             tabView.getRegularContentPane().setFiles(briefFilesInfo);
         }
+        tabView.hideProgressIndicator();
     }
 
     private void updateView() {
