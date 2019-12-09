@@ -319,7 +319,7 @@ public class MergeFilesTabController implements TabController {
         }
 
         try {
-            Subtitles subtitles = Parser.parseSubtitles(
+            Subtitles subtitles = Parser.fromSubRipText(
                     FileUtils.readFileToString(file, StandardCharsets.UTF_8),
                     name,
                     null

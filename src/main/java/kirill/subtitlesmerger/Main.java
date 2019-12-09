@@ -266,7 +266,7 @@ public class Main {
                         new FullSubtitlesStreamInfo(
                                 briefSubtitlesStream,
                                 null,
-                                Parser.parseSubtitles(
+                                Parser.fromSubRipText(
                                         subtitlesText,
                                         "subs-" + briefSubtitlesStream.getIndex(),
                                         briefSubtitlesStream.getLanguage()

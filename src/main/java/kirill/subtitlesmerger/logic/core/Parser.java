@@ -14,8 +14,8 @@ import java.util.List;
 
 @CommonsLog
 public class Parser {
-    public static Subtitles parseSubtitles(
-            String subtitlesUnprocessed,
+    public static Subtitles fromSubRipText(
+            String subRipText,
             String subtitlesName,
             LanguageAlpha3Code language
     ) throws IncorrectFormatException {
@@ -24,7 +24,7 @@ public class Parser {
         Subtitle currentSubtitle = null;
         ParsingStage parsingStage = ParsingStage.HAVE_NOT_STARTED;
 
-        for (String currentLine : subtitlesUnprocessed.split("\\r?\\n")) {
+        for (String currentLine : subRipText.split("\\r?\\n")) {
             /*
              * This special character can be found at the beginning of the very first line so we have to remove it
              * in order to parse int correctly.
