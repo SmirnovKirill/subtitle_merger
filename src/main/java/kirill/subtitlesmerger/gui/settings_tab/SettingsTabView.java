@@ -31,10 +31,6 @@ public class SettingsTabView implements TabView {
 
     private Stage stage;
 
-    private boolean debug;
-
-    private Tab tab;
-
     private TextField ffprobeField;
 
     private Button ffprobeSetButton;
@@ -49,23 +45,66 @@ public class SettingsTabView implements TabView {
 
     private ComboBox<LanguageAlpha3Code> upperLanguageComboBox;
 
-    private Button swapLanguagesButton;
-
     private ComboBox<LanguageAlpha3Code> lowerLanguageComboBox;
+
+    private Button swapLanguagesButton;
 
     private Label resultLabel;
 
+    private Tab tab;
+
     public SettingsTabView(Stage stage, boolean debug) {
         this.stage = stage;
-        this.debug = debug;
-        this.tab = generateTab();
+        this.ffprobeField = generateFfprobeField();
+        this.ffprobeSetButton = new Button();
+        this.ffprobeFileChooser = new FileChooser();
+        this.ffmpegField = generateFfmpegField();
+        this.ffmpegSetButton = new Button();
+        this.ffmpegFileChooser = new FileChooser();
+        this.upperLanguageComboBox = generateLanguageComboBox();
+        this.lowerLanguageComboBox = generateLanguageComboBox();
+        this.swapLanguagesButton = generateSwapLanguagesButton();
+        this.resultLabel = new Label();
+        this.tab = generateTab(
+                debug,
+                ffprobeField,
+                ffprobeSetButton,
+                ffmpegField,
+                ffmpegSetButton,
+                upperLanguageComboBox,
+                lowerLanguageComboBox,
+                swapLanguagesButton,
+                resultLabel
+        );
     }
 
-    private Tab generateTab() {
+    private static Tab generateTab(
+            boolean debug,
+            TextField ffprobeField,
+            Button ffprobeSetButton,
+            TextField ffmpegField,
+            Button ffmpegSetButton,
+            ComboBox<LanguageAlpha3Code> upperLanguageComboBox,
+            ComboBox<LanguageAlpha3Code> lowerLanguageComboBox,
+            Button swapLanguagesButton,
+            Label resultLabel
+    ) {
         Tab result = new Tab(TAB_NAME);
 
         result.setGraphic(generateTabGraphic());
-        result.setContent(generateContentPane());
+        result.setContent(
+                generateContentPane(
+                        debug,
+                        ffprobeField,
+                        ffprobeSetButton,
+                        ffmpegField,
+                        ffmpegSetButton,
+                        upperLanguageComboBox,
+                        lowerLanguageComboBox,
+                        swapLanguagesButton,
+                        resultLabel
+                )
+        );
 
         return result;
     }
@@ -80,7 +119,56 @@ public class SettingsTabView implements TabView {
         return result;
     }
 
-    private GridPane generateContentPane() {
+    private static TextField generateFfprobeField() {
+        TextField result = new TextField();
+
+        result.setEditable(false);
+
+        return result;
+    }
+
+    private static TextField generateFfmpegField() {
+        TextField result = new TextField();
+
+        result.setEditable(false);
+
+        return result;
+    }
+
+    private static ComboBox<LanguageAlpha3Code> generateLanguageComboBox() {
+        ComboBox<LanguageAlpha3Code> result = new ComboBox<>();
+
+        result.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
+        result.setMaxWidth(Double.MAX_VALUE);
+
+        return result;
+    }
+
+    private static Button generateSwapLanguagesButton() {
+        Image image = new Image(SettingsTabView.class.getResourceAsStream("/swap.png"));
+        ImageView imageView = new ImageView(image);
+        imageView.setFitHeight(24);
+        imageView.setFitWidth(24);
+        imageView.setSmooth(true);
+
+        Button result = new Button("", imageView);
+
+        result.setPadding(new Insets(0));
+
+        return result;
+    }
+
+    private static GridPane generateContentPane(
+            boolean debug,
+            TextField ffprobeField,
+            Button ffprobeSetButton,
+            TextField ffmpegField,
+            Button ffmpegSetButton,
+            ComboBox<LanguageAlpha3Code> upperLanguageComboBox,
+            ComboBox<LanguageAlpha3Code> lowerLanguageComboBox,
+            Button swapLanguagesButton,
+            Label resultLabel
+    ) {
         GridPane contentPane = new GridPane();
 
         contentPane.setHgap(55);
@@ -89,12 +177,12 @@ public class SettingsTabView implements TabView {
 
         contentPane.getColumnConstraints().addAll(generateColumnConstraints());
 
-        addRowForFfprobe(contentPane);
-        addRowForFfmpeg(contentPane);
-        addRowForUpperLanguage(contentPane);
-        addRowForSwapLanguagesButton(contentPane);
-        addRowForLowerLanguage(contentPane);
-        addResultLabel(contentPane);
+        addRowForFfprobe(ffprobeField, ffprobeSetButton, contentPane);
+        addRowForFfmpeg(ffmpegField, ffmpegSetButton, contentPane);
+        addRowForUpperLanguage(upperLanguageComboBox, contentPane);
+        addRowForSwapLanguagesButton(swapLanguagesButton, contentPane);
+        addRowForLowerLanguage(lowerLanguageComboBox, contentPane);
+        addResultLabel(resultLabel, contentPane);
 
         return contentPane;
     }
@@ -114,19 +202,12 @@ public class SettingsTabView implements TabView {
         return result;
     }
 
-    private void addRowForFfprobe(GridPane contentPane) {
+    private static void addRowForFfprobe(TextField ffprobeField, Button ffprobeSetButton, GridPane contentPane) {
         Label descriptionLabel = new Label("Path to ffprobe");
-
-        ffprobeField = new TextField();
-        ffprobeField.setEditable(false);
-
-        ffprobeSetButton = new Button();
 
         HBox fieldButtonBox = new HBox(ffprobeField, ffprobeSetButton);
         fieldButtonBox.setSpacing(20);
         HBox.setHgrow(ffprobeField, Priority.ALWAYS);
-
-        ffprobeFileChooser = new FileChooser();
 
         contentPane.addRow(
                 contentPane.getRowCount(),
@@ -140,19 +221,12 @@ public class SettingsTabView implements TabView {
         GridPane.setHalignment(fieldButtonBox, HPos.RIGHT);
     }
 
-    private void addRowForFfmpeg(GridPane contentPane) {
+    private static void addRowForFfmpeg(TextField ffmpegField, Button ffmpegSetButton, GridPane contentPane) {
         Label descriptionLabel = new Label("Path to ffmpeg");
-
-        ffmpegField = new TextField();
-        ffmpegField.setEditable(false);
-
-        ffmpegSetButton = new Button();
 
         HBox fieldButtonBox = new HBox(ffmpegField, ffmpegSetButton);
         fieldButtonBox.setSpacing(20);
         HBox.setHgrow(ffmpegField, Priority.ALWAYS);
-
-        ffmpegFileChooser = new FileChooser();
 
         contentPane.addRow(
                 contentPane.getRowCount(),
@@ -167,12 +241,11 @@ public class SettingsTabView implements TabView {
     }
 
     //todo make editable with drop-down
-    private void addRowForUpperLanguage(GridPane contentPane) {
+    private static void addRowForUpperLanguage(
+            ComboBox<LanguageAlpha3Code> upperLanguageComboBox,
+            GridPane contentPane
+    ) {
         HBox descriptionAndInfo = generateDescriptionAndInfoIcon("Preferred language for upper subtitles");
-
-        upperLanguageComboBox = new ComboBox<>();
-        upperLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
-        upperLanguageComboBox.setMaxWidth(Double.MAX_VALUE);
 
         contentPane.addRow(
                 contentPane.getRowCount(),
@@ -186,7 +259,7 @@ public class SettingsTabView implements TabView {
         GridPane.setHalignment(upperLanguageComboBox, HPos.RIGHT);
     }
 
-    private HBox generateDescriptionAndInfoIcon(String description) {
+    private static HBox generateDescriptionAndInfoIcon(String description) {
         HBox result = new HBox();
 
         ImageView imageView = getInfoImageView();
@@ -214,7 +287,7 @@ public class SettingsTabView implements TabView {
         return result;
     }
 
-    private ImageView getInfoImageView() {
+    private static ImageView getInfoImageView() {
         Image result = new Image(SettingsTabView.class.getResourceAsStream("/info.png"));
 
         ImageView imageView = new ImageView(result);
@@ -237,16 +310,7 @@ public class SettingsTabView implements TabView {
         return result;
     }
 
-    private void addRowForSwapLanguagesButton(GridPane contentPane) {
-        Image image = new Image(SettingsTabView.class.getResourceAsStream("/swap.png"));
-        ImageView imageView = new ImageView(image);
-        imageView.setFitHeight(24);
-        imageView.setFitWidth(24);
-        imageView.setSmooth(true);
-
-        swapLanguagesButton = new Button("", imageView);
-        swapLanguagesButton.setPadding(new Insets(0));
-
+    private static void addRowForSwapLanguagesButton(Button swapLanguagesButton, GridPane contentPane) {
         contentPane.addRow(
                 contentPane.getRowCount(),
                 new Region(),
@@ -258,12 +322,11 @@ public class SettingsTabView implements TabView {
     }
 
     //todo make editable with drop-down
-    private void addRowForLowerLanguage(GridPane contentPane) {
+    private static void addRowForLowerLanguage(
+            ComboBox<LanguageAlpha3Code> lowerLanguageComboBox,
+            GridPane contentPane
+    ) {
         HBox descriptionAndInfo = generateDescriptionAndInfoIcon("Preferred language for lower subtitles");
-
-        lowerLanguageComboBox = new ComboBox<>();
-        lowerLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
-        lowerLanguageComboBox.setMaxWidth(Double.MAX_VALUE);
 
         contentPane.addRow(
                 contentPane.getRowCount(),
@@ -277,8 +340,7 @@ public class SettingsTabView implements TabView {
         GridPane.setHalignment(lowerLanguageComboBox, HPos.RIGHT);
     }
 
-    private void addResultLabel(GridPane contentPane) {
-        resultLabel = new Label();
+    private static void addResultLabel(Label resultLabel, GridPane contentPane) {
         contentPane.addRow(contentPane.getRowCount(), resultLabel);
         GridPane.setColumnSpan(resultLabel, contentPane.getColumnCount());
         GridPane.setMargin(resultLabel, new Insets(20, 0, 0, 0));
