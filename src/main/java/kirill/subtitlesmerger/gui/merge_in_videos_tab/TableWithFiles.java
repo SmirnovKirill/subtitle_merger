@@ -18,7 +18,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class TableWithFiles {
+class TableWithFiles {
     private static final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern("dd.MM.YYYY HH:mm:ss");
 
     private static final String TABLE_HEADER_CLASS = "file-table-header";

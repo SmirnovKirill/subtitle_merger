@@ -30,11 +30,7 @@ public class MergeInVideosTabView implements TabView {
 
     private Tab tab;
 
-    private Node missingSettingsContent;
-
-    private VBox missingSettingLabels;
-
-    private Hyperlink goToSettingsLink;
+    private MissingSettingsPane missingSettingsPane;
 
     private Node regularContent;
 
@@ -54,33 +50,9 @@ public class MergeInVideosTabView implements TabView {
         this.stage = stage;
         this.debug = debug;
         this.tab = new Tab(TAB_NAME);
-        this.missingSettingsContent = generateMissingSettingsContent();
+        this.missingSettingsPane = new MissingSettingsPane();
         this.tableWithFiles = new TableWithFiles(debug);
         this.regularContent = generateRegularContent();
-    }
-
-    private Node generateMissingSettingsContent() {
-        VBox result = new VBox();
-
-        result.setPadding(GuiLauncher.TAB_PADDING);
-        result.setSpacing(10);
-
-        missingSettingLabels = generateMissingSettingLabels();
-
-        goToSettingsLink = new Hyperlink();
-        goToSettingsLink.setText("open settings tab");
-
-        result.getChildren().addAll(missingSettingLabels, goToSettingsLink);
-
-        return result;
-    }
-
-    private VBox generateMissingSettingLabels() {
-        VBox result = new VBox();
-
-        result.setSpacing(10);
-
-        return result;
     }
 
     private Node generateRegularContent() {
@@ -214,7 +186,11 @@ public class MergeInVideosTabView implements TabView {
     }
 
     void setGoToSettingsLinkHandler(EventHandler<ActionEvent> handler) {
-        goToSettingsLink.setOnAction(handler);
+        missingSettingsPane.setGoToSettingsLinkHandler(handler);
+    }
+
+    void showMissingSettings(List<String> missingSettings) {
+        missingSettingsPane.showMissingSettings(missingSettings);
     }
 
     void setDirectoryChooseButtonHandler(EventHandler<ActionEvent> handler) {
@@ -248,19 +224,6 @@ public class MergeInVideosTabView implements TabView {
         tableWithFiles.show();
 
         tableWithFiles.setFiles(briefFilesInfo);
-    }
-
-    void showMissingSettings(
-            List<String> missingSettings
-    ) {
-        missingSettingLabels.getChildren().clear();
-
-        this.missingSettingLabels.getChildren().add(new Label("The following settings are missing:"));
-        for (String setting : missingSettings) {
-            this.missingSettingLabels.getChildren().add(new Label("\u2022 " + setting));
-        }
-
-        tab.setContent(missingSettingsContent);
     }
 
     void showRegularContent() {
