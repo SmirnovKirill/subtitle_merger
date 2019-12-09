@@ -5,7 +5,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import kirill.subtitlesmerger.gui.TabController;
 import kirill.subtitlesmerger.gui.TabView;
-import kirill.subtitlesmerger.logic.data.Config;
+import kirill.subtitlesmerger.logic.merge_in_videos.Config;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 

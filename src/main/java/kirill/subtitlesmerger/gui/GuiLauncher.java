@@ -15,7 +15,7 @@ import kirill.subtitlesmerger.gui.merge_in_videos_tab.MergeInVideosTabView;
 import kirill.subtitlesmerger.gui.settings_tab.SettingsTabController;
 import kirill.subtitlesmerger.gui.settings_tab.SettingsTabView;
 import kirill.subtitlesmerger.logic.Constants;
-import kirill.subtitlesmerger.logic.data.Config;
+import kirill.subtitlesmerger.logic.merge_in_videos.Config;
 import lombok.extern.apachecommons.CommonsLog;
 
 import java.util.ArrayList;

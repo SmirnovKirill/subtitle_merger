@@ -1,7 +1,9 @@
 package kirill.subtitlesmerger.logic;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
-import kirill.subtitlesmerger.logic.data.Subtitles;
+import kirill.subtitlesmerger.logic.core.Merger;
+import kirill.subtitlesmerger.logic.core.Parser;
+import kirill.subtitlesmerger.logic.core.entities.Subtitles;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 

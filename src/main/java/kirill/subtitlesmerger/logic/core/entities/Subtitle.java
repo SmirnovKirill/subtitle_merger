@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.logic.data;
+package kirill.subtitlesmerger.logic.core.entities;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,8 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Setter
-public
-class Subtitle {
+public class Subtitle {
     private int number;
 
     private LocalTime from;

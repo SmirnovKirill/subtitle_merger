@@ -14,7 +14,7 @@ import javafx.scene.layout.*;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import kirill.subtitlesmerger.gui.GuiLauncher;
-import kirill.subtitlesmerger.logic.data.BriefFileInfo;
+import kirill.subtitlesmerger.logic.merge_in_videos.BriefFileInfo;
 import lombok.Getter;
 
 import java.io.File;
