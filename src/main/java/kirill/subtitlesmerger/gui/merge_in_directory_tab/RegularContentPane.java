@@ -31,7 +31,7 @@ class RegularContentPane {
 
     private Label directoryIncorrectLabel;
 
-    private CheckBox showOnlyValidCheckBox;
+    private CheckBox hideUnavailableCheckbox;
 
     private TableWithFiles tableWithFiles;
 
@@ -43,13 +43,13 @@ class RegularContentPane {
         this.directoryPathLabel = new Label("not selected");
         this.directoryChooser = generateDirectoryChooser();
         this.directoryIncorrectLabel = generateDirectoryIncorrectLabel();
-        this.showOnlyValidCheckBox = new CheckBox("Show only valid video files");
+        this.hideUnavailableCheckbox = new CheckBox("Hide unavailable");
         this.tableWithFiles = new TableWithFiles(debug);
         this.regularContentPane = generatePane(
                 debug,
                 directoryChooseButton,
                 directoryPathLabel,
-                showOnlyValidCheckBox,
+                hideUnavailableCheckbox,
                 directoryIncorrectLabel,
                 tableWithFiles
         );
@@ -77,7 +77,7 @@ class RegularContentPane {
             boolean debug,
             Button directoryChooseButton,
             Label directoryPathLabel,
-            CheckBox showOnlyValidCheckBox,
+            CheckBox hideUnavailableCheckbox,
             Label directoryIncorrectLabel,
             TableWithFiles tableWithFiles
     ) {
@@ -91,7 +91,7 @@ class RegularContentPane {
                 debug,
                 directoryChooseButton,
                 directoryPathLabel,
-                showOnlyValidCheckBox
+                hideUnavailableCheckbox
         );
 
         result.getChildren().addAll(controlsPane, directoryIncorrectLabel, tableWithFiles.getMainNode());
@@ -105,7 +105,7 @@ class RegularContentPane {
             boolean debug,
             Button directoryChooseButton,
             Label directoryPathLabel,
-            CheckBox showOnlyValidCheckBox
+            CheckBox hideUnavailableCheckbox
     ) {
         GridPane result = new GridPane();
 
@@ -116,7 +116,7 @@ class RegularContentPane {
         result.getColumnConstraints().addAll(generateControlPaneColumnConstraints());
 
         addFirstControlsRow(directoryChooseButton, directoryPathLabel, result);
-        addSecondControlsRow(showOnlyValidCheckBox, result);
+        addSecondControlsRow(hideUnavailableCheckbox, result);
 
         return result;
     }
@@ -156,7 +156,7 @@ class RegularContentPane {
         GridPane.setHalignment(directoryPathLabel, HPos.LEFT);
     }
 
-    private static void addSecondControlsRow(CheckBox showOnlyValidCheckBox, GridPane pane) {
+    private static void addSecondControlsRow(CheckBox hideUnavailableCheckbox, GridPane pane) {
         HBox row = new HBox();
 
         row.setSpacing(20);
@@ -180,7 +180,7 @@ class RegularContentPane {
         processImageView.setFitWidth(16);
         Button injectSubtitlesButton = new Button("Inject subtitles", processImageView);
 
-        row.getChildren().addAll(showOnlyValidCheckBox, refreshButton, getSubtitleSizesButton, injectSubtitlesButton);
+        row.getChildren().addAll(hideUnavailableCheckbox, refreshButton, getSubtitleSizesButton, injectSubtitlesButton);
 
         pane.addRow(
                 pane.getRowCount(),
@@ -199,8 +199,8 @@ class RegularContentPane {
         directoryChooser.setInitialDirectory(initialDirectory);
     }
 
-    void setShowOnlyValidCheckBoxChangeListener(ChangeListener<Boolean> listener) {
-        showOnlyValidCheckBox.selectedProperty().addListener(listener);
+    void setHideUnavailableCheckBoxChangeListener(ChangeListener<Boolean> listener) {
+        hideUnavailableCheckbox.selectedProperty().addListener(listener);
     }
 
     Optional<File> getChosenDirectory(Stage stage) {

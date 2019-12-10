@@ -51,7 +51,7 @@ public class MergeInDirectoryTabController implements TabController {
     public void initialize() {
         tabView.getMissingSettingsPane().setGoToSettingsLinkHandler(this::goToSettingsLinkClicked);
         tabView.getRegularContentPane().setDirectoryChooseButtonHandler(this::directoryButtonClicked);
-        tabView.getRegularContentPane().setShowOnlyValidCheckBoxChangeListener(this::showOnlyValidCheckBoxChanged);
+        tabView.getRegularContentPane().setHideUnavailableCheckBoxChangeListener(this::showOnlyValidCheckBoxChanged);
 
         updateView();
     }

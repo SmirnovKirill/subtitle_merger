@@ -163,6 +163,28 @@ class TableWithFiles {
         result.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         result.setFitToWidth(true);
         result.getStyleClass().add(SCROLL_CLASS);
+        result.setContextMenu(generateContextMenu());
+
+        return result;
+    }
+
+    private static ContextMenu generateContextMenu() {
+        ContextMenu result = new ContextMenu();
+
+        Menu menu = new Menu("_Sort files");
+
+        MenuItem menuItem = new MenuItem("asd");
+
+        menu.getItems().addAll(
+                new MenuItem("By _Name"),
+                new MenuItem("By _Modification Time"),
+                new MenuItem("By _Size"),
+                new SeparatorMenuItem(),
+                new MenuItem("_Ascending"),
+                new MenuItem("_Descending")
+        );
+
+        result.getItems().add(menu);
 
         return result;
     }
