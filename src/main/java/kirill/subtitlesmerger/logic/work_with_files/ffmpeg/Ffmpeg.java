@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.logic.merge_in_files.ffmpeg;
+package kirill.subtitlesmerger.logic.work_with_files.ffmpeg;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlesmerger.logic.core.entities.Subtitles;

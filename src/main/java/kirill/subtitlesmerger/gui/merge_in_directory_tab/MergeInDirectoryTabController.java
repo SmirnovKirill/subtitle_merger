@@ -7,7 +7,7 @@ import kirill.subtitlesmerger.gui.GuiLauncher;
 import kirill.subtitlesmerger.gui.TabController;
 import kirill.subtitlesmerger.gui.TabView;
 import kirill.subtitlesmerger.logic.Constants;
-import kirill.subtitlesmerger.logic.merge_in_files.entities.BriefFileInfo;
+import kirill.subtitlesmerger.logic.work_with_files.entities.BriefFileInfo;
 import kirill.subtitlesmerger.logic.Config;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static kirill.subtitlesmerger.logic.merge_in_files.entities.BriefFileInfo.UnavailabilityReason.*;
+import static kirill.subtitlesmerger.logic.work_with_files.entities.BriefFileInfo.UnavailabilityReason.*;
 
 @CommonsLog
 public class MergeInDirectoryTabController implements TabController {

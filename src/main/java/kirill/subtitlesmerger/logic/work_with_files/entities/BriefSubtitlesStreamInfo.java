@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.logic.merge_in_files.entities;
+package kirill.subtitlesmerger.logic.work_with_files.entities;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import lombok.Getter;

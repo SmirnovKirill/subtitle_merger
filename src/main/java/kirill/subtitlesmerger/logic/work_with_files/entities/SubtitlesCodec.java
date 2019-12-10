@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.logic.merge_in_files.entities;
+package kirill.subtitlesmerger.logic.work_with_files.entities;
 
 import java.util.Optional;
 
