@@ -243,7 +243,7 @@ public class SettingsTabView implements TabView {
             ComboBox<LanguageAlpha3Code> upperLanguageComboBox,
             GridPane pane
     ) {
-        HBox descriptionAndInfo = generateDescriptionAndInfoIcon("Preferred language for upper subtitles");
+        HBox descriptionAndInfo = generateDescriptionAndQuestionIcon("Preferred language for upper subtitles");
 
         pane.addRow(
                 pane.getRowCount(),
@@ -257,10 +257,10 @@ public class SettingsTabView implements TabView {
         GridPane.setHalignment(upperLanguageComboBox, HPos.RIGHT);
     }
 
-    private static HBox generateDescriptionAndInfoIcon(String description) {
+    private static HBox generateDescriptionAndQuestionIcon(String description) {
         HBox result = new HBox();
 
-        ImageView imageView = getInfoImageView();
+        ImageView imageView = getQuestionImageView();
 
         /*
          * Have to use the wrapper for the image view because otherwise the tooltip won't be shown when hovering over
@@ -285,8 +285,8 @@ public class SettingsTabView implements TabView {
         return result;
     }
 
-    private static ImageView getInfoImageView() {
-        Image result = new Image(SettingsTabView.class.getResourceAsStream("/info.png"));
+    private static ImageView getQuestionImageView() {
+        Image result = new Image(SettingsTabView.class.getResourceAsStream("/question.png"));
 
         ImageView imageView = new ImageView(result);
         imageView.setFitHeight(16);
@@ -323,7 +323,7 @@ public class SettingsTabView implements TabView {
             ComboBox<LanguageAlpha3Code> lowerLanguageComboBox,
             GridPane pane
     ) {
-        HBox descriptionAndInfo = generateDescriptionAndInfoIcon("Preferred language for lower subtitles");
+        HBox descriptionAndInfo = generateDescriptionAndQuestionIcon("Preferred language for lower subtitles");
 
         pane.addRow(
                 pane.getRowCount(),

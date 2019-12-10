@@ -8,14 +8,14 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
-import kirill.subtitlesmerger.gui.merge_single_files_tab.MergeSingleFilesTabController;
-import kirill.subtitlesmerger.gui.merge_single_files_tab.MergeSingleFilesTabView;
 import kirill.subtitlesmerger.gui.merge_in_directory_tab.MergeInDirectoryTabController;
 import kirill.subtitlesmerger.gui.merge_in_directory_tab.MergeInDirectoryTabView;
+import kirill.subtitlesmerger.gui.merge_single_files_tab.MergeSingleFilesTabController;
+import kirill.subtitlesmerger.gui.merge_single_files_tab.MergeSingleFilesTabView;
 import kirill.subtitlesmerger.gui.settings_tab.SettingsTabController;
 import kirill.subtitlesmerger.gui.settings_tab.SettingsTabView;
-import kirill.subtitlesmerger.logic.Constants;
 import kirill.subtitlesmerger.logic.Config;
+import kirill.subtitlesmerger.logic.Constants;
 import lombok.extern.apachecommons.CommonsLog;
 
 import java.util.ArrayList;
