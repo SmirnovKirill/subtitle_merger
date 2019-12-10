@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.gui.merge_in_videos_tab;
+package kirill.subtitlesmerger.gui.merge_in_directory_tab;
 
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -24,10 +24,10 @@ import java.util.stream.Collectors;
 import static kirill.subtitlesmerger.logic.merge_in_files.entities.BriefFileInfo.UnavailabilityReason.*;
 
 @CommonsLog
-public class MergeInVideosTabController implements TabController {
+public class MergeInDirectoryTabController implements TabController {
     private Stage stage;
 
-    private MergeInVideosTabView tabView;
+    private MergeInDirectoryTabView tabView;
 
     private Config config;
 
@@ -35,9 +35,9 @@ public class MergeInVideosTabController implements TabController {
 
     private List<BriefFileInfo> briefFilesInfo;
 
-    public MergeInVideosTabController(
+    public MergeInDirectoryTabController(
             Stage stage,
-            MergeInVideosTabView tabView,
+            MergeInDirectoryTabView tabView,
             Config config,
             GuiLauncher guiLauncher
     ) {

@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.gui.merge_in_videos_tab;
+package kirill.subtitlesmerger.gui.merge_in_directory_tab;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;

@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.gui.merge_in_videos_tab;
+package kirill.subtitlesmerger.gui.merge_in_directory_tab;
 
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.Tab;
@@ -8,7 +8,7 @@ import javafx.stage.Stage;
 import kirill.subtitlesmerger.gui.TabView;
 import lombok.Getter;
 
-public class MergeInVideosTabView implements TabView {
+public class MergeInDirectoryTabView implements TabView {
     private static final String TAB_NAME = "Merge subtitles in videos";
 
     private Tab tab;
@@ -22,7 +22,7 @@ public class MergeInVideosTabView implements TabView {
     @Getter
     private ProgressIndicator progressIndicator;
 
-    public MergeInVideosTabView(Stage stage, boolean debug) {
+    public MergeInDirectoryTabView(Stage stage, boolean debug) {
         this.missingSettingsPane = new MissingSettingsPane();
         this.regularContentPane = new RegularContentPane(debug);
         this.progressIndicator = generateProgressIndicator();

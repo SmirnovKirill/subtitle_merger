@@ -8,10 +8,10 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
-import kirill.subtitlesmerger.gui.merge_files_tab.MergeFilesTabController;
-import kirill.subtitlesmerger.gui.merge_files_tab.MergeFilesTabView;
-import kirill.subtitlesmerger.gui.merge_in_videos_tab.MergeInVideosTabController;
-import kirill.subtitlesmerger.gui.merge_in_videos_tab.MergeInVideosTabView;
+import kirill.subtitlesmerger.gui.merge_single_files_tab.MergeSingleFilesTabController;
+import kirill.subtitlesmerger.gui.merge_single_files_tab.MergeSingleFilesTabView;
+import kirill.subtitlesmerger.gui.merge_in_directory_tab.MergeInDirectoryTabController;
+import kirill.subtitlesmerger.gui.merge_in_directory_tab.MergeInDirectoryTabView;
 import kirill.subtitlesmerger.gui.settings_tab.SettingsTabController;
 import kirill.subtitlesmerger.gui.settings_tab.SettingsTabView;
 import kirill.subtitlesmerger.logic.Constants;
@@ -84,28 +84,28 @@ public class GuiLauncher extends Application {
     }
 
     private void addMergeFilesTabViewAndController(TabPane mainPane, Stage stage, Config config) {
-        MergeFilesTabView tab = new MergeFilesTabView(stage, Constants.DEBUG);
+        MergeSingleFilesTabView tab = new MergeSingleFilesTabView(stage, Constants.DEBUG);
         mainPane.getTabs().add(tab.getTab());
 
-        MergeFilesTabController mergeFilesTabController = new MergeFilesTabController(tab, config);
-        mergeFilesTabController.initialize();
+        MergeSingleFilesTabController mergeSingleFilesTabController = new MergeSingleFilesTabController(tab, config);
+        mergeSingleFilesTabController.initialize();
 
-        tabControllers.add(mergeFilesTabController);
+        tabControllers.add(mergeSingleFilesTabController);
     }
 
     private void addMergeInVideosTabViewAndController(TabPane mainPane, Stage stage, Config config) {
-        MergeInVideosTabView tab = new MergeInVideosTabView(stage, Constants.DEBUG);
+        MergeInDirectoryTabView tab = new MergeInDirectoryTabView(stage, Constants.DEBUG);
         mainPane.getTabs().add(tab.getTab());
 
-        MergeInVideosTabController mergeInVideosTabController = new MergeInVideosTabController(
+        MergeInDirectoryTabController mergeInDirectoryTabController = new MergeInDirectoryTabController(
                 stage,
                 tab,
                 config,
                 this
         );
-        mergeInVideosTabController.initialize();
+        mergeInDirectoryTabController.initialize();
 
-        tabControllers.add(mergeInVideosTabController);
+        tabControllers.add(mergeInDirectoryTabController);
     }
 
     private void addSettingsTabViewAndController(TabPane mainPane, Stage stage, Config config) {

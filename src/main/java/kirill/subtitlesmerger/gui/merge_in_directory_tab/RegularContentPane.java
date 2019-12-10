@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.gui.merge_in_videos_tab;
+package kirill.subtitlesmerger.gui.merge_in_directory_tab;
 
 import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
@@ -162,7 +162,7 @@ class RegularContentPane {
         row.setSpacing(20);
         row.setAlignment(Pos.CENTER_LEFT);
 
-        Image image = new Image(MergeInVideosTabView.class.getResourceAsStream("/refresh.png"));
+        Image image = new Image(MergeInDirectoryTabView.class.getResourceAsStream("/refresh.png"));
         ImageView imageView = new ImageView(image);
         imageView.setFitHeight(16);
         imageView.setFitWidth(16);

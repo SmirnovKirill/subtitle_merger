@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.gui.merge_files_tab;
+package kirill.subtitlesmerger.gui.merge_single_files_tab;
 
 import javafx.event.ActionEvent;
 import kirill.subtitlesmerger.gui.TabController;
@@ -25,8 +25,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @CommonsLog
-public class MergeFilesTabController implements TabController {
-    private MergeFilesTabView tabView;
+public class MergeSingleFilesTabController implements TabController {
+    private MergeSingleFilesTabView tabView;
 
     private Config config;
 
@@ -40,7 +40,7 @@ public class MergeFilesTabController implements TabController {
 
     private IncorrectOutputFile incorrectOutputFile;
 
-    public MergeFilesTabController(MergeFilesTabView tabView, Config config) {
+    public MergeSingleFilesTabController(MergeSingleFilesTabView tabView, Config config) {
         this.tabView = tabView;
         this.config = config;
     }
@@ -58,20 +58,20 @@ public class MergeFilesTabController implements TabController {
     private void upperSubtitlesFileButtonClicked(ActionEvent event) {
         upperSubtitlesFile = tabView.getSelectedUpperSubtitlesFile().orElse(null);
 
-        redrawAfterFileChosen(MergeFilesTabView.FileType.UPPER_SUBTITLES);
+        redrawAfterFileChosen(MergeSingleFilesTabView.FileType.UPPER_SUBTITLES);
 
-        saveLastDirectoryInConfigIfNecessary(MergeFilesTabView.FileType.UPPER_SUBTITLES);
+        saveLastDirectoryInConfigIfNecessary(MergeSingleFilesTabView.FileType.UPPER_SUBTITLES);
         updateFileChoosers();
     }
 
-    private void redrawAfterFileChosen(MergeFilesTabView.FileType fileType) {
+    private void redrawAfterFileChosen(MergeSingleFilesTabView.FileType fileType) {
         tabView.removeErrorsAndResult();
         updatePathLabels(fileType);
         showErrorsIfNecessary();
         updateMergeButtonVisibility();
     }
 
-    private void updatePathLabels(MergeFilesTabView.FileType fileType) {
+    private void updatePathLabels(MergeSingleFilesTabView.FileType fileType) {
         switch (fileType) {
             case UPPER_SUBTITLES:
                 tabView.setUpperSubtitlesPathLabel(getPathLabelText(upperSubtitlesFile));
@@ -194,7 +194,7 @@ public class MergeFilesTabController implements TabController {
         tabView.setMergeButtonDisable(disable);
     }
 
-    private void saveLastDirectoryInConfigIfNecessary(MergeFilesTabView.FileType fileType) {
+    private void saveLastDirectoryInConfigIfNecessary(MergeSingleFilesTabView.FileType fileType) {
         try {
             switch (fileType) {
                 case UPPER_SUBTITLES:
@@ -249,9 +249,9 @@ public class MergeFilesTabController implements TabController {
     private void lowerSubtitlesFileButtonClicked(ActionEvent event) {
         lowerSubtitlesFile = tabView.getSelectedLowerSubtitlesFile().orElse(null);
 
-        redrawAfterFileChosen(MergeFilesTabView.FileType.LOWER_SUBTITLES);
+        redrawAfterFileChosen(MergeSingleFilesTabView.FileType.LOWER_SUBTITLES);
 
-        saveLastDirectoryInConfigIfNecessary(MergeFilesTabView.FileType.LOWER_SUBTITLES);
+        saveLastDirectoryInConfigIfNecessary(MergeSingleFilesTabView.FileType.LOWER_SUBTITLES);
         updateFileChoosers();
     }
 
@@ -261,9 +261,9 @@ public class MergeFilesTabController implements TabController {
             mergedSubtitlesFile = new File(mergedSubtitlesFile.getAbsolutePath() + ".srt");
         }
 
-        redrawAfterFileChosen(MergeFilesTabView.FileType.MERGED_SUBTITLES);
+        redrawAfterFileChosen(MergeSingleFilesTabView.FileType.MERGED_SUBTITLES);
 
-        saveLastDirectoryInConfigIfNecessary(MergeFilesTabView.FileType.MERGED_SUBTITLES);
+        saveLastDirectoryInConfigIfNecessary(MergeSingleFilesTabView.FileType.MERGED_SUBTITLES);
         updateFileChoosers();
     }
 
