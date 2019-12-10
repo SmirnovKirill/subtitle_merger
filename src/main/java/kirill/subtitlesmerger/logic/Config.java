@@ -1,7 +1,6 @@
-package kirill.subtitlesmerger.logic.merge_in_videos;
+package kirill.subtitlesmerger.logic;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
-import kirill.subtitlesmerger.logic.Constants;
 import kirill.subtitlesmerger.logic.merge_in_videos.ffmpeg.Ffmpeg;
 import kirill.subtitlesmerger.logic.merge_in_videos.ffmpeg.FfmpegException;
 import kirill.subtitlesmerger.logic.merge_in_videos.ffmpeg.Ffprobe;

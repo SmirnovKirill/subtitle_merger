@@ -6,7 +6,7 @@ import kirill.subtitlesmerger.gui.TabView;
 import kirill.subtitlesmerger.logic.Constants;
 import kirill.subtitlesmerger.logic.core.Merger;
 import kirill.subtitlesmerger.logic.core.Parser;
-import kirill.subtitlesmerger.logic.merge_in_videos.Config;
+import kirill.subtitlesmerger.logic.Config;
 import kirill.subtitlesmerger.logic.core.entities.Subtitles;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

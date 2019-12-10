@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.logic.merge_in_videos;
+package kirill.subtitlesmerger.logic.merge_in_videos.entities;
 
 import java.util.Optional;
 

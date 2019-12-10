@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class Constants {
-    public static final String PREFERENCES_ROOT_NODE = "subtitlesmerger";
+    static final String PREFERENCES_ROOT_NODE = "subtitlesmerger";
 
     public static final List<String> ALLOWED_VIDEO_EXTENSIONS = Collections.singletonList("mkv");
 
