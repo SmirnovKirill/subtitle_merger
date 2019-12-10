@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.logic.merge_in_videos.ffmpeg;
+package kirill.subtitlesmerger.logic.merge_in_files.ffmpeg;
 
 import org.apache.commons.io.IOUtils;
 

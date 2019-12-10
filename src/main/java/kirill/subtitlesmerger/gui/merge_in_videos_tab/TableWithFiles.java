@@ -7,7 +7,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import kirill.subtitlesmerger.logic.merge_in_videos.entities.BriefFileInfo;
+import kirill.subtitlesmerger.logic.merge_in_files.entities.BriefFileInfo;
 import org.apache.commons.collections4.CollectionUtils;
 import org.joda.time.LocalDateTime;
 import org.joda.time.format.DateTimeFormat;

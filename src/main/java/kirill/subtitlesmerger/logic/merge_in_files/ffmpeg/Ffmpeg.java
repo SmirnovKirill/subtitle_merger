@@ -1,9 +1,8 @@
-package kirill.subtitlesmerger.logic.merge_in_videos.ffmpeg;
+package kirill.subtitlesmerger.logic.merge_in_files.ffmpeg;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlesmerger.logic.core.entities.Subtitles;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -88,7 +87,9 @@ public class Ffmpeg {
      */
     public synchronized void injectSubtitlesToFile(
             Subtitles subtitles,
-            int subtitlesStreamsAmount,
+            String title,
+            LanguageAlpha3Code mainLanguage,
+            int subtitleStreamsAmount,
             File videoFile
     ) throws FfmpegException {
         /*
@@ -105,19 +106,15 @@ public class Ffmpeg {
             throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
         }
 
-        LanguageAlpha3Code language = null;
-        if (!CollectionUtils.isEmpty(subtitles.getLanguages())) {
-            language = subtitles.getLanguages().get(0);
-        }
-
         try {
             try {
                 ProcessRunner.run(
                         getArgumentsInjectToFile(
+                                title,
+                                mainLanguage,
+                                subtitleStreamsAmount,
                                 videoFile,
-                                outputTemp,
-                                subtitlesStreamsAmount,
-                                language
+                                outputTemp
                         )
                 );
             } catch (ProcessException e) {
@@ -139,10 +136,11 @@ public class Ffmpeg {
     }
 
     private List<String> getArgumentsInjectToFile(
+            String title,
+            LanguageAlpha3Code mainLanguage,
+            int subtitleStreamsAmount,
             File videoFile,
-            File outputTemp,
-            int subtitlesStreamsAmount,
-            LanguageAlpha3Code language
+            File outputTemp
     ) {
         List<String> result = new ArrayList<>();
 
@@ -166,11 +164,12 @@ public class Ffmpeg {
          */
         result.addAll(Arrays.asList("-max_interleave_delta", "0"));
 
-        if (language != null) {
-            result.addAll(Arrays.asList("-metadata:s:s:" + subtitlesStreamsAmount, "language=" + language.toString()));
+        if (mainLanguage != null) {
+            result.addAll(Arrays.asList("-metadata:s:s:" + subtitleStreamsAmount, "language=" + mainLanguage));
         }
-        result.addAll(Arrays.asList("-metadata:s:s:" + subtitlesStreamsAmount, "title=Merged subtitles"));
-        result.addAll(Arrays.asList("-disposition:s:" + subtitlesStreamsAmount, "default"));
+
+        result.addAll(Arrays.asList("-metadata:s:s:" + subtitleStreamsAmount, "title=" + title));
+        result.addAll(Arrays.asList("-disposition:s:" + subtitleStreamsAmount, "default"));
         result.addAll(Arrays.asList("-map", "0"));
         result.addAll(Arrays.asList("-map", "1"));
         result.add(outputTemp.getAbsolutePath());

@@ -1,9 +1,9 @@
 package kirill.subtitlesmerger.logic;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
-import kirill.subtitlesmerger.logic.merge_in_videos.ffmpeg.Ffmpeg;
-import kirill.subtitlesmerger.logic.merge_in_videos.ffmpeg.FfmpegException;
-import kirill.subtitlesmerger.logic.merge_in_videos.ffmpeg.Ffprobe;
+import kirill.subtitlesmerger.logic.merge_in_files.ffmpeg.Ffmpeg;
+import kirill.subtitlesmerger.logic.merge_in_files.ffmpeg.FfmpegException;
+import kirill.subtitlesmerger.logic.merge_in_files.ffmpeg.Ffprobe;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;

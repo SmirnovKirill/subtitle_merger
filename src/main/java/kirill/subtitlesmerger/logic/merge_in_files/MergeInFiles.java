@@ -1,15 +1,16 @@
-package kirill.subtitlesmerger.logic.merge_in_videos;
+package kirill.subtitlesmerger.logic.merge_in_files;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlesmerger.logic.core.Merger;
 import kirill.subtitlesmerger.logic.core.Parser;
+import kirill.subtitlesmerger.logic.core.Writer;
 import kirill.subtitlesmerger.logic.core.entities.Subtitles;
-import kirill.subtitlesmerger.logic.merge_in_videos.entities.*;
-import kirill.subtitlesmerger.logic.merge_in_videos.ffmpeg.Ffmpeg;
-import kirill.subtitlesmerger.logic.merge_in_videos.ffmpeg.FfmpegException;
-import kirill.subtitlesmerger.logic.merge_in_videos.ffmpeg.Ffprobe;
-import kirill.subtitlesmerger.logic.merge_in_videos.ffmpeg.json.JsonFfprobeFileInfo;
-import kirill.subtitlesmerger.logic.merge_in_videos.ffmpeg.json.JsonStream;
+import kirill.subtitlesmerger.logic.merge_in_files.entities.*;
+import kirill.subtitlesmerger.logic.merge_in_files.ffmpeg.Ffmpeg;
+import kirill.subtitlesmerger.logic.merge_in_files.ffmpeg.FfmpegException;
+import kirill.subtitlesmerger.logic.merge_in_files.ffmpeg.Ffprobe;
+import kirill.subtitlesmerger.logic.merge_in_files.ffmpeg.json.JsonFfprobeFileInfo;
+import kirill.subtitlesmerger.logic.merge_in_files.ffmpeg.json.JsonStream;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
@@ -21,52 +22,15 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-import static kirill.subtitlesmerger.logic.merge_in_videos.entities.BriefFileInfo.UnavailabilityReason.*;
+import static kirill.subtitlesmerger.logic.merge_in_files.entities.BriefFileInfo.UnavailabilityReason.*;
 
 @CommonsLog
-public class MergeInVideos {
-    public static List<BriefFileInfo> getBriefFileInfos(
-            File directory,
-            List<String> allowedVideoExtensions,
-            List<String> allowedVideoMimeTypes,
-            Ffprobe ffprobe
-    ) {
-        File[] directoryFiles = getDirectoryFiles(directory);
-
-        List<BriefFileInfo> result = new ArrayList<>();
-
-        for (File file : directoryFiles) {
-            if (!file.isFile()) {
-                continue;
-            }
-
-            result.add(getBriefFileInfo(file, allowedVideoExtensions, allowedVideoMimeTypes, ffprobe));
-        }
-
-        return result;
-    }
-
-    private static File[] getDirectoryFiles(File directory) {
-        if (!directory.isDirectory()) {
-            log.error("passed file is not a directory: " + directory.getAbsolutePath());
-            throw new IllegalArgumentException();
-        }
-
-        File[] result = directory.listFiles();
-        if (result == null) {
-            log.error("failed to get directory files, directory " + directory.getAbsolutePath());
-            throw new IllegalArgumentException();
-        }
-
-        return result;
-    }
-
-    private static BriefFileInfo getBriefFileInfo(
+public class MergeInFiles {
+    public static BriefFileInfo getBriefFileInfo(
             File file,
             List<String> allowedVideoExtensions,
             List<String> allowedVideoMimeTypes,
@@ -186,66 +150,20 @@ public class MergeInVideos {
         return Optional.ofNullable(stream.getTags().get("title"));
     }
 
-    private static void main() {
-        System.out.println("got brief files info");
-
-        List<FullFileInfo> fullFilesInfo = new ArrayList<>();
-        for (int i = 0; i < briefFilesInfo.size(); i++) {
-            BriefFileInfo briefFileInfo = briefFilesInfo.get(i);
-
-            System.out.println(
-                    "start processing file " + briefFileInfo.getFile().getAbsolutePath() + ", "
-                            + (i + 1) + "/" + briefFilesInfo.size()
-            );
-
-            fullFilesInfo.add(getFullFileInfo(briefFileInfo, ffmpeg));
-        }
-
-        System.out.println("start injecting subtitles");
-        for (int i = 0; i < fullFilesInfo.size(); i++) {
-            FullFileInfo fullFileInfo = fullFilesInfo.get(i);
-
-            System.out.println("start processing file " + fullFileInfo.getBriefInfo().getFile().getAbsolutePath() + ", "
-                    + (i + 1) + "/" + fullFilesInfo.size()
-            );
-
-            Subtitles merged = fullFileInfo.getMerged(config).orElse(null);
-            if (merged == null) {
-                System.out.println("no merged subtitles");
-            } else {
-                try {
-                    ffmpeg.injectSubtitlesToFile(
-                            merged,
-                            fullFileInfo.getSubtitlesStreams().size(),
-                            fullFileInfo.getBriefInfo().getFile()
-                    );
-                } catch (FfmpegException e) {
-                    if (e.getCode() == FfmpegException.Code.FAILED_TO_MOVE_TEMP_VIDEO) {
-                        System.out.println("failed to move temp file for "
-                                + fullFileInfo.getBriefInfo().getFile().getAbsolutePath()
-                        );
-                    } else {
-                        throw e;
-                    }
-                }
-            }
-        }
-    }
-
-    private static FullFileInfo getFullFileInfo(BriefFileInfo briefFileInfo, Ffmpeg ffmpeg) {
-        if (briefFileInfo.getUnavailabilityReason() != null) {
+    public static FullFileInfo getFullFileInfo(BriefFileInfo briefInfo, Ffmpeg ffmpeg) {
+        if (briefInfo.getUnavailabilityReason() != null) {
             return new FullFileInfo(
-                    briefFileInfo,
+                    briefInfo,
                     FullFileInfo.UnavailabilityReason.FAILED_BEFORE,
-                    wrap(briefFileInfo.getSubtitlesStreams())
+                    wrap(briefInfo.getSubtitlesStreams())
             );
         }
 
         try {
             List<FullSubtitlesStreamInfo> allSubtitles = new ArrayList<>();
 
-            for (BriefSubtitlesStreamInfo briefSubtitlesStream : briefFileInfo.getSubtitlesStreams()) {
-                if (briefFileInfo.getUnavailabilityReason() != null) {
+            for (BriefSubtitlesStreamInfo briefSubtitlesStream : briefInfo.getSubtitlesStreams()) {
+                if (briefInfo.getUnavailabilityReason() != null) {
                     allSubtitles.add(
                             new FullSubtitlesStreamInfo(
                                     briefSubtitlesStream,
@@ -258,7 +176,7 @@ public class MergeInVideos {
                     continue;
                 }
 
-                String subtitlesText = ffmpeg.getSubtitlesText(briefSubtitlesStream.getIndex(), briefFileInfo.getFile());
+                String subtitlesText = ffmpeg.getSubtitlesText(briefSubtitlesStream.getIndex(), briefInfo.getFile());
                 allSubtitles.add(
                         new FullSubtitlesStreamInfo(
                                 briefSubtitlesStream,
@@ -272,29 +190,28 @@ public class MergeInVideos {
                 );
             }
 
-            return new FullFileInfo(briefFileInfo, null, allSubtitles);
+            return new FullFileInfo(briefInfo, null, allSubtitles);
         } catch (FfmpegException | Parser.IncorrectFormatException e) {
             return new FullFileInfo(
-                    briefFileInfo,
+                    briefInfo,
                     FullFileInfo.UnavailabilityReason.FFMPEG_FAILED,
-                    wrap(briefFileInfo.getSubtitlesStreams())
+                    wrap(briefInfo.getSubtitlesStreams())
             );
         }
     }
 
-    private static List<FullSubtitlesStreamInfo> wrap(List<BriefSubtitlesStreamInfo> briefSubtitlesStreams) {
-        if (briefSubtitlesStreams == null) {
+    private static List<FullSubtitlesStreamInfo> wrap(List<BriefSubtitlesStreamInfo> briefInfos) {
+        if (briefInfos == null) {
             return null;
         }
 
         List<FullSubtitlesStreamInfo> result = new ArrayList<>();
 
-        for (BriefSubtitlesStreamInfo briefSubtitlesStream
-                : briefSubtitlesStreams) {
+        for (BriefSubtitlesStreamInfo briefInfo : briefInfos) {
             result.add(
                     new FullSubtitlesStreamInfo(
-                            briefSubtitlesStream,
-                            briefSubtitlesStream.getUnavailabilityReason() != null
+                            briefInfo,
+                            briefInfo.getUnavailabilityReason() != null
                                     ? FullSubtitlesStreamInfo.UnavailabilityReason.FAILED_BEFORE
                                     : null,
                             null
@@ -304,41 +221,75 @@ public class MergeInVideos {
         return result;
     }
 
-    public Optional<Subtitles> getMerged(Config config) {
-        if (unavailabilityReason != null || CollectionUtils.isEmpty(subtitlesStreams)) {
-            return Optional.empty();
-        }
+    public static void mergeAndInjectSubtitlesToFile(
+            Subtitles upperSubtitles,
+            Subtitles lowerSubtitles,
+            FullFileInfo fullFileInfo,
+            Ffmpeg ffmpeg
+    ) throws SubtitlesAlreadyInjectedException, FfmpegException {
+        Subtitles result = Merger.mergeSubtitles(upperSubtitles, lowerSubtitles);
+        checkForDuplicates(result, fullFileInfo);
 
-        List<FullSubtitlesStreamInfo> streamsUpperLanguage = subtitlesStreams.stream()
-                .filter(subtitles -> subtitles.getUnavailabilityReason() == null)
-                .filter(subtitles -> subtitles.getBriefInfo().getLanguage() == config.getUpperLanguage())
-                .collect(Collectors.toList());
+        LanguageAlpha3Code mainLanguage = getMergedSubtitlesMainLanguage(upperSubtitles, lowerSubtitles);
+        String title = getMergedSubtitlesTitle(upperSubtitles, lowerSubtitles);
 
-        List<FullSubtitlesStreamInfo> streamsLowerLanguage = subtitlesStreams.stream()
-                .filter(subtitles -> subtitles.getUnavailabilityReason() == null)
-                .filter(subtitles -> subtitles.getBriefInfo().getLanguage() == config.getLowerLanguage())
-                .collect(Collectors.toList());
-
-        if (CollectionUtils.isEmpty(streamsUpperLanguage) || CollectionUtils.isEmpty(streamsLowerLanguage)) {
-            return Optional.empty();
-        }
-
-        streamsUpperLanguage.sort(
-                Comparator.comparing((FullSubtitlesStreamInfo stream) -> stream.getSubtitles().toString().length())
-                        .reversed()
-        );
-
-        streamsLowerLanguage.sort(
-                Comparator.comparing((FullSubtitlesStreamInfo stream) -> stream.getSubtitles().toString().length())
-                        .reversed()
-        );
-
-        return Optional.of(
-                Merger.mergeSubtitles(
-                        streamsUpperLanguage.get(0).getSubtitles(),
-                        streamsLowerLanguage.get(0).getSubtitles()
-                )
+        ffmpeg.injectSubtitlesToFile(
+                result,
+                title,
+                mainLanguage,
+                fullFileInfo.getSubtitlesStreams().size(),
+                fullFileInfo.getBriefInfo().getFile()
         );
     }
 
+    private static LanguageAlpha3Code getMergedSubtitlesMainLanguage(
+            Subtitles upperSubtitles,
+            Subtitles lowerSubtitles
+    ) {
+        if (!CollectionUtils.isEmpty(upperSubtitles.getLanguages())) {
+           return upperSubtitles.getLanguages().get(0);
+        } else if (!CollectionUtils.isEmpty(lowerSubtitles.getLanguages())) {
+            return lowerSubtitles.getLanguages().get(0);
+        } else {
+            return null;
+        }
+    }
+
+    private static String getMergedSubtitlesTitle(Subtitles upperSubtitles, Subtitles lowerSubtitles) {
+        String result = "Merged subtitles ";
+
+        if (!CollectionUtils.isEmpty(upperSubtitles.getLanguages())) {
+            result += StringUtils.join(upperSubtitles.getLanguages(), '-');
+        } else {
+            result += "file";
+        }
+
+        result += '-';
+
+        if (!CollectionUtils.isEmpty(lowerSubtitles.getLanguages())) {
+            result += StringUtils.join(lowerSubtitles.getLanguages(), '-');
+        } else {
+            result += "file";
+        }
+
+        return result;
+    }
+
+    private static void checkForDuplicates(
+            Subtitles result,
+            FullFileInfo fullFileInfo
+    ) throws SubtitlesAlreadyInjectedException {
+        String resultText = Writer.toSubRipText(result);
+
+        if (!CollectionUtils.isEmpty(fullFileInfo.getSubtitlesStreams())) {
+            for (FullSubtitlesStreamInfo streamInfo : fullFileInfo.getSubtitlesStreams()) {
+                if (Objects.equals(Writer.toSubRipText(streamInfo.getSubtitles()), resultText)) {
+                    throw new SubtitlesAlreadyInjectedException();
+                }
+            }
+        }
+    }
+
+    public static class SubtitlesAlreadyInjectedException extends Exception {
+    }
 }

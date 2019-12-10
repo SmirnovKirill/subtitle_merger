@@ -1,7 +1,5 @@
-package kirill.subtitlesmerger.logic.merge_in_videos.entities;
+package kirill.subtitlesmerger.logic.merge_in_files.entities;
 
-import kirill.subtitlesmerger.logic.merge_in_videos.entities.BriefFileInfo;
-import kirill.subtitlesmerger.logic.merge_in_videos.entities.FullSubtitlesStreamInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

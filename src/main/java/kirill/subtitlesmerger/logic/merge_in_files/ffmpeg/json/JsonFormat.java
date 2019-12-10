@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.logic.merge_in_videos.ffmpeg.json;
+package kirill.subtitlesmerger.logic.merge_in_files.ffmpeg.json;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
