@@ -162,17 +162,23 @@ class RegularContentPane {
         row.setSpacing(20);
         row.setAlignment(Pos.CENTER_LEFT);
 
-        Image image = new Image(MergeInDirectoryTabView.class.getResourceAsStream("/refresh.png"));
-        ImageView imageView = new ImageView(image);
-        imageView.setFitHeight(16);
-        imageView.setFitWidth(16);
-        imageView.setSmooth(true);
+        Image refreshImage = new Image(MergeInDirectoryTabView.class.getResourceAsStream("/refresh.png"));
+        ImageView refreshImageView = new ImageView(refreshImage);
+        refreshImageView.setFitHeight(16);
+        refreshImageView.setFitWidth(16);
+        Button refreshButton = new Button("Refresh", refreshImageView);
 
-        Button refreshButton = new Button("Refresh", imageView);
+        Image getImage = new Image(MergeInDirectoryTabView.class.getResourceAsStream("/get.png"));
+        ImageView getImageView = new ImageView(getImage);
+        getImageView.setFitHeight(16);
+        getImageView.setFitWidth(16);
+        Button getSubtitleSizesButton = new Button("Get subtitle sizes", getImageView);
 
-        Button getSubtitleSizesButton = new Button("Get subtitle sizes");
-
-        Button injectSubtitlesButton = new Button("Inject subtitles");
+        Image processImage = new Image(MergeInDirectoryTabView.class.getResourceAsStream("/process.png"));
+        ImageView processImageView = new ImageView(processImage);
+        processImageView.setFitHeight(16);
+        processImageView.setFitWidth(16);
+        Button injectSubtitlesButton = new Button("Inject subtitles", processImageView);
 
         row.getChildren().addAll(showOnlyValidCheckBox, refreshButton, getSubtitleSizesButton, injectSubtitlesButton);
 

@@ -108,7 +108,6 @@ public class SettingsTabView implements TabView {
         ImageView imageView = new ImageView(image);
         imageView.setFitHeight(24);
         imageView.setFitWidth(24);
-        imageView.setSmooth(true);
 
         Button result = new Button("", imageView);
 
@@ -153,7 +152,6 @@ public class SettingsTabView implements TabView {
 
         result.setFitHeight(16);
         result.setFitWidth(16);
-        result.setSmooth(true);
 
         return result;
     }
@@ -293,7 +291,6 @@ public class SettingsTabView implements TabView {
         ImageView imageView = new ImageView(result);
         imageView.setFitHeight(16);
         imageView.setFitWidth(16);
-        imageView.setSmooth(true);
 
         return imageView;
     }

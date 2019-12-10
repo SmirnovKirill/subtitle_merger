@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static kirill.subtitlesmerger.logic.work_with_files.entities.BriefFileInfo.UnavailabilityReason.*;
-import static kirill.subtitlesmerger.logic.work_with_files.entities.BriefFileInfo.UnavailabilityReason.NOT_ALLOWED_CONTAINER;
 
 @CommonsLog
 public class FileInfoGetter {
