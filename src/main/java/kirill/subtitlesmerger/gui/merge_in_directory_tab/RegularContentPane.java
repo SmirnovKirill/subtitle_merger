@@ -211,8 +211,8 @@ class RegularContentPane {
         directoryPathLabel.setText(text);
     }
 
-    void setFiles(List<FileInfo> briefFilesInfo) {
-        tableWithFiles.setFiles(briefFilesInfo);
+    void showFiles(List<FileInfo> filesInfo) {
+        tableWithFiles.showFiles(filesInfo);
     }
 
     void hide() {

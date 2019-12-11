@@ -3,6 +3,7 @@ package kirill.subtitlesmerger.gui.merge_single_files_tab;
 import javafx.event.ActionEvent;
 import kirill.subtitlesmerger.gui.TabController;
 import kirill.subtitlesmerger.gui.TabView;
+import kirill.subtitlesmerger.logic.AppContext;
 import kirill.subtitlesmerger.logic.Constants;
 import kirill.subtitlesmerger.logic.core.Merger;
 import kirill.subtitlesmerger.logic.core.Parser;
@@ -28,7 +29,7 @@ import java.util.stream.Collectors;
 public class MergeSingleFilesTabController implements TabController {
     private MergeSingleFilesTabView tabView;
 
-    private Config config;
+    private AppContext appContext;
 
     private File upperSubtitlesFile;
 
@@ -40,9 +41,9 @@ public class MergeSingleFilesTabController implements TabController {
 
     private IncorrectOutputFile incorrectOutputFile;
 
-    public MergeSingleFilesTabController(MergeSingleFilesTabView tabView, Config config) {
+    public MergeSingleFilesTabController(MergeSingleFilesTabView tabView, AppContext appContext) {
         this.tabView = tabView;
-        this.config = config;
+        this.appContext = appContext;
     }
 
     @Override
@@ -199,17 +200,17 @@ public class MergeSingleFilesTabController implements TabController {
             switch (fileType) {
                 case UPPER_SUBTITLES:
                     if (upperSubtitlesFile != null) {
-                        config.saveUpperSubtitlesLastDirectory(upperSubtitlesFile.getParent());
+                        appContext.getConfig().saveUpperSubtitlesLastDirectory(upperSubtitlesFile.getParent());
                     }
                     break;
                 case LOWER_SUBTITLES:
                     if (lowerSubtitlesFile != null) {
-                        config.saveLowerSubtitlesLastDirectory(lowerSubtitlesFile.getParent());
+                        appContext.getConfig().saveLowerSubtitlesLastDirectory(lowerSubtitlesFile.getParent());
                     }
                     break;
                 case MERGED_SUBTITLES:
                     if (mergedSubtitlesFile != null) {
-                        config.saveMergedSubtitlesLastDirectory(mergedSubtitlesFile.getParent());
+                        appContext.getConfig().saveMergedSubtitlesLastDirectory(mergedSubtitlesFile.getParent());
                     }
                     break;
                 default:
@@ -222,21 +223,21 @@ public class MergeSingleFilesTabController implements TabController {
 
     private void updateFileChoosers() {
         File upperSubtitlesDirectory = ObjectUtils.firstNonNull(
-                config.getUpperSubtitlesLastDirectory(),
-                config.getLowerSubtitlesLastDirectory(),
-                config.getMergedSubtitlesLastDirectory()
+                appContext.getConfig().getUpperSubtitlesLastDirectory(),
+                appContext.getConfig().getLowerSubtitlesLastDirectory(),
+                appContext.getConfig().getMergedSubtitlesLastDirectory()
         );
 
         File lowerSubtitlesDirectory = ObjectUtils.firstNonNull(
-                config.getLowerSubtitlesLastDirectory(),
-                config.getUpperSubtitlesLastDirectory(),
-                config.getMergedSubtitlesLastDirectory()
+                appContext.getConfig().getLowerSubtitlesLastDirectory(),
+                appContext.getConfig().getUpperSubtitlesLastDirectory(),
+                appContext.getConfig().getMergedSubtitlesLastDirectory()
         );
 
         File mergedSubtitlesDirectory = ObjectUtils.firstNonNull(
-                config.getMergedSubtitlesLastDirectory(),
-                config.getUpperSubtitlesLastDirectory(),
-                config.getLowerSubtitlesLastDirectory()
+                appContext.getConfig().getMergedSubtitlesLastDirectory(),
+                appContext.getConfig().getUpperSubtitlesLastDirectory(),
+                appContext.getConfig().getLowerSubtitlesLastDirectory()
         );
 
         tabView.updateFileChooserInitialDirectories(

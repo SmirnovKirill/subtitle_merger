@@ -14,6 +14,7 @@ import kirill.subtitlesmerger.gui.merge_single_files_tab.MergeSingleFilesTabCont
 import kirill.subtitlesmerger.gui.merge_single_files_tab.MergeSingleFilesTabView;
 import kirill.subtitlesmerger.gui.settings_tab.SettingsTabController;
 import kirill.subtitlesmerger.gui.settings_tab.SettingsTabView;
+import kirill.subtitlesmerger.logic.AppContext;
 import kirill.subtitlesmerger.logic.Config;
 import kirill.subtitlesmerger.logic.Constants;
 import lombok.extern.apachecommons.CommonsLog;
@@ -44,9 +45,9 @@ public class GuiLauncher extends Application {
     public void start(Stage stage) {
         this.tabControllers = new ArrayList<>();
 
-        Config config = new Config();
+        AppContext appContext = new AppContext();
 
-        mainPane = generateMainPane(stage, config);
+        mainPane = generateMainPane(stage, appContext);
 
         Scene scene = new Scene(mainPane);
         scene.getStylesheets().add("style.css");
@@ -63,7 +64,7 @@ public class GuiLauncher extends Application {
         stage.setMinHeight(stage.getHeight());
     }
 
-    private TabPane generateMainPane(Stage stage, Config config) {
+    private TabPane generateMainPane(Stage stage, AppContext appContext) {
         TabPane result = new TabPane();
 
         result.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
@@ -74,33 +75,33 @@ public class GuiLauncher extends Application {
         result.setPrefHeight(480);
         result.setMinHeight(result.getPrefHeight());
 
-        addMergeFilesTabViewAndController(result, stage, config);
-        addMergeInVideosTabViewAndController(result, stage, config);
-        addSettingsTabViewAndController(result, stage, config);
+        addMergeFilesTabViewAndController(result, stage, appContext);
+        addMergeInVideosTabViewAndController(result, stage, appContext);
+        addSettingsTabViewAndController(result, stage, appContext);
 
         result.getSelectionModel().selectedItemProperty().addListener(this::tabChangedListener);
 
         return result;
     }
 
-    private void addMergeFilesTabViewAndController(TabPane mainPane, Stage stage, Config config) {
+    private void addMergeFilesTabViewAndController(TabPane mainPane, Stage stage, AppContext appContext) {
         MergeSingleFilesTabView tab = new MergeSingleFilesTabView(stage, Constants.DEBUG);
         mainPane.getTabs().add(tab.getTab());
 
-        MergeSingleFilesTabController mergeSingleFilesTabController = new MergeSingleFilesTabController(tab, config);
+        MergeSingleFilesTabController mergeSingleFilesTabController = new MergeSingleFilesTabController(tab, appContext);
         mergeSingleFilesTabController.initialize();
 
         tabControllers.add(mergeSingleFilesTabController);
     }
 
-    private void addMergeInVideosTabViewAndController(TabPane mainPane, Stage stage, Config config) {
+    private void addMergeInVideosTabViewAndController(TabPane mainPane, Stage stage, AppContext appContext) {
         MergeInDirectoryTabView tab = new MergeInDirectoryTabView(stage, Constants.DEBUG);
         mainPane.getTabs().add(tab.getTab());
 
         MergeInDirectoryTabController mergeInDirectoryTabController = new MergeInDirectoryTabController(
                 stage,
                 tab,
-                config,
+                appContext,
                 this
         );
         mergeInDirectoryTabController.initialize();
@@ -108,11 +109,11 @@ public class GuiLauncher extends Application {
         tabControllers.add(mergeInDirectoryTabController);
     }
 
-    private void addSettingsTabViewAndController(TabPane mainPane, Stage stage, Config config) {
+    private void addSettingsTabViewAndController(TabPane mainPane, Stage stage, AppContext appContext) {
         SettingsTabView tab = new SettingsTabView(stage, Constants.DEBUG);
         mainPane.getTabs().add(tab.getTab());
 
-        SettingsTabController settingsTabController = new SettingsTabController(tab, config);
+        SettingsTabController settingsTabController = new SettingsTabController(tab, appContext);
         settingsTabController.initialize();
 
         tabControllers.add(settingsTabController);

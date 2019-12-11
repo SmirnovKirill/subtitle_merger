@@ -5,7 +5,11 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import kirill.subtitlesmerger.gui.TabController;
 import kirill.subtitlesmerger.gui.TabView;
+import kirill.subtitlesmerger.logic.AppContext;
 import kirill.subtitlesmerger.logic.Config;
+import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.Ffmpeg;
+import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.FfmpegException;
+import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.Ffprobe;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -20,13 +24,13 @@ import java.util.stream.Collectors;
 public class SettingsTabController implements TabController {
     private SettingsTabView tabView;
 
-    private Config config;
+    private AppContext appContext;
 
     private List<LanguageAlpha3Code> allLanguageCodes;
 
-    public SettingsTabController(SettingsTabView tabView, Config config) {
+    public SettingsTabController(SettingsTabView tabView, AppContext appContext) {
         this.tabView = tabView;
-        this.config = config;
+        this.appContext = appContext;
         this.allLanguageCodes = getAllLanguageCodes();
     }
 
@@ -57,15 +61,16 @@ public class SettingsTabController implements TabController {
             return;
         }
 
-        if (Objects.equals(ffprobeFile, config.getFfprobeFile())) {
+        if (Objects.equals(ffprobeFile, appContext.getConfig().getFfprobeFile())) {
             tabView.showSuccessMessage("path to ffprobe has stayed the same");
             return;
         }
 
-        boolean hadValueBefore = config.getFfmpegFile() != null;
+        boolean hadValueBefore = appContext.getConfig().getFfmpegFile() != null;
 
         try {
-            config.saveFfprobeFile(ffprobeFile.getAbsolutePath());
+            appContext.getConfig().saveFfprobeFile(ffprobeFile.getAbsolutePath());
+            appContext.setFfprobe(new Ffprobe(appContext.getConfig().getFfprobeFile()));
             updateFileChoosersAndFields();
 
             if (hadValueBefore) {
@@ -73,14 +78,14 @@ public class SettingsTabController implements TabController {
             } else {
                 tabView.showSuccessMessage("path to ffprobe has been saved successfully");
             }
-        } catch (Config.ConfigException e) {
+        } catch (Config.ConfigException | FfmpegException e) {
             tabView.showErrorMessage("incorrect path to ffprobe");
         }
     }
 
     private void updateFileChoosersAndFields() {
-        File ffprobeFile = config.getFfprobeFile();
-        File ffmpegFile = config.getFfmpegFile();
+        File ffprobeFile = appContext.getConfig().getFfprobeFile();
+        File ffmpegFile = appContext.getConfig().getFfmpegFile();
 
         if (ffprobeFile != null) {
             tabView.updateFfprobeInfo(
@@ -114,17 +119,19 @@ public class SettingsTabController implements TabController {
             );
         }
 
-        LanguageAlpha3Code upperLanguage = config.getUpperLanguage();
+        LanguageAlpha3Code upperLanguage = appContext.getConfig().getUpperLanguage();
         if (upperLanguage != null) {
             tabView.setSelectedUpperLanguage(upperLanguage);
         }
 
-        LanguageAlpha3Code lowerLanguage = config.getLowerLanguage();
+        LanguageAlpha3Code lowerLanguage = appContext.getConfig().getLowerLanguage();
         if (lowerLanguage != null) {
             tabView.setSelectedLowerLanguage(lowerLanguage);
         }
 
-        tabView.setSwapLanguagesButtonDisable(config.getUpperLanguage() == null || config.getLowerLanguage() == null);
+        tabView.setSwapLanguagesButtonDisable(
+                appContext.getConfig().getUpperLanguage() == null || appContext.getConfig().getLowerLanguage() == null
+        );
     }
 
     private void ffmpegFileButtonClicked(ActionEvent event) {
@@ -134,15 +141,16 @@ public class SettingsTabController implements TabController {
             return;
         }
 
-        if (Objects.equals(ffmpegFile, config.getFfmpegFile())) {
+        if (Objects.equals(ffmpegFile, appContext.getConfig().getFfmpegFile())) {
             tabView.showSuccessMessage("path to ffmpeg has stayed the same");
             return;
         }
 
-        boolean hadValueBefore = config.getFfmpegFile() != null;
+        boolean hadValueBefore = appContext.getConfig().getFfmpegFile() != null;
 
         try {
-            config.saveFfmpegFile(ffmpegFile.getAbsolutePath());
+            appContext.getConfig().saveFfmpegFile(ffmpegFile.getAbsolutePath());
+            appContext.setFfmpeg(new Ffmpeg(appContext.getConfig().getFfmpegFile()));
             updateFileChoosersAndFields();
 
             if (hadValueBefore) {
@@ -150,7 +158,7 @@ public class SettingsTabController implements TabController {
             } else {
                 tabView.showSuccessMessage("path to ffmpeg has been saved successfully");
             }
-        } catch (Config.ConfigException e) {
+        } catch (Config.ConfigException | FfmpegException e) {
             tabView.showErrorMessage("incorrect path to ffmpeg");
         }
     }
@@ -160,20 +168,20 @@ public class SettingsTabController implements TabController {
             LanguageAlpha3Code oldValue,
             LanguageAlpha3Code newValue
     ) {
-        if (Objects.equals(newValue, config.getUpperLanguage())) {
+        if (Objects.equals(newValue, appContext.getConfig().getUpperLanguage())) {
             return;
         }
 
-        if (Objects.equals(newValue, config.getLowerLanguage())) {
+        if (Objects.equals(newValue, appContext.getConfig().getLowerLanguage())) {
             updateFileChoosersAndFields();
             tabView.showErrorMessage("languages have to be different, please select another one");
             return;
         }
 
-        boolean hadValueBefore = config.getUpperLanguage() != null;
+        boolean hadValueBefore = appContext.getConfig().getUpperLanguage() != null;
 
         try {
-            config.saveUpperLanguage(newValue.toString());
+            appContext.getConfig().saveUpperLanguage(newValue.toString());
             updateFileChoosersAndFields();
 
             if (hadValueBefore) {
@@ -189,12 +197,12 @@ public class SettingsTabController implements TabController {
     }
 
     private void swapLanguagesButtonClicked(ActionEvent event) {
-        LanguageAlpha3Code oldUpperLanguage = config.getUpperLanguage();
-        LanguageAlpha3Code oldLowerLanguage = config.getLowerLanguage();
+        LanguageAlpha3Code oldUpperLanguage = appContext.getConfig().getUpperLanguage();
+        LanguageAlpha3Code oldLowerLanguage = appContext.getConfig().getLowerLanguage();
 
         try {
-            config.saveUpperLanguage(oldLowerLanguage.toString());
-            config.saveLowerLanguage(oldUpperLanguage.toString());
+            appContext.getConfig().saveUpperLanguage(oldLowerLanguage.toString());
+            appContext.getConfig().saveLowerLanguage(oldUpperLanguage.toString());
             updateFileChoosersAndFields();
 
             tabView.showSuccessMessage("languages have been swapped successfully");
@@ -214,20 +222,20 @@ public class SettingsTabController implements TabController {
             throw new IllegalStateException();
         }
 
-        if (Objects.equals(newValue, config.getLowerLanguage())) {
+        if (Objects.equals(newValue, appContext.getConfig().getLowerLanguage())) {
             return;
         }
 
-        if (Objects.equals(newValue, config.getUpperLanguage())) {
+        if (Objects.equals(newValue, appContext.getConfig().getUpperLanguage())) {
             updateFileChoosersAndFields();
             tabView.showErrorMessage("languages have to be different, please select another one");
             return;
         }
 
-        boolean hadValueBefore = config.getLowerLanguage() != null;
+        boolean hadValueBefore = appContext.getConfig().getLowerLanguage() != null;
 
         try {
-            config.saveLowerLanguage(newValue.toString());
+            appContext.getConfig().saveLowerLanguage(newValue.toString());
             updateFileChoosersAndFields();
 
             if (hadValueBefore) {

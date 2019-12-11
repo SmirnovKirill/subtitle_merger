@@ -1,8 +1,5 @@
 package kirill.subtitlesmerger.gui.merge_in_directory_tab;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -43,16 +40,11 @@ class TableWithFiles {
 
     private VBox mainNode;
 
-    private ObservableList<FileInfo> files;
-
     TableWithFiles(boolean debug) {
         this.headerPane = generateHeaderPane(debug);
         this.contentPane = generateContentPane(debug, this.headerPane);
         this.contentScrollPane = generateContentScrollPane(this.contentPane);
         this.mainNode = generateMainNode(this.headerPane, this.contentScrollPane);
-
-        this.files = FXCollections.observableArrayList();
-        this.files.addListener(this::filesChanged);
     }
 
     private static GridPane generateHeaderPane(boolean debug) {
@@ -199,25 +191,6 @@ class TableWithFiles {
         return result;
     }
 
-    private void filesChanged(ListChangeListener.Change<? extends FileInfo> change) {
-        contentPane.getChildren().clear();
-
-        int i = 0;
-        for (FileInfo file : files) {
-            boolean lowest = (i == (files.size() - 1));
-
-            contentPane.addRow(
-                    contentPane.getRowCount(),
-                    generateFilenameCell(file, lowest),
-                    generateSubtitlesCell(file, lowest),
-                    generateSubtitlesCell(file, lowest),
-                    generateActionsCell(lowest)
-            );
-
-            i++;
-        }
-    }
-
     private static Node generateFilenameCell(FileInfo fileInfo, boolean lowest) {
         VBox result = new VBox();
 
@@ -304,8 +277,22 @@ class TableWithFiles {
         contentScrollPane.setVisible(true);
     }
 
-    void setFiles(Collection<FileInfo> files) {
-        this.files.clear();
-        this.files.addAll(files);
+    void showFiles(Collection<FileInfo> filesInfo) {
+        contentPane.getChildren().clear();
+
+        int i = 0;
+        for (FileInfo fileInfo : filesInfo) {
+            boolean lowest = (i == (filesInfo.size() - 1));
+
+            contentPane.addRow(
+                    contentPane.getRowCount(),
+                    generateFilenameCell(fileInfo, lowest),
+                    generateSubtitlesCell(fileInfo, lowest),
+                    generateSubtitlesCell(fileInfo, lowest),
+                    generateActionsCell(lowest)
+            );
+
+            i++;
+        }
     }
 }

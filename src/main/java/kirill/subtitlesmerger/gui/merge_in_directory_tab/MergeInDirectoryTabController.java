@@ -6,9 +6,10 @@ import javafx.stage.Stage;
 import kirill.subtitlesmerger.gui.GuiLauncher;
 import kirill.subtitlesmerger.gui.TabController;
 import kirill.subtitlesmerger.gui.TabView;
+import kirill.subtitlesmerger.logic.AppContext;
+import kirill.subtitlesmerger.logic.Config;
 import kirill.subtitlesmerger.logic.Constants;
 import kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo;
-import kirill.subtitlesmerger.logic.Config;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -29,21 +30,21 @@ public class MergeInDirectoryTabController implements TabController {
 
     private MergeInDirectoryTabView tabView;
 
-    private Config config;
+    private AppContext appContext;
 
     private GuiLauncher guiLauncher;
 
-    private List<FileInfo> briefFilesInfo;
+    private List<FileInfo> filesInfo;
 
     public MergeInDirectoryTabController(
             Stage stage,
             MergeInDirectoryTabView tabView,
-            Config config,
+            AppContext appContext,
             GuiLauncher guiLauncher
     ) {
         this.stage = stage;
         this.tabView = tabView;
-        this.config = config;
+        this.appContext = appContext;
         this.guiLauncher = guiLauncher;
     }
 
@@ -71,26 +72,22 @@ public class MergeInDirectoryTabController implements TabController {
         tabView.getRegularContentPane().setDirectoryPathLabel(directory.getAbsolutePath());
 
         try {
-            config.saveLastDirectoryWithVideos(directory.getAbsolutePath());
+            appContext.getConfig().saveLastDirectoryWithVideos(directory.getAbsolutePath());
         } catch (Config.ConfigException e) {
             log.error("failed to save last directory with videos, that shouldn't be possible");
             throw new IllegalStateException();
         }
         tabView.getRegularContentPane().setDirectoryChooserInitialDirectory(directory);
 
-        briefFilesInfo = getBriefFilesInfo(directory.listFiles());
+        filesInfo = getBriefFilesInfo(directory.listFiles());
 
-        tabView.getRegularContentPane().setFiles(briefFilesInfo);
+        tabView.getRegularContentPane().showFiles(filesInfo);
 
         tabView.hideProgressIndicator();
     }
 
     private static List<FileInfo> getBriefFilesInfo(File[] files) {
         List<FileInfo> result = new ArrayList<>();
-
-        if (files == null) {
-            return result;
-        }
 
         for (File file : files) {
             if (!file.isFile()) {
@@ -136,19 +133,19 @@ public class MergeInDirectoryTabController implements TabController {
     ) {
         tabView.showProgressIndicator();
         if (Boolean.TRUE.equals(newValue)) {
-            tabView.getRegularContentPane().setFiles(
-                    briefFilesInfo.stream()
+            tabView.getRegularContentPane().showFiles(
+                    filesInfo.stream()
                     .filter(file -> file.getUnavailabilityReason() == null)
                     .collect(Collectors.toList())
             );
         } else {
-            tabView.getRegularContentPane().setFiles(briefFilesInfo);
+            tabView.getRegularContentPane().showFiles(filesInfo);
         }
         tabView.hideProgressIndicator();
     }
 
     private void updateView() {
-        List<String> missingSettings = getMissingSettings(config);
+        List<String> missingSettings = getMissingSettings(appContext.getConfig());
         if (!CollectionUtils.isEmpty(missingSettings)) {
             tabView.getRegularContentPane().hide();
             tabView.getMissingSettingsPane().setMissingSettings(missingSettings);
