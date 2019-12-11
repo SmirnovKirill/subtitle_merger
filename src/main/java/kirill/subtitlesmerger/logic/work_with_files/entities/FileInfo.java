@@ -2,6 +2,7 @@ package kirill.subtitlesmerger.logic.work_with_files.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.joda.time.LocalDateTime;
 
 import java.io.File;
 import java.util.List;
@@ -12,6 +13,10 @@ public
 class FileInfo {
     private File file;
 
+    private LocalDateTime lastModified;
+
+    private long size;
+
     /**
      * We will keep track of all files from the selected directory even if they can't be used for subtitle merging
      * (for better diagnostics). Enum contains the reason why this file can't be used for subtitle merging.
@@ -21,6 +26,20 @@ class FileInfo {
     private VideoFormat videoContainer;
 
     private List<SubtitleStream> subtitleStreams;
+
+    public FileInfo(
+            File file,
+            UnavailabilityReason unavailabilityReason,
+            VideoFormat videoContainer,
+            List<SubtitleStream> subtitleStreams
+    ) {
+        this.file = file;
+        this.lastModified = new LocalDateTime(file.lastModified());
+        this.size = file.length();
+        this.unavailabilityReason = unavailabilityReason;
+        this.videoContainer = videoContainer;
+        this.subtitleStreams = subtitleStreams;
+    }
 
     @AllArgsConstructor
     @Getter

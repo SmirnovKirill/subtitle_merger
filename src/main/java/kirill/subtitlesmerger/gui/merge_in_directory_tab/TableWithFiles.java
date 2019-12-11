@@ -6,11 +6,13 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo;
 import org.apache.commons.collections4.CollectionUtils;
-import org.joda.time.LocalDateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -165,8 +167,6 @@ class TableWithFiles {
 
         Menu menu = new Menu("_Sort files");
 
-        MenuItem menuItem = new MenuItem("asd");
-
         menu.getItems().addAll(
                 new MenuItem("By _Name"),
                 new MenuItem("By _Modification Time"),
@@ -203,10 +203,30 @@ class TableWithFiles {
 
         result.getChildren().addAll(
                 new Label(fileInfo.getFile().getAbsolutePath()),
-                new Label(FORMATTER.print(new LocalDateTime(fileInfo.getFile().lastModified())))
+                new Label("last modified: " + FORMATTER.print(fileInfo.getLastModified())),
+                new Label("file size: " + getFileSizeTextual(fileInfo.getSize()))
         );
 
         return result;
+    }
+
+    private static String getFileSizeTextual(long size) {
+        List<String> sizes = Arrays.asList("B", "KB", "MB", "GB", "TB");
+
+        BigDecimal divisor = new BigDecimal(1024);
+        BigDecimal sizeBigDecimal = new BigDecimal(size);
+
+        int i = 0;
+        do {
+            if (sizeBigDecimal.compareTo(divisor) < 0) {
+                return sizeBigDecimal + " " + sizes.get(i);
+            }
+
+            sizeBigDecimal = sizeBigDecimal.divide(divisor, 2, RoundingMode.HALF_UP);
+            i++;
+        } while (i < sizes.size());
+
+        return sizeBigDecimal + " " + sizes.get(sizes.size() - 1);
     }
 
     private static Node generateSubtitlesCell(FileInfo fileInfo, boolean lowest) {

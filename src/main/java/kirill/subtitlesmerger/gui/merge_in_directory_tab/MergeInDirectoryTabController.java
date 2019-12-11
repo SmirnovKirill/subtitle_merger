@@ -9,20 +9,16 @@ import kirill.subtitlesmerger.gui.TabView;
 import kirill.subtitlesmerger.logic.AppContext;
 import kirill.subtitlesmerger.logic.Config;
 import kirill.subtitlesmerger.logic.Constants;
+import kirill.subtitlesmerger.logic.work_with_files.FileInfoGetter;
 import kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo;
+import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.Ffprobe;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo.UnavailabilityReason.*;
 
 @CommonsLog
 public class MergeInDirectoryTabController implements TabController {
@@ -79,14 +75,14 @@ public class MergeInDirectoryTabController implements TabController {
         }
         tabView.getRegularContentPane().setDirectoryChooserInitialDirectory(directory);
 
-        filesInfo = getBriefFilesInfo(directory.listFiles());
+        filesInfo = getBriefFilesInfo(directory.listFiles(), appContext.getFfprobe());
 
         tabView.getRegularContentPane().showFiles(filesInfo);
 
         tabView.hideProgressIndicator();
     }
 
-    private static List<FileInfo> getBriefFilesInfo(File[] files) {
+    private static List<FileInfo> getBriefFilesInfo(File[] files, Ffprobe ffprobe) {
         List<FileInfo> result = new ArrayList<>();
 
         for (File file : files) {
@@ -94,32 +90,13 @@ public class MergeInDirectoryTabController implements TabController {
                 continue;
             }
 
-            String extension = FilenameUtils.getExtension(file.getName());
-            if (StringUtils.isBlank(extension)) {
-                result.add(new FileInfo(file, NO_EXTENSION, null, null));
-                continue;
-            }
-
-            if (!Constants.ALLOWED_VIDEO_EXTENSIONS.contains(extension.toLowerCase())) {
-                result.add(new FileInfo(file, NOT_ALLOWED_EXTENSION, null, null));
-                continue;
-            }
-
-            String mimeType;
-            try {
-                mimeType = Files.probeContentType(file.toPath());
-            } catch (IOException e) {
-                result.add(new FileInfo(file, FAILED_TO_GET_MIME_TYPE, null, null));
-                continue;
-            }
-
-            if (!Constants.ALLOWED_VIDEO_MIME_TYPES.contains(mimeType)) {
-                result.add(new FileInfo(file, NOT_ALLOWED_MIME_TYPE, null, null));
-                continue;
-            }
-
             result.add(
-                    new FileInfo(file, null, null, null)
+                    FileInfoGetter.getFileInfoWithoutSubtitles(
+                            file,
+                            Constants.ALLOWED_VIDEO_EXTENSIONS,
+                            Constants.ALLOWED_VIDEO_MIME_TYPES,
+                            ffprobe
+                    )
             );
         }
 
