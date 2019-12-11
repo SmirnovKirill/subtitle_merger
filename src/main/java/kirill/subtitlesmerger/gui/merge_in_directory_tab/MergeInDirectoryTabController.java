@@ -7,7 +7,7 @@ import kirill.subtitlesmerger.gui.GuiLauncher;
 import kirill.subtitlesmerger.gui.TabController;
 import kirill.subtitlesmerger.gui.TabView;
 import kirill.subtitlesmerger.logic.Constants;
-import kirill.subtitlesmerger.logic.work_with_files.entities.BriefFileInfo;
+import kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlesmerger.logic.Config;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static kirill.subtitlesmerger.logic.work_with_files.entities.BriefFileInfo.UnavailabilityReason.*;
+import static kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo.UnavailabilityReason.*;
 
 @CommonsLog
 public class MergeInDirectoryTabController implements TabController {
@@ -33,7 +33,7 @@ public class MergeInDirectoryTabController implements TabController {
 
     private GuiLauncher guiLauncher;
 
-    private List<BriefFileInfo> briefFilesInfo;
+    private List<FileInfo> briefFilesInfo;
 
     public MergeInDirectoryTabController(
             Stage stage,
@@ -85,8 +85,8 @@ public class MergeInDirectoryTabController implements TabController {
         tabView.hideProgressIndicator();
     }
 
-    private static List<BriefFileInfo> getBriefFilesInfo(File[] files) {
-        List<BriefFileInfo> result = new ArrayList<>();
+    private static List<FileInfo> getBriefFilesInfo(File[] files) {
+        List<FileInfo> result = new ArrayList<>();
 
         if (files == null) {
             return result;
@@ -99,12 +99,12 @@ public class MergeInDirectoryTabController implements TabController {
 
             String extension = FilenameUtils.getExtension(file.getName());
             if (StringUtils.isBlank(extension)) {
-                result.add(new BriefFileInfo(file, NO_EXTENSION, null, null));
+                result.add(new FileInfo(file, NO_EXTENSION, null, null));
                 continue;
             }
 
             if (!Constants.ALLOWED_VIDEO_EXTENSIONS.contains(extension.toLowerCase())) {
-                result.add(new BriefFileInfo(file, NOT_ALLOWED_EXTENSION, null, null));
+                result.add(new FileInfo(file, NOT_ALLOWED_EXTENSION, null, null));
                 continue;
             }
 
@@ -112,17 +112,17 @@ public class MergeInDirectoryTabController implements TabController {
             try {
                 mimeType = Files.probeContentType(file.toPath());
             } catch (IOException e) {
-                result.add(new BriefFileInfo(file, FAILED_TO_GET_MIME_TYPE, null, null));
+                result.add(new FileInfo(file, FAILED_TO_GET_MIME_TYPE, null, null));
                 continue;
             }
 
             if (!Constants.ALLOWED_VIDEO_MIME_TYPES.contains(mimeType)) {
-                result.add(new BriefFileInfo(file, NOT_ALLOWED_MIME_TYPE, null, null));
+                result.add(new FileInfo(file, NOT_ALLOWED_MIME_TYPE, null, null));
                 continue;
             }
 
             result.add(
-                    new BriefFileInfo(file, null, null, null)
+                    new FileInfo(file, null, null, null)
             );
         }
 

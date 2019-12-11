@@ -7,7 +7,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import kirill.subtitlesmerger.logic.work_with_files.entities.BriefFileInfo;
+import kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo;
 import org.apache.commons.collections4.CollectionUtils;
 import org.joda.time.LocalDateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -43,7 +43,7 @@ class TableWithFiles {
 
     private VBox mainNode;
 
-    private ObservableList<BriefFileInfo> files;
+    private ObservableList<FileInfo> files;
 
     TableWithFiles(boolean debug) {
         this.headerPane = generateHeaderPane(debug);
@@ -199,11 +199,11 @@ class TableWithFiles {
         return result;
     }
 
-    private void filesChanged(ListChangeListener.Change<? extends BriefFileInfo> change) {
+    private void filesChanged(ListChangeListener.Change<? extends FileInfo> change) {
         contentPane.getChildren().clear();
 
         int i = 0;
-        for (BriefFileInfo file : files) {
+        for (FileInfo file : files) {
             boolean lowest = (i == (files.size() - 1));
 
             contentPane.addRow(
@@ -218,7 +218,7 @@ class TableWithFiles {
         }
     }
 
-    private static Node generateFilenameCell(BriefFileInfo fileInfo, boolean lowest) {
+    private static Node generateFilenameCell(FileInfo fileInfo, boolean lowest) {
         VBox result = new VBox();
 
         result.setAlignment(Pos.CENTER_LEFT);
@@ -236,7 +236,7 @@ class TableWithFiles {
         return result;
     }
 
-    private static Node generateSubtitlesCell(BriefFileInfo fileInfo, boolean lowest) {
+    private static Node generateSubtitlesCell(FileInfo fileInfo, boolean lowest) {
         VBox result = new VBox();
 
         result.setAlignment(Pos.CENTER_LEFT);
@@ -249,8 +249,8 @@ class TableWithFiles {
         ToggleGroup toggleGroup = new ToggleGroup();
 
         List<String> languages = new ArrayList<>();
-        if (!CollectionUtils.isEmpty(fileInfo.getSubtitlesStreams())) {
-            languages = fileInfo.getSubtitlesStreams().stream()
+        if (!CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
+            languages = fileInfo.getSubtitleStreams().stream()
                     .map(stream -> stream.getLanguage().toString())
                     .collect(Collectors.toList());
         }
@@ -304,7 +304,7 @@ class TableWithFiles {
         contentScrollPane.setVisible(true);
     }
 
-    void setFiles(Collection<BriefFileInfo> files) {
+    void setFiles(Collection<FileInfo> files) {
         this.files.clear();
         this.files.addAll(files);
     }

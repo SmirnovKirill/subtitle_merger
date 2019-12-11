@@ -2,7 +2,10 @@ package kirill.subtitlesmerger.logic.work_with_files;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlesmerger.logic.core.Parser;
-import kirill.subtitlesmerger.logic.work_with_files.entities.*;
+import kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo;
+import kirill.subtitlesmerger.logic.work_with_files.entities.SubtitleCodec;
+import kirill.subtitlesmerger.logic.work_with_files.entities.SubtitleStream;
+import kirill.subtitlesmerger.logic.work_with_files.entities.VideoFormat;
 import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.Ffmpeg;
 import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.FfmpegException;
 import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.Ffprobe;
@@ -21,11 +24,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static kirill.subtitlesmerger.logic.work_with_files.entities.BriefFileInfo.UnavailabilityReason.*;
+import static kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo.UnavailabilityReason.*;
 
 @CommonsLog
 public class FileInfoGetter {
-    public static BriefFileInfo getBriefFileInfo(
+    public static FileInfo getFileInfoWithoutSubtitles(
             File file,
             List<String> allowedVideoExtensions,
             List<String> allowedVideoMimeTypes,
@@ -38,11 +41,11 @@ public class FileInfoGetter {
 
         String extension = FilenameUtils.getExtension(file.getName());
         if (StringUtils.isBlank(extension)) {
-            return new BriefFileInfo(file, NO_EXTENSION, null, null);
+            return new FileInfo(file, NO_EXTENSION, null, null);
         }
 
         if (!allowedVideoExtensions.contains(extension.toLowerCase())) {
-            return new BriefFileInfo(file, NOT_ALLOWED_EXTENSION, null, null);
+            return new FileInfo(file, NOT_ALLOWED_EXTENSION, null, null);
         }
 
         String mimeType;
@@ -53,11 +56,11 @@ public class FileInfoGetter {
                     + ExceptionUtils.getStackTrace(e)
             );
 
-            return new BriefFileInfo(file, FAILED_TO_GET_MIME_TYPE, null, null);
+            return new FileInfo(file, FAILED_TO_GET_MIME_TYPE, null, null);
         }
 
         if (!allowedVideoMimeTypes.contains(mimeType)) {
-            return new BriefFileInfo(file, NOT_ALLOWED_MIME_TYPE, null, null);
+            return new FileInfo(file, NOT_ALLOWED_MIME_TYPE, null, null);
         }
 
         JsonFfprobeFileInfo ffprobeInfo;
@@ -68,46 +71,48 @@ public class FileInfoGetter {
                     + ExceptionUtils.getStackTrace(e)
             );
 
-            return new BriefFileInfo(file, FAILED_TO_GET_FFPROBE_INFO, null, null);
+            return new FileInfo(file, FAILED_TO_GET_FFPROBE_INFO, null, null);
         }
 
         VideoFormat videoFormat = VideoFormat.from(ffprobeInfo.getFormat().getFormatName()).orElse(null);
         if (videoFormat == null) {
-            return new BriefFileInfo(file, NOT_ALLOWED_CONTAINER, null, null);
+            return new FileInfo(file, NOT_ALLOWED_CONTAINER, null, null);
         }
 
-        return new BriefFileInfo(file, null, videoFormat, getBriefStreamInfos(ffprobeInfo));
+        return new FileInfo(file, null, videoFormat, getStreamsWithoutSubtitles(ffprobeInfo));
     }
 
-    private static List<BriefSubtitlesStreamInfo> getBriefStreamInfos(JsonFfprobeFileInfo ffprobeInfo) {
-        List<BriefSubtitlesStreamInfo> result = new ArrayList<>();
+    private static List<SubtitleStream> getStreamsWithoutSubtitles(JsonFfprobeFileInfo ffprobeInfo) {
+        List<SubtitleStream> result = new ArrayList<>();
 
         for (JsonStream stream : ffprobeInfo.getStreams()) {
             if (!"subtitle".equals(stream.getCodecType())) {
                 continue;
             }
 
-            SubtitlesCodec codec = SubtitlesCodec.from(stream.getCodecName()).orElse(null);
+            SubtitleCodec codec = SubtitleCodec.from(stream.getCodecName()).orElse(null);
             if (codec == null) {
                 result.add(
-                        new BriefSubtitlesStreamInfo(
+                        new SubtitleStream(
                                 stream.getIndex(),
                                 null,
-                                BriefSubtitlesStreamInfo.UnavailabilityReason.NOT_ALLOWED_CODEC,
+                                SubtitleStream.UnavailabilityReason.NOT_ALLOWED_CODEC,
                                 getLanguage(stream).orElse(null),
-                                getTitle(stream).orElse(null)
+                                getTitle(stream).orElse(null),
+                                null
                         )
                 );
                 continue;
             }
 
             result.add(
-                    new BriefSubtitlesStreamInfo(
+                    new SubtitleStream(
                             stream.getIndex(),
                             codec,
                             null,
                             getLanguage(stream).orElse(null),
-                            getTitle(stream).orElse(null)
+                            getTitle(stream).orElse(null),
+                            null
                     )
             );
         }
@@ -145,74 +150,58 @@ public class FileInfoGetter {
         return Optional.ofNullable(stream.getTags().get("title"));
     }
 
-    public static FullFileInfo getFullFileInfo(BriefFileInfo briefInfo, Ffmpeg ffmpeg) {
-        if (briefInfo.getUnavailabilityReason() != null) {
-            return new FullFileInfo(
-                    briefInfo,
-                    FullFileInfo.UnavailabilityReason.FAILED_BEFORE,
-                    wrap(briefInfo.getSubtitlesStreams())
-            );
+    public static FileInfo getFileInfoWithSubtitles(FileInfo fileInfoWithoutSubtitles, Ffmpeg ffmpeg) {
+        if (fileInfoWithoutSubtitles.getUnavailabilityReason() != null) {
+            throw new IllegalArgumentException();
         }
 
-        try {
-            List<FullSubtitlesStreamInfo> allSubtitles = new ArrayList<>();
+        List<SubtitleStream> streamsWithSubtitles = new ArrayList<>();
 
-            for (BriefSubtitlesStreamInfo briefSubtitlesStream : briefInfo.getSubtitlesStreams()) {
-                if (briefInfo.getUnavailabilityReason() != null) {
-                    allSubtitles.add(
-                            new FullSubtitlesStreamInfo(
-                                    briefSubtitlesStream,
-                                    briefSubtitlesStream.getUnavailabilityReason() != null
-                                            ? FullSubtitlesStreamInfo.UnavailabilityReason.FAILED_BEFORE
-                                            : null,
-                                    null
-                            )
-                    );
-                    continue;
-                }
+        for (SubtitleStream streamWithoutSubtitles : fileInfoWithoutSubtitles.getSubtitleStreams()) {
+            if (streamWithoutSubtitles.getUnavailabilityReason() != null) {
+                streamsWithSubtitles.add(streamWithoutSubtitles);
+                continue;
+            }
 
-                String subtitlesText = ffmpeg.getSubtitlesText(briefSubtitlesStream.getIndex(), briefInfo.getFile());
-                allSubtitles.add(
-                        new FullSubtitlesStreamInfo(
-                                briefSubtitlesStream,
+            try {
+                String subtitlesText = ffmpeg.getSubtitlesText(
+                        streamWithoutSubtitles.getIndex(),
+                        fileInfoWithoutSubtitles.getFile()
+                );
+
+                streamsWithSubtitles.add(
+                        new SubtitleStream(
+                                streamWithoutSubtitles.getIndex(),
+                                streamWithoutSubtitles.getCodec(),
                                 null,
+                                streamWithoutSubtitles.getLanguage(),
+                                streamWithoutSubtitles.getTitle(),
                                 Parser.fromSubRipText(
                                         subtitlesText,
-                                        "subs-" + briefSubtitlesStream.getIndex(),
-                                        briefSubtitlesStream.getLanguage()
+                                        "subs-" + streamWithoutSubtitles.getIndex(),
+                                        streamWithoutSubtitles.getLanguage()
                                 )
                         )
                 );
+            } catch (FfmpegException | Parser.IncorrectFormatException e) {
+                streamsWithSubtitles.add(
+                        new SubtitleStream(
+                                streamWithoutSubtitles.getIndex(),
+                                streamWithoutSubtitles.getCodec(),
+                                SubtitleStream.UnavailabilityReason.FAILED_TO_GET_FFMPEG_INFO,
+                                streamWithoutSubtitles.getLanguage(),
+                                streamWithoutSubtitles.getTitle(),
+                                null
+                        )
+                );
             }
-
-            return new FullFileInfo(briefInfo, null, allSubtitles);
-        } catch (FfmpegException | Parser.IncorrectFormatException e) {
-            return new FullFileInfo(
-                    briefInfo,
-                    FullFileInfo.UnavailabilityReason.FFMPEG_FAILED,
-                    wrap(briefInfo.getSubtitlesStreams())
-            );
-        }
-    }
-
-    private static List<FullSubtitlesStreamInfo> wrap(List<BriefSubtitlesStreamInfo> briefInfos) {
-        if (briefInfos == null) {
-            return null;
         }
 
-        List<FullSubtitlesStreamInfo> result = new ArrayList<>();
-
-        for (BriefSubtitlesStreamInfo briefInfo : briefInfos) {
-            result.add(
-                    new FullSubtitlesStreamInfo(
-                            briefInfo,
-                            briefInfo.getUnavailabilityReason() != null
-                                    ? FullSubtitlesStreamInfo.UnavailabilityReason.FAILED_BEFORE
-                                    : null,
-                            null
-                    ));
-        }
-
-        return result;
+        return new FileInfo(
+                fileInfoWithoutSubtitles.getFile(),
+                null,
+                fileInfoWithoutSubtitles.getVideoContainer(),
+                streamsWithSubtitles
+        );
     }
 }
