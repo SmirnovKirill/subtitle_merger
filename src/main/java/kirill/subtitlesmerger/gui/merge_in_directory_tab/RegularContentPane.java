@@ -14,6 +14,7 @@ import javafx.scene.layout.*;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import kirill.subtitlesmerger.gui.GuiLauncher;
+import kirill.subtitlesmerger.logic.AppContext;
 import kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo;
 import lombok.Getter;
 
@@ -211,8 +212,8 @@ class RegularContentPane {
         directoryPathLabel.setText(text);
     }
 
-    void showFiles(List<FileInfo> filesInfo) {
-        tableWithFiles.showFiles(filesInfo);
+    void showFiles(List<FileInfo> filesInfo, Stage stage, AppContext appContext) {
+        tableWithFiles.showFiles(filesInfo, stage, appContext);
     }
 
     void hide() {

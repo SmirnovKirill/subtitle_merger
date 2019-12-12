@@ -4,6 +4,8 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.stage.Stage;
+import kirill.subtitlesmerger.logic.AppContext;
 import kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -213,30 +215,20 @@ class TableWithFiles {
         contentScrollPane.setVisible(true);
     }
 
-    void showFiles(Collection<FileInfo> filesInfo) {
+    void showFiles(Collection<FileInfo> filesInfo, Stage stage, AppContext appContext) {
         contentPane.getChildren().clear();
 
         int i = 0;
         for (FileInfo fileInfo : filesInfo) {
             boolean lowest = (i == (filesInfo.size() - 1));
 
-            FileTableRow fileTableRow = new FileTableRow(fileInfo);
+            FileTableRow fileTableRow = new FileTableRow(fileInfo, stage, appContext);
 
             contentPane.addRow(
                     contentPane.getRowCount(),
-                    FileTableRow.generateBasicInfoPane(fileInfo, lowest),
-                    FileTableRow.generateSubtitlePane(
-                            fileInfo,
-                            fileTableRow.getUpperSubtitleStreamRadioButtons(),
-                            fileTableRow.getUpperSubtitleFileRadioButton(),
-                            lowest
-                    ),
-                    FileTableRow.generateSubtitlePane(
-                            fileInfo,
-                            fileTableRow.getLowerSubtitleStreamRadioButtons(),
-                            fileTableRow.getLowerSubtitleFileRadioButton(),
-                            lowest
-                    ),
+                    fileTableRow.generateBasicInfoCellPane(lowest),
+                    fileTableRow.generateUpperSubtitleStreamChooserCellPane(lowest),
+                    fileTableRow.generateLowerSubtitleStreamChooserCellPane(lowest),
                     generateActionsCell(lowest)
             );
 

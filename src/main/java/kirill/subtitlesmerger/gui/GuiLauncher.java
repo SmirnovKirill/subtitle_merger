@@ -33,6 +33,14 @@ public class GuiLauncher extends Application {
 
     public static final Insets TAB_PADDING = new Insets(20);
 
+    public static final String TABLE_CELL_CLASS = "file-table-cell";
+
+    public static final String FIRST_TABLE_CELL_CLASS = "first-file-table-cell";
+
+    public static final String LOWEST_TABLE_CELL_CLASS = "lowest-file-table-cell";
+
+    public static final String FIRST_LOWEST_TABLE_CELL_CLASS = "first-lowest-file-table-cell";
+
     private TabPane mainPane;
 
     private List<TabController> tabControllers;

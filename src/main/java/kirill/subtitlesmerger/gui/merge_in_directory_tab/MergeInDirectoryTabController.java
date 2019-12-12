@@ -77,7 +77,7 @@ public class MergeInDirectoryTabController implements TabController {
 
         filesInfo = getBriefFilesInfo(directory.listFiles(), appContext.getFfprobe());
 
-        tabView.getRegularContentPane().showFiles(filesInfo);
+        tabView.getRegularContentPane().showFiles(filesInfo, stage, appContext);
 
         tabView.hideProgressIndicator();
     }
@@ -112,11 +112,13 @@ public class MergeInDirectoryTabController implements TabController {
         if (Boolean.TRUE.equals(newValue)) {
             tabView.getRegularContentPane().showFiles(
                     filesInfo.stream()
-                    .filter(file -> file.getUnavailabilityReason() == null)
-                    .collect(Collectors.toList())
+                            .filter(file -> file.getUnavailabilityReason() == null)
+                            .collect(Collectors.toList()),
+                    stage,
+                    appContext
             );
         } else {
-            tabView.getRegularContentPane().showFiles(filesInfo);
+            tabView.getRegularContentPane().showFiles(filesInfo, stage, appContext);
         }
         tabView.hideProgressIndicator();
     }
