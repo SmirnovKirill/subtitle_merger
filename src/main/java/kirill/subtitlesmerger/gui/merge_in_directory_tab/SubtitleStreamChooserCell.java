@@ -1,5 +1,6 @@
 package kirill.subtitlesmerger.gui.merge_in_directory_tab;
 
+import javafx.event.ActionEvent;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.RadioButton;
@@ -10,18 +11,23 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kirill.subtitlesmerger.gui.GuiLauncher;
+import kirill.subtitlesmerger.gui.merge_single_files_tab.MergeSingleFilesTabView;
 import kirill.subtitlesmerger.logic.AppContext;
 import kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlesmerger.logic.work_with_files.entities.SubtitleStream;
+import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class SubtitleStreamChooserCell {
     private FileInfo fileInfo;
+
+    private boolean lowestRow;
 
     private SubtitleType subtitleType;
 
@@ -43,8 +49,18 @@ public class SubtitleStreamChooserCell {
 
     private Button discardFileButton;
 
-    public SubtitleStreamChooserCell(FileInfo fileInfo, SubtitleType subtitleType, Stage stage, AppContext appContext) {
+    @Getter
+    private Pane pane;
+
+    public SubtitleStreamChooserCell(
+            FileInfo fileInfo,
+            boolean lowestRow,
+            SubtitleType subtitleType,
+            Stage stage,
+            AppContext appContext
+    ) {
         this.fileInfo = fileInfo;
+        this.lowestRow = lowestRow;
         this.subtitleType = subtitleType;
         this.stage = stage;
         this.appContext = appContext;
@@ -56,8 +72,10 @@ public class SubtitleStreamChooserCell {
         this.toggleGroup = new ToggleGroup();
         this.streamRadioButtons = generateStreamRadioButtons(fileInfo, toggleGroup);
         this.fileRadioButton = generateFileRadioButton(toggleGroup);
-        this.fileChooseButton = new Button("Choose file");
+        this.fileChooseButton = generateFileChooseButton();
         this.fileChooser = generateFileChooser(subtitleType);
+
+        this.pane = generatePane();
     }
 
     private static List<RadioButton> generateStreamRadioButtons(
@@ -101,6 +119,24 @@ public class SubtitleStreamChooserCell {
         return result;
     }
 
+    private static Button generateFileChooseButton() {
+        Button result = new Button("Choose file");
+
+        return result;
+    }
+
+    private void fileChooseButtonClicked(ActionEvent event) {
+        chosenFile = fileChooser.showOpenDialog(stage);
+        if (chosenFile == null) {
+            return;
+        }
+
+        redrawAfterFileChosen(MergeSingleFilesTabView.FileType.UPPER_SUBTITLES);
+
+        saveLastDirectoryInConfigIfNecessary(MergeSingleFilesTabView.FileType.UPPER_SUBTITLES);
+        updateFileChoosers();
+    }
+
     private static FileChooser generateFileChooser(SubtitleType subtitleType) {
         FileChooser result = new FileChooser();
 
@@ -119,7 +155,7 @@ public class SubtitleStreamChooserCell {
         return result;
     }
 
-    public Pane generatePane(boolean lowestRow) {
+    private Pane generatePane(boolean lowestRow) {
         VBox result = new VBox();
 
         result.setAlignment(Pos.CENTER_LEFT);
@@ -147,6 +183,16 @@ public class SubtitleStreamChooserCell {
         }
 
         return result;
+    }
+
+    public Optional<File> getChosenFile() {
+        //todo implement
+        return Optional.empty();
+    }
+
+    public Optional<SubtitleStream> getChosenSubtitleStream() {
+        //todo implement
+        return Optional.empty();
     }
 
     public enum SubtitleType {
