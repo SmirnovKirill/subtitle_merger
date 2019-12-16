@@ -29,18 +29,20 @@ public class FileTableRow {
 
     private SubtitleStreamChooserCell lowerStreamChooserCell;
 
-    public FileTableRow(FileInfo fileInfo, Stage stage, AppContext appContext) {
+    public FileTableRow(FileInfo fileInfo, boolean lowestRow, Stage stage, AppContext appContext) {
         this.fileInfo = fileInfo;
         this.stage = stage;
         this.appContext = appContext;
         this.upperStreamChooserCell = new SubtitleStreamChooserCell(
                 fileInfo,
+                lowestRow,
                 SubtitleStreamChooserCell.SubtitleType.UPPER,
                 stage,
                 appContext
         );
         this.lowerStreamChooserCell = new SubtitleStreamChooserCell(
                 fileInfo,
+                lowestRow,
                 SubtitleStreamChooserCell.SubtitleType.LOWER,
                 stage,
                 appContext

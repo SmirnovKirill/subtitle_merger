@@ -75,7 +75,7 @@ public class SubtitleStreamChooserCell {
         this.fileChooseButton = generateFileChooseButton();
         this.fileChooser = generateFileChooser(subtitleType);
 
-        this.pane = generatePane();
+        //this.pane = generatePane();
     }
 
     private static List<RadioButton> generateStreamRadioButtons(
@@ -131,10 +131,10 @@ public class SubtitleStreamChooserCell {
             return;
         }
 
-        redrawAfterFileChosen(MergeSingleFilesTabView.FileType.UPPER_SUBTITLES);
+       /* redrawAfterFileChosen(MergeSingleFilesTabView.FileType.UPPER_SUBTITLES);
 
         saveLastDirectoryInConfigIfNecessary(MergeSingleFilesTabView.FileType.UPPER_SUBTITLES);
-        updateFileChoosers();
+        updateFileChoosers();*/
     }
 
     private static FileChooser generateFileChooser(SubtitleType subtitleType) {
@@ -155,7 +155,7 @@ public class SubtitleStreamChooserCell {
         return result;
     }
 
-    private Pane generatePane(boolean lowestRow) {
+    Pane generatePane(boolean lowestRow) {
         VBox result = new VBox();
 
         result.setAlignment(Pos.CENTER_LEFT);

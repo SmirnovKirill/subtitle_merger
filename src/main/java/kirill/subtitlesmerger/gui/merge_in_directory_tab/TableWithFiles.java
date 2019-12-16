@@ -222,7 +222,7 @@ class TableWithFiles {
         for (FileInfo fileInfo : filesInfo) {
             boolean lowest = (i == (filesInfo.size() - 1));
 
-            FileTableRow fileTableRow = new FileTableRow(fileInfo, stage, appContext);
+            FileTableRow fileTableRow = new FileTableRow(fileInfo, lowest, stage, appContext);
 
             contentPane.addRow(
                     contentPane.getRowCount(),
