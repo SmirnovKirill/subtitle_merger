@@ -1,6 +1,5 @@
 package kirill.subtitlesmerger.gui.merge_single_files_tab;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -129,7 +128,7 @@ public class MergeSingleFilesTabController implements Controller {
     }
 
     @FXML
-    private void upperSubtitlesButtonClicked(ActionEvent event) {
+    private void upperSubtitlesButtonClicked() {
         upperSubtitlesFile = upperSubtitlesChooser.showOpenDialog(stage);
 
         redrawAfterFileChosen(FileType.UPPER_SUBTITLES);
@@ -140,7 +139,7 @@ public class MergeSingleFilesTabController implements Controller {
         updatePathLabels(fileType);
         showErrorsIfNecessary();
         updateMergeButtonVisibility();
-        saveLastDirectoryInConfigIfNecessary(FileType.UPPER_SUBTITLES);
+        saveLastDirectoryInConfigIfNecessary(fileType);
         updateFileChoosers();
     }
 
@@ -367,14 +366,14 @@ public class MergeSingleFilesTabController implements Controller {
     }
 
     @FXML
-    private void lowerSubtitlesButtonClicked(ActionEvent event) {
+    private void lowerSubtitlesButtonClicked() {
         lowerSubtitlesFile = lowerSubtitlesChooser.showOpenDialog(stage);
 
         redrawAfterFileChosen(FileType.LOWER_SUBTITLES);
     }
 
     @FXML
-    private void mergedSubtitlesButtonClicked(ActionEvent event) {
+    private void mergedSubtitlesButtonClicked() {
         mergedSubtitlesFile = mergedSubtitlesChooser.showSaveDialog(stage);
         if (mergedSubtitlesFile != null && !mergedSubtitlesFile.getAbsolutePath().endsWith(".srt")) {
             mergedSubtitlesFile = new File(mergedSubtitlesFile.getAbsolutePath() + ".srt");
@@ -384,7 +383,7 @@ public class MergeSingleFilesTabController implements Controller {
     }
 
     @FXML
-    private void mergeButtonClicked(ActionEvent event) {
+    private void mergeButtonClicked() {
         this.incorrectInputFiles = new ArrayList<>();
         this.incorrectOutputFile = null;
         removeErrorsAndResult();
@@ -416,7 +415,7 @@ public class MergeSingleFilesTabController implements Controller {
         showSuccessMessage();
     }
 
-    void showSuccessMessage() {
+    private void showSuccessMessage() {
         clearResult();
         resultLabel.getStyleClass().add(GuiLauncher.LABEL_SUCCESS_CLASS);
         resultLabel.setText("Subtitles have been merged successfully!");

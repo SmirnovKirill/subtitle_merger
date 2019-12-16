@@ -1,4 +1,4 @@
 <?import javafx.scene.control.TabPane?>
 <TabPane tabClosingPolicy="UNAVAILABLE" tabDragPolicy="FIXED" minWidth="800" minHeight="480" fx:controller="kirill.subtitlesmerger.gui.MainController" xmlns:fx="http://javafx.com/fxml">
-    <fx:include source="merge_single_files_tab.fxml"/>
+    <fx:include fx:id="mergeSingleFilesTab" source="merge_single_files_tab.fxml"/>
 </TabPane>
