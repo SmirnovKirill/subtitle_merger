@@ -2,8 +2,6 @@ package kirill.subtitlesmerger.gui;
 
 import javafx.fxml.FXML;
 import javafx.stage.Stage;
-import kirill.subtitlesmerger.gui.merge_single_files_tab.MergeSingleFilesTabController;
-import kirill.subtitlesmerger.gui.settings_tab.SettingsTabController;
 import kirill.subtitlesmerger.logic.AppContext;
 
 public class MainController implements Controller {

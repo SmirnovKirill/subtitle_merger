@@ -3,7 +3,7 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 <?import kirill.subtitlesmerger.logic.Constants?>
-<Tab text="Settings" fx:controller="kirill.subtitlesmerger.gui.settings_tab.SettingsTabController" xmlns:fx="http://javafx.com/fxml">
+<Tab text="Settings" fx:controller="kirill.subtitlesmerger.gui.SettingsTabController" xmlns:fx="http://javafx.com/fxml">
     <graphic>
         <ImageView fitHeight="16" fitWidth="16">
             <Image url="/settings.png"/>

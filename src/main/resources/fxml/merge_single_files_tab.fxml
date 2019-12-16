@@ -2,7 +2,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import kirill.subtitlesmerger.logic.Constants?>
-<Tab text="Merge subtitle files" fx:controller="kirill.subtitlesmerger.gui.merge_single_files_tab.MergeSingleFilesTabController" xmlns:fx="http://javafx.com/fxml">
+<Tab text="Merge subtitle files" fx:controller="kirill.subtitlesmerger.gui.MergeSingleFilesTabController" xmlns:fx="http://javafx.com/fxml">
     <GridPane hgap="30" vgap="40">
         <padding>
             <Insets top="20" right="20" bottom="20" left="20"/>

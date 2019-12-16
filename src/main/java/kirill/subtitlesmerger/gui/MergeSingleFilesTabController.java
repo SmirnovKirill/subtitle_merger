@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.gui.merge_single_files_tab;
+package kirill.subtitlesmerger.gui;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;

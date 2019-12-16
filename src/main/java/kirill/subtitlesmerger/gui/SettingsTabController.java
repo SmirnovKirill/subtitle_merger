@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.gui.settings_tab;
+package kirill.subtitlesmerger.gui;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.fxml.FXML;

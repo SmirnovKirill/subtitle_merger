@@ -1,0 +1,7 @@
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.layout.StackPane?>
+<Tab text="Merge subtitles in videos" fx:controller="kirill.subtitlesmerger.gui.merge_in_directory_tab.MergeInDirectoryTabController" xmlns:fx="http://javafx.com/fxml">
+    <StackPane>
+
+    </StackPane>
+</Tab>
