@@ -1,18 +1,14 @@
 package kirill.subtitlesmerger.gui;
 
 import javafx.application.Application;
-import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import kirill.subtitlesmerger.gui.merge_in_directory_tab.MergeInDirectoryTabController;
 import kirill.subtitlesmerger.gui.merge_in_directory_tab.MergeInDirectoryTabView;
-import kirill.subtitlesmerger.gui.settings_tab.SettingsTabController;
-import kirill.subtitlesmerger.gui.settings_tab.SettingsTabView;
 import kirill.subtitlesmerger.logic.AppContext;
 import kirill.subtitlesmerger.logic.Constants;
 import lombok.extern.apachecommons.CommonsLog;
@@ -20,7 +16,6 @@ import lombok.extern.apachecommons.CommonsLog;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @CommonsLog
 public class GuiLauncher extends Application {
@@ -91,41 +86,7 @@ public class GuiLauncher extends Application {
         tabControllers.add(mergeInDirectoryTabController);
     }
 
-    private void addSettingsTabViewAndController(TabPane mainPane, Stage stage, AppContext appContext) {
-        SettingsTabView tab = new SettingsTabView(stage, Constants.DEBUG);
-        mainPane.getTabs().add(tab.getTab());
-
-        SettingsTabController settingsTabController = new SettingsTabController(tab, appContext);
-        settingsTabController.initialize();
-
-        tabControllers.add(settingsTabController);
-    }
-
-    private void tabChangedListener(
-            ObservableValue<? extends Tab> observableValue,
-            Tab oldTab,
-            Tab newTab
-    ) {
-        for (TabController controller : tabControllers) {
-            if (Objects.equals(controller.getTabView().getTabName(), newTab.getText())) {
-                controller.tabClicked();
-                return;
-            }
-        }
-
-        log.error("unknown tab " + newTab.getText());
-        throw new IllegalStateException();
-    }
-
     public void openSettingsTab() {
-        for (TabController controller : tabControllers) {
-            if (Objects.equals(controller.getTabView().getTabName(), SettingsTabView.TAB_NAME)) {
-                mainPane.getSelectionModel().select(controller.getTabView().getTab());
-                return;
-            }
-        }
-
-        log.error("failed to find settings tab");
-        throw new IllegalStateException();
+        //todo implement
     }
 }

@@ -29,8 +29,8 @@
             <GridPane.margin>
                 <Insets bottom="20"/>
             </GridPane.margin>
-            <TextField editable="false" HBox.hgrow="ALWAYS"/>
-            <Button/>
+            <TextField fx:id="ffprobeField" editable="false" HBox.hgrow="ALWAYS"/>
+            <Button fx:id="ffprobeSetButton" onAction="#ffprobeFileButtonClicked"/>
         </HBox>
 
         <Label text="Path to ffmpeg" GridPane.halignment="LEFT" GridPane.rowIndex="1" GridPane.columnIndex="0">
@@ -42,8 +42,8 @@
             <GridPane.margin>
                 <Insets top="20" bottom="40"/>
             </GridPane.margin>
-            <TextField editable="false" HBox.hgrow="ALWAYS"/>
-            <Button/>
+            <TextField fx:id="ffmpegField" editable="false" HBox.hgrow="ALWAYS"/>
+            <Button fx:id="ffmpegSetButton" onAction="#ffmpegFileButtonClicked"/>
         </HBox>
 
         <HBox alignment="CENTER_LEFT" GridPane.halignment="LEFT" GridPane.rowIndex="2" GridPane.columnIndex="0">
@@ -53,16 +53,16 @@
             Have to use the wrapper for the image view because otherwise the tooltip won't be shown when hovering over
             transparent parts of the image.
             -->
-            <HBox alignment="CENTER">
+            <HBox fx:id="upperSubtitlesQuestionWrapper" alignment="CENTER">
                 <ImageView fitHeight="16" fitWidth="16">
                     <Image url="/question.png"/>
                 </ImageView>
             </HBox>
         </HBox>
-        <ComboBox maxWidth="Infinity" GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+        <ComboBox fx:id="upperLanguageComboBox" onAction="#upperLanguageChanged" maxWidth="Infinity" GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
-        <Region GridPane.hgrow="ALWAYS" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-        <Button GridPane.halignment="LEFT" GridPane.rowIndex="3" GridPane.columnIndex="1">
+        <Region GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <Button fx:id="swapLanguagesButton" onAction="#swapLanguagesButtonClicked" GridPane.halignment="LEFT" GridPane.rowIndex="3" GridPane.columnIndex="1">
             <GridPane.margin>
                 <Insets top="8" bottom="8" left="10"/>
             </GridPane.margin>
@@ -83,15 +83,15 @@
             Have to use the wrapper for the image view because otherwise the tooltip won't be shown when hovering over
             transparent parts of the image.
             -->
-            <HBox alignment="CENTER">
+            <HBox fx:id="lowerSubtitlesQuestionWrapper" alignment="CENTER">
                 <ImageView fitHeight="16" fitWidth="16">
                     <Image url="/question.png"/>
                 </ImageView>
             </HBox>
         </HBox>
-        <ComboBox maxWidth="Infinity" GridPane.halignment="RIGHT" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+        <ComboBox fx:id="lowerLanguageComboBox" onAction="#lowerLanguageChanged" maxWidth="Infinity" GridPane.halignment="RIGHT" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
 
-        <Label GridPane.halignment="LEFT" GridPane.rowIndex="5" GridPane.columnIndex="0" GridPane.columnSpan="2">
+        <Label fx:id="resultLabel" GridPane.halignment="LEFT" GridPane.rowIndex="5" GridPane.columnIndex="0" GridPane.columnSpan="2">
             <GridPane.margin>
                 <Insets top="20"/>
             </GridPane.margin>
