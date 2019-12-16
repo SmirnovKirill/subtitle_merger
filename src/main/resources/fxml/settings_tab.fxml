@@ -1,0 +1,100 @@
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import kirill.subtitlesmerger.logic.Constants?>
+<Tab text="Settings" fx:controller="kirill.subtitlesmerger.gui.settings_tab.SettingsTabController" xmlns:fx="http://javafx.com/fxml">
+    <graphic>
+        <ImageView fitHeight="16" fitWidth="16">
+            <Image url="/settings.png"/>
+        </ImageView>
+    </graphic>
+    <GridPane hgap="55">
+        <padding>
+            <Insets top="20" right="20" bottom="20" left="20"/>
+        </padding>
+        <gridLinesVisible><Constants fx:constant="DEBUG"/></gridLinesVisible>
+
+        <columnConstraints>
+            <ColumnConstraints minWidth="275"/>
+            <ColumnConstraints hgrow="ALWAYS"/>
+        </columnConstraints>
+
+        <Label text="Path to ffprobe" GridPane.halignment="LEFT" GridPane.rowIndex="0" GridPane.columnIndex="0">
+            <GridPane.margin>
+                <Insets bottom="20"/>
+            </GridPane.margin>
+        </Label>
+        <HBox spacing="20" GridPane.halignment="RIGHT" GridPane.rowIndex="0" GridPane.columnIndex="1">
+            <GridPane.margin>
+                <Insets bottom="20"/>
+            </GridPane.margin>
+            <TextField editable="false" HBox.hgrow="ALWAYS"/>
+            <Button/>
+        </HBox>
+
+        <Label text="Path to ffmpeg" GridPane.halignment="LEFT" GridPane.rowIndex="1" GridPane.columnIndex="0">
+            <GridPane.margin>
+                <Insets top="20" bottom="40"/>
+            </GridPane.margin>
+        </Label>
+        <HBox spacing="20" GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.columnIndex="1">
+            <GridPane.margin>
+                <Insets top="20" bottom="40"/>
+            </GridPane.margin>
+            <TextField editable="false" HBox.hgrow="ALWAYS"/>
+            <Button/>
+        </HBox>
+
+        <HBox alignment="CENTER_LEFT" GridPane.halignment="LEFT" GridPane.rowIndex="2" GridPane.columnIndex="0">
+            <Label text="Preferred language for upper subtitles"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <!--
+            Have to use the wrapper for the image view because otherwise the tooltip won't be shown when hovering over
+            transparent parts of the image.
+            -->
+            <HBox alignment="CENTER">
+                <ImageView fitHeight="16" fitWidth="16">
+                    <Image url="/question.png"/>
+                </ImageView>
+            </HBox>
+        </HBox>
+        <ComboBox maxWidth="Infinity" GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+        <Region GridPane.hgrow="ALWAYS" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <Button GridPane.halignment="LEFT" GridPane.rowIndex="3" GridPane.columnIndex="1">
+            <GridPane.margin>
+                <Insets top="8" bottom="8" left="10"/>
+            </GridPane.margin>
+            <padding>
+                <Insets/>
+            </padding>
+            <graphic>
+                <ImageView fitHeight="24" fitWidth="24">
+                    <Image url="/swap.png"/>
+                </ImageView>
+            </graphic>
+        </Button>
+
+        <HBox alignment="CENTER_LEFT" GridPane.halignment="LEFT" GridPane.rowIndex="4" GridPane.columnIndex="0">
+            <Label text="Preferred language for lower subtitles"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <!--
+            Have to use the wrapper for the image view because otherwise the tooltip won't be shown when hovering over
+            transparent parts of the image.
+            -->
+            <HBox alignment="CENTER">
+                <ImageView fitHeight="16" fitWidth="16">
+                    <Image url="/question.png"/>
+                </ImageView>
+            </HBox>
+        </HBox>
+        <ComboBox maxWidth="Infinity" GridPane.halignment="RIGHT" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+        <Label GridPane.halignment="LEFT" GridPane.rowIndex="5" GridPane.columnIndex="0" GridPane.columnSpan="2">
+            <GridPane.margin>
+                <Insets top="20"/>
+            </GridPane.margin>
+        </Label>
+    </GridPane>
+</Tab>
