@@ -1,13 +1,18 @@
 package kirill.subtitlesmerger.gui.merge_single_files_tab;
 
 import javafx.event.ActionEvent;
-import kirill.subtitlesmerger.gui.TabController;
-import kirill.subtitlesmerger.gui.TabView;
+import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+import kirill.subtitlesmerger.gui.Controller;
+import kirill.subtitlesmerger.gui.GuiLauncher;
 import kirill.subtitlesmerger.logic.AppContext;
+import kirill.subtitlesmerger.logic.Config;
 import kirill.subtitlesmerger.logic.Constants;
 import kirill.subtitlesmerger.logic.core.Merger;
 import kirill.subtitlesmerger.logic.core.Parser;
-import kirill.subtitlesmerger.logic.Config;
 import kirill.subtitlesmerger.logic.core.entities.Subtitles;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -26,8 +31,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @CommonsLog
-public class MergeSingleFilesTabController implements TabController {
-    private MergeSingleFilesTabView tabView;
+public class MergeSingleFilesTabController implements Controller {
+    private Stage stage;
 
     private AppContext appContext;
 
@@ -41,47 +46,131 @@ public class MergeSingleFilesTabController implements TabController {
 
     private IncorrectOutputFile incorrectOutputFile;
 
-    public MergeSingleFilesTabController(MergeSingleFilesTabView tabView, AppContext appContext) {
-        this.tabView = tabView;
-        this.appContext = appContext;
-    }
+    @FXML
+    private Button upperSubtitlesChooseButton;
+
+    @FXML
+    private Label upperSubtitlesPathLabel;
+
+    private FileChooser upperSubtitlesChooser;
+
+    @FXML
+    private Button lowerSubtitlesChooseButton;
+
+    @FXML
+    private Label lowerSubtitlesPathLabel;
+
+    private FileChooser lowerSubtitlesChooser;
+
+    @FXML
+    private Button mergedSubtitlesChooseButton;
+
+    @FXML
+    private Label mergedSubtitlesPathLabel;
+
+    private FileChooser mergedSubtitlesChooser;
+
+    @FXML
+    private Button mergeButton;
+
+    @FXML
+    private Label resultLabel;
 
     @Override
-    public void initialize() {
-        tabView.setUpperSubtitlesFileChooseButtonHandler(this::upperSubtitlesFileButtonClicked);
-        tabView.setLowerSubtitlesFileChooseButtonHandler(this::lowerSubtitlesFileButtonClicked);
-        tabView.setMergedSubtitlesFileChooseButtonHandler(this::mergedSubtitlesFileButtonClicked);
-        tabView.setMergeButtonHandler(this::mergeButtonClicked);
+    public void init(Stage stage, AppContext appContext) {
+        this.stage = stage;
+        this.appContext = appContext;
+
+        this.upperSubtitlesChooser = generateFileChooser("Please choose the file with the upper subtitles");
+        this.lowerSubtitlesChooser = generateFileChooser("Please choose the file with the lower subtitles");
+        this.mergedSubtitlesChooser = generateFileChooser("Please choose where to save the result");
 
         updateFileChoosers();
     }
 
-    private void upperSubtitlesFileButtonClicked(ActionEvent event) {
-        upperSubtitlesFile = tabView.getSelectedUpperSubtitlesFile().orElse(null);
+    private static FileChooser generateFileChooser(String title) {
+        FileChooser result = new FileChooser();
 
-        redrawAfterFileChosen(MergeSingleFilesTabView.FileType.UPPER_SUBTITLES);
+        result.setTitle(title);
+        result.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("subrip files (*.srt)", "*.srt")
+        );
 
-        saveLastDirectoryInConfigIfNecessary(MergeSingleFilesTabView.FileType.UPPER_SUBTITLES);
-        updateFileChoosers();
+        return result;
     }
 
-    private void redrawAfterFileChosen(MergeSingleFilesTabView.FileType fileType) {
-        tabView.removeErrorsAndResult();
+    private void updateFileChoosers() {
+        File upperSubtitlesDirectory = ObjectUtils.firstNonNull(
+                appContext.getConfig().getUpperSubtitlesLastDirectory(),
+                appContext.getConfig().getLowerSubtitlesLastDirectory(),
+                appContext.getConfig().getMergedSubtitlesLastDirectory()
+        );
+        if (upperSubtitlesDirectory != null) {
+            upperSubtitlesChooser.setInitialDirectory(upperSubtitlesDirectory);
+        }
+
+        File lowerSubtitlesDirectory = ObjectUtils.firstNonNull(
+                appContext.getConfig().getLowerSubtitlesLastDirectory(),
+                appContext.getConfig().getUpperSubtitlesLastDirectory(),
+                appContext.getConfig().getMergedSubtitlesLastDirectory()
+        );
+        if (lowerSubtitlesDirectory != null) {
+            lowerSubtitlesChooser.setInitialDirectory(lowerSubtitlesDirectory);
+        }
+
+        File mergedSubtitlesDirectory = ObjectUtils.firstNonNull(
+                appContext.getConfig().getMergedSubtitlesLastDirectory(),
+                appContext.getConfig().getUpperSubtitlesLastDirectory(),
+                appContext.getConfig().getLowerSubtitlesLastDirectory()
+        );
+        if (mergedSubtitlesDirectory != null) {
+            mergedSubtitlesChooser.setInitialDirectory(mergedSubtitlesDirectory);
+        }
+    }
+
+    @FXML
+    private void upperSubtitlesButtonClicked(ActionEvent event) {
+        upperSubtitlesFile = upperSubtitlesChooser.showOpenDialog(stage);
+
+        redrawAfterFileChosen(FileType.UPPER_SUBTITLES);
+    }
+
+    private void redrawAfterFileChosen(FileType fileType) {
+        removeErrorsAndResult();
         updatePathLabels(fileType);
         showErrorsIfNecessary();
         updateMergeButtonVisibility();
+        saveLastDirectoryInConfigIfNecessary(FileType.UPPER_SUBTITLES);
+        updateFileChoosers();
     }
 
-    private void updatePathLabels(MergeSingleFilesTabView.FileType fileType) {
+    private void removeErrorsAndResult() {
+        removeButtonErrorClass(upperSubtitlesChooseButton);
+        removeButtonErrorClass(lowerSubtitlesChooseButton);
+        removeButtonErrorClass(mergedSubtitlesChooseButton);
+        clearResult();
+    }
+
+    private static void removeButtonErrorClass(Button button) {
+        button.getStyleClass().remove(GuiLauncher.BUTTON_ERROR_CLASS);
+    }
+
+    private void clearResult() {
+        resultLabel.setText("");
+        resultLabel.getStyleClass().remove(GuiLauncher.LABEL_SUCCESS_CLASS);
+        resultLabel.getStyleClass().remove(GuiLauncher.LABEL_ERROR_CLASS);
+    }
+
+    private void updatePathLabels(FileType fileType) {
         switch (fileType) {
             case UPPER_SUBTITLES:
-                tabView.setUpperSubtitlesPathLabel(getPathLabelText(upperSubtitlesFile));
+                this.upperSubtitlesPathLabel.setText(getPathLabelText(upperSubtitlesFile));
                 break;
             case LOWER_SUBTITLES:
-                tabView.setLowerSubtitlesPathLabel(getPathLabelText(lowerSubtitlesFile));
+                this.lowerSubtitlesPathLabel.setText(getPathLabelText(lowerSubtitlesFile));
                 break;
             case MERGED_SUBTITLES:
-                tabView.setMergedSubtitlesPathLabel(getPathLabelText(mergedSubtitlesFile));
+                this.mergedSubtitlesPathLabel.setText(getPathLabelText(mergedSubtitlesFile));
                 break;
             default:
                 throw new IllegalStateException();
@@ -98,7 +187,7 @@ public class MergeSingleFilesTabController implements TabController {
 
     private void showErrorsIfNecessary() {
         if (inputFilesTheSame()) {
-            tabView.showErrors(
+            showErrors(
                     null,
                     "you can't use the same file twice",
                     null
@@ -139,19 +228,69 @@ public class MergeSingleFilesTabController implements TabController {
                 || !StringUtils.isBlank(mergedSubtitlesFileErrorMessage);
 
         if (atLeastOneError) {
-            tabView.showErrors(
-                    upperSubtitlesFileErrorMessage,
-                    lowerSubtitlesFileErrorMessage,
-                    mergedSubtitlesFileErrorMessage
-            );
+            showErrors(upperSubtitlesFileErrorMessage, lowerSubtitlesFileErrorMessage, mergedSubtitlesFileErrorMessage);
         }
     }
+
     private boolean inputFilesTheSame() {
         if (upperSubtitlesFile == null || lowerSubtitlesFile == null) {
             return false;
         }
 
         return Objects.equals(upperSubtitlesFile, lowerSubtitlesFile);
+    }
+
+    private void showErrors(
+            String upperSubtitlesFileErrorMessage,
+            String lowerSubtitlesFileErrorMessage,
+            String mergedSubtitlesFileErrorMessage
+    ) {
+        if (!StringUtils.isBlank(upperSubtitlesFileErrorMessage)) {
+            addButtonErrorClass(upperSubtitlesChooseButton);
+        } else {
+            removeButtonErrorClass(upperSubtitlesChooseButton);
+        }
+
+        if (!StringUtils.isBlank(lowerSubtitlesFileErrorMessage)) {
+            addButtonErrorClass(lowerSubtitlesChooseButton);
+        } else {
+            removeButtonErrorClass(lowerSubtitlesChooseButton);
+        }
+
+        if (!StringUtils.isBlank(mergedSubtitlesFileErrorMessage)) {
+            addButtonErrorClass(mergedSubtitlesChooseButton);
+        } else {
+            removeButtonErrorClass(mergedSubtitlesChooseButton);
+        }
+
+        boolean atLeastOneError = !StringUtils.isBlank(upperSubtitlesFileErrorMessage)
+                || !StringUtils.isBlank(lowerSubtitlesFileErrorMessage)
+                || !StringUtils.isBlank(mergedSubtitlesFileErrorMessage);
+        if (!atLeastOneError) {
+            throw new IllegalStateException();
+        }
+
+        StringBuilder combinedErrorsMessage = new StringBuilder("Can't merge subtitles:");
+
+        if (!StringUtils.isBlank(upperSubtitlesFileErrorMessage)) {
+            combinedErrorsMessage.append("\n").append("\u2022").append(" ").append(upperSubtitlesFileErrorMessage);
+        }
+
+        if (!StringUtils.isBlank(lowerSubtitlesFileErrorMessage)) {
+            combinedErrorsMessage.append("\n").append("\u2022").append(" ").append(lowerSubtitlesFileErrorMessage);
+        }
+
+        if (!StringUtils.isBlank(mergedSubtitlesFileErrorMessage)) {
+            combinedErrorsMessage.append("\n").append("\u2022").append(" ").append(mergedSubtitlesFileErrorMessage);
+        }
+
+        showErrorMessage(combinedErrorsMessage.toString());
+    }
+
+    private static void addButtonErrorClass(Button button) {
+        if (!button.getStyleClass().contains(GuiLauncher.BUTTON_ERROR_CLASS)) {
+            button.getStyleClass().add(GuiLauncher.BUTTON_ERROR_CLASS);
+        }
     }
 
     private static String getErrorText(File file, IncorrectInputFileReason reason) {
@@ -187,15 +326,21 @@ public class MergeSingleFilesTabController implements TabController {
         return result.toString();
     }
 
+    private void showErrorMessage(String text) {
+        clearResult();
+        resultLabel.getStyleClass().add(GuiLauncher.LABEL_ERROR_CLASS);
+        resultLabel.setText(text);
+    }
+
     private void updateMergeButtonVisibility() {
         boolean disable = upperSubtitlesFile == null
                 || lowerSubtitlesFile == null
                 || mergedSubtitlesFile == null
                 || inputFilesTheSame();
-        tabView.setMergeButtonDisable(disable);
+        mergeButton.setDisable(disable);
     }
 
-    private void saveLastDirectoryInConfigIfNecessary(MergeSingleFilesTabView.FileType fileType) {
+    private void saveLastDirectoryInConfigIfNecessary(FileType fileType) {
         try {
             switch (fileType) {
                 case UPPER_SUBTITLES:
@@ -221,57 +366,28 @@ public class MergeSingleFilesTabController implements TabController {
         }
     }
 
-    private void updateFileChoosers() {
-        File upperSubtitlesDirectory = ObjectUtils.firstNonNull(
-                appContext.getConfig().getUpperSubtitlesLastDirectory(),
-                appContext.getConfig().getLowerSubtitlesLastDirectory(),
-                appContext.getConfig().getMergedSubtitlesLastDirectory()
-        );
+    @FXML
+    private void lowerSubtitlesButtonClicked(ActionEvent event) {
+        lowerSubtitlesFile = lowerSubtitlesChooser.showOpenDialog(stage);
 
-        File lowerSubtitlesDirectory = ObjectUtils.firstNonNull(
-                appContext.getConfig().getLowerSubtitlesLastDirectory(),
-                appContext.getConfig().getUpperSubtitlesLastDirectory(),
-                appContext.getConfig().getMergedSubtitlesLastDirectory()
-        );
-
-        File mergedSubtitlesDirectory = ObjectUtils.firstNonNull(
-                appContext.getConfig().getMergedSubtitlesLastDirectory(),
-                appContext.getConfig().getUpperSubtitlesLastDirectory(),
-                appContext.getConfig().getLowerSubtitlesLastDirectory()
-        );
-
-        tabView.updateFileChooserInitialDirectories(
-                upperSubtitlesDirectory,
-                lowerSubtitlesDirectory,
-                mergedSubtitlesDirectory
-        );
+        redrawAfterFileChosen(FileType.LOWER_SUBTITLES);
     }
 
-    private void lowerSubtitlesFileButtonClicked(ActionEvent event) {
-        lowerSubtitlesFile = tabView.getSelectedLowerSubtitlesFile().orElse(null);
-
-        redrawAfterFileChosen(MergeSingleFilesTabView.FileType.LOWER_SUBTITLES);
-
-        saveLastDirectoryInConfigIfNecessary(MergeSingleFilesTabView.FileType.LOWER_SUBTITLES);
-        updateFileChoosers();
-    }
-
-    private void mergedSubtitlesFileButtonClicked(ActionEvent event) {
-        mergedSubtitlesFile = tabView.getSelectedMergedSubtitlesFile().orElse(null);
+    @FXML
+    private void mergedSubtitlesButtonClicked(ActionEvent event) {
+        mergedSubtitlesFile = mergedSubtitlesChooser.showSaveDialog(stage);
         if (mergedSubtitlesFile != null && !mergedSubtitlesFile.getAbsolutePath().endsWith(".srt")) {
             mergedSubtitlesFile = new File(mergedSubtitlesFile.getAbsolutePath() + ".srt");
         }
 
-        redrawAfterFileChosen(MergeSingleFilesTabView.FileType.MERGED_SUBTITLES);
-
-        saveLastDirectoryInConfigIfNecessary(MergeSingleFilesTabView.FileType.MERGED_SUBTITLES);
-        updateFileChoosers();
+        redrawAfterFileChosen(FileType.MERGED_SUBTITLES);
     }
 
+    @FXML
     private void mergeButtonClicked(ActionEvent event) {
         this.incorrectInputFiles = new ArrayList<>();
         this.incorrectOutputFile = null;
-        tabView.removeErrorsAndResult();
+        removeErrorsAndResult();
 
         List<ParsedSubtitlesInfo> allParsedSubtitles = getAllParsedSubtitles();
 
@@ -297,7 +413,13 @@ public class MergeSingleFilesTabController implements TabController {
             return;
         }
 
-        tabView.showSuccessMessage();
+        showSuccessMessage();
+    }
+
+    void showSuccessMessage() {
+        clearResult();
+        resultLabel.getStyleClass().add(GuiLauncher.LABEL_SUCCESS_CLASS);
+        resultLabel.setText("Subtitles have been merged successfully!");
     }
 
     private List<ParsedSubtitlesInfo> getAllParsedSubtitles() {
@@ -341,14 +463,10 @@ public class MergeSingleFilesTabController implements TabController {
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public TabView getTabView() {
-        return tabView;
-    }
-
-    @Override
-    public void tabClicked() {
-        updateFileChoosers();
+    private enum FileType {
+        UPPER_SUBTITLES,
+        LOWER_SUBTITLES,
+        MERGED_SUBTITLES
     }
 
     @AllArgsConstructor

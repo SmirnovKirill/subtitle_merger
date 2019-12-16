@@ -11,7 +11,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kirill.subtitlesmerger.gui.GuiLauncher;
-import kirill.subtitlesmerger.gui.merge_single_files_tab.MergeSingleFilesTabView;
 import kirill.subtitlesmerger.logic.AppContext;
 import kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlesmerger.logic.work_with_files.entities.SubtitleStream;
