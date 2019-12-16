@@ -3,6 +3,7 @@ package kirill.subtitlesmerger.gui;
 import javafx.fxml.FXML;
 import javafx.stage.Stage;
 import kirill.subtitlesmerger.gui.merge_single_files_tab.MergeSingleFilesTabController;
+import kirill.subtitlesmerger.gui.settings_tab.SettingsTabController;
 import kirill.subtitlesmerger.logic.AppContext;
 
 public class MainController implements Controller {
@@ -13,10 +14,14 @@ public class MainController implements Controller {
     @FXML
     private MergeSingleFilesTabController mergeSingleFilesTabController;
 
+    @FXML
+    private SettingsTabController settingsTabController;
+
     @Override
     public void init(Stage stage, AppContext appContext) {
         this.stage = stage;
         this.appContext = appContext;
         this.mergeSingleFilesTabController.init(stage, appContext);
+        this.settingsTabController.init(stage, appContext);
     }
 }

@@ -87,6 +87,11 @@ public class SettingsTabController implements Controller {
         return Arrays.stream(LanguageAlpha3Code.values())
                 .filter(code -> code != LanguageAlpha3Code.undefined)
                 .filter(code -> code.getUsage() != LanguageAlpha3Code.Usage.TERMINOLOGY)
+                /*
+                 * The title for this code is way to long and doesn't fit to the combobox so I think it's simpler
+                 * just to remove it, nobody will use it anyway.
+                 */
+                .filter(code -> code != LanguageAlpha3Code.inc)
                 .sorted(Comparator.comparing(LanguageAlpha3Code::getName))
                 .collect(Collectors.toList());
     }
