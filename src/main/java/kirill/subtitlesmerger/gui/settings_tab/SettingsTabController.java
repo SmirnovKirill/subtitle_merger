@@ -12,6 +12,7 @@ import kirill.subtitlesmerger.gui.Controller;
 import kirill.subtitlesmerger.gui.GuiLauncher;
 import kirill.subtitlesmerger.logic.AppContext;
 import kirill.subtitlesmerger.logic.Config;
+import kirill.subtitlesmerger.logic.Constants;
 import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.Ffmpeg;
 import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.FfmpegException;
 import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.Ffprobe;
@@ -19,11 +20,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @CommonsLog
 public class SettingsTabController implements Controller {
@@ -73,34 +70,20 @@ public class SettingsTabController implements Controller {
     public void init(Stage stage, AppContext appContext) {
         this.stage = stage;
         this.appContext = appContext;
-        List<LanguageAlpha3Code> allLanguageCodes = getAllLanguageCodes();
 
         this.ffprobeChooser = new FileChooser();
         this.ffmpegChooser = new FileChooser();
-        initComboBoxes(allLanguageCodes);
+        initComboBoxes();
         Tooltip.install(upperSubtitlesQuestionWrapper, generateLanguageTooltip());
         Tooltip.install(lowerSubtitlesQuestionWrapper, generateLanguageTooltip());
         updateFileChoosersAndFields();
     }
 
-    private static List<LanguageAlpha3Code> getAllLanguageCodes() {
-        return Arrays.stream(LanguageAlpha3Code.values())
-                .filter(code -> code != LanguageAlpha3Code.undefined)
-                .filter(code -> code.getUsage() != LanguageAlpha3Code.Usage.TERMINOLOGY)
-                /*
-                 * The title for this code is way to long and doesn't fit to the combobox so I think it's simpler
-                 * just to remove it, nobody will use it anyway.
-                 */
-                .filter(code -> code != LanguageAlpha3Code.inc)
-                .sorted(Comparator.comparing(LanguageAlpha3Code::getName))
-                .collect(Collectors.toList());
-    }
-
-    private void initComboBoxes(List<LanguageAlpha3Code> languageCodes) {
-        upperLanguageComboBox.getItems().setAll(languageCodes);
+    private void initComboBoxes() {
+        upperLanguageComboBox.getItems().setAll(Constants.ALLOWED_LANGUAGE_CODES);
         upperLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
 
-        lowerLanguageComboBox.getItems().setAll(languageCodes);
+        lowerLanguageComboBox.getItems().setAll(Constants.ALLOWED_LANGUAGE_CODES);
         lowerLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
     }
 
