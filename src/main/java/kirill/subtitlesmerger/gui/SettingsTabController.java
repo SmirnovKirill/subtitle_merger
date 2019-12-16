@@ -8,8 +8,6 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
-import kirill.subtitlesmerger.gui.Controller;
-import kirill.subtitlesmerger.gui.GuiLauncher;
 import kirill.subtitlesmerger.logic.AppContext;
 import kirill.subtitlesmerger.logic.Config;
 import kirill.subtitlesmerger.logic.Constants;
@@ -23,7 +21,7 @@ import java.io.File;
 import java.util.Objects;
 
 @CommonsLog
-public class SettingsTabController implements Controller {
+public class SettingsTabController {
     private static final LanguageCodeStringConverter LANGUAGE_CODE_STRING_CONVERTER = new LanguageCodeStringConverter();
 
     private Stage stage;
@@ -66,7 +64,6 @@ public class SettingsTabController implements Controller {
     @FXML
     private Label resultLabel;
 
-    @Override
     public void init(Stage stage, AppContext appContext) {
         this.stage = stage;
         this.appContext = appContext;

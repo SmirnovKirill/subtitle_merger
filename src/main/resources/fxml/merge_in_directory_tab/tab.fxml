@@ -1,7 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.layout.StackPane?>
-<Tab text="Merge subtitles in videos" fx:controller="kirill.subtitlesmerger.gui.merge_in_directory_tab.MergeInDirectoryTabController" xmlns:fx="http://javafx.com/fxml">
+<Tab xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+     fx:controller="kirill.subtitlesmerger.gui.merge_in_directory_tab.MergeInDirectoryTabController"
+     text="Merge subtitles in videos">
     <StackPane>
-
+        <fx:include fx:id="missingSettings" source="missing_settings.fxml"/>
+        <fx:include fx:id="regularContent" source="regular_content.fxml"/>
     </StackPane>
 </Tab>

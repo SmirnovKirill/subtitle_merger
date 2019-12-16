@@ -1,9 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 <?import kirill.subtitlesmerger.logic.Constants?>
-<Tab text="Settings" fx:controller="kirill.subtitlesmerger.gui.SettingsTabController" xmlns:fx="http://javafx.com/fxml">
+<Tab xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+     fx:controller="kirill.subtitlesmerger.gui.SettingsTabController"
+     text="Settings">
     <graphic>
         <ImageView fitHeight="16" fitWidth="16">
             <Image url="/settings.png"/>
@@ -59,10 +63,13 @@
                 </ImageView>
             </HBox>
         </HBox>
-        <ComboBox fx:id="upperLanguageComboBox" onAction="#upperLanguageChanged" maxWidth="Infinity" GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+        <ComboBox fx:id="upperLanguageComboBox" onAction="#upperLanguageChanged"
+                  maxWidth="Infinity"
+                  GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
         <Region GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-        <Button fx:id="swapLanguagesButton" onAction="#swapLanguagesButtonClicked" GridPane.halignment="LEFT" GridPane.rowIndex="3" GridPane.columnIndex="1">
+        <Button fx:id="swapLanguagesButton" onAction="#swapLanguagesButtonClicked"
+                GridPane.halignment="LEFT" GridPane.rowIndex="3" GridPane.columnIndex="1">
             <GridPane.margin>
                 <Insets top="8" bottom="8" left="10"/>
             </GridPane.margin>
@@ -89,9 +96,11 @@
                 </ImageView>
             </HBox>
         </HBox>
-        <ComboBox fx:id="lowerLanguageComboBox" onAction="#lowerLanguageChanged" maxWidth="Infinity" GridPane.halignment="RIGHT" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+        <ComboBox fx:id="lowerLanguageComboBox" onAction="#lowerLanguageChanged"
+                  maxWidth="Infinity" GridPane.halignment="RIGHT" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
 
-        <Label fx:id="resultLabel" GridPane.halignment="LEFT" GridPane.rowIndex="5" GridPane.columnIndex="0" GridPane.columnSpan="2">
+        <Label fx:id="resultLabel"
+               GridPane.halignment="LEFT" GridPane.rowIndex="5" GridPane.columnIndex="0" GridPane.columnSpan="2">
             <GridPane.margin>
                 <Insets top="20"/>
             </GridPane.margin>

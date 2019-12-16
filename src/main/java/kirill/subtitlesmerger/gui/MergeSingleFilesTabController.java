@@ -5,8 +5,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import kirill.subtitlesmerger.gui.Controller;
-import kirill.subtitlesmerger.gui.GuiLauncher;
 import kirill.subtitlesmerger.logic.AppContext;
 import kirill.subtitlesmerger.logic.Config;
 import kirill.subtitlesmerger.logic.Constants;
@@ -30,7 +28,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @CommonsLog
-public class MergeSingleFilesTabController implements Controller {
+public class MergeSingleFilesTabController {
     private Stage stage;
 
     private AppContext appContext;
@@ -75,7 +73,6 @@ public class MergeSingleFilesTabController implements Controller {
     @FXML
     private Label resultLabel;
 
-    @Override
     public void init(Stage stage, AppContext appContext) {
         this.stage = stage;
         this.appContext = appContext;

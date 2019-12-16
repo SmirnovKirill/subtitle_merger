@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
+<?import kirill.subtitlesmerger.gui.GuiLauncher?>
+<?import javafx.scene.layout.GridPane?>
+<?import kirill.subtitlesmerger.logic.Constants?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:id="pane" fx:controller="kirill.subtitlesmerger.gui.merge_in_directory_tab.RegularContentController"
+      spacing="10">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <GridPane hgap="30" vgap="40">
+        <gridLinesVisible><Constants fx:constant="DEBUG"/></gridLinesVisible>
+
+        <columnConstraints>
+            <ColumnConstraints minWidth="400"/>
+            <ColumnConstraints minWidth="100"/>
+            <ColumnConstraints hgrow="ALWAYS"/>
+        </columnConstraints>
+
+        <Label text="Please choose the directory with videos"
+               GridPane.halignment="LEFT" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <Button fx:id="directoryChooseButton"
+                onAction="#directoryButtonClicked"
+                GridPane.halignment="RIGHT" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+        <Label fx:id="directoryPathLabel"
+               text="not selected"
+               GridPane.halignment="LEFT" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+
+        <HBox spacing="20" alignment="CENTER_LEFT"
+                GridPane.halignment="LEFT" GridPane.rowIndex="1" GridPane.columnSpan="2">
+            <CheckBox text="Hide unavailable"/>
+            <Button text="Refresh">
+                <graphic>
+                    <ImageView fitHeight="16" fitWidth="16">
+                        <Image url="/refresh.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+            <Button text="Get subtitle sizes">
+                <graphic>
+                    <ImageView fitHeight="16" fitWidth="16">
+                        <Image url="/get.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+            <Button text="Inject subtitles">
+                <graphic>
+                    <ImageView fitHeight="16" fitWidth="16">
+                        <Image url="/process.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+        </HBox>
+    </GridPane>
+    <Label visible="false">
+        <styleClass><GuiLauncher fx:constant="LABEL_ERROR_CLASS"/></styleClass>
+    </Label>
+</VBox>

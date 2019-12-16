@@ -1,8 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import kirill.subtitlesmerger.logic.Constants?>
-<Tab text="Merge subtitle files" fx:controller="kirill.subtitlesmerger.gui.MergeSingleFilesTabController" xmlns:fx="http://javafx.com/fxml">
+<Tab xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+     fx:controller="kirill.subtitlesmerger.gui.MergeSingleFilesTabController"
+     text="Merge subtitle files">
     <GridPane hgap="30" vgap="40">
         <padding>
             <Insets top="20" right="20" bottom="20" left="20"/>
@@ -15,19 +19,36 @@
             <ColumnConstraints hgrow="ALWAYS"/>
         </columnConstraints>
 
-        <Label text="Please choose the file with the upper subtitles" GridPane.halignment="LEFT" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-        <Button fx:id="upperSubtitlesChooseButton" onAction="#upperSubtitlesButtonClicked" text="Choose file" GridPane.halignment="RIGHT" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-        <Label fx:id="upperSubtitlesPathLabel" text="not selected" GridPane.halignment="LEFT" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+        <Label text="Please choose the file with the upper subtitles"
+               GridPane.halignment="LEFT" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <Button fx:id="upperSubtitlesChooseButton" onAction="#upperSubtitlesButtonClicked"
+                text="Choose file"
+                GridPane.halignment="RIGHT" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+        <Label fx:id="upperSubtitlesPathLabel"
+               text="not selected"
+               GridPane.halignment="LEFT" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
 
-        <Label text="Please choose the file with the lower subtitles" GridPane.halignment="LEFT" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-        <Button fx:id="lowerSubtitlesChooseButton" onAction="#lowerSubtitlesButtonClicked" text="Choose file" GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-        <Label fx:id="lowerSubtitlesPathLabel" text="not selected" GridPane.halignment="LEFT" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+        <Label text="Please choose the file with the lower subtitles"
+               GridPane.halignment="LEFT" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <Button fx:id="lowerSubtitlesChooseButton" onAction="#lowerSubtitlesButtonClicked"
+                text="Choose file"
+                GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+        <Label fx:id="lowerSubtitlesPathLabel"
+               text="not selected"
+               GridPane.halignment="LEFT" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
 
-        <Label text="Please choose where to save the result" GridPane.halignment="LEFT" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-        <Button fx:id="mergedSubtitlesChooseButton" onAction="#mergedSubtitlesButtonClicked" text="Choose file" GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-        <Label fx:id="mergedSubtitlesPathLabel" text="not selected" GridPane.halignment="LEFT" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
+        <Label text="Please choose where to save the result"
+               GridPane.halignment="LEFT" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <Button fx:id="mergedSubtitlesChooseButton" onAction="#mergedSubtitlesButtonClicked"
+                text="Choose file"
+                GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+        <Label fx:id="mergedSubtitlesPathLabel"
+               text="not selected"
+               GridPane.halignment="LEFT" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
 
-        <Button fx:id="mergeButton" onAction="#mergeButtonClicked" text="Merge subtitles" disable="true" GridPane.rowIndex="3" GridPane.columnSpan="3"/>
+        <Button fx:id="mergeButton" onAction="#mergeButtonClicked"
+                text="Merge subtitles"
+                disable="true" GridPane.rowIndex="3" GridPane.columnSpan="3"/>
 
         <Label fx:id="resultLabel" GridPane.rowIndex="4" GridPane.columnSpan="3"/>
     </GridPane>

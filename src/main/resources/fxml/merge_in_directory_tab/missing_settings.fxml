@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:id="pane" fx:controller="kirill.subtitlesmerger.gui.merge_in_directory_tab.MissingSettingsController"
+      spacing="10">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <VBox spacing="10">
+        <Label text="The following settings are missing:"/>
+        <VBox fx:id="missingSettingLabelsPane" spacing="10"/>
+    </VBox>
+    <Hyperlink fx:id="goToSettingsLink" onAction="#goToSettingsLinkClicked" text="open settings tab"/>
+</VBox>
