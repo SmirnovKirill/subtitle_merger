@@ -9,7 +9,7 @@ import kirill.subtitlesmerger.gui.tabs.merge_in_directory.MergeInDirectoryTabCon
 import kirill.subtitlesmerger.gui.tabs.merge_single_files.MergeSingleFilesTabController;
 import kirill.subtitlesmerger.gui.tabs.settings.SettingsTabController;
 
-public class TabsController {
+public class TabController {
     @FXML
     private TabPane mainTabPane;
 

@@ -5,7 +5,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
-import kirill.subtitlesmerger.gui.tabs.TabsController;
+import kirill.subtitlesmerger.gui.tabs.TabController;
 import lombok.extern.apachecommons.CommonsLog;
 
 import java.io.IOException;
@@ -23,8 +23,8 @@ public class GuiLauncher extends Application {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/tabs/tabs.fxml"));
         loader.load();
 
-        TabsController tabsController = loader.getController();
-        tabsController.initialize(stage, guiContext);
+        TabController tabController = loader.getController();
+        tabController.initialize(stage, guiContext);
 
         Scene scene = new Scene(loader.getRoot());
         scene.getStylesheets().add("/gui/style.css");

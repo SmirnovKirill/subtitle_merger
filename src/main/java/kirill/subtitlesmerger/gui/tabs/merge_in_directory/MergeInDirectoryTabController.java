@@ -2,7 +2,7 @@ package kirill.subtitlesmerger.gui.tabs.merge_in_directory;
 
 import javafx.fxml.FXML;
 import javafx.stage.Stage;
-import kirill.subtitlesmerger.gui.tabs.TabsController;
+import kirill.subtitlesmerger.gui.tabs.TabController;
 import kirill.subtitlesmerger.gui.GuiContext;
 import kirill.subtitlesmerger.gui.GuiPreferences;
 import lombok.extern.apachecommons.CommonsLog;
@@ -13,7 +13,7 @@ import java.util.List;
 
 @CommonsLog
 public class MergeInDirectoryTabController {
-    private TabsController tabsController;
+    private TabController tabController;
 
     private GuiContext guiContext;
 
@@ -23,8 +23,8 @@ public class MergeInDirectoryTabController {
     @FXML
     private RegularContentController regularContentController;
 
-    public void initialize(Stage stage, TabsController tabsController, GuiContext guiContext) {
-        this.tabsController = tabsController;
+    public void initialize(Stage stage, TabController tabController, GuiContext guiContext) {
+        this.tabController = tabController;
         this.guiContext = guiContext;
 
         this.missingSettingsController.init(this);
@@ -68,6 +68,6 @@ public class MergeInDirectoryTabController {
     }
 
     void openSettingsTab() {
-        tabsController.openSettingsTab();
+        tabController.openSettingsTab();
     }
 }

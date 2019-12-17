@@ -6,10 +6,8 @@ import javafx.scene.control.Label;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kirill.subtitlesmerger.gui.GuiConstants;
-import kirill.subtitlesmerger.gui.GuiPreferences;
 import kirill.subtitlesmerger.gui.GuiContext;
-import kirill.subtitlesmerger.gui.GuiLauncher;
-import kirill.subtitlesmerger.logic.LogicConstants;
+import kirill.subtitlesmerger.gui.GuiPreferences;
 import kirill.subtitlesmerger.logic.core.Merger;
 import kirill.subtitlesmerger.logic.core.Parser;
 import kirill.subtitlesmerger.logic.core.entities.Subtitles;
@@ -51,6 +49,7 @@ public class MergeSingleFilesTabController {
     @FXML
     private Label upperSubtitlesPathLabel;
 
+    @FXML
     private FileChooser upperSubtitlesChooser;
 
     @FXML
@@ -59,6 +58,7 @@ public class MergeSingleFilesTabController {
     @FXML
     private Label lowerSubtitlesPathLabel;
 
+    @FXML
     private FileChooser lowerSubtitlesChooser;
 
     @FXML
@@ -67,6 +67,7 @@ public class MergeSingleFilesTabController {
     @FXML
     private Label mergedSubtitlesPathLabel;
 
+    @FXML
     private FileChooser mergedSubtitlesChooser;
 
     @FXML
@@ -79,22 +80,15 @@ public class MergeSingleFilesTabController {
         this.stage = stage;
         this.guiContext = guiContext;
 
-        this.upperSubtitlesChooser = generateFileChooser("Please choose the file with the upper subtitles");
-        this.lowerSubtitlesChooser = generateFileChooser("Please choose the file with the lower subtitles");
-        this.mergedSubtitlesChooser = generateFileChooser("Please choose where to save the result");
+        this.upperSubtitlesChooser.getExtensionFilters().add(generateExtensionFilter());
+        this.lowerSubtitlesChooser.getExtensionFilters().add(generateExtensionFilter());
+        this.mergedSubtitlesChooser.getExtensionFilters().add(generateExtensionFilter());
 
         updateFileChoosers();
     }
 
-    private static FileChooser generateFileChooser(String title) {
-        FileChooser result = new FileChooser();
-
-        result.setTitle(title);
-        result.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("subrip files (*.srt)", "*.srt")
-        );
-
-        return result;
+    private static FileChooser.ExtensionFilter generateExtensionFilter() {
+        return new FileChooser.ExtensionFilter("subrip files (*.srt)", "*.srt");
     }
 
     private void updateFileChoosers() {

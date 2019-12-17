@@ -3,14 +3,22 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.stage.FileChooser?>
 <?import kirill.subtitlesmerger.gui.GuiConstants?>
 <Tab xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
      fx:controller="kirill.subtitlesmerger.gui.tabs.merge_single_files.MergeSingleFilesTabController"
      text="Merge subtitle files">
     <GridPane hgap="30" vgap="40">
+        <fx:define>
+            <FileChooser fx:id="upperSubtitlesChooser" title="Please choose the file with the upper subtitles"/>
+            <FileChooser fx:id="lowerSubtitlesChooser" title="Please choose the file with the lower subtitles"/>
+            <FileChooser fx:id="mergedSubtitlesChooser" title="Please choose where to save the result"/>
+        </fx:define>
+
         <padding>
             <Insets top="20" right="20" bottom="20" left="20"/>
         </padding>
+
         <gridLinesVisible><GuiConstants fx:constant="DEBUG"/></gridLinesVisible>
 
         <columnConstraints>

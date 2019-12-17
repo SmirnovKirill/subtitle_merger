@@ -1,0 +1,38 @@
+.file-table-header {
+    -fx-background-color: -fx-box-border, -fx-inner-border, -fx-body-color;
+    -fx-background-insets: 0, 1, 2 0 0 2;
+    -fx-font-weight: bold;
+    -fx-padding: 0.166667em;
+    -fx-min-height: 2em;
+}
+
+.last-file-table-header {
+    -fx-background-color: -fx-box-border, -fx-inner-border, -fx-body-color;
+    -fx-background-insets: 0, 1, 2 2 0 2;
+}
+
+.file-table-cell {
+    -fx-background-color: -fx-box-border, white;
+    -fx-background-insets: 0, 0 0 1 1;
+    -fx-padding: 5px;
+}
+
+.first-file-table-cell {
+    -fx-background-color: -fx-box-border, white;
+    -fx-background-insets: 0, 0 0 1 0;
+}
+
+.lowest-file-table-cell {
+    -fx-background-color: -fx-box-border, white;
+    -fx-background-insets: 0, 0 0 0 1;
+}
+
+.first-lowest-file-table-cell {
+    -fx-background-color: white;
+    -fx-background-insets: 0;
+}
+
+.file-table-scroll:focused {
+    -fx-background-color: -fx-box-border, -fx-background;
+    -fx-background-insets: 0, 1;
+}
