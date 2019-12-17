@@ -34,6 +34,7 @@ public class RegularContentController {
     @FXML
     private Label directoryPathLabel;
 
+    @FXML
     private DirectoryChooser directoryChooser;
 
     @FXML
@@ -45,16 +46,6 @@ public class RegularContentController {
     public void init(Stage stage, AppContext appContext) {
         this.stage = stage;
         this.appContext = appContext;
-
-        this.directoryChooser = generateDirectoryChooser();
-    }
-
-    private static DirectoryChooser generateDirectoryChooser() {
-        DirectoryChooser result = new DirectoryChooser();
-
-        result.setTitle("choose the directory with videos");
-
-        return result;
     }
 
     @FXML

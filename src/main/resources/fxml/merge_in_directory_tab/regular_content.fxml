@@ -1,21 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.VBox?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Hyperlink?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.stage.DirectoryChooser?>
 <?import kirill.subtitlesmerger.gui.GuiLauncher?>
-<?import javafx.scene.layout.GridPane?>
 <?import kirill.subtitlesmerger.logic.Constants?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.image.ImageView?>
-<?import javafx.scene.image.Image?>
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
       fx:id="pane" fx:controller="kirill.subtitlesmerger.gui.merge_in_directory_tab.RegularContentController"
       spacing="10">
+    <fx:define>
+        <DirectoryChooser fx:id="directoryChooser" title="choose the directory with videos"/>
+    </fx:define>
+
     <padding>
         <Insets top="20" right="20" bottom="20" left="20"/>
     </padding>
@@ -31,8 +29,8 @@
 
         <Label text="Please choose the directory with videos"
                GridPane.halignment="LEFT" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-        <Button fx:id="directoryChooseButton"
-                onAction="#directoryButtonClicked"
+        <Button fx:id="directoryChooseButton" onAction="#directoryButtonClicked"
+                text="Choose directory"
                 GridPane.halignment="RIGHT" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
         <Label fx:id="directoryPathLabel"
                text="not selected"
