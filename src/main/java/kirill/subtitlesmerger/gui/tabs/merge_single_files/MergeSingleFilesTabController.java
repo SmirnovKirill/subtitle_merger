@@ -1,13 +1,15 @@
-package kirill.subtitlesmerger.gui;
+package kirill.subtitlesmerger.gui.tabs.merge_single_files;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import kirill.subtitlesmerger.logic.AppContext;
-import kirill.subtitlesmerger.logic.Config;
-import kirill.subtitlesmerger.logic.Constants;
+import kirill.subtitlesmerger.gui.GuiConstants;
+import kirill.subtitlesmerger.gui.GuiPreferences;
+import kirill.subtitlesmerger.gui.GuiContext;
+import kirill.subtitlesmerger.gui.GuiLauncher;
+import kirill.subtitlesmerger.logic.LogicConstants;
 import kirill.subtitlesmerger.logic.core.Merger;
 import kirill.subtitlesmerger.logic.core.Parser;
 import kirill.subtitlesmerger.logic.core.entities.Subtitles;
@@ -31,7 +33,7 @@ import java.util.stream.Collectors;
 public class MergeSingleFilesTabController {
     private Stage stage;
 
-    private AppContext appContext;
+    private GuiContext guiContext;
 
     private File upperSubtitlesFile;
 
@@ -73,9 +75,9 @@ public class MergeSingleFilesTabController {
     @FXML
     private Label resultLabel;
 
-    public void init(Stage stage, AppContext appContext) {
+    public void initialize(Stage stage, GuiContext guiContext) {
         this.stage = stage;
-        this.appContext = appContext;
+        this.guiContext = guiContext;
 
         this.upperSubtitlesChooser = generateFileChooser("Please choose the file with the upper subtitles");
         this.lowerSubtitlesChooser = generateFileChooser("Please choose the file with the lower subtitles");
@@ -97,27 +99,27 @@ public class MergeSingleFilesTabController {
 
     private void updateFileChoosers() {
         File upperSubtitlesDirectory = ObjectUtils.firstNonNull(
-                appContext.getConfig().getUpperSubtitlesLastDirectory(),
-                appContext.getConfig().getLowerSubtitlesLastDirectory(),
-                appContext.getConfig().getMergedSubtitlesLastDirectory()
+                guiContext.getConfig().getUpperSubtitlesLastDirectory(),
+                guiContext.getConfig().getLowerSubtitlesLastDirectory(),
+                guiContext.getConfig().getMergedSubtitlesLastDirectory()
         );
         if (upperSubtitlesDirectory != null) {
             upperSubtitlesChooser.setInitialDirectory(upperSubtitlesDirectory);
         }
 
         File lowerSubtitlesDirectory = ObjectUtils.firstNonNull(
-                appContext.getConfig().getLowerSubtitlesLastDirectory(),
-                appContext.getConfig().getUpperSubtitlesLastDirectory(),
-                appContext.getConfig().getMergedSubtitlesLastDirectory()
+                guiContext.getConfig().getLowerSubtitlesLastDirectory(),
+                guiContext.getConfig().getUpperSubtitlesLastDirectory(),
+                guiContext.getConfig().getMergedSubtitlesLastDirectory()
         );
         if (lowerSubtitlesDirectory != null) {
             lowerSubtitlesChooser.setInitialDirectory(lowerSubtitlesDirectory);
         }
 
         File mergedSubtitlesDirectory = ObjectUtils.firstNonNull(
-                appContext.getConfig().getMergedSubtitlesLastDirectory(),
-                appContext.getConfig().getUpperSubtitlesLastDirectory(),
-                appContext.getConfig().getLowerSubtitlesLastDirectory()
+                guiContext.getConfig().getMergedSubtitlesLastDirectory(),
+                guiContext.getConfig().getUpperSubtitlesLastDirectory(),
+                guiContext.getConfig().getLowerSubtitlesLastDirectory()
         );
         if (mergedSubtitlesDirectory != null) {
             mergedSubtitlesChooser.setInitialDirectory(mergedSubtitlesDirectory);
@@ -148,13 +150,13 @@ public class MergeSingleFilesTabController {
     }
 
     private static void removeButtonErrorClass(Button button) {
-        button.getStyleClass().remove(GuiLauncher.BUTTON_ERROR_CLASS);
+        button.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
     }
 
     private void clearResult() {
         resultLabel.setText("");
-        resultLabel.getStyleClass().remove(GuiLauncher.LABEL_SUCCESS_CLASS);
-        resultLabel.getStyleClass().remove(GuiLauncher.LABEL_ERROR_CLASS);
+        resultLabel.getStyleClass().remove(GuiConstants.LABEL_SUCCESS_CLASS);
+        resultLabel.getStyleClass().remove(GuiConstants.LABEL_ERROR_CLASS);
     }
 
     private void updatePathLabels(FileType fileType) {
@@ -284,8 +286,8 @@ public class MergeSingleFilesTabController {
     }
 
     private static void addButtonErrorClass(Button button) {
-        if (!button.getStyleClass().contains(GuiLauncher.BUTTON_ERROR_CLASS)) {
-            button.getStyleClass().add(GuiLauncher.BUTTON_ERROR_CLASS);
+        if (!button.getStyleClass().contains(GuiConstants.BUTTON_ERROR_CLASS)) {
+            button.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
         }
     }
 
@@ -298,7 +300,7 @@ public class MergeSingleFilesTabController {
                 break;
             case FILE_IS_TOO_BIG:
                 result.append("file is too big (>")
-                        .append(Constants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES).append(" megabytes)");
+                        .append(GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES).append(" megabytes)");
                 break;
             case INCORRECT_SUBTITLES_FORMAT:
                 result.append("incorrect subtitles format");
@@ -324,7 +326,7 @@ public class MergeSingleFilesTabController {
 
     private void showErrorMessage(String text) {
         clearResult();
-        resultLabel.getStyleClass().add(GuiLauncher.LABEL_ERROR_CLASS);
+        resultLabel.getStyleClass().add(GuiConstants.LABEL_ERROR_CLASS);
         resultLabel.setText(text);
     }
 
@@ -341,23 +343,23 @@ public class MergeSingleFilesTabController {
             switch (fileType) {
                 case UPPER_SUBTITLES:
                     if (upperSubtitlesFile != null) {
-                        appContext.getConfig().saveUpperSubtitlesLastDirectory(upperSubtitlesFile.getParent());
+                        guiContext.getConfig().saveUpperSubtitlesLastDirectory(upperSubtitlesFile.getParent());
                     }
                     break;
                 case LOWER_SUBTITLES:
                     if (lowerSubtitlesFile != null) {
-                        appContext.getConfig().saveLowerSubtitlesLastDirectory(lowerSubtitlesFile.getParent());
+                        guiContext.getConfig().saveLowerSubtitlesLastDirectory(lowerSubtitlesFile.getParent());
                     }
                     break;
                 case MERGED_SUBTITLES:
                     if (mergedSubtitlesFile != null) {
-                        appContext.getConfig().saveMergedSubtitlesLastDirectory(mergedSubtitlesFile.getParent());
+                        guiContext.getConfig().saveMergedSubtitlesLastDirectory(mergedSubtitlesFile.getParent());
                     }
                     break;
                 default:
                     throw new IllegalStateException();
             }
-        } catch (Config.ConfigException e) {
+        } catch (GuiPreferences.ConfigException e) {
             throw new IllegalStateException();
         }
     }
@@ -414,7 +416,7 @@ public class MergeSingleFilesTabController {
 
     private void showSuccessMessage() {
         clearResult();
-        resultLabel.getStyleClass().add(GuiLauncher.LABEL_SUCCESS_CLASS);
+        resultLabel.getStyleClass().add(GuiConstants.LABEL_SUCCESS_CLASS);
         resultLabel.setText("Subtitles have been merged successfully!");
     }
 
@@ -433,7 +435,7 @@ public class MergeSingleFilesTabController {
     }
 
     private static ParsedSubtitlesInfo getParsedSubtitlesSingleFile(File file, String name) {
-        if (file.length() / 1024 / 1024 > Constants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES) {
+        if (file.length() / 1024 / 1024 > GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES) {
             return new ParsedSubtitlesInfo(file, null, IncorrectInputFileReason.FILE_IS_TOO_BIG);
         }
 

@@ -3,15 +3,15 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import kirill.subtitlesmerger.logic.Constants?>
+<?import kirill.subtitlesmerger.gui.GuiConstants?>
 <Tab xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-     fx:controller="kirill.subtitlesmerger.gui.MergeSingleFilesTabController"
+     fx:controller="kirill.subtitlesmerger.gui.tabs.merge_single_files.MergeSingleFilesTabController"
      text="Merge subtitle files">
     <GridPane hgap="30" vgap="40">
         <padding>
             <Insets top="20" right="20" bottom="20" left="20"/>
         </padding>
-        <gridLinesVisible><Constants fx:constant="DEBUG"/></gridLinesVisible>
+        <gridLinesVisible><GuiConstants fx:constant="DEBUG"/></gridLinesVisible>
 
         <columnConstraints>
             <ColumnConstraints minWidth="400"/>

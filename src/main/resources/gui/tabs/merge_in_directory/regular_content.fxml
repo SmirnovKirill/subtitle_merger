@@ -5,10 +5,9 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.stage.DirectoryChooser?>
-<?import kirill.subtitlesmerger.gui.GuiLauncher?>
-<?import kirill.subtitlesmerger.logic.Constants?>
+<?import kirill.subtitlesmerger.gui.GuiConstants?>
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-      fx:id="pane" fx:controller="kirill.subtitlesmerger.gui.merge_in_directory_tab.RegularContentController"
+      fx:id="pane" fx:controller="kirill.subtitlesmerger.gui.tabs.merge_in_directory.RegularContentController"
       spacing="10">
     <fx:define>
         <DirectoryChooser fx:id="directoryChooser" title="choose the directory with videos"/>
@@ -19,7 +18,7 @@
     </padding>
 
     <GridPane hgap="30" vgap="40">
-        <gridLinesVisible><Constants fx:constant="DEBUG"/></gridLinesVisible>
+        <gridLinesVisible><GuiConstants fx:constant="DEBUG"/></gridLinesVisible>
 
         <columnConstraints>
             <ColumnConstraints minWidth="400"/>
@@ -42,27 +41,27 @@
             <Button text="Refresh">
                 <graphic>
                     <ImageView fitHeight="16" fitWidth="16">
-                        <Image url="/refresh.png"/>
+                        <Image url="/gui/icons/refresh.png"/>
                     </ImageView>
                 </graphic>
             </Button>
             <Button text="Get subtitle sizes">
                 <graphic>
                     <ImageView fitHeight="16" fitWidth="16">
-                        <Image url="/get.png"/>
+                        <Image url="/gui/icons/get.png"/>
                     </ImageView>
                 </graphic>
             </Button>
             <Button text="Inject subtitles">
                 <graphic>
                     <ImageView fitHeight="16" fitWidth="16">
-                        <Image url="/process.png"/>
+                        <Image url="/gui/icons/process.png"/>
                     </ImageView>
                 </graphic>
             </Button>
         </HBox>
     </GridPane>
     <Label visible="false">
-        <styleClass><GuiLauncher fx:constant="LABEL_ERROR_CLASS"/></styleClass>
+        <styleClass><GuiConstants fx:constant="LABEL_ERROR_CLASS"/></styleClass>
     </Label>
 </VBox>

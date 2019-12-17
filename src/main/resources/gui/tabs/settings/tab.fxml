@@ -4,20 +4,20 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import kirill.subtitlesmerger.logic.Constants?>
+<?import kirill.subtitlesmerger.gui.GuiConstants?>
 <Tab xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-     fx:controller="kirill.subtitlesmerger.gui.SettingsTabController"
+     fx:controller="kirill.subtitlesmerger.gui.tabs.settings.SettingsTabController"
      text="Settings">
     <graphic>
         <ImageView fitHeight="16" fitWidth="16">
-            <Image url="/settings.png"/>
+            <Image url="/gui/icons/settings.png"/>
         </ImageView>
     </graphic>
     <GridPane hgap="55">
         <padding>
             <Insets top="20" right="20" bottom="20" left="20"/>
         </padding>
-        <gridLinesVisible><Constants fx:constant="DEBUG"/></gridLinesVisible>
+        <gridLinesVisible><GuiConstants fx:constant="DEBUG"/></gridLinesVisible>
 
         <columnConstraints>
             <ColumnConstraints minWidth="275"/>
@@ -59,7 +59,7 @@
             -->
             <HBox fx:id="upperSubtitlesQuestionWrapper" alignment="CENTER">
                 <ImageView fitHeight="16" fitWidth="16">
-                    <Image url="/question.png"/>
+                    <Image url="/gui/icons/question.png"/>
                 </ImageView>
             </HBox>
         </HBox>
@@ -78,7 +78,7 @@
             </padding>
             <graphic>
                 <ImageView fitHeight="24" fitWidth="24">
-                    <Image url="/swap.png"/>
+                    <Image url="/gui/icons/swap.png"/>
                 </ImageView>
             </graphic>
         </Button>
@@ -92,7 +92,7 @@
             -->
             <HBox fx:id="lowerSubtitlesQuestionWrapper" alignment="CENTER">
                 <ImageView fitHeight="16" fitWidth="16">
-                    <Image url="/question.png"/>
+                    <Image url="/gui/icons/question.png"/>
                 </ImageView>
             </HBox>
         </HBox>

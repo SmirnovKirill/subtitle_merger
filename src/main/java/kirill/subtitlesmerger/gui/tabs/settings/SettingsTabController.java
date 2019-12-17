@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.gui;
+package kirill.subtitlesmerger.gui.tabs.settings;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.fxml.FXML;
@@ -8,9 +8,10 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
-import kirill.subtitlesmerger.logic.AppContext;
-import kirill.subtitlesmerger.logic.Config;
-import kirill.subtitlesmerger.logic.Constants;
+import kirill.subtitlesmerger.gui.GuiConstants;
+import kirill.subtitlesmerger.gui.GuiContext;
+import kirill.subtitlesmerger.gui.GuiPreferences;
+import kirill.subtitlesmerger.logic.LogicConstants;
 import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.Ffmpeg;
 import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.FfmpegException;
 import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.Ffprobe;
@@ -26,7 +27,7 @@ public class SettingsTabController {
 
     private Stage stage;
 
-    private AppContext appContext;
+    private GuiContext guiContext;
 
     @FXML
     private TextField ffprobeField;
@@ -64,9 +65,9 @@ public class SettingsTabController {
     @FXML
     private Label resultLabel;
 
-    public void init(Stage stage, AppContext appContext) {
+    public void initialize(Stage stage, GuiContext guiContext) {
         this.stage = stage;
-        this.appContext = appContext;
+        this.guiContext = guiContext;
 
         this.ffprobeChooser = new FileChooser();
         this.ffmpegChooser = new FileChooser();
@@ -77,10 +78,10 @@ public class SettingsTabController {
     }
 
     private void initComboBoxes() {
-        upperLanguageComboBox.getItems().setAll(Constants.ALLOWED_LANGUAGE_CODES);
+        upperLanguageComboBox.getItems().setAll(LogicConstants.ALLOWED_LANGUAGE_CODES);
         upperLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
 
-        lowerLanguageComboBox.getItems().setAll(Constants.ALLOWED_LANGUAGE_CODES);
+        lowerLanguageComboBox.getItems().setAll(LogicConstants.ALLOWED_LANGUAGE_CODES);
         lowerLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
     }
 
@@ -97,8 +98,8 @@ public class SettingsTabController {
     }
 
     private void updateFileChoosersAndFields() {
-        File ffprobeFile = appContext.getConfig().getFfprobeFile();
-        File ffmpegFile = appContext.getConfig().getFfmpegFile();
+        File ffprobeFile = guiContext.getConfig().getFfprobeFile();
+        File ffmpegFile = guiContext.getConfig().getFfmpegFile();
 
         if (ffprobeFile != null) {
             updateFfprobeInfo(
@@ -132,18 +133,18 @@ public class SettingsTabController {
             );
         }
 
-        LanguageAlpha3Code upperLanguage = appContext.getConfig().getUpperLanguage();
+        LanguageAlpha3Code upperLanguage = guiContext.getConfig().getUpperLanguage();
         if (upperLanguage != null) {
             upperLanguageComboBox.getSelectionModel().select(upperLanguage);
         }
 
-        LanguageAlpha3Code lowerLanguage = appContext.getConfig().getLowerLanguage();
+        LanguageAlpha3Code lowerLanguage = guiContext.getConfig().getLowerLanguage();
         if (lowerLanguage != null) {
             lowerLanguageComboBox.getSelectionModel().select(lowerLanguage);
         }
 
-        boolean swapButtonDisable = appContext.getConfig().getUpperLanguage() == null
-                || appContext.getConfig().getLowerLanguage() == null;
+        boolean swapButtonDisable = guiContext.getConfig().getUpperLanguage() == null
+                || guiContext.getConfig().getLowerLanguage() == null;
 
         swapLanguagesButton.setDisable(swapButtonDisable);
     }
@@ -180,16 +181,16 @@ public class SettingsTabController {
             return;
         }
 
-        if (Objects.equals(ffprobeFile, appContext.getConfig().getFfprobeFile())) {
+        if (Objects.equals(ffprobeFile, guiContext.getConfig().getFfprobeFile())) {
             showSuccessMessage("path to ffprobe has stayed the same");
             return;
         }
 
-        boolean hadValueBefore = appContext.getConfig().getFfmpegFile() != null;
+        boolean hadValueBefore = guiContext.getConfig().getFfmpegFile() != null;
 
         try {
-            appContext.getConfig().saveFfprobeFile(ffprobeFile.getAbsolutePath());
-            appContext.setFfprobe(new Ffprobe(appContext.getConfig().getFfprobeFile()));
+            guiContext.getConfig().saveFfprobeFile(ffprobeFile.getAbsolutePath());
+            guiContext.setFfprobe(new Ffprobe(guiContext.getConfig().getFfprobeFile()));
             updateFileChoosersAndFields();
 
             if (hadValueBefore) {
@@ -197,26 +198,26 @@ public class SettingsTabController {
             } else {
                 showSuccessMessage("path to ffprobe has been saved successfully");
             }
-        } catch (Config.ConfigException | FfmpegException e) {
+        } catch (GuiPreferences.ConfigException | FfmpegException e) {
             showErrorMessage("incorrect path to ffprobe");
         }
     }
 
     private void clearResult() {
         resultLabel.setText("");
-        resultLabel.getStyleClass().remove(GuiLauncher.LABEL_SUCCESS_CLASS);
-        resultLabel.getStyleClass().remove(GuiLauncher.LABEL_ERROR_CLASS);
+        resultLabel.getStyleClass().remove(GuiConstants.LABEL_SUCCESS_CLASS);
+        resultLabel.getStyleClass().remove(GuiConstants.LABEL_ERROR_CLASS);
     }
 
     private void showSuccessMessage(String text) {
         clearResult();
-        resultLabel.getStyleClass().add(GuiLauncher.LABEL_SUCCESS_CLASS);
+        resultLabel.getStyleClass().add(GuiConstants.LABEL_SUCCESS_CLASS);
         resultLabel.setText(text);
     }
 
     private void showErrorMessage(String text) {
         clearResult();
-        resultLabel.getStyleClass().add(GuiLauncher.LABEL_ERROR_CLASS);
+        resultLabel.getStyleClass().add(GuiConstants.LABEL_ERROR_CLASS);
         resultLabel.setText(text);
     }
 
@@ -228,16 +229,16 @@ public class SettingsTabController {
             return;
         }
 
-        if (Objects.equals(ffmpegFile, appContext.getConfig().getFfmpegFile())) {
+        if (Objects.equals(ffmpegFile, guiContext.getConfig().getFfmpegFile())) {
             showSuccessMessage("path to ffmpeg has stayed the same");
             return;
         }
 
-        boolean hadValueBefore = appContext.getConfig().getFfmpegFile() != null;
+        boolean hadValueBefore = guiContext.getConfig().getFfmpegFile() != null;
 
         try {
-            appContext.getConfig().saveFfmpegFile(ffmpegFile.getAbsolutePath());
-            appContext.setFfmpeg(new Ffmpeg(appContext.getConfig().getFfmpegFile()));
+            guiContext.getConfig().saveFfmpegFile(ffmpegFile.getAbsolutePath());
+            guiContext.setFfmpeg(new Ffmpeg(guiContext.getConfig().getFfmpegFile()));
             updateFileChoosersAndFields();
 
             if (hadValueBefore) {
@@ -245,7 +246,7 @@ public class SettingsTabController {
             } else {
                 showSuccessMessage("path to ffmpeg has been saved successfully");
             }
-        } catch (Config.ConfigException | FfmpegException e) {
+        } catch (GuiPreferences.ConfigException | FfmpegException e) {
             showErrorMessage("incorrect path to ffmpeg");
         }
     }
@@ -254,20 +255,20 @@ public class SettingsTabController {
     private void upperLanguageChanged() {
         LanguageAlpha3Code value = upperLanguageComboBox.getSelectionModel().getSelectedItem();
 
-        if (Objects.equals(value, appContext.getConfig().getUpperLanguage())) {
+        if (Objects.equals(value, guiContext.getConfig().getUpperLanguage())) {
             return;
         }
 
-        if (Objects.equals(value, appContext.getConfig().getLowerLanguage())) {
+        if (Objects.equals(value, guiContext.getConfig().getLowerLanguage())) {
             updateFileChoosersAndFields();
             showErrorMessage("languages have to be different, please select another one");
             return;
         }
 
-        boolean hadValueBefore = appContext.getConfig().getUpperLanguage() != null;
+        boolean hadValueBefore = guiContext.getConfig().getUpperLanguage() != null;
 
         try {
-            appContext.getConfig().saveUpperLanguage(value.toString());
+            guiContext.getConfig().saveUpperLanguage(value.toString());
             updateFileChoosersAndFields();
 
             if (hadValueBefore) {
@@ -275,7 +276,7 @@ public class SettingsTabController {
             } else {
                 showSuccessMessage("language for upper subtitles has been saved successfully");
             }
-        } catch (Config.ConfigException e) {
+        } catch (GuiPreferences.ConfigException e) {
             log.error("language for upper subtitles has not been saved: " + ExceptionUtils.getStackTrace(e));
 
             showErrorMessage("something bad has happened, language hasn't been saved");
@@ -284,16 +285,16 @@ public class SettingsTabController {
 
     @FXML
     private void swapLanguagesButtonClicked() {
-        LanguageAlpha3Code oldUpperLanguage = appContext.getConfig().getUpperLanguage();
-        LanguageAlpha3Code oldLowerLanguage = appContext.getConfig().getLowerLanguage();
+        LanguageAlpha3Code oldUpperLanguage = guiContext.getConfig().getUpperLanguage();
+        LanguageAlpha3Code oldLowerLanguage = guiContext.getConfig().getLowerLanguage();
 
         try {
-            appContext.getConfig().saveUpperLanguage(oldLowerLanguage.toString());
-            appContext.getConfig().saveLowerLanguage(oldUpperLanguage.toString());
+            guiContext.getConfig().saveUpperLanguage(oldLowerLanguage.toString());
+            guiContext.getConfig().saveLowerLanguage(oldUpperLanguage.toString());
             updateFileChoosersAndFields();
 
             showSuccessMessage("languages have been swapped successfully");
-        } catch (Config.ConfigException e) {
+        } catch (GuiPreferences.ConfigException e) {
             log.error("languages haven't been swapped: " + ExceptionUtils.getStackTrace(e));
 
             showErrorMessage("something bad has happened, languages haven't been swapped");
@@ -304,20 +305,20 @@ public class SettingsTabController {
     private void lowerLanguageChanged() {
         LanguageAlpha3Code value = lowerLanguageComboBox.getSelectionModel().getSelectedItem();
 
-        if (Objects.equals(value, appContext.getConfig().getLowerLanguage())) {
+        if (Objects.equals(value, guiContext.getConfig().getLowerLanguage())) {
             return;
         }
 
-        if (Objects.equals(value, appContext.getConfig().getUpperLanguage())) {
+        if (Objects.equals(value, guiContext.getConfig().getUpperLanguage())) {
             updateFileChoosersAndFields();
             showErrorMessage("languages have to be different, please select another one");
             return;
         }
 
-        boolean hadValueBefore = appContext.getConfig().getLowerLanguage() != null;
+        boolean hadValueBefore = guiContext.getConfig().getLowerLanguage() != null;
 
         try {
-            appContext.getConfig().saveLowerLanguage(value.toString());
+            guiContext.getConfig().saveLowerLanguage(value.toString());
             updateFileChoosersAndFields();
 
             if (hadValueBefore) {
@@ -325,7 +326,7 @@ public class SettingsTabController {
             } else {
                 showSuccessMessage("language for lower subtitles has been saved successfully");
             }
-        } catch (Config.ConfigException e) {
+        } catch (GuiPreferences.ConfigException e) {
             log.error("language for lower subtitles has not been saved: " + ExceptionUtils.getStackTrace(e));
 
             showErrorMessage("something bad has happened, language hasn't been saved");

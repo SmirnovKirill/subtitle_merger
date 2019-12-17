@@ -1,12 +1,12 @@
-package kirill.subtitlesmerger.gui.merge_in_directory_tab;
+package kirill.subtitlesmerger.gui.custom_controls;
 
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import kirill.subtitlesmerger.gui.GuiLauncher;
-import kirill.subtitlesmerger.logic.AppContext;
+import kirill.subtitlesmerger.gui.GuiConstants;
+import kirill.subtitlesmerger.gui.GuiContext;
 import kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -23,29 +23,29 @@ public class FileTableRow {
 
     private Stage stage;
 
-    private AppContext appContext;
+    private GuiContext guiContext;
 
     private SubtitleStreamChooserCell upperStreamChooserCell;
 
     private SubtitleStreamChooserCell lowerStreamChooserCell;
 
-    public FileTableRow(FileInfo fileInfo, boolean lowestRow, Stage stage, AppContext appContext) {
+    public FileTableRow(FileInfo fileInfo, boolean lowestRow, Stage stage, GuiContext guiContext) {
         this.fileInfo = fileInfo;
         this.stage = stage;
-        this.appContext = appContext;
+        this.guiContext = guiContext;
         this.upperStreamChooserCell = new SubtitleStreamChooserCell(
                 fileInfo,
                 lowestRow,
                 SubtitleStreamChooserCell.SubtitleType.UPPER,
                 stage,
-                appContext
+                guiContext
         );
         this.lowerStreamChooserCell = new SubtitleStreamChooserCell(
                 fileInfo,
                 lowestRow,
                 SubtitleStreamChooserCell.SubtitleType.LOWER,
                 stage,
-                appContext
+                guiContext
         );
     }
 
@@ -55,9 +55,9 @@ public class FileTableRow {
         result.setAlignment(Pos.CENTER_LEFT);
         result.setSpacing(10);
 
-        result.getStyleClass().add(GuiLauncher.FIRST_TABLE_CELL_CLASS);
+        result.getStyleClass().add(GuiConstants.FIRST_TABLE_CELL_CLASS);
         if (lowestRow) {
-            result.getStyleClass().add(GuiLauncher.FIRST_LOWEST_TABLE_CELL_CLASS);
+            result.getStyleClass().add(GuiConstants.FIRST_LOWEST_TABLE_CELL_CLASS);
         }
 
         result.getChildren().addAll(

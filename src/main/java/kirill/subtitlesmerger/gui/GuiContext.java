@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.logic;
+package kirill.subtitlesmerger.gui;
 
 import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.Ffmpeg;
 import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.FfmpegException;
@@ -8,9 +8,9 @@ import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 
 @CommonsLog
-public class AppContext {
+public class GuiContext {
     @Getter
-    private Config config;
+    private GuiPreferences config;
 
     @Getter
     @Setter
@@ -20,8 +20,8 @@ public class AppContext {
     @Setter
     private Ffmpeg ffmpeg;
 
-    public AppContext() {
-        config = new Config();
+    public GuiContext() {
+        config = new GuiPreferences();
         if (config.getFfprobeFile() != null) {
             try {
                 ffprobe = new Ffprobe(config.getFfprobeFile());

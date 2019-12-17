@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.gui.merge_in_directory_tab;
+package kirill.subtitlesmerger.gui.custom_controls;
 
 import javafx.event.ActionEvent;
 import javafx.geometry.Pos;
@@ -10,8 +10,8 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import kirill.subtitlesmerger.gui.GuiLauncher;
-import kirill.subtitlesmerger.logic.AppContext;
+import kirill.subtitlesmerger.gui.GuiConstants;
+import kirill.subtitlesmerger.gui.GuiContext;
 import kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlesmerger.logic.work_with_files.entities.SubtitleStream;
 import lombok.Getter;
@@ -32,7 +32,7 @@ public class SubtitleStreamChooserCell {
 
     private Stage stage;
 
-    private AppContext appContext;
+    private GuiContext guiContext;
 
     private ToggleGroup toggleGroup;
 
@@ -56,13 +56,13 @@ public class SubtitleStreamChooserCell {
             boolean lowestRow,
             SubtitleType subtitleType,
             Stage stage,
-            AppContext appContext
+            GuiContext guiContext
     ) {
         this.fileInfo = fileInfo;
         this.lowestRow = lowestRow;
         this.subtitleType = subtitleType;
         this.stage = stage;
-        this.appContext = appContext;
+        this.guiContext = guiContext;
 
         if (fileInfo.getUnavailabilityReason() != null) {
             return;
@@ -160,9 +160,9 @@ public class SubtitleStreamChooserCell {
         result.setAlignment(Pos.CENTER_LEFT);
         result.setSpacing(10);
 
-        result.getStyleClass().add(GuiLauncher.TABLE_CELL_CLASS);
+        result.getStyleClass().add(GuiConstants.TABLE_CELL_CLASS);
         if (lowestRow) {
-            result.getStyleClass().add(GuiLauncher.LOWEST_TABLE_CELL_CLASS);
+            result.getStyleClass().add(GuiConstants.LOWEST_TABLE_CELL_CLASS);
         }
 
         if (!CollectionUtils.isEmpty(streamRadioButtons)) {

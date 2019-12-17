@@ -5,7 +5,7 @@
 <?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-      fx:id="pane" fx:controller="kirill.subtitlesmerger.gui.merge_in_directory_tab.MissingSettingsController"
+      fx:id="pane" fx:controller="kirill.subtitlesmerger.gui.tabs.merge_in_directory.MissingSettingsController"
       spacing="10">
     <padding>
         <Insets top="20" right="20" bottom="20" left="20"/>

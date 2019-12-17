@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.gui.merge_in_directory_tab;
+package kirill.subtitlesmerger.gui.tabs.merge_in_directory;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;

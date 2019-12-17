@@ -1,11 +1,11 @@
-package kirill.subtitlesmerger.gui.merge_in_directory_tab;
+package kirill.subtitlesmerger.gui.custom_controls;
 
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-import kirill.subtitlesmerger.logic.AppContext;
+import kirill.subtitlesmerger.gui.GuiContext;
 import kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -215,14 +215,14 @@ class TableWithFiles {
         contentScrollPane.setVisible(true);
     }
 
-    void showFiles(Collection<FileInfo> filesInfo, Stage stage, AppContext appContext) {
+    void showFiles(Collection<FileInfo> filesInfo, Stage stage, GuiContext guiContext) {
         contentPane.getChildren().clear();
 
         int i = 0;
         for (FileInfo fileInfo : filesInfo) {
             boolean lowest = (i == (filesInfo.size() - 1));
 
-            FileTableRow fileTableRow = new FileTableRow(fileInfo, lowest, stage, appContext);
+            FileTableRow fileTableRow = new FileTableRow(fileInfo, lowest, stage, guiContext);
 
             contentPane.addRow(
                     contentPane.getRowCount(),

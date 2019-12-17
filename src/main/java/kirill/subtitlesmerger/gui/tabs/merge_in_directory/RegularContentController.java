@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.gui.merge_in_directory_tab;
+package kirill.subtitlesmerger.gui.tabs.merge_in_directory;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -7,9 +7,9 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
-import kirill.subtitlesmerger.logic.AppContext;
-import kirill.subtitlesmerger.logic.Config;
-import kirill.subtitlesmerger.logic.Constants;
+import kirill.subtitlesmerger.gui.GuiContext;
+import kirill.subtitlesmerger.gui.GuiPreferences;
+import kirill.subtitlesmerger.logic.LogicConstants;
 import kirill.subtitlesmerger.logic.work_with_files.FileInfoGetter;
 import kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.Ffprobe;
@@ -23,7 +23,7 @@ import java.util.List;
 public class RegularContentController {
     private Stage stage;
 
-    private AppContext appContext;
+    private GuiContext guiContext;
 
     @FXML
     private Pane pane;
@@ -40,12 +40,9 @@ public class RegularContentController {
     @FXML
     private CheckBox hideUnavailableCheckbox;
 
-    @FXML
-    private TableWithFiles tableWithFiles;
-
-    public void init(Stage stage, AppContext appContext) {
+    public void init(Stage stage, GuiContext guiContext) {
         this.stage = stage;
-        this.appContext = appContext;
+        this.guiContext = guiContext;
     }
 
     @FXML
@@ -58,8 +55,8 @@ public class RegularContentController {
         directoryPathLabel.setText(directory.getAbsolutePath());
 
         try {
-            appContext.getConfig().saveLastDirectoryWithVideos(directory.getAbsolutePath());
-        } catch (Config.ConfigException e) {
+            guiContext.getConfig().saveLastDirectoryWithVideos(directory.getAbsolutePath());
+        } catch (GuiPreferences.ConfigException e) {
             log.error("failed to save last directory with videos, that shouldn't be possible");
             throw new IllegalStateException();
         }
@@ -81,8 +78,8 @@ public class RegularContentController {
             result.add(
                     FileInfoGetter.getFileInfoWithoutSubtitles(
                             file,
-                            Constants.ALLOWED_VIDEO_EXTENSIONS,
-                            Constants.ALLOWED_VIDEO_MIME_TYPES,
+                            LogicConstants.ALLOWED_VIDEO_EXTENSIONS,
+                            LogicConstants.ALLOWED_VIDEO_MIME_TYPES,
                             ffprobe
                     )
             );

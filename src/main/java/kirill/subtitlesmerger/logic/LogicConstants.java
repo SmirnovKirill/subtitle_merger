@@ -8,16 +8,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Constants {
-    static final String PREFERENCES_ROOT_NODE = "subtitlesmerger";
-
+public class LogicConstants {
     public static final List<String> ALLOWED_VIDEO_EXTENSIONS = Collections.singletonList("mkv");
 
     public static final List<String> ALLOWED_VIDEO_MIME_TYPES = Collections.singletonList("video/x-matroska");
-
-    public static final boolean DEBUG = false;
-
-    public static final int INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES = 10;
 
     public static final List<LanguageAlpha3Code> ALLOWED_LANGUAGE_CODES = getAllLanguageCodes();
 
