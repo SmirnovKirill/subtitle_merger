@@ -1,6 +1,8 @@
 package kirill.subtitlesmerger.gui.tabs.merge_single_files;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kirill.subtitlesmerger.gui.GuiConstants;
@@ -28,12 +30,35 @@ import java.util.stream.Collectors;
 
 @CommonsLog
 public class MergeSingleFilesTabController {
+    public static final String FILE_NOT_CHOSEN_PATH = "not selected";
+
     private Stage stage;
 
     private GuiPreferences preferences;
 
-    @Getter
-    private MergeSingleFilesTabModel model;
+    @FXML
+    private Button upperSubtitlesChooseButton;
+
+    @FXML
+    private Label upperSubtitlesPathLabel;
+
+    @FXML
+    private Button lowerSubtitlesChooseButton;
+
+    @FXML
+    private Label lowerSubtitlesPathLabel;
+
+    @FXML
+    private Button mergedSubtitlesChooseButton;
+
+    @FXML
+    private Label mergedSubtitlesPathLabel;
+
+    @FXML
+    private Button mergeButton;
+
+    @FXML
+    private Label resultLabel;
 
     private File upperSubtitlesFile;
 
@@ -44,10 +69,6 @@ public class MergeSingleFilesTabController {
     private List<IncorrectInputFile> incorrectInputFiles;
 
     private IncorrectOutputFile incorrectOutputFile;
-
-    public MergeSingleFilesTabController() {
-        this.model = new MergeSingleFilesTabModel();
-    }
 
     public void initialize(Stage stage, GuiContext context) {
         this.stage = stage;
@@ -128,23 +149,22 @@ public class MergeSingleFilesTabController {
     }
 
     private void clearErrorsAndResult() {
-        model.getUpperSubtitlesChooseButtonClass().clear();
-        model.getLowerSubtitlesChooseButtonClass().clear();
-        model.getMergedSubtitlesChooseButtonClass().clear();
-        model.getResultClass().clear();
-        model.setResultText("");
+        upperSubtitlesChooseButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
+        lowerSubtitlesChooseButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
+        mergedSubtitlesChooseButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
+        resultLabel.getStyleClass().removeAll(GuiConstants.LABEL_ERROR_CLASS, GuiConstants.LABEL_SUCCESS_CLASS);
     }
 
     private void updatePathLabels(FileType fileType) {
         switch (fileType) {
             case UPPER_SUBTITLES:
-                model.setUpperSubtitlesPath(getPathText(upperSubtitlesFile));
+                upperSubtitlesPathLabel.setText(getPathText(upperSubtitlesFile));
                 break;
             case LOWER_SUBTITLES:
-                model.setLowerSubtitlesPath(getPathText(lowerSubtitlesFile));
+                lowerSubtitlesPathLabel.setText(getPathText(lowerSubtitlesFile));
                 break;
             case MERGED_SUBTITLES:
-                model.setMergedSubtitlesPath(getPathText(mergedSubtitlesFile));
+                mergedSubtitlesPathLabel.setText(getPathText(mergedSubtitlesFile));
                 break;
             default:
                 throw new IllegalStateException();
@@ -153,7 +173,7 @@ public class MergeSingleFilesTabController {
 
     private static String getPathText(File file) {
         if (file == null) {
-            return MergeSingleFilesTabModel.FILE_NOT_CHOSEN_PATH;
+            return FILE_NOT_CHOSEN_PATH;
         } else {
             return file.getAbsolutePath();
         }
@@ -227,18 +247,21 @@ public class MergeSingleFilesTabController {
         }
 
         if (!StringUtils.isBlank(upperSubtitlesFileErrorMessage)) {
-            model.getUpperSubtitlesChooseButtonClass().clear();
-            model.getUpperSubtitlesChooseButtonClass().add(GuiConstants.BUTTON_ERROR_CLASS);
+            if (!upperSubtitlesChooseButton.getStyleClass().contains(GuiConstants.BUTTON_ERROR_CLASS)) {
+                upperSubtitlesChooseButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
+            }
         }
 
         if (!StringUtils.isBlank(lowerSubtitlesFileErrorMessage)) {
-            model.getLowerSubtitlesChooseButtonClass().clear();
-            model.getLowerSubtitlesChooseButtonClass().add(GuiConstants.BUTTON_ERROR_CLASS);
+            if (!lowerSubtitlesChooseButton.getStyleClass().contains(GuiConstants.BUTTON_ERROR_CLASS)) {
+                lowerSubtitlesChooseButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
+            }
         }
 
         if (!StringUtils.isBlank(mergedSubtitlesFileErrorMessage)) {
-            model.getMergedSubtitlesChooseButtonClass().clear();
-            model.getMergedSubtitlesChooseButtonClass().add(GuiConstants.BUTTON_ERROR_CLASS);
+            if (!mergedSubtitlesChooseButton.getStyleClass().contains(GuiConstants.BUTTON_ERROR_CLASS)) {
+                mergedSubtitlesChooseButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
+            }
         }
 
         StringBuilder combinedErrorsMessage = new StringBuilder("Can't merge subtitles:");
@@ -255,9 +278,11 @@ public class MergeSingleFilesTabController {
             combinedErrorsMessage.append("\n").append("\u2022").append(" ").append(mergedSubtitlesFileErrorMessage);
         }
 
-        model.setResultText(combinedErrorsMessage.toString());
-        model.getResultClass().clear();
-        model.getResultClass().add(GuiConstants.LABEL_ERROR_CLASS);
+        resultLabel.setText(combinedErrorsMessage.toString());
+        resultLabel.getStyleClass().remove(GuiConstants.LABEL_SUCCESS_CLASS);
+        if (!resultLabel.getStyleClass().contains(GuiConstants.LABEL_ERROR_CLASS)) {
+            resultLabel.getStyleClass().add(GuiConstants.LABEL_ERROR_CLASS);
+        }
     }
 
     private static String getErrorText(File file, IncorrectInputFileReason reason) {
@@ -298,7 +323,7 @@ public class MergeSingleFilesTabController {
                 || lowerSubtitlesFile == null
                 || mergedSubtitlesFile == null
                 || inputFilesTheSame();
-        model.setMergeButtonDisable(disable);
+        mergeButton.setDisable(disable);
     }
 
     private void saveLastDirectoryInConfigIfNecessary(FileType fileType) {
@@ -376,9 +401,11 @@ public class MergeSingleFilesTabController {
             return;
         }
 
-        model.setResultText("Subtitles have been merged successfully!");
-        model.getResultClass().clear();
-        model.getResultClass().add(GuiConstants.LABEL_SUCCESS_CLASS);
+        resultLabel.setText("Subtitles have been merged successfully!");
+        resultLabel.getStyleClass().remove(GuiConstants.LABEL_SUCCESS_CLASS);
+        if (!resultLabel.getStyleClass().contains(GuiConstants.LABEL_SUCCESS_CLASS)) {
+            resultLabel.getStyleClass().add(GuiConstants.LABEL_SUCCESS_CLASS);
+        }
     }
 
     private List<ParsedSubtitlesInfo> getAllParsedSubtitles() {
