@@ -14,10 +14,11 @@
         </ImageView>
     </graphic>
     <GridPane hgap="55">
+        <gridLinesVisible><GuiConstants fx:constant="DEBUG"/></gridLinesVisible>
+
         <padding>
             <Insets top="20" right="20" bottom="20" left="20"/>
         </padding>
-        <gridLinesVisible><GuiConstants fx:constant="DEBUG"/></gridLinesVisible>
 
         <columnConstraints>
             <ColumnConstraints minWidth="275"/>

@@ -9,11 +9,11 @@
      fx:controller="kirill.subtitlesmerger.gui.tabs.merge_single_files.MergeSingleFilesTabController"
      text="Merge subtitle files">
     <GridPane hgap="30" vgap="40">
+        <gridLinesVisible><GuiConstants fx:constant="DEBUG"/></gridLinesVisible>
+
         <padding>
             <Insets top="20" right="20" bottom="20" left="20"/>
         </padding>
-
-        <gridLinesVisible><GuiConstants fx:constant="DEBUG"/></gridLinesVisible>
 
         <columnConstraints>
             <ColumnConstraints minWidth="400"/>

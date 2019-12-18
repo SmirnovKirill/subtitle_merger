@@ -177,7 +177,7 @@ public class MergeSingleFilesTabController {
     }
 
     private void setFileInfoAndShowErrorsIfNecessary(File file, FileType fileType) {
-        if (isDuplicate(file, fileType)) {
+        if (file != null && isDuplicate(file, fileType)) {
             if (fileType == FileType.UPPER_SUBTITLES) {
                 this.upperSubtitlesFileInfo = null;
 
@@ -197,9 +197,9 @@ public class MergeSingleFilesTabController {
             }
         } else {
             if (fileType == FileType.UPPER_SUBTITLES) {
-                this.upperSubtitlesFileInfo = getInputFileInfo(file, fileType);
+                this.upperSubtitlesFileInfo = getInputFileInfo(file, fileType).orElse(null);
             } else if (fileType == FileType.LOWER_SUBTITLES) {
-                this.lowerSubtitlesFileInfo = getInputFileInfo(file, fileType);
+                this.lowerSubtitlesFileInfo = getInputFileInfo(file, fileType).orElse(null);
             } else {
                 throw new IllegalStateException();
             }
@@ -218,9 +218,13 @@ public class MergeSingleFilesTabController {
         }
     }
 
-    private static InputFileInfo getInputFileInfo(File file, FileType fileType) {
+    private static Optional<InputFileInfo> getInputFileInfo(File file, FileType fileType) {
+        if (file == null) {
+            return Optional.empty();
+        }
+
         if (file.length() / 1024 / 1024 > GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES) {
-            return new InputFileInfo(file, null, IncorrectInputFileReason.FILE_IS_TOO_BIG);
+            return Optional.of(new InputFileInfo(file, null, IncorrectInputFileReason.FILE_IS_TOO_BIG));
         }
 
         try {
@@ -230,11 +234,13 @@ public class MergeSingleFilesTabController {
                     null
             );
 
-            return new InputFileInfo(file, subtitles, null);
+            return Optional.of(new InputFileInfo(file, subtitles, null));
         } catch (IOException e) {
-            return new InputFileInfo(file, null, IncorrectInputFileReason.CAN_NOT_READ_FILE);
+            return Optional.of(new InputFileInfo(file, null, IncorrectInputFileReason.CAN_NOT_READ_FILE));
         } catch (Parser.IncorrectFormatException e) {
-            return new InputFileInfo(file, null, IncorrectInputFileReason.INCORRECT_SUBTITLE_FORMAT);
+            return Optional.of(
+                    new InputFileInfo(file, null, IncorrectInputFileReason.INCORRECT_SUBTITLE_FORMAT)
+            );
         }
     }
 
