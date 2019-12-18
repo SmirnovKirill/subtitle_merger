@@ -2,9 +2,9 @@ package kirill.subtitlesmerger.gui.tabs.merge_in_directory;
 
 import javafx.fxml.FXML;
 import javafx.stage.Stage;
-import kirill.subtitlesmerger.gui.tabs.TabController;
 import kirill.subtitlesmerger.gui.GuiContext;
 import kirill.subtitlesmerger.gui.GuiPreferences;
+import kirill.subtitlesmerger.gui.tabs.TabPaneController;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -13,9 +13,9 @@ import java.util.List;
 
 @CommonsLog
 public class MergeInDirectoryTabController {
-    private TabController tabController;
+    private TabPaneController tabPaneController;
 
-    private GuiContext guiContext;
+    private GuiPreferences preferences;
 
     @FXML
     private MissingSettingsController missingSettingsController;
@@ -23,18 +23,18 @@ public class MergeInDirectoryTabController {
     @FXML
     private RegularContentController regularContentController;
 
-    public void initialize(Stage stage, TabController tabController, GuiContext guiContext) {
-        this.tabController = tabController;
-        this.guiContext = guiContext;
+    public void initialize(Stage stage, TabPaneController tabPaneController, GuiContext context) {
+        this.tabPaneController = tabPaneController;
+        this.preferences = context.getPreferences();
 
         this.missingSettingsController.init(this);
-        this.regularContentController.init(stage, guiContext);
+        this.regularContentController.init(stage, context);
 
         updateView();
     }
 
     private void updateView() {
-        List<String> missingSettings = getMissingSettings(guiContext.getConfig());
+        List<String> missingSettings = getMissingSettings(preferences);
         if (!CollectionUtils.isEmpty(missingSettings)) {
             regularContentController.hide();
             missingSettingsController.setMissingSettings(missingSettings);
@@ -68,6 +68,6 @@ public class MergeInDirectoryTabController {
     }
 
     void openSettingsTab() {
-        tabController.openSettingsTab();
+        tabPaneController.openSettingsTab();
     }
 }

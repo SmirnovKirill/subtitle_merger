@@ -55,7 +55,7 @@ public class RegularContentController {
         directoryPathLabel.setText(directory.getAbsolutePath());
 
         try {
-            guiContext.getConfig().saveLastDirectoryWithVideos(directory.getAbsolutePath());
+            guiContext.getPreferences().saveLastDirectoryWithVideos(directory.getAbsolutePath());
         } catch (GuiPreferences.ConfigException e) {
             log.error("failed to save last directory with videos, that shouldn't be possible");
             throw new IllegalStateException();

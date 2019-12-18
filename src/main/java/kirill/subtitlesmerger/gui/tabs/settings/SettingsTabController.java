@@ -27,7 +27,9 @@ public class SettingsTabController {
 
     private Stage stage;
 
-    private GuiContext guiContext;
+    private GuiContext context;
+
+    private GuiPreferences preferences;
 
     @FXML
     private TextField ffprobeField;
@@ -65,9 +67,10 @@ public class SettingsTabController {
     @FXML
     private Label resultLabel;
 
-    public void initialize(Stage stage, GuiContext guiContext) {
+    public void initialize(Stage stage, GuiContext context) {
         this.stage = stage;
-        this.guiContext = guiContext;
+        this.context = context;
+        this.preferences = context.getPreferences();
 
         this.ffprobeChooser = new FileChooser();
         this.ffmpegChooser = new FileChooser();
@@ -98,8 +101,8 @@ public class SettingsTabController {
     }
 
     private void updateFileChoosersAndFields() {
-        File ffprobeFile = guiContext.getConfig().getFfprobeFile();
-        File ffmpegFile = guiContext.getConfig().getFfmpegFile();
+        File ffprobeFile = preferences.getFfprobeFile();
+        File ffmpegFile = preferences.getFfmpegFile();
 
         if (ffprobeFile != null) {
             updateFfprobeInfo(
@@ -133,18 +136,18 @@ public class SettingsTabController {
             );
         }
 
-        LanguageAlpha3Code upperLanguage = guiContext.getConfig().getUpperLanguage();
+        LanguageAlpha3Code upperLanguage = preferences.getUpperLanguage();
         if (upperLanguage != null) {
             upperLanguageComboBox.getSelectionModel().select(upperLanguage);
         }
 
-        LanguageAlpha3Code lowerLanguage = guiContext.getConfig().getLowerLanguage();
+        LanguageAlpha3Code lowerLanguage = preferences.getLowerLanguage();
         if (lowerLanguage != null) {
             lowerLanguageComboBox.getSelectionModel().select(lowerLanguage);
         }
 
-        boolean swapButtonDisable = guiContext.getConfig().getUpperLanguage() == null
-                || guiContext.getConfig().getLowerLanguage() == null;
+        boolean swapButtonDisable = preferences.getUpperLanguage() == null
+                || preferences.getLowerLanguage() == null;
 
         swapLanguagesButton.setDisable(swapButtonDisable);
     }
@@ -181,16 +184,16 @@ public class SettingsTabController {
             return;
         }
 
-        if (Objects.equals(ffprobeFile, guiContext.getConfig().getFfprobeFile())) {
+        if (Objects.equals(ffprobeFile, preferences.getFfprobeFile())) {
             showSuccessMessage("path to ffprobe has stayed the same");
             return;
         }
 
-        boolean hadValueBefore = guiContext.getConfig().getFfmpegFile() != null;
+        boolean hadValueBefore = preferences.getFfmpegFile() != null;
 
         try {
-            guiContext.getConfig().saveFfprobeFile(ffprobeFile.getAbsolutePath());
-            guiContext.setFfprobe(new Ffprobe(guiContext.getConfig().getFfprobeFile()));
+            preferences.saveFfprobeFile(ffprobeFile.getAbsolutePath());
+            context.setFfprobe(new Ffprobe(preferences.getFfprobeFile()));
             updateFileChoosersAndFields();
 
             if (hadValueBefore) {
@@ -229,16 +232,16 @@ public class SettingsTabController {
             return;
         }
 
-        if (Objects.equals(ffmpegFile, guiContext.getConfig().getFfmpegFile())) {
+        if (Objects.equals(ffmpegFile, preferences.getFfmpegFile())) {
             showSuccessMessage("path to ffmpeg has stayed the same");
             return;
         }
 
-        boolean hadValueBefore = guiContext.getConfig().getFfmpegFile() != null;
+        boolean hadValueBefore = preferences.getFfmpegFile() != null;
 
         try {
-            guiContext.getConfig().saveFfmpegFile(ffmpegFile.getAbsolutePath());
-            guiContext.setFfmpeg(new Ffmpeg(guiContext.getConfig().getFfmpegFile()));
+            preferences.saveFfmpegFile(ffmpegFile.getAbsolutePath());
+            context.setFfmpeg(new Ffmpeg(preferences.getFfmpegFile()));
             updateFileChoosersAndFields();
 
             if (hadValueBefore) {
@@ -255,20 +258,20 @@ public class SettingsTabController {
     private void upperLanguageChanged() {
         LanguageAlpha3Code value = upperLanguageComboBox.getSelectionModel().getSelectedItem();
 
-        if (Objects.equals(value, guiContext.getConfig().getUpperLanguage())) {
+        if (Objects.equals(value, preferences.getUpperLanguage())) {
             return;
         }
 
-        if (Objects.equals(value, guiContext.getConfig().getLowerLanguage())) {
+        if (Objects.equals(value, preferences.getLowerLanguage())) {
             updateFileChoosersAndFields();
             showErrorMessage("languages have to be different, please select another one");
             return;
         }
 
-        boolean hadValueBefore = guiContext.getConfig().getUpperLanguage() != null;
+        boolean hadValueBefore = preferences.getUpperLanguage() != null;
 
         try {
-            guiContext.getConfig().saveUpperLanguage(value.toString());
+            preferences.saveUpperLanguage(value.toString());
             updateFileChoosersAndFields();
 
             if (hadValueBefore) {
@@ -285,12 +288,12 @@ public class SettingsTabController {
 
     @FXML
     private void swapLanguagesButtonClicked() {
-        LanguageAlpha3Code oldUpperLanguage = guiContext.getConfig().getUpperLanguage();
-        LanguageAlpha3Code oldLowerLanguage = guiContext.getConfig().getLowerLanguage();
+        LanguageAlpha3Code oldUpperLanguage = preferences.getUpperLanguage();
+        LanguageAlpha3Code oldLowerLanguage = preferences.getLowerLanguage();
 
         try {
-            guiContext.getConfig().saveUpperLanguage(oldLowerLanguage.toString());
-            guiContext.getConfig().saveLowerLanguage(oldUpperLanguage.toString());
+            preferences.saveUpperLanguage(oldLowerLanguage.toString());
+            preferences.saveLowerLanguage(oldUpperLanguage.toString());
             updateFileChoosersAndFields();
 
             showSuccessMessage("languages have been swapped successfully");
@@ -305,20 +308,20 @@ public class SettingsTabController {
     private void lowerLanguageChanged() {
         LanguageAlpha3Code value = lowerLanguageComboBox.getSelectionModel().getSelectedItem();
 
-        if (Objects.equals(value, guiContext.getConfig().getLowerLanguage())) {
+        if (Objects.equals(value, preferences.getLowerLanguage())) {
             return;
         }
 
-        if (Objects.equals(value, guiContext.getConfig().getUpperLanguage())) {
+        if (Objects.equals(value, preferences.getUpperLanguage())) {
             updateFileChoosersAndFields();
             showErrorMessage("languages have to be different, please select another one");
             return;
         }
 
-        boolean hadValueBefore = guiContext.getConfig().getLowerLanguage() != null;
+        boolean hadValueBefore = preferences.getLowerLanguage() != null;
 
         try {
-            guiContext.getConfig().saveLowerLanguage(value.toString());
+            preferences.saveLowerLanguage(value.toString());
             updateFileChoosersAndFields();
 
             if (hadValueBefore) {

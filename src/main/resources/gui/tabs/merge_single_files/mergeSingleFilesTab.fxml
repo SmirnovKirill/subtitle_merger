@@ -3,18 +3,12 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.stage.FileChooser?>
 <?import kirill.subtitlesmerger.gui.GuiConstants?>
 <Tab xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
      fx:controller="kirill.subtitlesmerger.gui.tabs.merge_single_files.MergeSingleFilesTabController"
      text="Merge subtitle files">
-    <GridPane hgap="30" vgap="40">
-        <fx:define>
-            <FileChooser fx:id="upperSubtitlesChooser" title="Please choose the file with the upper subtitles"/>
-            <FileChooser fx:id="lowerSubtitlesChooser" title="Please choose the file with the lower subtitles"/>
-            <FileChooser fx:id="mergedSubtitlesChooser" title="Please choose where to save the result"/>
-        </fx:define>
 
+    <GridPane hgap="30" vgap="40">
         <padding>
             <Insets top="20" right="20" bottom="20" left="20"/>
         </padding>
@@ -29,35 +23,32 @@
 
         <Label text="Please choose the file with the upper subtitles"
                GridPane.halignment="LEFT" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-        <Button fx:id="upperSubtitlesChooseButton" onAction="#upperSubtitlesButtonClicked"
-                text="Choose file"
+        <Button text="Choose file" onAction="#upperSubtitlesButtonClicked"
+                styleClass="${controller.model.upperSubtitlesChooseButtonClass}"
                 GridPane.halignment="RIGHT" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-        <Label fx:id="upperSubtitlesPathLabel"
-               text="not selected"
+        <Label text="${controller.model.upperSubtitlesPath}"
                GridPane.halignment="LEFT" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
 
         <Label text="Please choose the file with the lower subtitles"
                GridPane.halignment="LEFT" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-        <Button fx:id="lowerSubtitlesChooseButton" onAction="#lowerSubtitlesButtonClicked"
-                text="Choose file"
+        <Button text="Choose file" onAction="#lowerSubtitlesButtonClicked"
+                styleClass="${controller.model.lowerSubtitlesChooseButtonClass}"
                 GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-        <Label fx:id="lowerSubtitlesPathLabel"
-               text="not selected"
+        <Label text="${controller.model.lowerSubtitlesPath}"
                GridPane.halignment="LEFT" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
 
         <Label text="Please choose where to save the result"
                GridPane.halignment="LEFT" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-        <Button fx:id="mergedSubtitlesChooseButton" onAction="#mergedSubtitlesButtonClicked"
-                text="Choose file"
+        <Button text="Choose file" onAction="#mergedSubtitlesButtonClicked"
+                styleClass="${controller.model.mergedSubtitlesChooseButtonClass}"
                 GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-        <Label fx:id="mergedSubtitlesPathLabel"
-               text="not selected"
+        <Label text="${controller.model.mergedSubtitlesPath}"
                GridPane.halignment="LEFT" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
 
-        <Button fx:id="mergeButton" onAction="#mergeButtonClicked"
-                text="Merge subtitles"
-                disable="true" GridPane.rowIndex="3" GridPane.columnSpan="3"/>
+        <Button text="Merge subtitles" disable="${controller.model.mergeButtonDisable}" onAction="#mergeButtonClicked"
+                GridPane.rowIndex="3" GridPane.columnSpan="3"/>
 
-        <Label fx:id="resultLabel" GridPane.rowIndex="4" GridPane.columnSpan="3"/>
+        <Label text="${controller.model.resultText}" styleClass="${controller.model.resultClass}"
+               GridPane.rowIndex="4" GridPane.columnSpan="3"/>
     </GridPane>
 </Tab>
