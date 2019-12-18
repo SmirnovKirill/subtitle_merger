@@ -14,19 +14,16 @@ import kirill.subtitlesmerger.logic.core.entities.Subtitles;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @CommonsLog
 public class MergeSingleFilesTabController {
@@ -60,15 +57,11 @@ public class MergeSingleFilesTabController {
     @FXML
     private Label resultLabel;
 
-    private File upperSubtitlesFile;
+    private InputFileInfo upperSubtitlesFileInfo;
 
-    private File lowerSubtitlesFile;
+    private InputFileInfo lowerSubtitlesFileInfo;
 
     private File mergedSubtitlesFile;
-
-    private List<IncorrectInputFile> incorrectInputFiles;
-
-    private IncorrectOutputFile incorrectOutputFile;
 
     public void initialize(Stage stage, GuiContext context) {
         this.stage = stage;
@@ -77,9 +70,17 @@ public class MergeSingleFilesTabController {
 
     @FXML
     private void upperSubtitlesButtonClicked() {
-        upperSubtitlesFile = getFile(FileType.UPPER_SUBTITLES, stage, preferences).orElse(null);
+        processInputFile(FileType.UPPER_SUBTITLES);
+    }
 
-        redrawAfterFileChosen(FileType.UPPER_SUBTITLES);
+    private void processInputFile(FileType fileType) {
+        File file = getFile(fileType, stage, preferences).orElse(null);
+
+        clearErrorsAndResult();
+        saveLastDirectoryInConfigIfNecessary(file, fileType);
+        setFileInfoAndShowErrorsIfNecessary(file, fileType);
+        updatePathLabels(fileType);
+        updateMergeButtonVisibility();
     }
 
     private static Optional<File> getFile(FileType fileType, Stage stage, GuiPreferences preferences) {
@@ -140,28 +141,188 @@ public class MergeSingleFilesTabController {
         }
     }
 
-    private void redrawAfterFileChosen(FileType fileType) {
-        clearErrorsAndResult();
-        updatePathLabels(fileType);
-        showErrorsIfNecessary();
-        updateMergeButtonVisibility();
-        saveLastDirectoryInConfigIfNecessary(fileType);
-    }
-
     private void clearErrorsAndResult() {
         upperSubtitlesChooseButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
         lowerSubtitlesChooseButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
         mergedSubtitlesChooseButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
         resultLabel.getStyleClass().removeAll(GuiConstants.LABEL_ERROR_CLASS, GuiConstants.LABEL_SUCCESS_CLASS);
+        resultLabel.setText("");
+    }
+
+    private void saveLastDirectoryInConfigIfNecessary(File file, FileType fileType) {
+        if (file == null) {
+            return;
+        }
+
+        try {
+            switch (fileType) {
+                case UPPER_SUBTITLES:
+                    preferences.saveUpperSubtitlesLastDirectory(file.getParent());
+                    return;
+                case LOWER_SUBTITLES:
+                    preferences.saveLowerSubtitlesLastDirectory(file.getParent());
+                    return;
+                case MERGED_SUBTITLES:
+                    preferences.saveMergedSubtitlesLastDirectory(file.getParent());
+                    return;
+                default:
+                    throw new IllegalStateException();
+            }
+        } catch (GuiPreferences.ConfigException e) {
+            log.error(
+                    "failed to save last directory , file " + file.getAbsolutePath() + ": "
+                            + ExceptionUtils.getStackTrace(e)
+            );
+        }
+    }
+
+    private void setFileInfoAndShowErrorsIfNecessary(File file, FileType fileType) {
+        if (isDuplicate(file, fileType)) {
+            if (fileType == FileType.UPPER_SUBTITLES) {
+                this.upperSubtitlesFileInfo = null;
+
+                showInputFileErrors(
+                        "you can't use the same file twice",
+                        null
+                );
+            } else if (fileType == FileType.LOWER_SUBTITLES) {
+                this.lowerSubtitlesFileInfo = null;
+
+                showInputFileErrors(
+                        null,
+                        "you can't use the same file twice"
+                );
+            } else {
+                throw new IllegalStateException();
+            }
+        } else {
+            if (fileType == FileType.UPPER_SUBTITLES) {
+                this.upperSubtitlesFileInfo = getInputFileInfo(file, fileType);
+            } else if (fileType == FileType.LOWER_SUBTITLES) {
+                this.lowerSubtitlesFileInfo = getInputFileInfo(file, fileType);
+            } else {
+                throw new IllegalStateException();
+            }
+
+            showInputFileErrorsIfNecessary();
+        }
+    }
+
+    private boolean isDuplicate(File file, FileType fileType) {
+        if (fileType == FileType.UPPER_SUBTITLES) {
+            return lowerSubtitlesFileInfo != null && Objects.equals(file, lowerSubtitlesFileInfo.getFile());
+        } else if (fileType == FileType.LOWER_SUBTITLES) {
+            return upperSubtitlesFileInfo != null && Objects.equals(file, upperSubtitlesFileInfo.getFile());
+        } else {
+            throw new IllegalStateException();
+        }
+    }
+
+    private static InputFileInfo getInputFileInfo(File file, FileType fileType) {
+        if (file.length() / 1024 / 1024 > GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES) {
+            return new InputFileInfo(file, null, IncorrectInputFileReason.FILE_IS_TOO_BIG);
+        }
+
+        try {
+            Subtitles subtitles = Parser.fromSubRipText(
+                    FileUtils.readFileToString(file, StandardCharsets.UTF_8),
+                    fileType.toString(),
+                    null
+            );
+
+            return new InputFileInfo(file, subtitles, null);
+        } catch (IOException e) {
+            return new InputFileInfo(file, null, IncorrectInputFileReason.CAN_NOT_READ_FILE);
+        } catch (Parser.IncorrectFormatException e) {
+            return new InputFileInfo(file, null, IncorrectInputFileReason.INCORRECT_SUBTITLE_FORMAT);
+        }
+    }
+
+    private void showInputFileErrorsIfNecessary() {
+        String upperSubtitlesFileErrorMessage = null;
+        if (upperSubtitlesFileInfo != null && upperSubtitlesFileInfo.getIncorrectFileReason() != null) {
+            upperSubtitlesFileErrorMessage = getErrorText(upperSubtitlesFileInfo);
+        }
+
+        String lowerSubtitlesFileErrorMessage = null;
+        if (lowerSubtitlesFileInfo != null && lowerSubtitlesFileInfo.getIncorrectFileReason() != null) {
+            lowerSubtitlesFileErrorMessage = getErrorText(lowerSubtitlesFileInfo);
+        }
+
+        boolean atLeastOneError = !StringUtils.isBlank(upperSubtitlesFileErrorMessage)
+                || !StringUtils.isBlank(lowerSubtitlesFileErrorMessage);
+
+        if (atLeastOneError) {
+            showInputFileErrors(upperSubtitlesFileErrorMessage, lowerSubtitlesFileErrorMessage);
+        }
+    }
+
+    private static String getErrorText(InputFileInfo fileInfo) {
+        StringBuilder result = new StringBuilder("file ")
+                .append(fileInfo.getFile().getAbsolutePath())
+                .append(" is incorrect: ");
+
+        switch (fileInfo.getIncorrectFileReason()) {
+            case CAN_NOT_READ_FILE:
+                result.append("can't read the file");
+                break;
+            case FILE_IS_TOO_BIG:
+                result.append("file is too big (>")
+                        .append(GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES).append(" megabytes)");
+                break;
+            case INCORRECT_SUBTITLE_FORMAT:
+                result.append("incorrect subtitle format");
+                break;
+            default:
+                throw new IllegalStateException();
+        }
+
+        return result.toString();
+    }
+
+    private void showInputFileErrors(
+            String upperSubtitlesFileErrorMessage,
+            String lowerSubtitlesFileErrorMessage
+    ) {
+        if (!StringUtils.isBlank(upperSubtitlesFileErrorMessage)) {
+            if (!upperSubtitlesChooseButton.getStyleClass().contains(GuiConstants.BUTTON_ERROR_CLASS)) {
+                upperSubtitlesChooseButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
+            }
+        }
+
+        if (!StringUtils.isBlank(lowerSubtitlesFileErrorMessage)) {
+            if (!lowerSubtitlesChooseButton.getStyleClass().contains(GuiConstants.BUTTON_ERROR_CLASS)) {
+                lowerSubtitlesChooseButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
+            }
+        }
+
+        StringBuilder combinedErrorsMessage = new StringBuilder("Can't merge subtitles:");
+
+        if (!StringUtils.isBlank(upperSubtitlesFileErrorMessage)) {
+            combinedErrorsMessage.append("\n").append("\u2022").append(" ").append(upperSubtitlesFileErrorMessage);
+        }
+
+        if (!StringUtils.isBlank(lowerSubtitlesFileErrorMessage)) {
+            combinedErrorsMessage.append("\n").append("\u2022").append(" ").append(lowerSubtitlesFileErrorMessage);
+        }
+
+        resultLabel.setText(combinedErrorsMessage.toString());
+        resultLabel.getStyleClass().remove(GuiConstants.LABEL_SUCCESS_CLASS);
+        if (!resultLabel.getStyleClass().contains(GuiConstants.LABEL_ERROR_CLASS)) {
+            resultLabel.getStyleClass().add(GuiConstants.LABEL_ERROR_CLASS);
+        }
     }
 
     private void updatePathLabels(FileType fileType) {
+        File file;
         switch (fileType) {
             case UPPER_SUBTITLES:
-                upperSubtitlesPathLabel.setText(getPathText(upperSubtitlesFile));
+                file = upperSubtitlesFileInfo != null ? upperSubtitlesFileInfo.getFile() : null;
+                upperSubtitlesPathLabel.setText(getPathText(file));
                 break;
             case LOWER_SUBTITLES:
-                lowerSubtitlesPathLabel.setText(getPathText(lowerSubtitlesFile));
+                file = lowerSubtitlesFileInfo != null ? lowerSubtitlesFileInfo.getFile() : null;
+                lowerSubtitlesPathLabel.setText(getPathText(file));
                 break;
             case MERGED_SUBTITLES:
                 mergedSubtitlesPathLabel.setText(getPathText(mergedSubtitlesFile));
@@ -179,274 +340,70 @@ public class MergeSingleFilesTabController {
         }
     }
 
-    private void showErrorsIfNecessary() {
-        if (inputFilesTheSame()) {
-            showErrors(
-                    null,
-                    "you can't use the same file twice",
-                    null
-            );
-
-            return;
-        }
-
-        String upperSubtitlesFileErrorMessage = null;
-        if (upperSubtitlesFile != null && !CollectionUtils.isEmpty(incorrectInputFiles)) {
-            IncorrectInputFile incorrectInputFile = incorrectInputFiles.stream()
-                    .filter(file -> Objects.equals(file.getFile(), upperSubtitlesFile))
-                    .findAny().orElse(null);
-            if (incorrectInputFile != null) {
-                upperSubtitlesFileErrorMessage = getErrorText(upperSubtitlesFile, incorrectInputFile.getReason());
-            }
-        }
-
-        String lowerSubtitlesFileErrorMessage = null;
-        if (lowerSubtitlesFile != null && !CollectionUtils.isEmpty(incorrectInputFiles)) {
-            IncorrectInputFile incorrectInputFile = incorrectInputFiles.stream()
-                    .filter(file -> Objects.equals(file.getFile(), lowerSubtitlesFile))
-                    .findAny().orElse(null);
-            if (incorrectInputFile != null) {
-                lowerSubtitlesFileErrorMessage = getErrorText(lowerSubtitlesFile, incorrectInputFile.getReason());
-            }
-        }
-
-        String mergedSubtitlesFileErrorMessage = null;
-        if (mergedSubtitlesFile != null && incorrectOutputFile != null) {
-            if (Objects.equals(mergedSubtitlesFile, incorrectOutputFile.getFile())) {
-                mergedSubtitlesFileErrorMessage = getErrorText(mergedSubtitlesFile, incorrectOutputFile.getReason());
-            }
-        }
-
-        boolean atLeastOneError = !StringUtils.isBlank(upperSubtitlesFileErrorMessage)
-                || !StringUtils.isBlank(lowerSubtitlesFileErrorMessage)
-                || !StringUtils.isBlank(mergedSubtitlesFileErrorMessage);
-
-        if (atLeastOneError) {
-            showErrors(upperSubtitlesFileErrorMessage, lowerSubtitlesFileErrorMessage, mergedSubtitlesFileErrorMessage);
-        }
-    }
-
-    private boolean inputFilesTheSame() {
-        if (upperSubtitlesFile == null || lowerSubtitlesFile == null) {
-            return false;
-        }
-
-        return Objects.equals(upperSubtitlesFile, lowerSubtitlesFile);
-    }
-
-    private void showErrors(
-            String upperSubtitlesFileErrorMessage,
-            String lowerSubtitlesFileErrorMessage,
-            String mergedSubtitlesFileErrorMessage
-    ) {
-        boolean atLeastOneError = !StringUtils.isBlank(upperSubtitlesFileErrorMessage)
-                || !StringUtils.isBlank(lowerSubtitlesFileErrorMessage)
-                || !StringUtils.isBlank(mergedSubtitlesFileErrorMessage);
-        if (!atLeastOneError) {
-            throw new IllegalStateException();
-        }
-
-        if (!StringUtils.isBlank(upperSubtitlesFileErrorMessage)) {
-            if (!upperSubtitlesChooseButton.getStyleClass().contains(GuiConstants.BUTTON_ERROR_CLASS)) {
-                upperSubtitlesChooseButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
-            }
-        }
-
-        if (!StringUtils.isBlank(lowerSubtitlesFileErrorMessage)) {
-            if (!lowerSubtitlesChooseButton.getStyleClass().contains(GuiConstants.BUTTON_ERROR_CLASS)) {
-                lowerSubtitlesChooseButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
-            }
-        }
-
-        if (!StringUtils.isBlank(mergedSubtitlesFileErrorMessage)) {
-            if (!mergedSubtitlesChooseButton.getStyleClass().contains(GuiConstants.BUTTON_ERROR_CLASS)) {
-                mergedSubtitlesChooseButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
-            }
-        }
-
-        StringBuilder combinedErrorsMessage = new StringBuilder("Can't merge subtitles:");
-
-        if (!StringUtils.isBlank(upperSubtitlesFileErrorMessage)) {
-            combinedErrorsMessage.append("\n").append("\u2022").append(" ").append(upperSubtitlesFileErrorMessage);
-        }
-
-        if (!StringUtils.isBlank(lowerSubtitlesFileErrorMessage)) {
-            combinedErrorsMessage.append("\n").append("\u2022").append(" ").append(lowerSubtitlesFileErrorMessage);
-        }
-
-        if (!StringUtils.isBlank(mergedSubtitlesFileErrorMessage)) {
-            combinedErrorsMessage.append("\n").append("\u2022").append(" ").append(mergedSubtitlesFileErrorMessage);
-        }
-
-        resultLabel.setText(combinedErrorsMessage.toString());
-        resultLabel.getStyleClass().remove(GuiConstants.LABEL_SUCCESS_CLASS);
-        if (!resultLabel.getStyleClass().contains(GuiConstants.LABEL_ERROR_CLASS)) {
-            resultLabel.getStyleClass().add(GuiConstants.LABEL_ERROR_CLASS);
-        }
-    }
-
-    private static String getErrorText(File file, IncorrectInputFileReason reason) {
-        StringBuilder result = new StringBuilder("file ").append(file.getAbsolutePath()).append(" is incorrect: ");
-
-        switch (reason) {
-            case CAN_NOT_READ_FILE:
-                result.append("can't read the file");
-                break;
-            case FILE_IS_TOO_BIG:
-                result.append("file is too big (>")
-                        .append(GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES).append(" megabytes)");
-                break;
-            case INCORRECT_SUBTITLES_FORMAT:
-                result.append("incorrect subtitles format");
-                break;
-            default:
-                throw new IllegalStateException();
-        }
-
-        return result.toString();
-    }
-
-    private static String getErrorText(File file, IncorrectOutputFileReason reason) {
-        StringBuilder result = new StringBuilder("file ").append(file.getAbsolutePath()).append(" is incorrect: ");
-
-        if (reason == IncorrectOutputFileReason.CAN_NOT_WRITE_TO_FILE) {
-            result.append("can't write to this file");
-        } else {
-            throw new IllegalStateException();
-        }
-
-        return result.toString();
-    }
-
     private void updateMergeButtonVisibility() {
-        boolean disable = upperSubtitlesFile == null
-                || lowerSubtitlesFile == null
-                || mergedSubtitlesFile == null
-                || inputFilesTheSame();
+        boolean disable = upperSubtitlesFileInfo == null || upperSubtitlesFileInfo.getIncorrectFileReason() != null
+                || lowerSubtitlesFileInfo == null || lowerSubtitlesFileInfo.getIncorrectFileReason() != null
+                || mergedSubtitlesFile == null;
         mergeButton.setDisable(disable);
-    }
-
-    private void saveLastDirectoryInConfigIfNecessary(FileType fileType) {
-        try {
-            switch (fileType) {
-                case UPPER_SUBTITLES:
-                    if (upperSubtitlesFile != null) {
-                        preferences.saveUpperSubtitlesLastDirectory(upperSubtitlesFile.getParent());
-                    }
-                    break;
-                case LOWER_SUBTITLES:
-                    if (lowerSubtitlesFile != null) {
-                        preferences.saveLowerSubtitlesLastDirectory(lowerSubtitlesFile.getParent());
-                    }
-                    break;
-                case MERGED_SUBTITLES:
-                    if (mergedSubtitlesFile != null) {
-                        preferences.saveMergedSubtitlesLastDirectory(mergedSubtitlesFile.getParent());
-                    }
-                    break;
-                default:
-                    throw new IllegalStateException();
-            }
-        } catch (GuiPreferences.ConfigException e) {
-            throw new IllegalStateException();
-        }
     }
 
     @FXML
     private void lowerSubtitlesButtonClicked() {
-        lowerSubtitlesFile = getFile(FileType.LOWER_SUBTITLES, stage, preferences).orElse(null);
-
-        redrawAfterFileChosen(FileType.LOWER_SUBTITLES);
+        processInputFile(FileType.LOWER_SUBTITLES);
     }
 
     @FXML
     private void mergedSubtitlesButtonClicked() {
-        mergedSubtitlesFile = getFile(FileType.MERGED_SUBTITLES, stage, preferences).orElse(null);
+        File file = getFile(FileType.MERGED_SUBTITLES, stage, preferences).orElse(null);
 
-        if (mergedSubtitlesFile != null && !mergedSubtitlesFile.getAbsolutePath().endsWith(".srt")) {
-            mergedSubtitlesFile = new File(mergedSubtitlesFile.getAbsolutePath() + ".srt");
-        }
-
-        redrawAfterFileChosen(FileType.MERGED_SUBTITLES);
+        clearErrorsAndResult();
+        saveLastDirectoryInConfigIfNecessary(file, FileType.MERGED_SUBTITLES);
+        this.mergedSubtitlesFile = file;
+        showInputFileErrorsIfNecessary();
+        updatePathLabels(FileType.MERGED_SUBTITLES);
+        updateMergeButtonVisibility();
     }
 
     @FXML
     private void mergeButtonClicked() {
         clearErrorsAndResult();
 
-        this.incorrectInputFiles = new ArrayList<>();
-        this.incorrectOutputFile = null;
-
-        List<ParsedSubtitlesInfo> allParsedSubtitles = getAllParsedSubtitles();
-
-        this.incorrectInputFiles = getIncorrectInputFiles(allParsedSubtitles);
-        if (!CollectionUtils.isEmpty(incorrectInputFiles)) {
-            showErrorsIfNecessary();
-            return;
-        }
-
         Subtitles result = Merger.mergeSubtitles(
-                allParsedSubtitles.get(0).getSubtitles(),
-                allParsedSubtitles.get(1).getSubtitles()
+                upperSubtitlesFileInfo.getSubtitles(),
+                lowerSubtitlesFileInfo.getSubtitles()
         );
 
         try {
             FileUtils.writeStringToFile(mergedSubtitlesFile, result.toString(), StandardCharsets.UTF_8);
         } catch (IOException e) {
-            incorrectOutputFile = new IncorrectOutputFile(
-                    mergedSubtitlesFile,
-                    IncorrectOutputFileReason.CAN_NOT_WRITE_TO_FILE
-            );
-            showErrorsIfNecessary();
+            showFailedToWriteMessage();
+
             return;
         }
 
+        showSuccessMessage();
+    }
+
+    private void showSuccessMessage() {
         resultLabel.setText("Subtitles have been merged successfully!");
-        resultLabel.getStyleClass().remove(GuiConstants.LABEL_SUCCESS_CLASS);
+
+        resultLabel.getStyleClass().remove(GuiConstants.LABEL_ERROR_CLASS);
         if (!resultLabel.getStyleClass().contains(GuiConstants.LABEL_SUCCESS_CLASS)) {
             resultLabel.getStyleClass().add(GuiConstants.LABEL_SUCCESS_CLASS);
         }
     }
 
-    private List<ParsedSubtitlesInfo> getAllParsedSubtitles() {
-        List<ParsedSubtitlesInfo> result = new ArrayList<>();
+    private void showFailedToWriteMessage() {
+        resultLabel.setText("Can't merge subtitles:" + "\n" + "\u2022" + " " + "can't write to this file");
 
-        if (upperSubtitlesFile == null || lowerSubtitlesFile == null || mergedSubtitlesFile == null) {
-            log.error("at least one of the files is null, how is that possible?!");
-            throw new IllegalStateException();
+        if (!mergedSubtitlesChooseButton.getStyleClass().contains(GuiConstants.BUTTON_ERROR_CLASS)) {
+            mergedSubtitlesChooseButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
         }
 
-        result.add(getParsedSubtitlesSingleFile(upperSubtitlesFile, "upper"));
-        result.add(getParsedSubtitlesSingleFile(lowerSubtitlesFile, "lower"));
-
-        return result;
-    }
-
-    private static ParsedSubtitlesInfo getParsedSubtitlesSingleFile(File file, String name) {
-        if (file.length() / 1024 / 1024 > GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES) {
-            return new ParsedSubtitlesInfo(file, null, IncorrectInputFileReason.FILE_IS_TOO_BIG);
+        resultLabel.getStyleClass().remove(GuiConstants.LABEL_SUCCESS_CLASS);
+        if (!resultLabel.getStyleClass().contains(GuiConstants.LABEL_ERROR_CLASS)) {
+            resultLabel.getStyleClass().add(GuiConstants.LABEL_ERROR_CLASS);
         }
-
-        try {
-            Subtitles subtitles = Parser.fromSubRipText(
-                    FileUtils.readFileToString(file, StandardCharsets.UTF_8),
-                    name,
-                    null
-            );
-
-            return new ParsedSubtitlesInfo(file, subtitles, null);
-        } catch (IOException e) {
-            return new ParsedSubtitlesInfo(file, null, IncorrectInputFileReason.CAN_NOT_READ_FILE);
-        } catch (Parser.IncorrectFormatException e) {
-            return new ParsedSubtitlesInfo(file, null, IncorrectInputFileReason.INCORRECT_SUBTITLES_FORMAT);
-        }
-    }
-
-    private List<IncorrectInputFile> getIncorrectInputFiles(List<ParsedSubtitlesInfo> allParsedSubtitles) {
-        return allParsedSubtitles.stream()
-                .filter(subtitles -> subtitles.getIncorrectFileReason() != null)
-                .map(subtitles -> new IncorrectInputFile(subtitles.getFile(), subtitles.getIncorrectFileReason()))
-                .collect(Collectors.toList());
     }
 
     private enum FileType {
@@ -457,7 +414,7 @@ public class MergeSingleFilesTabController {
 
     @AllArgsConstructor
     @Getter
-    private static class ParsedSubtitlesInfo {
+    private static class InputFileInfo {
         private File file;
 
         private Subtitles subtitles;
@@ -465,29 +422,9 @@ public class MergeSingleFilesTabController {
         private IncorrectInputFileReason incorrectFileReason;
     }
 
-    @AllArgsConstructor
-    @Getter
-    private static class IncorrectInputFile {
-        private File file;
-
-        private IncorrectInputFileReason reason;
-    }
-
-    @AllArgsConstructor
-    @Getter
-    private static class IncorrectOutputFile {
-        private File file;
-
-        private IncorrectOutputFileReason reason;
-    }
-
     private enum IncorrectInputFileReason {
         CAN_NOT_READ_FILE,
-        INCORRECT_SUBTITLES_FORMAT,
+        INCORRECT_SUBTITLE_FORMAT,
         FILE_IS_TOO_BIG
-    }
-
-    private enum IncorrectOutputFileReason {
-        CAN_NOT_WRITE_TO_FILE
     }
 }
