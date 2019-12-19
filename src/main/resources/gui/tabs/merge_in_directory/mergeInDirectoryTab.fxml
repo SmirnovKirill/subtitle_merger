@@ -6,7 +6,7 @@
      fx:controller="kirill.subtitlesmerger.gui.tabs.merge_in_directory.MergeInDirectoryTabController"
      text="Merge subtitles in videos">
     <StackPane>
-        <fx:include fx:id="missingSettings" source="missingSettings.fxml"/>
-        <fx:include fx:id="regularContent" source="regularContent.fxml"/>
+        <fx:include fx:id="missingSettings" source="missing_settings/missingSettings.fxml"/>
+        <fx:include fx:id="regularContent" source="regular_content/regularContent.fxml"/>
     </StackPane>
 </Tab>

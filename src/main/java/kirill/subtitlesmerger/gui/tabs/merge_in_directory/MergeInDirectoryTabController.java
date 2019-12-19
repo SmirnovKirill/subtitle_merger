@@ -6,6 +6,8 @@ import javafx.stage.Stage;
 import kirill.subtitlesmerger.gui.GuiContext;
 import kirill.subtitlesmerger.gui.GuiSettings;
 import kirill.subtitlesmerger.gui.tabs.TabPaneController;
+import kirill.subtitlesmerger.gui.tabs.merge_in_directory.missing_settings.MissingSettingsController;
+import kirill.subtitlesmerger.gui.tabs.merge_in_directory.regular_content.RegularContentController;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -47,7 +49,7 @@ public class MergeInDirectoryTabController {
         setActivePane(CollectionUtils.isEmpty(this.settings.getMissingSettings()));
     }
 
-    void openSettingsTab() {
+    public void openSettingsTab() {
         tabPaneController.openSettingsTab();
     }
 }

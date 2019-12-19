@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.gui.tabs.merge_in_directory;
+package kirill.subtitlesmerger.gui.tabs.merge_in_directory.regular_content;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -108,11 +108,11 @@ public class RegularContentController {
         tabView.hideProgressIndicator();
     }*/
 
-    void show() {
+    public void show() {
         pane.setVisible(true);
     }
 
-    void hide() {
+    public void hide() {
         pane.setVisible(false);
     }
 }

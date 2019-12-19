@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.gui.tabs.merge_in_directory;
+package kirill.subtitlesmerger.gui.tabs.merge_in_directory.missing_settings;
 
 import javafx.collections.ObservableSet;
 import javafx.collections.SetChangeListener;

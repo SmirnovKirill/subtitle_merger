@@ -7,7 +7,8 @@
 <?import javafx.stage.DirectoryChooser?>
 <?import kirill.subtitlesmerger.gui.GuiConstants?>
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-      fx:id="pane" fx:controller="kirill.subtitlesmerger.gui.tabs.merge_in_directory.RegularContentController"
+      fx:id="pane"
+      fx:controller="kirill.subtitlesmerger.gui.tabs.merge_in_directory.regular_content.RegularContentController"
       spacing="10">
     <fx:define>
         <DirectoryChooser fx:id="directoryChooser" title="choose the directory with videos"/>
