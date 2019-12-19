@@ -20,7 +20,7 @@ import java.util.prefs.Preferences;
 @CommonsLog
 @Getter
 public
-class GuiPreferences {
+class GuiSettings {
     private static final String PREFERENCES_ROOT_NODE = "subtitlesmerger";
 
     private Preferences preferences;
@@ -41,76 +41,76 @@ class GuiPreferences {
 
     private File lastDirectoryWithVideos;
 
-    private ObservableSet<GuiPreferences.PreferenceType> missingPreferences;
+    private ObservableSet<SettingType> missingSettings;
 
-    GuiPreferences() {
+    GuiSettings() {
         preferences = Preferences.userRoot().node(PREFERENCES_ROOT_NODE);
 
         try {
             upperSubtitlesLastDirectory = getValidatedDirectory(
-                    preferences.get(PreferenceType.UPPER_SUBTITLES_LAST_DIRECTORY.getPreferenceCode(), "")
+                    preferences.get(SettingType.UPPER_SUBTITLES_LAST_DIRECTORY.getSettingCode(), "")
             ).orElse(null);
         } catch (ConfigException e) {
-            log.warn("incorrect upper subtitles last directory in saved preference: " + e.getMessage());
+            log.warn("incorrect upper subtitles last directory in saved preferences: " + e.getMessage());
         }
 
         try {
             lowerSubtitlesLastDirectory = getValidatedDirectory(
-                    preferences.get(PreferenceType.LOWER_SUBTITLES_LAST_DIRECTORY.getPreferenceCode(), "")
+                    preferences.get(SettingType.LOWER_SUBTITLES_LAST_DIRECTORY.getSettingCode(), "")
             ).orElse(null);
         } catch (ConfigException e) {
-            log.warn("incorrect lower subtitles last directory in saved preference: " + e.getMessage());
+            log.warn("incorrect lower subtitles last directory in saved preferences: " + e.getMessage());
         }
 
         try {
             mergedSubtitlesLastDirectory = getValidatedDirectory(
-                    preferences.get(PreferenceType.MERGED_SUBTITLES_LAST_DIRECTORY.getPreferenceCode(), "")
+                    preferences.get(SettingType.MERGED_SUBTITLES_LAST_DIRECTORY.getSettingCode(), "")
             ).orElse(null);
         } catch (ConfigException e) {
-            log.warn("incorrect merged subtitles last directory in saved preference: " + e.getMessage());
+            log.warn("incorrect merged subtitles last directory in saved preferences: " + e.getMessage());
         }
 
         try {
             ffprobeFile = getValidatedFfprobeFile(
-                    preferences.get(PreferenceType.FFPROBE_PATH.getPreferenceCode(), "")
+                    preferences.get(SettingType.FFPROBE_PATH.getSettingCode(), "")
             ).orElse(null);
         } catch (ConfigException e) {
-            log.warn("incorrect ffprobe path in saved preference: " + e.getMessage());
+            log.warn("incorrect ffprobe path in saved preferences: " + e.getMessage());
         }
 
         try {
             ffmpegFile = getValidatedFfmpegFile(
-                    preferences.get(PreferenceType.FFMPEG_PATH.getPreferenceCode(), "")
+                    preferences.get(SettingType.FFMPEG_PATH.getSettingCode(), "")
             ).orElse(null);
         } catch (ConfigException e) {
-            log.warn("incorrect ffmpeg path in saved preference: " + e.getMessage());
+            log.warn("incorrect ffmpeg path in saved preferences: " + e.getMessage());
         }
 
         try {
             upperLanguage = getValidatedLanguage(
-                    preferences.get(PreferenceType.UPPER_LANGUAGE.getPreferenceCode(), "")
+                    preferences.get(SettingType.UPPER_LANGUAGE.getSettingCode(), "")
             ).orElse(null);
         } catch (ConfigException e) {
-            log.warn("incorrect upper language in saved preference: " + e.getMessage());
+            log.warn("incorrect upper language in saved preferences: " + e.getMessage());
         }
 
         try {
             lowerLanguage = getValidatedLanguage(
-                    preferences.get(PreferenceType.LOWER_LANGUAGE.getPreferenceCode(), "")
+                    preferences.get(SettingType.LOWER_LANGUAGE.getSettingCode(), "")
             ).orElse(null);
         } catch (ConfigException e) {
-            log.warn("incorrect lower language in saved preference: " + e.getMessage());
+            log.warn("incorrect lower language in saved preferences: " + e.getMessage());
         }
 
         try {
             lastDirectoryWithVideos = getValidatedDirectory(
-                    preferences.get(PreferenceType.LAST_DIRECTORY_WITH_VIDEOS.getPreferenceCode(), "")
+                    preferences.get(SettingType.LAST_DIRECTORY_WITH_VIDEOS.getSettingCode(), "")
             ).orElse(null);
         } catch (ConfigException e) {
-            log.warn("incorrect last directory with videos in saved preference: " + e.getMessage());
+            log.warn("incorrect last directory with videos in saved preferences: " + e.getMessage());
         }
 
-        missingPreferences = getMissingPreferences();
+        missingSettings = generateMissingSettings();
     }
 
     private static Optional<File> getValidatedDirectory(String rawValue) throws ConfigException {
@@ -174,25 +174,25 @@ class GuiPreferences {
     }
 
     /*
-     * Preferences required for merging in videos.
+     * Settings required for merging in videos.
      */
-    private ObservableSet<PreferenceType> getMissingPreferences() {
-        Set<PreferenceType> result = EnumSet.noneOf(GuiPreferences.PreferenceType.class);
+    private ObservableSet<SettingType> generateMissingSettings() {
+        Set<SettingType> result = EnumSet.noneOf(SettingType.class);
 
         if (ffprobeFile == null) {
-            result.add(GuiPreferences.PreferenceType.FFPROBE_PATH);
+            result.add(SettingType.FFPROBE_PATH);
         }
 
         if (ffmpegFile == null) {
-            result.add(GuiPreferences.PreferenceType.FFMPEG_PATH);
+            result.add(SettingType.FFMPEG_PATH);
         }
 
         if (upperLanguage == null) {
-            result.add(GuiPreferences.PreferenceType.UPPER_LANGUAGE);
+            result.add(SettingType.UPPER_LANGUAGE);
         }
 
         if (lowerLanguage == null) {
-            result.add(GuiPreferences.PreferenceType.LOWER_LANGUAGE);
+            result.add(SettingType.LOWER_LANGUAGE);
         }
 
         return FXCollections.observableSet(result);
@@ -205,7 +205,7 @@ class GuiPreferences {
         }
 
         this.upperSubtitlesLastDirectory = directory;
-        preferences.put(PreferenceType.UPPER_SUBTITLES_LAST_DIRECTORY.getPreferenceCode(), directory.getAbsolutePath());
+        preferences.put(SettingType.UPPER_SUBTITLES_LAST_DIRECTORY.getSettingCode(), directory.getAbsolutePath());
     }
 
     public void saveLowerSubtitlesLastDirectory(String rawValue) throws ConfigException {
@@ -215,7 +215,7 @@ class GuiPreferences {
         }
 
         this.lowerSubtitlesLastDirectory = directory;
-        preferences.put(PreferenceType.LOWER_SUBTITLES_LAST_DIRECTORY.getPreferenceCode(), directory.getAbsolutePath());
+        preferences.put(SettingType.LOWER_SUBTITLES_LAST_DIRECTORY.getSettingCode(), directory.getAbsolutePath());
     }
 
     public void saveMergedSubtitlesLastDirectory(String rawValue) throws ConfigException {
@@ -235,8 +235,8 @@ class GuiPreferences {
         }
 
         this.ffprobeFile = ffprobeFile;
-        preferences.put(PreferenceType.FFPROBE_PATH.getPreferenceCode(), ffprobeFile.getAbsolutePath());
-        missingPreferences.remove(PreferenceType.FFPROBE_PATH);
+        preferences.put(SettingType.FFPROBE_PATH.getSettingCode(), ffprobeFile.getAbsolutePath());
+        missingSettings.remove(SettingType.FFPROBE_PATH);
     }
 
     public void saveFfmpegFile(String rawValue) throws ConfigException {
@@ -246,8 +246,8 @@ class GuiPreferences {
         }
 
         this.ffmpegFile = ffmpegFile;
-        preferences.put(PreferenceType.FFMPEG_PATH.getPreferenceCode(), ffmpegFile.getAbsolutePath());
-        missingPreferences.remove(PreferenceType.FFMPEG_PATH);
+        preferences.put(SettingType.FFMPEG_PATH.getSettingCode(), ffmpegFile.getAbsolutePath());
+        missingSettings.remove(SettingType.FFMPEG_PATH);
     }
 
     public void saveUpperLanguage(String rawValue) throws ConfigException {
@@ -257,8 +257,8 @@ class GuiPreferences {
         }
 
         this.upperLanguage = language;
-        preferences.put(PreferenceType.UPPER_LANGUAGE.getPreferenceCode(), upperLanguage.toString());
-        missingPreferences.remove(PreferenceType.UPPER_LANGUAGE);
+        preferences.put(SettingType.UPPER_LANGUAGE.getSettingCode(), upperLanguage.toString());
+        missingSettings.remove(SettingType.UPPER_LANGUAGE);
     }
 
     public void saveLowerLanguage(String rawValue) throws ConfigException {
@@ -268,8 +268,8 @@ class GuiPreferences {
         }
 
         this.lowerLanguage = language;
-        preferences.put(PreferenceType.LOWER_LANGUAGE.getPreferenceCode(), lowerLanguage.toString());
-        missingPreferences.remove(PreferenceType.LOWER_LANGUAGE);
+        preferences.put(SettingType.LOWER_LANGUAGE.getSettingCode(), lowerLanguage.toString());
+        missingSettings.remove(SettingType.LOWER_LANGUAGE);
     }
 
     public void saveLastDirectoryWithVideos(String rawValue) throws ConfigException {
@@ -279,7 +279,7 @@ class GuiPreferences {
         }
 
         this.lastDirectoryWithVideos = directory;
-        preferences.put(PreferenceType.LAST_DIRECTORY_WITH_VIDEOS.getPreferenceCode(), directory.getAbsolutePath());
+        preferences.put(SettingType.LAST_DIRECTORY_WITH_VIDEOS.getSettingCode(), directory.getAbsolutePath());
     }
 
     public static class ConfigException extends Exception {
@@ -294,7 +294,7 @@ class GuiPreferences {
         }
     }
 
-    private enum PreferenceType {
+    public enum SettingType {
         UPPER_SUBTITLES_LAST_DIRECTORY("upper_subtitles_last_directory"),
         LOWER_SUBTITLES_LAST_DIRECTORY("lower_subtitles_last_directory"),
         MERGED_SUBTITLES_LAST_DIRECTORY("merged_subtitles_last_directory"),
@@ -305,10 +305,10 @@ class GuiPreferences {
         LAST_DIRECTORY_WITH_VIDEOS("last_directory_with_videos");
 
         @Getter
-        private String preferenceCode;
+        private String settingCode;
 
-        PreferenceType(String preferenceCode) {
-            this.preferenceCode = preferenceCode;
+        SettingType(String settingCode) {
+            this.settingCode = settingCode;
         }
     }
 }

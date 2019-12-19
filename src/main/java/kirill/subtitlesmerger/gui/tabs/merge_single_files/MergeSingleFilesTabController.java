@@ -7,7 +7,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kirill.subtitlesmerger.gui.GuiConstants;
 import kirill.subtitlesmerger.gui.GuiContext;
-import kirill.subtitlesmerger.gui.GuiPreferences;
+import kirill.subtitlesmerger.gui.GuiSettings;
 import kirill.subtitlesmerger.logic.core.Merger;
 import kirill.subtitlesmerger.logic.core.Parser;
 import kirill.subtitlesmerger.logic.core.Writer;
@@ -32,7 +32,7 @@ public class MergeSingleFilesTabController {
 
     private Stage stage;
 
-    private GuiPreferences preferences;
+    private GuiSettings settings;
 
     @FXML
     private Button upperSubtitlesChooseButton;
@@ -66,7 +66,7 @@ public class MergeSingleFilesTabController {
 
     public void initialize(Stage stage, GuiContext context) {
         this.stage = stage;
-        this.preferences = context.getPreferences();
+        this.settings = context.getSettings();
     }
 
     @FXML
@@ -75,7 +75,7 @@ public class MergeSingleFilesTabController {
     }
 
     private void processInputFile(FileType fileType) {
-        File file = getFile(fileType, stage, preferences).orElse(null);
+        File file = getFile(fileType, stage, settings).orElse(null);
 
         clearErrorsAndResult();
         saveLastDirectoryInConfigIfNecessary(file, fileType);
@@ -84,11 +84,11 @@ public class MergeSingleFilesTabController {
         setMergeButtonVisibility();
     }
 
-    private static Optional<File> getFile(FileType fileType, Stage stage, GuiPreferences preferences) {
+    private static Optional<File> getFile(FileType fileType, Stage stage, GuiSettings settings) {
         FileChooser fileChooser = new FileChooser();
 
         fileChooser.setTitle(getChooserTitle(fileType));
-        fileChooser.setInitialDirectory(getChooserInitialDirectory(fileType, preferences));
+        fileChooser.setInitialDirectory(getChooserInitialDirectory(fileType, settings));
         fileChooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter("subrip files (*.srt)", "*.srt")
         );
@@ -117,25 +117,25 @@ public class MergeSingleFilesTabController {
         }
     }
 
-    private static File getChooserInitialDirectory(FileType fileType, GuiPreferences preferences) {
+    private static File getChooserInitialDirectory(FileType fileType, GuiSettings settings) {
         switch (fileType) {
             case UPPER_SUBTITLES:
                 return ObjectUtils.firstNonNull(
-                        preferences.getUpperSubtitlesLastDirectory(),
-                        preferences.getLowerSubtitlesLastDirectory(),
-                        preferences.getMergedSubtitlesLastDirectory()
+                        settings.getUpperSubtitlesLastDirectory(),
+                        settings.getLowerSubtitlesLastDirectory(),
+                        settings.getMergedSubtitlesLastDirectory()
                 );
             case LOWER_SUBTITLES:
                 return ObjectUtils.firstNonNull(
-                        preferences.getLowerSubtitlesLastDirectory(),
-                        preferences.getUpperSubtitlesLastDirectory(),
-                        preferences.getMergedSubtitlesLastDirectory()
+                        settings.getLowerSubtitlesLastDirectory(),
+                        settings.getUpperSubtitlesLastDirectory(),
+                        settings.getMergedSubtitlesLastDirectory()
                 );
             case MERGED_SUBTITLES:
                 return ObjectUtils.firstNonNull(
-                        preferences.getMergedSubtitlesLastDirectory(),
-                        preferences.getUpperSubtitlesLastDirectory(),
-                        preferences.getLowerSubtitlesLastDirectory()
+                        settings.getMergedSubtitlesLastDirectory(),
+                        settings.getUpperSubtitlesLastDirectory(),
+                        settings.getLowerSubtitlesLastDirectory()
                 );
             default:
                 throw new IllegalStateException();
@@ -158,18 +158,18 @@ public class MergeSingleFilesTabController {
         try {
             switch (fileType) {
                 case UPPER_SUBTITLES:
-                    preferences.saveUpperSubtitlesLastDirectory(file.getParent());
+                    settings.saveUpperSubtitlesLastDirectory(file.getParent());
                     return;
                 case LOWER_SUBTITLES:
-                    preferences.saveLowerSubtitlesLastDirectory(file.getParent());
+                    settings.saveLowerSubtitlesLastDirectory(file.getParent());
                     return;
                 case MERGED_SUBTITLES:
-                    preferences.saveMergedSubtitlesLastDirectory(file.getParent());
+                    settings.saveMergedSubtitlesLastDirectory(file.getParent());
                     return;
                 default:
                     throw new IllegalStateException();
             }
-        } catch (GuiPreferences.ConfigException e) {
+        } catch (GuiSettings.ConfigException e) {
             log.error(
                     "failed to save last directory , file " + file.getAbsolutePath() + ": "
                             + ExceptionUtils.getStackTrace(e)
@@ -361,7 +361,7 @@ public class MergeSingleFilesTabController {
 
     @FXML
     private void mergedSubtitlesButtonClicked() {
-        File file = getFile(FileType.MERGED_SUBTITLES, stage, preferences).orElse(null);
+        File file = getFile(FileType.MERGED_SUBTITLES, stage, settings).orElse(null);
 
         clearErrorsAndResult();
         saveLastDirectoryInConfigIfNecessary(file, FileType.MERGED_SUBTITLES);

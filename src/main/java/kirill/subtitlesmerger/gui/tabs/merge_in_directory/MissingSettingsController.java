@@ -1,22 +1,21 @@
 package kirill.subtitlesmerger.gui.tabs.merge_in_directory;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
-
-import java.util.List;
+import kirill.subtitlesmerger.gui.GuiContext;
 
 public class MissingSettingsController {
-    @FXML
-    private Pane pane;
-
     private MergeInDirectoryTabController mergeInDirectoryTabController;
 
     @FXML
-    private Pane missingSettingLabelsPane;
+    private Pane pane;
 
-    public void init(MergeInDirectoryTabController mergeInDirectoryTabController) {
+    @FXML
+    private PaneWithMissingSettingLabels paneWithMissingSettingLabels;
+
+    public void initialize(MergeInDirectoryTabController mergeInDirectoryTabController, GuiContext context) {
         this.mergeInDirectoryTabController = mergeInDirectoryTabController;
+        this.paneWithMissingSettingLabels.setMissingSettings(context.getSettings().getMissingSettings());
     }
 
     void show() {
@@ -25,15 +24,6 @@ public class MissingSettingsController {
 
     void hide() {
         pane.setVisible(false);
-    }
-
-    void setMissingSettings(List<String> missingSettings) {
-        missingSettingLabelsPane.getChildren().clear();
-
-        //todo separate control
-        for (String setting : missingSettings) {
-            missingSettingLabelsPane.getChildren().add(new Label("\u2022 " + setting));
-        }
     }
 
     @FXML

@@ -10,7 +10,7 @@ import lombok.extern.apachecommons.CommonsLog;
 @CommonsLog
 public class GuiContext {
     @Getter
-    private GuiPreferences preferences;
+    private GuiSettings settings;
 
     @Getter
     @Setter
@@ -21,17 +21,17 @@ public class GuiContext {
     private Ffmpeg ffmpeg;
 
     public GuiContext() {
-        preferences = new GuiPreferences();
-        if (preferences.getFfprobeFile() != null) {
+        settings = new GuiSettings();
+        if (settings.getFfprobeFile() != null) {
             try {
-                ffprobe = new Ffprobe(preferences.getFfprobeFile());
+                ffprobe = new Ffprobe(settings.getFfprobeFile());
             } catch (FfmpegException e) {
                 log.error("failed to initialize ffprobe");
             }
         }
-        if (preferences.getFfmpegFile() != null) {
+        if (settings.getFfmpegFile() != null) {
             try {
-                ffmpeg = new Ffmpeg(preferences.getFfmpegFile());
+                ffmpeg = new Ffmpeg(settings.getFfmpegFile());
             } catch (FfmpegException e) {
                 log.error("failed to initialize ffmpeg");
             }

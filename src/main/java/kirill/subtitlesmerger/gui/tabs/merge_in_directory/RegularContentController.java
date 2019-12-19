@@ -8,7 +8,7 @@ import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import kirill.subtitlesmerger.gui.GuiContext;
-import kirill.subtitlesmerger.gui.GuiPreferences;
+import kirill.subtitlesmerger.gui.GuiSettings;
 import kirill.subtitlesmerger.logic.LogicConstants;
 import kirill.subtitlesmerger.logic.work_with_files.FileInfoGetter;
 import kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo;
@@ -40,7 +40,7 @@ public class RegularContentController {
     @FXML
     private CheckBox hideUnavailableCheckbox;
 
-    public void init(Stage stage, GuiContext guiContext) {
+    public void initialize(Stage stage, GuiContext guiContext) {
         this.stage = stage;
         this.guiContext = guiContext;
     }
@@ -55,8 +55,8 @@ public class RegularContentController {
         directoryPathLabel.setText(directory.getAbsolutePath());
 
         try {
-            guiContext.getPreferences().saveLastDirectoryWithVideos(directory.getAbsolutePath());
-        } catch (GuiPreferences.ConfigException e) {
+            guiContext.getSettings().saveLastDirectoryWithVideos(directory.getAbsolutePath());
+        } catch (GuiSettings.ConfigException e) {
             log.error("failed to save last directory with videos, that shouldn't be possible");
             throw new IllegalStateException();
         }
