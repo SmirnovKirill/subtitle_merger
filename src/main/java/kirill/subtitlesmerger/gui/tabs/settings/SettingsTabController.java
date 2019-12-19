@@ -2,11 +2,12 @@ package kirill.subtitlesmerger.gui.tabs.settings;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 import javafx.util.StringConverter;
 import kirill.subtitlesmerger.gui.GuiConstants;
 import kirill.subtitlesmerger.gui.GuiContext;
@@ -20,9 +21,14 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
 import java.util.Objects;
+import java.util.Optional;
 
 @CommonsLog
 public class SettingsTabController {
+    private static final String UPDATE_FFPROBE_BUTTON_TEXT = "update path to ffprobe";
+
+    private static final String UPDATE_FFMPEG_BUTTON_TEXT = "update path to ffmpeg";
+
     private static final LanguageCodeStringConverter LANGUAGE_CODE_STRING_CONVERTER = new LanguageCodeStringConverter();
 
     private Stage stage;
@@ -37,25 +43,15 @@ public class SettingsTabController {
     @FXML
     private Button ffprobeSetButton;
 
-    private FileChooser ffprobeChooser;
-
     @FXML
     private TextField ffmpegField;
 
     @FXML
     private Button ffmpegSetButton;
 
-    private FileChooser ffmpegChooser;
-
-    @FXML
-    private Node upperSubtitlesQuestionWrapper;
-
     @FXML
     //todo make editable with drop-down
     private ComboBox<LanguageAlpha3Code> upperLanguageComboBox;
-
-    @FXML
-    private Node lowerSubtitlesQuestionWrapper;
 
     @FXML
     //todo make editable with drop-down
@@ -72,15 +68,12 @@ public class SettingsTabController {
         this.context = context;
         this.preferences = context.getPreferences();
 
-        this.ffprobeChooser = new FileChooser();
-        this.ffmpegChooser = new FileChooser();
-        initComboBoxes();
-        Tooltip.install(upperSubtitlesQuestionWrapper, generateLanguageTooltip());
-        Tooltip.install(lowerSubtitlesQuestionWrapper, generateLanguageTooltip());
-        updateFileChoosersAndFields();
+        initializeComboBoxes();
+        initializeTextFields();
+        setSwapLanguagesButtonVisibility();
     }
 
-    private void initComboBoxes() {
+    private void initializeComboBoxes() {
         upperLanguageComboBox.getItems().setAll(LogicConstants.ALLOWED_LANGUAGE_CODES);
         upperLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
 
@@ -88,52 +81,22 @@ public class SettingsTabController {
         lowerLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
     }
 
-    private static Tooltip generateLanguageTooltip() {
-        Tooltip result = new Tooltip(
-                "this setting will be used to auto-detect subtitles\n"
-                        + "for merging when working with videos"
-        );
-
-        result.setShowDelay(Duration.ZERO);
-        result.setShowDuration(Duration.INDEFINITE);
-
-        return result;
-    }
-
-    private void updateFileChoosersAndFields() {
+    private void initializeTextFields() {
         File ffprobeFile = preferences.getFfprobeFile();
         File ffmpegFile = preferences.getFfmpegFile();
 
         if (ffprobeFile != null) {
-            updateFfprobeInfo(
-                    ffprobeFile.getAbsolutePath(),
-                    "update path to ffprobe",
-                    "update path to ffprobe",
-                    ffprobeFile.getParentFile()
-            );
+            ffprobeField.setText(ffprobeFile.getAbsolutePath());
+            ffprobeSetButton.setText(UPDATE_FFPROBE_BUTTON_TEXT);
         } else {
-            updateFfprobeInfo(
-                    "",
-                    "choose path to ffprobe",
-                    "choose path to ffprobe",
-                    ffmpegFile != null ? ffmpegFile.getParentFile() : null
-            );
+            ffprobeSetButton.setText("choose path to ffprobe");
         }
 
         if (ffmpegFile != null) {
-            updateFfmpegInfo(
-                    ffmpegFile.getAbsolutePath(),
-                    "update path to ffmpeg",
-                    "update path to ffmpeg",
-                    ffmpegFile.getParentFile()
-            );
+            ffmpegField.setText(ffmpegFile.getAbsolutePath());
+            ffmpegSetButton.setText(UPDATE_FFMPEG_BUTTON_TEXT);
         } else {
-            updateFfmpegInfo(
-                    "",
-                    "choose path to ffmpeg",
-                    "choose path to ffmpeg",
-                    ffprobeFile != null ? ffprobeFile.getParentFile() : null
-            );
+            ffmpegSetButton.setText("choose path to ffmpeg");
         }
 
         LanguageAlpha3Code upperLanguage = preferences.getUpperLanguage();
@@ -145,40 +108,18 @@ public class SettingsTabController {
         if (lowerLanguage != null) {
             lowerLanguageComboBox.getSelectionModel().select(lowerLanguage);
         }
+    }
 
+    private void setSwapLanguagesButtonVisibility() {
         boolean swapButtonDisable = preferences.getUpperLanguage() == null
                 || preferences.getLowerLanguage() == null;
 
         swapLanguagesButton.setDisable(swapButtonDisable);
     }
 
-    private void updateFfprobeInfo(
-            String fieldText,
-            String buttonText,
-            String fileChooserTitle,
-            File fileChooserInitialDirectory
-    ) {
-        ffprobeField.setText(fieldText);
-        ffprobeSetButton.setText(buttonText);
-        ffprobeChooser.setTitle(fileChooserTitle);
-        ffprobeChooser.setInitialDirectory(fileChooserInitialDirectory);
-    }
-
-    private void updateFfmpegInfo(
-            String fieldText,
-            String buttonText,
-            String fileChooserTitle,
-            File fileChooserInitialDirectory
-    ) {
-        ffmpegField.setText(fieldText);
-        ffmpegSetButton.setText(buttonText);
-        ffmpegChooser.setTitle(fileChooserTitle);
-        ffmpegChooser.setInitialDirectory(fileChooserInitialDirectory);
-    }
-
     @FXML
     private void ffprobeFileButtonClicked() {
-        File ffprobeFile = ffprobeChooser.showOpenDialog(stage);
+        File ffprobeFile = getFfprobeFile(stage, preferences).orElse(null);
         if (ffprobeFile == null) {
             clearResult();
             return;
@@ -194,7 +135,8 @@ public class SettingsTabController {
         try {
             preferences.saveFfprobeFile(ffprobeFile.getAbsolutePath());
             context.setFfprobe(new Ffprobe(preferences.getFfprobeFile()));
-            updateFileChoosersAndFields();
+            ffprobeField.setText(ffprobeFile.getAbsolutePath());
+            ffprobeSetButton.setText(UPDATE_FFPROBE_BUTTON_TEXT);
 
             if (hadValueBefore) {
                 showSuccessMessage("path to ffprobe has been updated successfully");
@@ -206,27 +148,51 @@ public class SettingsTabController {
         }
     }
 
+    private static Optional<File> getFfprobeFile(Stage stage, GuiPreferences preferences) {
+        FileChooser fileChooser = new FileChooser();
+
+        String title;
+        File initialDirectory;
+        if (preferences.getFfprobeFile() != null) {
+            title = "update path to ffprobe";
+            initialDirectory = preferences.getFfprobeFile().getParentFile();
+        } else {
+            title = "choose path to ffprobe";
+            initialDirectory = preferences.getFfmpegFile() != null ? preferences.getFfmpegFile().getParentFile() : null;
+        }
+
+        fileChooser.setTitle(title);
+        fileChooser.setInitialDirectory(initialDirectory);
+
+        return Optional.ofNullable(fileChooser.showOpenDialog(stage));
+    }
+
     private void clearResult() {
         resultLabel.setText("");
-        resultLabel.getStyleClass().remove(GuiConstants.LABEL_SUCCESS_CLASS);
-        resultLabel.getStyleClass().remove(GuiConstants.LABEL_ERROR_CLASS);
+        resultLabel.getStyleClass().removeAll(GuiConstants.LABEL_SUCCESS_CLASS, GuiConstants.LABEL_ERROR_CLASS);
     }
 
     private void showSuccessMessage(String text) {
-        clearResult();
-        resultLabel.getStyleClass().add(GuiConstants.LABEL_SUCCESS_CLASS);
         resultLabel.setText(text);
+
+        resultLabel.getStyleClass().remove(GuiConstants.LABEL_ERROR_CLASS);
+        if (!resultLabel.getStyleClass().contains(GuiConstants.LABEL_SUCCESS_CLASS)) {
+            resultLabel.getStyleClass().add(GuiConstants.LABEL_SUCCESS_CLASS);
+        }
     }
 
     private void showErrorMessage(String text) {
-        clearResult();
-        resultLabel.getStyleClass().add(GuiConstants.LABEL_ERROR_CLASS);
         resultLabel.setText(text);
+
+        resultLabel.getStyleClass().remove(GuiConstants.LABEL_SUCCESS_CLASS);
+        if (!resultLabel.getStyleClass().contains(GuiConstants.LABEL_ERROR_CLASS)) {
+            resultLabel.getStyleClass().add(GuiConstants.LABEL_ERROR_CLASS);
+        }
     }
 
     @FXML
     private void ffmpegFileButtonClicked() {
-        File ffmpegFile = ffmpegChooser.showOpenDialog(stage);
+        File ffmpegFile = getFfmpegFile(stage, preferences).orElse(null);
         if (ffmpegFile == null) {
             clearResult();
             return;
@@ -242,7 +208,8 @@ public class SettingsTabController {
         try {
             preferences.saveFfmpegFile(ffmpegFile.getAbsolutePath());
             context.setFfmpeg(new Ffmpeg(preferences.getFfmpegFile()));
-            updateFileChoosersAndFields();
+            ffmpegField.setText(ffmpegFile.getAbsolutePath());
+            ffmpegSetButton.setText(UPDATE_FFMPEG_BUTTON_TEXT);
 
             if (hadValueBefore) {
                 showSuccessMessage("path to ffmpeg has been updated successfully");
@@ -254,6 +221,27 @@ public class SettingsTabController {
         }
     }
 
+    private static Optional<File> getFfmpegFile(Stage stage, GuiPreferences preferences) {
+        FileChooser fileChooser = new FileChooser();
+
+        String title;
+        File initialDirectory;
+        if (preferences.getFfmpegFile() != null) {
+            title = "update path to ffmpeg";
+            initialDirectory = preferences.getFfmpegFile().getParentFile();
+        } else {
+            title = "choose path to ffmpeg";
+            initialDirectory = preferences.getFfprobeFile() != null
+                    ? preferences.getFfprobeFile().getParentFile()
+                    : null;
+        }
+
+        fileChooser.setTitle(title);
+        fileChooser.setInitialDirectory(initialDirectory);
+
+        return Optional.ofNullable(fileChooser.showOpenDialog(stage));
+    }
+
     @FXML
     private void upperLanguageChanged() {
         LanguageAlpha3Code value = upperLanguageComboBox.getSelectionModel().getSelectedItem();
@@ -263,8 +251,7 @@ public class SettingsTabController {
         }
 
         if (Objects.equals(value, preferences.getLowerLanguage())) {
-            updateFileChoosersAndFields();
-            showErrorMessage("languages have to be different, please select another one");
+            showErrorMessage("languages have to be different, please choose another one");
             return;
         }
 
@@ -272,7 +259,7 @@ public class SettingsTabController {
 
         try {
             preferences.saveUpperLanguage(value.toString());
-            updateFileChoosersAndFields();
+            setSwapLanguagesButtonVisibility();
 
             if (hadValueBefore) {
                 showSuccessMessage("language for upper subtitles has been updated successfully");
@@ -293,8 +280,10 @@ public class SettingsTabController {
 
         try {
             preferences.saveUpperLanguage(oldLowerLanguage.toString());
+            upperLanguageComboBox.getSelectionModel().select(oldLowerLanguage);
+
             preferences.saveLowerLanguage(oldUpperLanguage.toString());
-            updateFileChoosersAndFields();
+            lowerLanguageComboBox.getSelectionModel().select(oldUpperLanguage);
 
             showSuccessMessage("languages have been swapped successfully");
         } catch (GuiPreferences.ConfigException e) {
@@ -313,8 +302,7 @@ public class SettingsTabController {
         }
 
         if (Objects.equals(value, preferences.getUpperLanguage())) {
-            updateFileChoosersAndFields();
-            showErrorMessage("languages have to be different, please select another one");
+            showErrorMessage("languages have to be different, please choose another one");
             return;
         }
 
@@ -322,7 +310,7 @@ public class SettingsTabController {
 
         try {
             preferences.saveLowerLanguage(value.toString());
-            updateFileChoosersAndFields();
+            setSwapLanguagesButtonVisibility();
 
             if (hadValueBefore) {
                 showSuccessMessage("language for lower subtitles has been updated successfully");

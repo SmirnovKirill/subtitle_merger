@@ -12,6 +12,7 @@ import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import kirill.subtitlesmerger.gui.tabs.TabPaneController;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.IOException;
 
@@ -51,6 +52,8 @@ public class GuiLauncher extends Application {
             stage.setMinHeight(stage.getHeight());
             System.out.println("on succeed took " + (System.currentTimeMillis() - start) + " ms");
         });
+
+        loadTask.setOnFailed(e -> log.error("failed to load fxml: " + ExceptionUtils.getStackTrace(e.getSource().getException())));
 
         Scene scene = new Scene(generatePaneWithProgress());
         scene.getStylesheets().add("/gui/style.css");

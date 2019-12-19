@@ -10,6 +10,7 @@ import kirill.subtitlesmerger.gui.GuiContext;
 import kirill.subtitlesmerger.gui.GuiPreferences;
 import kirill.subtitlesmerger.logic.core.Merger;
 import kirill.subtitlesmerger.logic.core.Parser;
+import kirill.subtitlesmerger.logic.core.Writer;
 import kirill.subtitlesmerger.logic.core.entities.Subtitles;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -79,8 +80,8 @@ public class MergeSingleFilesTabController {
         clearErrorsAndResult();
         saveLastDirectoryInConfigIfNecessary(file, fileType);
         setFileInfoAndShowErrorsIfNecessary(file, fileType);
-        updatePathLabels(fileType);
-        updateMergeButtonVisibility();
+        setPathLabels(fileType);
+        setMergeButtonVisibility();
     }
 
     private static Optional<File> getFile(FileType fileType, Stage stage, GuiPreferences preferences) {
@@ -145,8 +146,8 @@ public class MergeSingleFilesTabController {
         upperSubtitlesChooseButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
         lowerSubtitlesChooseButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
         mergedSubtitlesChooseButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
-        resultLabel.getStyleClass().removeAll(GuiConstants.LABEL_ERROR_CLASS, GuiConstants.LABEL_SUCCESS_CLASS);
         resultLabel.setText("");
+        resultLabel.getStyleClass().removeAll(GuiConstants.LABEL_SUCCESS_CLASS, GuiConstants.LABEL_ERROR_CLASS);
     }
 
     private void saveLastDirectoryInConfigIfNecessary(File file, FileType fileType) {
@@ -302,14 +303,14 @@ public class MergeSingleFilesTabController {
             }
         }
 
-        StringBuilder combinedErrorsMessage = new StringBuilder("Can't merge subtitles:");
+        StringBuilder combinedErrorsMessage = new StringBuilder();
 
         if (!StringUtils.isBlank(upperSubtitlesFileErrorMessage)) {
-            combinedErrorsMessage.append("\n").append("\u2022").append(" ").append(upperSubtitlesFileErrorMessage);
+            combinedErrorsMessage.append("\u2022").append(" ").append(upperSubtitlesFileErrorMessage).append("\n");
         }
 
         if (!StringUtils.isBlank(lowerSubtitlesFileErrorMessage)) {
-            combinedErrorsMessage.append("\n").append("\u2022").append(" ").append(lowerSubtitlesFileErrorMessage);
+            combinedErrorsMessage.append("\u2022").append(" ").append(lowerSubtitlesFileErrorMessage).append("\n");
         }
 
         resultLabel.setText(combinedErrorsMessage.toString());
@@ -319,7 +320,7 @@ public class MergeSingleFilesTabController {
         }
     }
 
-    private void updatePathLabels(FileType fileType) {
+    private void setPathLabels(FileType fileType) {
         File file;
         switch (fileType) {
             case UPPER_SUBTITLES:
@@ -346,7 +347,7 @@ public class MergeSingleFilesTabController {
         }
     }
 
-    private void updateMergeButtonVisibility() {
+    private void setMergeButtonVisibility() {
         boolean disable = upperSubtitlesFileInfo == null || upperSubtitlesFileInfo.getIncorrectFileReason() != null
                 || lowerSubtitlesFileInfo == null || lowerSubtitlesFileInfo.getIncorrectFileReason() != null
                 || mergedSubtitlesFile == null;
@@ -366,8 +367,8 @@ public class MergeSingleFilesTabController {
         saveLastDirectoryInConfigIfNecessary(file, FileType.MERGED_SUBTITLES);
         this.mergedSubtitlesFile = file;
         showInputFileErrorsIfNecessary();
-        updatePathLabels(FileType.MERGED_SUBTITLES);
-        updateMergeButtonVisibility();
+        setPathLabels(FileType.MERGED_SUBTITLES);
+        setMergeButtonVisibility();
     }
 
     @FXML
@@ -380,7 +381,7 @@ public class MergeSingleFilesTabController {
         );
 
         try {
-            FileUtils.writeStringToFile(mergedSubtitlesFile, result.toString(), StandardCharsets.UTF_8);
+            FileUtils.writeStringToFile(mergedSubtitlesFile, Writer.toSubRipText(result), StandardCharsets.UTF_8);
         } catch (IOException e) {
             showFailedToWriteMessage();
 
