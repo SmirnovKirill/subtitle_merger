@@ -111,8 +111,7 @@ public class SettingsTabController {
     }
 
     private void setSwapLanguagesButtonVisibility() {
-        boolean swapButtonDisable = settings.getUpperLanguage() == null
-                || settings.getLowerLanguage() == null;
+        boolean swapButtonDisable = settings.getUpperLanguage() == null || settings.getLowerLanguage() == null;
 
         swapLanguagesButton.setDisable(swapButtonDisable);
     }
@@ -231,9 +230,7 @@ public class SettingsTabController {
             initialDirectory = settings.getFfmpegFile().getParentFile();
         } else {
             title = "choose path to ffmpeg";
-            initialDirectory = settings.getFfprobeFile() != null
-                    ? settings.getFfprobeFile().getParentFile()
-                    : null;
+            initialDirectory = settings.getFfprobeFile() != null ? settings.getFfprobeFile().getParentFile() : null;
         }
 
         fileChooser.setTitle(title);

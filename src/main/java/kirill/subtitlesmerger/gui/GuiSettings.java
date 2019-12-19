@@ -41,6 +41,9 @@ class GuiSettings {
 
     private File lastDirectoryWithVideos;
 
+    /**
+     * Settings required for merging in videos.
+     */
     private ObservableSet<SettingType> missingSettings;
 
     GuiSettings() {
@@ -173,9 +176,6 @@ class GuiSettings {
         return Optional.of(result);
     }
 
-    /*
-     * Settings required for merging in videos.
-     */
     private ObservableSet<SettingType> generateMissingSettings() {
         Set<SettingType> result = EnumSet.noneOf(SettingType.class);
 

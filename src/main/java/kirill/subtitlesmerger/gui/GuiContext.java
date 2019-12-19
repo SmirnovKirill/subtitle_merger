@@ -8,15 +8,13 @@ import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 
 @CommonsLog
+@Getter
 public class GuiContext {
-    @Getter
     private GuiSettings settings;
 
-    @Getter
     @Setter
     private Ffprobe ffprobe;
 
-    @Getter
     @Setter
     private Ffmpeg ffmpeg;
 
