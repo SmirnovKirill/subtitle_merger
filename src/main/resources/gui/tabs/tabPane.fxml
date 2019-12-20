@@ -1,12 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.TabPane?>
-<?import kirill.subtitlesmerger.gui.GuiConstants?>
 <TabPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-         fx:id="mainTabPane" fx:controller="kirill.subtitlesmerger.gui.tabs.TabPaneController"
-         tabClosingPolicy="UNAVAILABLE" tabDragPolicy="FIXED">
-    <minWidth><GuiConstants fx:constant="MIN_ROOT_PANE_WIDTH"/> </minWidth>
-    <minHeight><GuiConstants fx:constant="MIN_ROOT_PANE_HEIGHT"/> </minHeight>
+         fx:id="tabPane" fx:controller="kirill.subtitlesmerger.gui.tabs.TabPaneController"
+         tabClosingPolicy="UNAVAILABLE" tabDragPolicy="FIXED" minWidth="800" minHeight="480">
     <fx:include fx:id="mergeSingleFilesTab" source="merge_single_files/mergeSingleFilesTab.fxml"/>
     <fx:include fx:id="mergeInDirectoryTab" source="merge_in_directory/mergeInDirectoryTab.fxml"/>
     <fx:include fx:id="settingsTab" source="settings/settingsTab.fxml"/>

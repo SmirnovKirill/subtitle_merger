@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.gui.custom_controls;
+package kirill.subtitlesmerger.gui.tabs.merge_in_directory.regular_content.table_with_files;
 
 import javafx.event.ActionEvent;
 import javafx.geometry.Pos;

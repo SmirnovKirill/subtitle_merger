@@ -5,7 +5,6 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.stage.DirectoryChooser?>
-<?import kirill.subtitlesmerger.gui.GuiConstants?>
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
       fx:id="pane"
       fx:controller="kirill.subtitlesmerger.gui.tabs.merge_in_directory.regular_content.RegularContentController"
@@ -18,26 +17,16 @@
         <Insets top="20" right="20" bottom="20" left="20"/>
     </padding>
 
-    <GridPane hgap="30" vgap="40">
-        <gridLinesVisible><GuiConstants fx:constant="DEBUG"/></gridLinesVisible>
-
-        <columnConstraints>
-            <ColumnConstraints minWidth="400"/>
-            <ColumnConstraints minWidth="100"/>
-            <ColumnConstraints hgrow="ALWAYS"/>
-        </columnConstraints>
-
-        <Label text="Please choose the directory with videos"
-               GridPane.halignment="LEFT" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-        <Button fx:id="directoryChooseButton" onAction="#directoryButtonClicked"
-                text="Choose directory"
-                GridPane.halignment="RIGHT" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-        <Label fx:id="directoryPathLabel"
-               text="not selected"
-               GridPane.halignment="LEFT" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
-
-        <HBox spacing="20" alignment="CENTER_LEFT"
-                GridPane.halignment="LEFT" GridPane.rowIndex="1" GridPane.columnSpan="2">
+    <VBox spacing="40">
+        <VBox spacing="10">
+            <HBox>
+                <Label text="Please choose the directory with videos"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button onAction="#directoryButtonClicked" text="Choose directory"/>
+            </HBox>
+            <TextField fx:id="directoryField" editable="false" maxWidth="Infinity"/>
+        </VBox>
+        <HBox spacing="20">
             <CheckBox text="Hide unavailable"/>
             <Button text="Refresh">
                 <graphic>
@@ -61,8 +50,5 @@
                 </graphic>
             </Button>
         </HBox>
-    </GridPane>
-    <Label visible="false">
-        <styleClass><GuiConstants fx:constant="LABEL_ERROR_CLASS"/></styleClass>
-    </Label>
+    </VBox>
 </VBox>

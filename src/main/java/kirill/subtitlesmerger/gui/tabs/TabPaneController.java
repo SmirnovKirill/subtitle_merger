@@ -11,7 +11,7 @@ import kirill.subtitlesmerger.gui.tabs.settings.SettingsTabController;
 
 public class TabPaneController {
     @FXML
-    private TabPane mainTabPane;
+    private TabPane tabPane;
 
     @FXML
     private Tab settingsTab;
@@ -32,6 +32,6 @@ public class TabPaneController {
     }
 
     public void openSettingsTab() {
-        mainTabPane.getSelectionModel().select(settingsTab);
+        tabPane.getSelectionModel().select(settingsTab);
     }
 }

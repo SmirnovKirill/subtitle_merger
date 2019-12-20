@@ -5,10 +5,6 @@ public class GuiConstants {
 
     public static final boolean DEBUG = false;
 
-    public static final int MIN_ROOT_PANE_WIDTH = 800;
-
-    public static final int MIN_ROOT_PANE_HEIGHT = 480;
-
     public static final String BUTTON_ERROR_CLASS = "button-error";
 
     public static final String LABEL_SUCCESS_CLASS = "label-success";

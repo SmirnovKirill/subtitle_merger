@@ -105,6 +105,7 @@
                         <manifestEntries>
                             <!-- Otherwise log4j will produce warnings at runtime. -->
                             <Multi-Release>true</Multi-Release>
+                            <SplashScreen-Image>gui/icons/splash.png</SplashScreen-Image>
                         </manifestEntries>
                     </archive>
                 </configuration>
