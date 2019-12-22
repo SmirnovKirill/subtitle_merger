@@ -45,8 +45,7 @@ public class SubtitleInjector {
 
         for (SubtitleStream streamInfo : fileInfo.getSubtitleStreams()) {
             if (streamInfo.getSubtitles() == null) {
-                log.error("subtitles have to be initialized before injecting!");
-                throw new IllegalArgumentException();
+                continue;
             }
 
             if (Objects.equals(Writer.toSubRipText(streamInfo.getSubtitles()), resultText)) {

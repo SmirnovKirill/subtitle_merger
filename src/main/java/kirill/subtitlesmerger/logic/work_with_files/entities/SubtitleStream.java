@@ -46,7 +46,6 @@ class SubtitleStream {
     }
 
     public enum UnavailabilityReason {
-        NOT_ALLOWED_CODEC,
-        FAILED_TO_GET_FFMPEG_INFO
+        NOT_ALLOWED_CODEC
     }
 }

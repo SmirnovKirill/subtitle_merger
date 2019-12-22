@@ -24,17 +24,19 @@
                 <Region HBox.hgrow="ALWAYS"/>
                 <Button onAction="#directoryButtonClicked" text="Choose directory"/>
             </HBox>
-            <TextField fx:id="directoryField" editable="false" maxWidth="Infinity"/>
+            <HBox spacing="10">
+                <TextField fx:id="directoryField" editable="false" HBox.hgrow="ALWAYS"/>
+                <Button disable="true">
+                    <graphic>
+                        <ImageView fitHeight="16" fitWidth="16">
+                            <Image url="/gui/icons/refresh.png"/>
+                        </ImageView>
+                    </graphic>
+                </Button>
+            </HBox>
         </VBox>
         <HBox spacing="20">
             <CheckBox text="Hide unavailable"/>
-            <Button text="Refresh">
-                <graphic>
-                    <ImageView fitHeight="16" fitWidth="16">
-                        <Image url="/gui/icons/refresh.png"/>
-                    </ImageView>
-                </graphic>
-            </Button>
             <Button text="Get subtitle sizes">
                 <graphic>
                     <ImageView fitHeight="16" fitWidth="16">

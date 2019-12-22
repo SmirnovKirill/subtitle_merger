@@ -1,13 +1,10 @@
 package kirill.subtitlesmerger.logic.work_with_files;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
-import kirill.subtitlesmerger.logic.core.Parser;
 import kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlesmerger.logic.work_with_files.entities.SubtitleCodec;
 import kirill.subtitlesmerger.logic.work_with_files.entities.SubtitleStream;
 import kirill.subtitlesmerger.logic.work_with_files.entities.VideoFormat;
-import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.Ffmpeg;
-import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.FfmpegException;
 import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.Ffprobe;
 import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.json.JsonFfprobeFileInfo;
 import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.json.JsonStream;
@@ -148,60 +145,5 @@ public class FileInfoGetter {
         }
 
         return Optional.ofNullable(stream.getTags().get("title"));
-    }
-
-    public static FileInfo getFileInfoWithSubtitles(FileInfo fileInfoWithoutSubtitles, Ffmpeg ffmpeg) {
-        if (fileInfoWithoutSubtitles.getUnavailabilityReason() != null) {
-            throw new IllegalArgumentException();
-        }
-
-        List<SubtitleStream> streamsWithSubtitles = new ArrayList<>();
-
-        for (SubtitleStream streamWithoutSubtitles : fileInfoWithoutSubtitles.getSubtitleStreams()) {
-            if (streamWithoutSubtitles.getUnavailabilityReason() != null) {
-                streamsWithSubtitles.add(streamWithoutSubtitles);
-                continue;
-            }
-
-            try {
-                String subtitlesText = ffmpeg.getSubtitlesText(
-                        streamWithoutSubtitles.getIndex(),
-                        fileInfoWithoutSubtitles.getFile()
-                );
-
-                streamsWithSubtitles.add(
-                        new SubtitleStream(
-                                streamWithoutSubtitles.getIndex(),
-                                streamWithoutSubtitles.getCodec(),
-                                null,
-                                streamWithoutSubtitles.getLanguage(),
-                                streamWithoutSubtitles.getTitle(),
-                                Parser.fromSubRipText(
-                                        subtitlesText,
-                                        "subs-" + streamWithoutSubtitles.getIndex(),
-                                        streamWithoutSubtitles.getLanguage()
-                                )
-                        )
-                );
-            } catch (FfmpegException | Parser.IncorrectFormatException e) {
-                streamsWithSubtitles.add(
-                        new SubtitleStream(
-                                streamWithoutSubtitles.getIndex(),
-                                streamWithoutSubtitles.getCodec(),
-                                SubtitleStream.UnavailabilityReason.FAILED_TO_GET_FFMPEG_INFO,
-                                streamWithoutSubtitles.getLanguage(),
-                                streamWithoutSubtitles.getTitle(),
-                                null
-                        )
-                );
-            }
-        }
-
-        return new FileInfo(
-                fileInfoWithoutSubtitles.getFile(),
-                null,
-                fileInfoWithoutSubtitles.getVideoContainer(),
-                streamsWithSubtitles
-        );
     }
 }
