@@ -3,7 +3,7 @@ package kirill.subtitlesmerger.logic.work_with_files;
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlesmerger.logic.work_with_files.entities.SubtitleCodec;
-import kirill.subtitlesmerger.logic.work_with_files.entities.SubtitleStream;
+import kirill.subtitlesmerger.logic.work_with_files.entities.SubtitleStreamInfo;
 import kirill.subtitlesmerger.logic.work_with_files.entities.VideoFormat;
 import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.Ffprobe;
 import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.json.JsonFfprobeFileInfo;
@@ -79,8 +79,8 @@ public class FileInfoGetter {
         return new FileInfo(file, null, videoFormat, getStreamsWithoutSubtitles(ffprobeInfo));
     }
 
-    private static List<SubtitleStream> getStreamsWithoutSubtitles(JsonFfprobeFileInfo ffprobeInfo) {
-        List<SubtitleStream> result = new ArrayList<>();
+    private static List<SubtitleStreamInfo> getStreamsWithoutSubtitles(JsonFfprobeFileInfo ffprobeInfo) {
+        List<SubtitleStreamInfo> result = new ArrayList<>();
 
         for (JsonStream stream : ffprobeInfo.getStreams()) {
             if (!"subtitle".equals(stream.getCodecType())) {
@@ -90,26 +90,24 @@ public class FileInfoGetter {
             SubtitleCodec codec = SubtitleCodec.from(stream.getCodecName()).orElse(null);
             if (codec == null) {
                 result.add(
-                        new SubtitleStream(
+                        new SubtitleStreamInfo(
                                 stream.getIndex(),
                                 null,
-                                SubtitleStream.UnavailabilityReason.NOT_ALLOWED_CODEC,
+                                SubtitleStreamInfo.UnavailabilityReason.NOT_ALLOWED_CODEC,
                                 getLanguage(stream).orElse(null),
-                                getTitle(stream).orElse(null),
-                                null
+                                getTitle(stream).orElse(null)
                         )
                 );
                 continue;
             }
 
             result.add(
-                    new SubtitleStream(
+                    new SubtitleStreamInfo(
                             stream.getIndex(),
                             codec,
                             null,
                             getLanguage(stream).orElse(null),
-                            getTitle(stream).orElse(null),
-                            null
+                            getTitle(stream).orElse(null)
                     )
             );
         }

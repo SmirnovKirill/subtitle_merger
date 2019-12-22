@@ -13,7 +13,7 @@ import javafx.stage.Stage;
 import kirill.subtitlesmerger.gui.GuiConstants;
 import kirill.subtitlesmerger.gui.GuiContext;
 import kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo;
-import kirill.subtitlesmerger.logic.work_with_files.entities.SubtitleStream;
+import kirill.subtitlesmerger.logic.work_with_files.entities.SubtitleStreamInfo;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -83,7 +83,7 @@ public class SubtitleStreamChooserCell {
     ) {
         List<RadioButton> result = new ArrayList<>();
 
-        for (SubtitleStream stream : fileInfo.getSubtitleStreams()) {
+        for (SubtitleStreamInfo stream : fileInfo.getSubtitleStreamsInfo()) {
             RadioButton radioButton = new RadioButton(getRadioButtonText(stream));
 
             radioButton.setToggleGroup(toggleGroup);
@@ -94,7 +94,7 @@ public class SubtitleStreamChooserCell {
         return result;
     }
 
-    private static String getRadioButtonText(SubtitleStream stream) {
+    private static String getRadioButtonText(SubtitleStreamInfo stream) {
         StringBuilder result = new StringBuilder();
 
         if (stream.getLanguage() != null) {
@@ -189,7 +189,7 @@ public class SubtitleStreamChooserCell {
         return Optional.empty();
     }
 
-    public Optional<SubtitleStream> getChosenSubtitleStream() {
+    public Optional<SubtitleStreamInfo> getChosenSubtitleStream() {
         //todo implement
         return Optional.empty();
     }

@@ -1,12 +1,11 @@
 package kirill.subtitlesmerger.logic.work_with_files.entities;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
-import kirill.subtitlesmerger.logic.core.entities.Subtitles;
 import lombok.Getter;
 
 @Getter
 public
-class SubtitleStream {
+class SubtitleStreamInfo {
     private int index;
 
     private boolean merged;
@@ -23,18 +22,12 @@ class SubtitleStream {
 
     private String title;
 
-    /**
-     * Can be null if we haven't used ffmpeg yet.
-     */
-    private Subtitles subtitles;
-
-    public SubtitleStream(
+    public SubtitleStreamInfo(
             int index,
             SubtitleCodec codec,
             UnavailabilityReason unavailabilityReason,
             LanguageAlpha3Code language,
-            String title,
-            Subtitles subtitles
+            String title
     ) {
         this.index = index;
         this.merged = title != null && title.startsWith("Merged subtitles");
@@ -42,7 +35,6 @@ class SubtitleStream {
         this.unavailabilityReason = unavailabilityReason;
         this.language = language;
         this.title = title;
-        this.subtitles = subtitles;
     }
 
     public enum UnavailabilityReason {

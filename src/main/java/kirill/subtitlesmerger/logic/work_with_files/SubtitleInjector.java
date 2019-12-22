@@ -2,17 +2,13 @@ package kirill.subtitlesmerger.logic.work_with_files;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlesmerger.logic.core.Merger;
-import kirill.subtitlesmerger.logic.core.Writer;
 import kirill.subtitlesmerger.logic.core.entities.Subtitles;
 import kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo;
-import kirill.subtitlesmerger.logic.work_with_files.entities.SubtitleStream;
 import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.Ffmpeg;
 import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.FfmpegException;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-
-import java.util.Objects;
 
 @CommonsLog
 public class SubtitleInjector {
@@ -21,9 +17,8 @@ public class SubtitleInjector {
             Subtitles lowerSubtitles,
             FileInfo fileInfo,
             Ffmpeg ffmpeg
-    ) throws SubtitlesAlreadyInjectedException, FfmpegException {
+    ) throws FfmpegException {
         Subtitles result = Merger.mergeSubtitles(upperSubtitles, lowerSubtitles);
-        checkForDuplicates(result, fileInfo);
 
         LanguageAlpha3Code mainLanguage = getMergedSubtitlesMainLanguage(upperSubtitles, lowerSubtitles);
         String title = getMergedSubtitlesTitle(upperSubtitles, lowerSubtitles);
@@ -32,26 +27,9 @@ public class SubtitleInjector {
                 result,
                 title,
                 mainLanguage,
-                fileInfo.getSubtitleStreams().size(),
+                fileInfo.getSubtitleStreamsInfo().size(), //todo take highest index + 1, check
                 fileInfo.getFile()
         );
-    }
-
-    private static void checkForDuplicates(
-            Subtitles result,
-            FileInfo fileInfo
-    ) throws SubtitlesAlreadyInjectedException {
-        String resultText = Writer.toSubRipText(result);
-
-        for (SubtitleStream streamInfo : fileInfo.getSubtitleStreams()) {
-            if (streamInfo.getSubtitles() == null) {
-                continue;
-            }
-
-            if (Objects.equals(Writer.toSubRipText(streamInfo.getSubtitles()), resultText)) {
-                throw new SubtitlesAlreadyInjectedException();
-            }
-        }
     }
 
     private static LanguageAlpha3Code getMergedSubtitlesMainLanguage(

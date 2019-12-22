@@ -25,20 +25,20 @@ class FileInfo {
 
     private VideoFormat videoContainer;
 
-    private List<SubtitleStream> subtitleStreams;
+    private List<SubtitleStreamInfo> subtitleStreamsInfo;
 
     public FileInfo(
             File file,
             UnavailabilityReason unavailabilityReason,
             VideoFormat videoContainer,
-            List<SubtitleStream> subtitleStreams
+            List<SubtitleStreamInfo> subtitleStreamsInfo
     ) {
         this.file = file;
         this.lastModified = new LocalDateTime(file.lastModified());
         this.size = file.length();
         this.unavailabilityReason = unavailabilityReason;
         this.videoContainer = videoContainer;
-        this.subtitleStreams = subtitleStreams;
+        this.subtitleStreamsInfo = subtitleStreamsInfo;
     }
 
     @AllArgsConstructor
