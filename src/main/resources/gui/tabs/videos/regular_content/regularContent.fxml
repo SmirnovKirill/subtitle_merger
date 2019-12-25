@@ -8,6 +8,7 @@
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
       fx:id="pane"
       fx:controller="kirill.subtitlesmerger.gui.tabs.videos.regular_content.RegularContentController"
+      stylesheets="/gui/tabs/videos/regular_content/regularContent.css"
       spacing="10">
     <fx:define>
         <DirectoryChooser fx:id="directoryChooser" title="choose the directory with videos"/>
@@ -17,40 +18,32 @@
         <Insets top="20" right="20" bottom="20" left="20"/>
     </padding>
 
-    <VBox spacing="40">
-        <VBox spacing="10">
-            <HBox>
-                <Label text="Please choose the directory with videos"/>
-                <Region HBox.hgrow="ALWAYS"/>
-                <Button onAction="#directoryButtonClicked" text="Choose directory"/>
-            </HBox>
-            <HBox spacing="10">
-                <TextField fx:id="directoryField" editable="false" HBox.hgrow="ALWAYS"/>
-                <Button disable="true">
-                    <graphic>
-                        <ImageView fitHeight="16" fitWidth="16">
-                            <Image url="/gui/icons/refresh.png"/>
-                        </ImageView>
-                    </graphic>
-                </Button>
-            </HBox>
-        </VBox>
-        <HBox spacing="20">
-            <CheckBox text="Hide unavailable"/>
-            <Button text="Get subtitle sizes">
-                <graphic>
-                    <ImageView fitHeight="16" fitWidth="16">
-                        <Image url="/gui/icons/get.png"/>
-                    </ImageView>
-                </graphic>
-            </Button>
-            <Button text="Inject subtitles">
-                <graphic>
-                    <ImageView fitHeight="16" fitWidth="16">
-                        <Image url="/gui/icons/process.png"/>
-                    </ImageView>
-                </graphic>
-            </Button>
+    <VBox spacing="10">
+        <Label alignment="CENTER" maxWidth="Infinity" styleClass="choose-title">Please choose</Label>
+
+        <HBox>
+            <BorderPane HBox.hgrow="ALWAYS" styleClass="files-pane">
+                <center>
+                    <HBox alignment="CENTER" spacing="10">
+                        <padding>
+                            <Insets top="20" right="20" bottom="20" left="20"/>
+                        </padding>
+                        <Label>One or more files</Label>
+                        <Button onAction="#filesButtonClicked" text="choose"/>
+                    </HBox>
+                </center>
+            </BorderPane>
+            <BorderPane HBox.hgrow="ALWAYS" styleClass="directory-pane">
+                <center>
+                    <HBox alignment="CENTER" spacing="10">
+                        <padding>
+                            <Insets top="20" right="20" bottom="20" left="20"/>
+                        </padding>
+                        <Label>All files from the directory</Label>
+                        <Button onAction="#directoryButtonClicked" text="choose"/>
+                    </HBox>
+                </center>
+            </BorderPane>
         </HBox>
     </VBox>
 </VBox>

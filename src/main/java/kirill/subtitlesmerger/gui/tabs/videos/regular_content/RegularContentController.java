@@ -46,6 +46,11 @@ public class RegularContentController {
     }
 
     @FXML
+    private void filesButtonClicked() {
+
+    }
+
+    @FXML
     private void directoryButtonClicked() {
         File directory = directoryChooser.showDialog(stage);
         if (directory == null) {
