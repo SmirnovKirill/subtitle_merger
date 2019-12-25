@@ -4,7 +4,7 @@
 <TabPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
          fx:id="tabPane" fx:controller="kirill.subtitlesmerger.gui.tabs.TabPaneController"
          tabClosingPolicy="UNAVAILABLE" tabDragPolicy="FIXED" minWidth="800" minHeight="480">
-    <fx:include fx:id="mergeSingleFilesTab" source="merge_single_files/mergeSingleFilesTab.fxml"/>
-    <fx:include fx:id="mergeInDirectoryTab" source="merge_in_directory/mergeInDirectoryTab.fxml"/>
+    <fx:include fx:id="subtitleFilesTab" source="subtitle_files/subtitleFilesTab.fxml"/>
+    <fx:include fx:id="videosTab" source="videos/videosTab.fxml"/>
     <fx:include fx:id="settingsTab" source="settings/settingsTab.fxml"/>
 </TabPane>

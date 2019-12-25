@@ -5,8 +5,8 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.stage.Stage;
 import kirill.subtitlesmerger.gui.GuiContext;
-import kirill.subtitlesmerger.gui.tabs.merge_in_directory.MergeInDirectoryTabController;
-import kirill.subtitlesmerger.gui.tabs.merge_single_files.MergeSingleFilesTabController;
+import kirill.subtitlesmerger.gui.tabs.videos.VideosTabController;
+import kirill.subtitlesmerger.gui.tabs.subtitle_files.SubtitleFilesTabController;
 import kirill.subtitlesmerger.gui.tabs.settings.SettingsTabController;
 
 public class TabPaneController {
@@ -17,17 +17,17 @@ public class TabPaneController {
     private Tab settingsTab;
 
     @FXML
-    private MergeSingleFilesTabController mergeSingleFilesTabController;
+    private SubtitleFilesTabController subtitleFilesTabController;
 
     @FXML
-    private MergeInDirectoryTabController mergeInDirectoryTabController;
+    private VideosTabController videosTabController;
 
     @FXML
     private SettingsTabController settingsTabController;
 
     public void initialize(Stage stage, GuiContext guiContext) {
-        this.mergeSingleFilesTabController.initialize(stage, guiContext);
-        this.mergeInDirectoryTabController.initialize(stage, this, guiContext);
+        this.subtitleFilesTabController.initialize(stage, guiContext);
+        this.videosTabController.initialize(stage, this, guiContext);
         this.settingsTabController.initialize(stage, guiContext);
     }
 

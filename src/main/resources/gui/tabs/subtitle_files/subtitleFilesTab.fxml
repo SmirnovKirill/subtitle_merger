@@ -4,10 +4,10 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import kirill.subtitlesmerger.gui.GuiConstants?>
-<?import kirill.subtitlesmerger.gui.tabs.merge_single_files.MergeSingleFilesTabController?>
+<?import kirill.subtitlesmerger.gui.tabs.subtitle_files.SubtitleFilesTabController?>
 <Tab xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-     fx:controller="kirill.subtitlesmerger.gui.tabs.merge_single_files.MergeSingleFilesTabController"
-     text="Merge subtitle files">
+     fx:controller="kirill.subtitlesmerger.gui.tabs.subtitle_files.SubtitleFilesTabController"
+     text="Subtitle files">
     <GridPane hgap="30" vgap="40">
         <gridLinesVisible><GuiConstants fx:constant="DEBUG"/></gridLinesVisible>
 
@@ -28,7 +28,7 @@
                 GridPane.halignment="RIGHT" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
         <Label fx:id="upperSubtitlesPathLabel"
                GridPane.halignment="LEFT" GridPane.rowIndex="0" GridPane.columnIndex="2">
-            <MergeSingleFilesTabController fx:constant="FILE_NOT_CHOSEN_PATH"/>
+            <SubtitleFilesTabController fx:constant="FILE_NOT_CHOSEN_PATH"/>
         </Label>
 
         <Label text="Please choose the file with the lower subtitles"
@@ -38,7 +38,7 @@
                 GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
         <Label fx:id="lowerSubtitlesPathLabel"
                GridPane.halignment="LEFT" GridPane.rowIndex="1" GridPane.columnIndex="2">
-            <MergeSingleFilesTabController fx:constant="FILE_NOT_CHOSEN_PATH"/>
+            <SubtitleFilesTabController fx:constant="FILE_NOT_CHOSEN_PATH"/>
         </Label>
 
         <Label text="Please choose where to save the result"
@@ -48,7 +48,7 @@
                 GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
         <Label fx:id="mergedSubtitlesPathLabel"
                GridPane.halignment="LEFT" GridPane.rowIndex="2" GridPane.columnIndex="2">
-            <MergeSingleFilesTabController fx:constant="FILE_NOT_CHOSEN_PATH"/>
+            <SubtitleFilesTabController fx:constant="FILE_NOT_CHOSEN_PATH"/>
         </Label>
 
         <Button fx:id="mergeButton" onAction="#mergeButtonClicked"

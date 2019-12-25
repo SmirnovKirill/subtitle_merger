@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.gui.tabs.merge_in_directory.regular_content.table_with_files;
+package kirill.subtitlesmerger.gui.tabs.videos.regular_content.table_with_files;
 
 import javafx.geometry.Pos;
 import javafx.scene.Node;

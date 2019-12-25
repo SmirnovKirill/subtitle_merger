@@ -3,8 +3,8 @@
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.layout.StackPane?>
 <Tab xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-     fx:controller="kirill.subtitlesmerger.gui.tabs.merge_in_directory.MergeInDirectoryTabController"
-     text="Merge subtitles in videos">
+     fx:controller="kirill.subtitlesmerger.gui.tabs.videos.VideosTabController"
+     text="Videos">
     <StackPane>
         <fx:include fx:id="missingSettings" source="missing_settings/missingSettings.fxml"/>
         <fx:include fx:id="regularContent" source="regular_content/regularContent.fxml"/>

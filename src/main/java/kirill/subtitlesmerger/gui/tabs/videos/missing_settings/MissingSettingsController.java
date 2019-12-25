@@ -1,12 +1,12 @@
-package kirill.subtitlesmerger.gui.tabs.merge_in_directory.missing_settings;
+package kirill.subtitlesmerger.gui.tabs.videos.missing_settings;
 
 import javafx.fxml.FXML;
 import javafx.scene.layout.Pane;
 import kirill.subtitlesmerger.gui.GuiContext;
-import kirill.subtitlesmerger.gui.tabs.merge_in_directory.MergeInDirectoryTabController;
+import kirill.subtitlesmerger.gui.tabs.videos.VideosTabController;
 
 public class MissingSettingsController {
-    private MergeInDirectoryTabController mergeInDirectoryTabController;
+    private VideosTabController videosTabController;
 
     @FXML
     private Pane pane;
@@ -14,8 +14,8 @@ public class MissingSettingsController {
     @FXML
     private PaneWithMissingSettingLabels paneWithMissingSettingLabels;
 
-    public void initialize(MergeInDirectoryTabController mergeInDirectoryTabController, GuiContext context) {
-        this.mergeInDirectoryTabController = mergeInDirectoryTabController;
+    public void initialize(VideosTabController videosTabController, GuiContext context) {
+        this.videosTabController = videosTabController;
         this.paneWithMissingSettingLabels.setMissingSettings(context.getSettings().getMissingSettings());
     }
 
@@ -29,6 +29,6 @@ public class MissingSettingsController {
 
     @FXML
     private void goToSettingsLinkClicked() {
-        mergeInDirectoryTabController.openSettingsTab();
+        videosTabController.openSettingsTab();
     }
 }

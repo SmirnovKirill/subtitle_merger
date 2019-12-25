@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.gui.tabs.merge_in_directory;
+package kirill.subtitlesmerger.gui.tabs.videos;
 
 import javafx.collections.SetChangeListener;
 import javafx.fxml.FXML;
@@ -6,13 +6,13 @@ import javafx.stage.Stage;
 import kirill.subtitlesmerger.gui.GuiContext;
 import kirill.subtitlesmerger.gui.GuiSettings;
 import kirill.subtitlesmerger.gui.tabs.TabPaneController;
-import kirill.subtitlesmerger.gui.tabs.merge_in_directory.missing_settings.MissingSettingsController;
-import kirill.subtitlesmerger.gui.tabs.merge_in_directory.regular_content.RegularContentController;
+import kirill.subtitlesmerger.gui.tabs.videos.missing_settings.MissingSettingsController;
+import kirill.subtitlesmerger.gui.tabs.videos.regular_content.RegularContentController;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 
 @CommonsLog
-public class MergeInDirectoryTabController {
+public class VideosTabController {
     private TabPaneController tabPaneController;
 
     private GuiSettings settings;

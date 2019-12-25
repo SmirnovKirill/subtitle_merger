@@ -1,4 +1,4 @@
-package kirill.subtitlesmerger.gui.tabs.merge_single_files;
+package kirill.subtitlesmerger.gui.tabs.subtitle_files;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -27,7 +27,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @CommonsLog
-public class MergeSingleFilesTabController {
+public class SubtitleFilesTabController {
     public static final String FILE_NOT_CHOSEN_PATH = "not selected";
 
     private Stage stage;
