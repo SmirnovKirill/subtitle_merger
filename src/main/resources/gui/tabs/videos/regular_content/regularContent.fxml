@@ -5,14 +5,13 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.stage.DirectoryChooser?>
+<?import kirill.subtitlesmerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo?>
+<?import kirill.subtitlesmerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles?>
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
       fx:id="pane"
       fx:controller="kirill.subtitlesmerger.gui.tabs.videos.regular_content.RegularContentController"
       stylesheets="/gui/tabs/videos/regular_content/regularContent.css"
       spacing="10">
-    <fx:define>
-        <DirectoryChooser fx:id="directoryChooser" title="choose the directory with videos"/>
-    </fx:define>
 
     <padding>
         <Insets top="20" right="20" bottom="20" left="20"/>
@@ -45,5 +44,21 @@
                 </center>
             </BorderPane>
         </HBox>
+
+        <TableWithFiles fx:id="tableWithFiles">
+            <columns>
+                <TableColumn sortable="false" minWidth="780" prefWidth="780">
+                    <text>file</text>
+                </TableColumn>
+               <!-- <TableColumn sortable="false">
+                    <text>upper subtitles</text>
+                </TableColumn>
+                <TableColumn sortable="false">
+                    <text>lower subtitles</text>
+                </TableColumn>  <TableColumn sortable="false">
+                    <text>action</text>
+                </TableColumn>-->
+            </columns>
+        </TableWithFiles>
     </VBox>
 </VBox>

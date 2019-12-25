@@ -1,23 +1,29 @@
 package kirill.subtitlesmerger.gui.tabs.videos.regular_content;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kirill.subtitlesmerger.gui.GuiContext;
 import kirill.subtitlesmerger.gui.GuiSettings;
+import kirill.subtitlesmerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles;
 import kirill.subtitlesmerger.logic.LogicConstants;
 import kirill.subtitlesmerger.logic.work_with_files.FileInfoGetter;
 import kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.Ffprobe;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+
+import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
 @CommonsLog
 public class RegularContentController {
@@ -28,55 +34,68 @@ public class RegularContentController {
     @FXML
     private Pane pane;
 
-    @FXML
-    private Button directoryChooseButton;
+    private Mode mode;
+
+    private File directory;
+
+    private List<FileInfo> filesInfo;
+
+    private BooleanProperty hideUnavailable;
 
     @FXML
-    private Label directoryPathLabel;
-
-    @FXML
-    private DirectoryChooser directoryChooser;
-
-    @FXML
-    private CheckBox hideUnavailableCheckbox;
+    private TableWithFiles tableWithFiles;
 
     public void initialize(Stage stage, GuiContext guiContext) {
         this.stage = stage;
         this.guiContext = guiContext;
+        this.hideUnavailable = new SimpleBooleanProperty(this, "hideUnavailable", true);
+    }
+
+    public void show() {
+        pane.setVisible(true);
+    }
+
+    public void hide() {
+        pane.setVisible(false);
     }
 
     @FXML
     private void filesButtonClicked() {
-
-    }
-
-    @FXML
-    private void directoryButtonClicked() {
-        File directory = directoryChooser.showDialog(stage);
-        if (directory == null) {
+        List<File> files = getFiles(stage, guiContext.getSettings());
+        if (CollectionUtils.isEmpty(files)) {
             return;
         }
 
-        directoryPathLabel.setText(directory.getAbsolutePath());
-
         try {
-            guiContext.getSettings().saveLastDirectoryWithVideos(directory.getAbsolutePath());
+            guiContext.getSettings().saveLastDirectoryWithVideos(files.get(0).getParent());
         } catch (GuiSettings.ConfigException e) {
-            log.error("failed to save last directory with videos, that shouldn't be possible");
-            throw new IllegalStateException();
+            log.error("failed to save last directory with videos, that shouldn't happen: " + getStackTrace(e));
         }
-        directoryChooser.setInitialDirectory(directory);
 
-//        filesInfo = getBriefFilesInfo(directory.listFiles(), appContext.getFfprobe());
-
-  //      tabView.getRegularContentPane().showFiles(filesInfo, stage, appContext);
+        mode = Mode.FILES;
+        directory = null;
+        //todo in background + progress
+        filesInfo = getFilesInfo(files, guiContext.getFfprobe());
+        hideUnavailable.setValue(hideUnavailable(filesInfo));
     }
 
-    private static List<FileInfo> getBriefFilesInfo(File[] files, Ffprobe ffprobe) {
+    private static List<File> getFiles(Stage stage, GuiSettings settings) {
+        FileChooser fileChooser = new FileChooser();
+
+        fileChooser.setTitle("choose files");
+        fileChooser.setInitialDirectory(settings.getLastDirectoryWithVideos());
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("subrip files (*.srt)", "*.srt")
+        );
+
+        return fileChooser.showOpenMultipleDialog(stage);
+    }
+
+    private static List<FileInfo> getFilesInfo(List<File> files, Ffprobe ffprobe) {
         List<FileInfo> result = new ArrayList<>();
 
         for (File file : files) {
-            if (!file.isFile()) {
+            if (file.isDirectory() || !file.exists()) {
                 continue;
             }
 
@@ -93,31 +112,50 @@ public class RegularContentController {
         return result;
     }
 
- /*   private void showOnlyValidCheckBoxChanged(
-            ObservableValue<? extends Boolean> observable,
-            Boolean oldValue,
-            Boolean newValue
-    ) {
-        tabView.showProgressIndicator();
-        if (Boolean.TRUE.equals(newValue)) {
-            tabView.getRegularContentPane().showFiles(
-                    filesInfo.stream()
-                            .filter(file -> file.getUnavailabilityReason() == null)
-                            .collect(Collectors.toList()),
-                    stage,
-                    appContext
-            );
-        } else {
-            tabView.getRegularContentPane().showFiles(filesInfo, stage, appContext);
-        }
-        tabView.hideProgressIndicator();
-    }*/
-
-    public void show() {
-        pane.setVisible(true);
+    /*
+     * Set "hide unavailable" checkbox by default if there is at least one available video. Otherwise it should
+     * not be checked because the user will see just an empty file list which isn't user friendly.
+     */
+    private static boolean hideUnavailable(List<FileInfo> filesInfo) {
+        return filesInfo.stream().anyMatch(fileInfo -> fileInfo.getUnavailabilityReason() == null);
     }
 
-    public void hide() {
-        pane.setVisible(false);
+    @FXML
+    private void directoryButtonClicked() {
+        File directory = getDirectory(stage, guiContext.getSettings()).orElse(null);
+        if (directory == null) {
+            return;
+        }
+        File[] files = directory.listFiles();
+        if (files == null) {
+            log.error("failed to get directory files, directory " + directory.getAbsolutePath());
+            return;
+        }
+
+        try {
+            guiContext.getSettings().saveLastDirectoryWithVideos(directory.getAbsolutePath());
+        } catch (GuiSettings.ConfigException e) {
+            log.error("failed to save last directory with videos, that shouldn't happen: " + getStackTrace(e));
+        }
+
+        mode = Mode.DIRECTORY;
+        this.directory = directory;
+        //todo in background + progress
+        filesInfo = getFilesInfo(Arrays.asList(files), guiContext.getFfprobe());
+        hideUnavailable.setValue(hideUnavailable(filesInfo));
+    }
+
+    private static Optional<File> getDirectory(Stage stage, GuiSettings settings) {
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+
+        directoryChooser.setTitle("choose directory");
+        directoryChooser.setInitialDirectory(settings.getLastDirectoryWithVideos());
+
+        return Optional.ofNullable(directoryChooser.showDialog(stage));
+    }
+
+    private enum Mode {
+        FILES,
+        DIRECTORY
     }
 }
