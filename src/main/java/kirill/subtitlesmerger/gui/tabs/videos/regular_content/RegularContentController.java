@@ -3,6 +3,7 @@ package kirill.subtitlesmerger.gui.tabs.videos.regular_content;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXML;
+import javafx.scene.control.TitledPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -34,6 +35,12 @@ public class RegularContentController {
     @FXML
     private Pane pane;
 
+    @FXML
+    private TitledPane chooseTitledPane;
+
+    @FXML
+    private TableWithFiles tableWithFiles;
+
     private Mode mode;
 
     private File directory;
@@ -41,9 +48,6 @@ public class RegularContentController {
     private List<FileInfo> filesInfo;
 
     private BooleanProperty hideUnavailable;
-
-    @FXML
-    private TableWithFiles tableWithFiles;
 
     public void initialize(Stage stage, GuiContext guiContext) {
         this.stage = stage;
@@ -60,7 +64,7 @@ public class RegularContentController {
     }
 
     @FXML
-    private void filesButtonClicked() {
+    private void videosButtonClicked() {
         List<File> files = getFiles(stage, guiContext.getSettings());
         if (CollectionUtils.isEmpty(files)) {
             return;
@@ -77,15 +81,17 @@ public class RegularContentController {
         //todo in background + progress
         filesInfo = getFilesInfo(files, guiContext.getFfprobe());
         hideUnavailable.setValue(hideUnavailable(filesInfo));
+        tableWithFiles.setVisible(true);
+        chooseTitledPane.setExpanded(false);
     }
 
     private static List<File> getFiles(Stage stage, GuiSettings settings) {
         FileChooser fileChooser = new FileChooser();
 
-        fileChooser.setTitle("choose files");
+        fileChooser.setTitle("choose videos");
         fileChooser.setInitialDirectory(settings.getLastDirectoryWithVideos());
         fileChooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("subrip files (*.srt)", "*.srt")
+                new FileChooser.ExtensionFilter("mkv files (*.mkv)", "*.mkv")
         );
 
         return fileChooser.showOpenMultipleDialog(stage);
@@ -143,12 +149,14 @@ public class RegularContentController {
         //todo in background + progress
         filesInfo = getFilesInfo(Arrays.asList(files), guiContext.getFfprobe());
         hideUnavailable.setValue(hideUnavailable(filesInfo));
+        tableWithFiles.setVisible(true);
+        chooseTitledPane.setExpanded(false);
     }
 
     private static Optional<File> getDirectory(Stage stage, GuiSettings settings) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
 
-        directoryChooser.setTitle("choose directory");
+        directoryChooser.setTitle("choose directory with videos");
         directoryChooser.setInitialDirectory(settings.getLastDirectoryWithVideos());
 
         return Optional.ofNullable(directoryChooser.showDialog(stage));

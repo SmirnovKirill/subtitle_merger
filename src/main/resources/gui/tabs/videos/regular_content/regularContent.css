@@ -1,5 +1,22 @@
-.choose-title {
+.choose-titled-pane {
     -fx-font-size: 1.166667em;
+}
+
+.choose-titled-pane > .title {
+    -fx-background-color: -fx-background;
+    -fx-background-insets: 0;
+}
+
+.choose-titled-pane  > *.content {
+    -fx-border-color: -fx-background;
+}
+
+.choose-titled-pane > .content > HBox {
+    -fx-padding: 0;
+}
+
+.choose-titled-pane:expanded  > .title > .arrow-button {
+    visibility: hidden;
 }
 
 .files-pane {
