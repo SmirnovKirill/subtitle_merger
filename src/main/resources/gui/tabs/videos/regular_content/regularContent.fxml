@@ -2,10 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.stage.DirectoryChooser?>
-<?import kirill.subtitlesmerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo?>
 <?import kirill.subtitlesmerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles?>
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
       fx:id="pane"
@@ -46,18 +43,19 @@
         </HBox>
 
         <TableWithFiles fx:id="tableWithFiles">
+            <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
             <columns>
-                <TableColumn sortable="false" minWidth="780" prefWidth="780">
+                <TableColumn sortable="false">
                     <text>file</text>
                 </TableColumn>
-               <!-- <TableColumn sortable="false">
+                <TableColumn sortable="false">
                     <text>upper subtitles</text>
                 </TableColumn>
                 <TableColumn sortable="false">
                     <text>lower subtitles</text>
                 </TableColumn>  <TableColumn sortable="false">
                     <text>action</text>
-                </TableColumn>-->
+                </TableColumn>
             </columns>
         </TableWithFiles>
     </VBox>
