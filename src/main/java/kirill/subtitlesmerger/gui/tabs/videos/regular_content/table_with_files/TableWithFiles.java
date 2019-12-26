@@ -1,6 +1,5 @@
 package kirill.subtitlesmerger.gui.tabs.videos.regular_content.table_with_files;
 
-import javafx.beans.value.ObservableValue;
 import javafx.scene.control.*;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -16,18 +15,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
     public TableWithFiles() {
         super();
 
-        widthProperty().addListener(this::widthChanged);
         setContextMenu(generateContextMenu());
-    }
-
-    /*
-     * This is my workaround for the JavaFX bug described here - https://bugs.openjdk.java.net/browse/JDK-8115476.
-     * I've noticed that it happens when width is odd so I decided to ensure that width is always even.
-     */
-    private void widthChanged(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-        if (newValue.intValue() % 2 == 1) {
-            setWidth(newValue.intValue() + 1);
-        }
     }
 
     private static ContextMenu generateContextMenu() {
