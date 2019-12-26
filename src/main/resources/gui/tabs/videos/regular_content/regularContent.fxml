@@ -53,7 +53,8 @@
                 </TableColumn>
                 <TableColumn sortable="false">
                     <text>lower subtitles</text>
-                </TableColumn>  <TableColumn sortable="false">
+                </TableColumn>
+                <TableColumn sortable="false" styleClass="last-column-header">
                     <text>action</text>
                 </TableColumn>
             </columns>

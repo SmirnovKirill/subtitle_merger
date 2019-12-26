@@ -15,3 +15,8 @@
     -fx-background-color: -fx-box-border, -fx-background;
     -fx-background-insets: 0, 1 1 1 0;
 }
+
+.table-view .last-column-header {
+    -fx-background-color: -fx-box-border, -fx-inner-border, -fx-body-color;
+    -fx-background-insets: 0, 0 0 1 0, 1 1 2 1;
+}
