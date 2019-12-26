@@ -42,6 +42,8 @@
             </HBox>
         </TitledPane>
 
+        <Label fx:id="resultLabel"/>
+
         <StackPane>
             <TableWithFiles fx:id="tableWithFiles" VBox.vgrow="ALWAYS" visible="false">
                 <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>

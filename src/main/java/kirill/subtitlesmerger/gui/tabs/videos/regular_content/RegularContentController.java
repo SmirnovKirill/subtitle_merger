@@ -3,11 +3,13 @@ package kirill.subtitlesmerger.gui.tabs.videos.regular_content;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXML;
+import javafx.scene.control.Label;
 import javafx.scene.control.TitledPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import kirill.subtitlesmerger.gui.GuiConstants;
 import kirill.subtitlesmerger.gui.GuiContext;
 import kirill.subtitlesmerger.gui.GuiSettings;
 import kirill.subtitlesmerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles;
@@ -39,6 +41,9 @@ public class RegularContentController {
     private TitledPane chooseTitledPane;
 
     @FXML
+    private Label resultLabel;
+
+    @FXML
     private TableWithFiles tableWithFiles;
 
     private Mode mode;
@@ -65,6 +70,8 @@ public class RegularContentController {
 
     @FXML
     private void videosButtonClicked() {
+        clearResult();
+
         List<File> files = getFiles(stage, guiContext.getSettings());
         if (CollectionUtils.isEmpty(files)) {
             return;
@@ -83,6 +90,11 @@ public class RegularContentController {
         hideUnavailable.setValue(hideUnavailable(filesInfo));
         tableWithFiles.setVisible(true);
         chooseTitledPane.setExpanded(false);
+    }
+
+    private void clearResult() {
+        resultLabel.setText("");
+        resultLabel.getStyleClass().removeAll(GuiConstants.LABEL_SUCCESS_CLASS, GuiConstants.LABEL_ERROR_CLASS);
     }
 
     private static List<File> getFiles(Stage stage, GuiSettings settings) {
@@ -128,6 +140,8 @@ public class RegularContentController {
 
     @FXML
     private void directoryButtonClicked() {
+        clearResult();
+
         File directory = getDirectory(stage, guiContext.getSettings()).orElse(null);
         if (directory == null) {
             return;
@@ -146,8 +160,16 @@ public class RegularContentController {
 
         mode = Mode.DIRECTORY;
         this.directory = directory;
-        //todo in background + progress
         filesInfo = getFilesInfo(Arrays.asList(files), guiContext.getFfprobe());
+
+        if (CollectionUtils.isEmpty(filesInfo)) {
+            tableWithFiles.setVisible(false);
+            chooseTitledPane.setExpanded(true);
+            showErrorMessage("directory is empty, please choose another one");
+            return;
+        }
+
+        //todo in background + progress
         hideUnavailable.setValue(hideUnavailable(filesInfo));
         tableWithFiles.setVisible(true);
         chooseTitledPane.setExpanded(false);
@@ -160,6 +182,15 @@ public class RegularContentController {
         directoryChooser.setInitialDirectory(settings.getLastDirectoryWithVideos());
 
         return Optional.ofNullable(directoryChooser.showDialog(stage));
+    }
+
+    private void showErrorMessage(String text) {
+        resultLabel.setText(text);
+
+        resultLabel.getStyleClass().remove(GuiConstants.LABEL_SUCCESS_CLASS);
+        if (!resultLabel.getStyleClass().contains(GuiConstants.LABEL_ERROR_CLASS)) {
+            resultLabel.getStyleClass().add(GuiConstants.LABEL_ERROR_CLASS);
+        }
     }
 
     private enum Mode {

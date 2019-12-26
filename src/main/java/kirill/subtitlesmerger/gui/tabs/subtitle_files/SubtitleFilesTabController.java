@@ -313,7 +313,12 @@ public class SubtitleFilesTabController {
             combinedErrorsMessage.append("\u2022").append(" ").append(lowerSubtitlesFileErrorMessage).append("\n");
         }
 
-        resultLabel.setText(combinedErrorsMessage.toString());
+        showErrorMessage(combinedErrorsMessage.toString());
+    }
+
+    private void showErrorMessage(String text) {
+        resultLabel.setText(text);
+
         resultLabel.getStyleClass().remove(GuiConstants.LABEL_SUCCESS_CLASS);
         if (!resultLabel.getStyleClass().contains(GuiConstants.LABEL_ERROR_CLASS)) {
             resultLabel.getStyleClass().add(GuiConstants.LABEL_ERROR_CLASS);
@@ -388,11 +393,11 @@ public class SubtitleFilesTabController {
             return;
         }
 
-        showSuccessMessage();
+        showSuccessMessage("Subtitles have been merged successfully!");
     }
 
-    private void showSuccessMessage() {
-        resultLabel.setText("Subtitles have been merged successfully!");
+    private void showSuccessMessage(String text) {
+        resultLabel.setText(text);
 
         resultLabel.getStyleClass().remove(GuiConstants.LABEL_ERROR_CLASS);
         if (!resultLabel.getStyleClass().contains(GuiConstants.LABEL_SUCCESS_CLASS)) {
