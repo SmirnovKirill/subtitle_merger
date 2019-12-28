@@ -10,3 +10,28 @@
 .label-error {
     -fx-text-fill: red;
 }
+
+.hyperlink,
+.hyperlink:focused  {
+    -fx-border-style: none;
+    -fx-border-width: 0;
+}
+
+.hyperlink:hover,
+.hyperlink:hover:visited {
+    -fx-underline: true;
+}
+
+.hyperlink:visited,
+.hyperlink:visited:armed {
+    -fx-underline: false;
+}
+
+.hyperlink,
+.hyperlink:hover,
+.hyperlink:armed,
+.hyperlink:hover:armed,
+.hyperlink:visited,
+.hyperlink:hover:visited {
+    -fx-text-fill: -fx-accent;
+}

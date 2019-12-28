@@ -1,22 +1,5 @@
-.choose-titled-pane {
+.choose-title {
     -fx-font-size: 1.166667em;
-}
-
-.choose-titled-pane > .title {
-    -fx-background-color: -fx-background;
-    -fx-background-insets: 0;
-}
-
-.choose-titled-pane  > *.content {
-    -fx-border-color: -fx-background;
-}
-
-.choose-titled-pane > .content > HBox {
-    -fx-padding: 0;
-}
-
-.choose-titled-pane:expanded  > .title > .arrow-button {
-    visibility: hidden;
 }
 
 .files-pane {
@@ -24,7 +7,8 @@
     -fx-background-insets: 0, 1;
 }
 
-.files-pane:hover,.directory-pane:hover {
+.files-pane:hover,
+.directory-pane:hover {
     -fx-background-color: -fx-box-border, -fx-body-color;
 }
 

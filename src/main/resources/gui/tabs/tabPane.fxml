@@ -3,7 +3,8 @@
 <?import javafx.scene.control.TabPane?>
 <TabPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
          fx:id="tabPane" fx:controller="kirill.subtitlesmerger.gui.tabs.TabPaneController"
-         tabClosingPolicy="UNAVAILABLE" tabDragPolicy="FIXED" minWidth="800" minHeight="480">
+         tabClosingPolicy="UNAVAILABLE" tabDragPolicy="FIXED"
+         minWidth="800" minHeight="480" prefWidth="800" prefHeight="480">
     <fx:include fx:id="subtitleFilesTab" source="subtitle_files/subtitleFilesTab.fxml"/>
     <fx:include fx:id="videosTab" source="videos/videosTab.fxml"/>
     <fx:include fx:id="settingsTab" source="settings/settingsTab.fxml"/>

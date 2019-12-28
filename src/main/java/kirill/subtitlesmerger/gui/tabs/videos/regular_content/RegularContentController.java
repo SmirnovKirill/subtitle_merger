@@ -4,6 +4,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TitledPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
@@ -38,10 +39,19 @@ public class RegularContentController {
     private Pane pane;
 
     @FXML
-    private TitledPane chooseTitledPane;
+    private Pane choicePane;
 
     @FXML
-    private Label resultLabel;
+    private Pane resultPane;
+
+    @FXML
+    private Pane choseVideosPane;
+
+    @FXML
+    private Pane choseDirectoryPane;
+
+    @FXML
+    private TextField chosenDirectoryField;
 
     @FXML
     private TableWithFiles tableWithFiles;
@@ -70,8 +80,6 @@ public class RegularContentController {
 
     @FXML
     private void videosButtonClicked() {
-        clearResult();
-
         List<File> files = getFiles(stage, guiContext.getSettings());
         if (CollectionUtils.isEmpty(files)) {
             return;
@@ -88,13 +96,10 @@ public class RegularContentController {
         //todo in background + progress
         filesInfo = getFilesInfo(files, guiContext.getFfprobe());
         hideUnavailable.setValue(hideUnavailable(filesInfo));
-        tableWithFiles.setVisible(true);
-        chooseTitledPane.setExpanded(false);
-    }
-
-    private void clearResult() {
-        resultLabel.setText("");
-        resultLabel.getStyleClass().removeAll(GuiConstants.LABEL_SUCCESS_CLASS, GuiConstants.LABEL_ERROR_CLASS);
+        choicePane.setVisible(false);
+        resultPane.setVisible(true);
+        choseVideosPane.setVisible(true);
+        choseDirectoryPane.setVisible(false);
     }
 
     private static List<File> getFiles(Stage stage, GuiSettings settings) {
@@ -140,8 +145,6 @@ public class RegularContentController {
 
     @FXML
     private void directoryButtonClicked() {
-        clearResult();
-
         File directory = getDirectory(stage, guiContext.getSettings()).orElse(null);
         if (directory == null) {
             return;
@@ -161,18 +164,13 @@ public class RegularContentController {
         mode = Mode.DIRECTORY;
         this.directory = directory;
         filesInfo = getFilesInfo(Arrays.asList(files), guiContext.getFfprobe());
-
-        if (CollectionUtils.isEmpty(filesInfo)) {
-            tableWithFiles.setVisible(false);
-            chooseTitledPane.setExpanded(true);
-            showErrorMessage("directory is empty, please choose another one");
-            return;
-        }
-
         //todo in background + progress
+        chosenDirectoryField.setText(directory.getAbsolutePath());
         hideUnavailable.setValue(hideUnavailable(filesInfo));
-        tableWithFiles.setVisible(true);
-        chooseTitledPane.setExpanded(false);
+        choicePane.setVisible(false);
+        resultPane.setVisible(true);
+        choseVideosPane.setVisible(false);
+        choseDirectoryPane.setVisible(true);
     }
 
     private static Optional<File> getDirectory(Stage stage, GuiSettings settings) {
@@ -182,15 +180,6 @@ public class RegularContentController {
         directoryChooser.setInitialDirectory(settings.getLastDirectoryWithVideos());
 
         return Optional.ofNullable(directoryChooser.showDialog(stage));
-    }
-
-    private void showErrorMessage(String text) {
-        resultLabel.setText(text);
-
-        resultLabel.getStyleClass().remove(GuiConstants.LABEL_SUCCESS_CLASS);
-        if (!resultLabel.getStyleClass().contains(GuiConstants.LABEL_ERROR_CLASS)) {
-            resultLabel.getStyleClass().add(GuiConstants.LABEL_ERROR_CLASS);
-        }
     }
 
     private enum Mode {
