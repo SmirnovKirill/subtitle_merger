@@ -146,7 +146,7 @@ public class RegularContentController {
         File[] files = directory.listFiles();
         if (files == null) {
             log.error("failed to get directory files, directory " + directory.getAbsolutePath());
-            return;
+            files = new File[]{};
         }
 
         try {
@@ -180,6 +180,19 @@ public class RegularContentController {
     private void backToSelectionClicked() {
         choicePane.setVisible(true);
         resultPane.setVisible(false);
+    }
+
+    @FXML
+    private void refreshButtonClicked() {
+        File[] files = directory.listFiles();
+        if (files == null) {
+            log.error("failed to get directory files, directory " + directory.getAbsolutePath());
+            files = new File[]{};
+        }
+
+        filesInfo = getFilesInfo(Arrays.asList(files), guiContext.getFfprobe());
+        //todo in background + progress
+        hideUnavailable.setValue(hideUnavailable(filesInfo));
     }
 
     private enum Mode {
