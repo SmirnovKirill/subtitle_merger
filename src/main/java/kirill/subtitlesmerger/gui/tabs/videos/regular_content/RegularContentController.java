@@ -3,14 +3,11 @@ package kirill.subtitlesmerger.gui.tabs.videos.regular_content;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXML;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.control.TitledPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import kirill.subtitlesmerger.gui.GuiConstants;
 import kirill.subtitlesmerger.gui.GuiContext;
 import kirill.subtitlesmerger.gui.GuiSettings;
 import kirill.subtitlesmerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles;
@@ -45,10 +42,7 @@ public class RegularContentController {
     private Pane resultPane;
 
     @FXML
-    private Pane choseVideosPane;
-
-    @FXML
-    private Pane choseDirectoryPane;
+    private Pane chosenDirectoryPane;
 
     @FXML
     private TextField chosenDirectoryField;
@@ -98,8 +92,8 @@ public class RegularContentController {
         hideUnavailable.setValue(hideUnavailable(filesInfo));
         choicePane.setVisible(false);
         resultPane.setVisible(true);
-        choseVideosPane.setVisible(true);
-        choseDirectoryPane.setVisible(false);
+        chosenDirectoryPane.setVisible(false);
+        chosenDirectoryPane.setManaged(false);
     }
 
     private static List<File> getFiles(Stage stage, GuiSettings settings) {
@@ -169,8 +163,8 @@ public class RegularContentController {
         hideUnavailable.setValue(hideUnavailable(filesInfo));
         choicePane.setVisible(false);
         resultPane.setVisible(true);
-        choseVideosPane.setVisible(false);
-        choseDirectoryPane.setVisible(true);
+        chosenDirectoryPane.setVisible(true);
+        chosenDirectoryPane.setManaged(true);
     }
 
     private static Optional<File> getDirectory(Stage stage, GuiSettings settings) {
@@ -180,6 +174,12 @@ public class RegularContentController {
         directoryChooser.setInitialDirectory(settings.getLastDirectoryWithVideos());
 
         return Optional.ofNullable(directoryChooser.showDialog(stage));
+    }
+
+    @FXML
+    private void backToSelectionClicked() {
+        choicePane.setVisible(true);
+        resultPane.setVisible(false);
     }
 
     private enum Mode {
