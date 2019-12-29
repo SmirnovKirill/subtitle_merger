@@ -10,6 +10,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kirill.subtitlesmerger.gui.GuiContext;
 import kirill.subtitlesmerger.gui.GuiSettings;
+import kirill.subtitlesmerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlesmerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles;
 import kirill.subtitlesmerger.logic.LogicConstants;
 import kirill.subtitlesmerger.logic.work_with_files.FileInfoGetter;
@@ -17,6 +18,8 @@ import kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.Ffprobe;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.joda.time.LocalDateTime;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -24,6 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
 @CommonsLog
@@ -54,7 +58,7 @@ public class RegularContentController {
 
     private File directory;
 
-    private List<FileInfo> filesInfo;
+    private List<File> files;
 
     private BooleanProperty hideUnavailable;
 
@@ -62,6 +66,7 @@ public class RegularContentController {
         this.stage = stage;
         this.guiContext = guiContext;
         this.hideUnavailable = new SimpleBooleanProperty(this, "hideUnavailable", true);
+        this.tableWithFiles.initialize();
     }
 
     public void show() {
@@ -78,6 +83,7 @@ public class RegularContentController {
         if (CollectionUtils.isEmpty(files)) {
             return;
         }
+        this.files = files;
 
         try {
             guiContext.getSettings().saveLastDirectoryWithVideos(files.get(0).getParent());
@@ -88,8 +94,10 @@ public class RegularContentController {
         mode = Mode.FILES;
         directory = null;
         //todo in background + progress
-        filesInfo = getFilesInfo(files, guiContext.getFfprobe());
-        hideUnavailable.setValue(hideUnavailable(filesInfo));
+        List<GuiFileInfo> guiFilesInfo = getGuiFilesInfo(files, guiContext.getFfprobe());
+        tableWithFiles.getItems().setAll(guiFilesInfo);
+        hideUnavailable.setValue(hideUnavailable(guiFilesInfo));
+
         choicePane.setVisible(false);
         resultPane.setVisible(true);
         chosenDirectoryPane.setVisible(false);
@@ -108,7 +116,7 @@ public class RegularContentController {
         return fileChooser.showOpenMultipleDialog(stage);
     }
 
-    private static List<FileInfo> getFilesInfo(List<File> files, Ffprobe ffprobe) {
+    private static List<GuiFileInfo> getGuiFilesInfo(List<File> files, Ffprobe ffprobe) {
         List<FileInfo> result = new ArrayList<>();
 
         for (File file : files) {
@@ -126,15 +134,38 @@ public class RegularContentController {
             );
         }
 
-        return result;
+        return guiFilesInfoFrom(result);
+    }
+
+    private static List<GuiFileInfo> guiFilesInfoFrom(List<FileInfo> filesInfo) {
+        return filesInfo.stream().map(RegularContentController::guiFileInfoFrom).collect(toList());
+    }
+
+    private static GuiFileInfo guiFileInfoFrom(FileInfo fileInfo) {
+        return new GuiFileInfo(
+                fileInfo.getFile().getAbsolutePath(),
+                fileInfo.getLastModified(),
+                LocalDateTime.now(),
+                fileInfo.getSize(),
+                convert(fileInfo.getUnavailabilityReason()),
+                ""
+        );
+    }
+
+    private static String convert(FileInfo.UnavailabilityReason unavailabilityReason) {
+        if (unavailabilityReason == null) {
+            return "";
+        }
+
+        return unavailabilityReason.toString(); //todo
     }
 
     /*
      * Set "hide unavailable" checkbox by default if there is at least one available video. Otherwise it should
      * not be checked because the user will see just an empty file list which isn't user friendly.
      */
-    private static boolean hideUnavailable(List<FileInfo> filesInfo) {
-        return filesInfo.stream().anyMatch(fileInfo -> fileInfo.getUnavailabilityReason() == null);
+    private static boolean hideUnavailable(List<GuiFileInfo> files) {
+        return files.stream().anyMatch(fileInfo -> StringUtils.isBlank(fileInfo.getUnavailabilityReason()));
     }
 
     @FXML
@@ -157,10 +188,11 @@ public class RegularContentController {
 
         mode = Mode.DIRECTORY;
         this.directory = directory;
-        filesInfo = getFilesInfo(Arrays.asList(files), guiContext.getFfprobe());
+        List<GuiFileInfo> guiFilesInfo = getGuiFilesInfo(Arrays.asList(files), guiContext.getFfprobe());
         //todo in background + progress
         chosenDirectoryField.setText(directory.getAbsolutePath());
-        hideUnavailable.setValue(hideUnavailable(filesInfo));
+        tableWithFiles.getItems().setAll(guiFilesInfo);
+        hideUnavailable.setValue(hideUnavailable(guiFilesInfo));
         choicePane.setVisible(false);
         resultPane.setVisible(true);
         chosenDirectoryPane.setVisible(true);
@@ -190,9 +222,10 @@ public class RegularContentController {
             files = new File[]{};
         }
 
-        filesInfo = getFilesInfo(Arrays.asList(files), guiContext.getFfprobe());
+        List<GuiFileInfo> guiFilesInfo = getGuiFilesInfo(Arrays.asList(files), guiContext.getFfprobe());
         //todo in background + progress
-        hideUnavailable.setValue(hideUnavailable(filesInfo));
+        tableWithFiles.getItems().setAll(guiFilesInfo);
+        hideUnavailable.setValue(hideUnavailable(guiFilesInfo));
     }
 
     private enum Mode {

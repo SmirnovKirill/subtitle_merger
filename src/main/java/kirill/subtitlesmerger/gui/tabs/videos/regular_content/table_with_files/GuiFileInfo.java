@@ -4,12 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.joda.time.LocalDateTime;
 
-import java.io.File;
-
 @AllArgsConstructor
 @Getter
 public class GuiFileInfo {
-    private File file;
+    private String path;
 
     private LocalDateTime lastModified;
 
