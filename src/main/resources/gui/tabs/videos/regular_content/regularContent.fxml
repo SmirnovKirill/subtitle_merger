@@ -58,7 +58,7 @@
 
         <VBox spacing="15" VBox.vgrow="ALWAYS">
             <HBox spacing="10" alignment="CENTER_LEFT">
-                <CheckBox text="hide unavailable"/>
+                <CheckBox fx:id="hideUnavailableCheckbox" onAction="#hideUnavailableClicked" text="hide unavailable"/>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Button text="Get all sizes">
                     <graphic>

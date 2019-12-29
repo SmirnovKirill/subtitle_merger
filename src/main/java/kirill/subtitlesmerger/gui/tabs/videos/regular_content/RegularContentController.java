@@ -1,8 +1,7 @@
 package kirill.subtitlesmerger.gui.tabs.videos.regular_content;
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXML;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
@@ -53,6 +52,9 @@ public class RegularContentController {
     private TextField chosenDirectoryField;
 
     @FXML
+    private CheckBox hideUnavailableCheckbox;
+
+    @FXML
     private TableWithFiles tableWithFiles;
 
     private Mode mode;
@@ -61,12 +63,11 @@ public class RegularContentController {
 
     private List<File> files;
 
-    private BooleanProperty hideUnavailable;
+    private List<GuiFileInfo> allGuiFilesInfo;
 
     public void initialize(Stage stage, GuiContext guiContext) {
         this.stage = stage;
         this.guiContext = guiContext;
-        this.hideUnavailable = new SimpleBooleanProperty(this, "hideUnavailable", true);
         this.tableWithFiles.initialize();
     }
 
@@ -95,9 +96,9 @@ public class RegularContentController {
         mode = Mode.FILES;
         directory = null;
         //todo in background + progress
-        List<GuiFileInfo> guiFilesInfo = getGuiFilesInfo(files, mode, guiContext.getFfprobe());
-        tableWithFiles.getItems().setAll(guiFilesInfo);
-        hideUnavailable.setValue(hideUnavailable(guiFilesInfo));
+        allGuiFilesInfo = getGuiFilesInfo(files, mode, guiContext.getFfprobe());
+        hideUnavailableCheckbox.setSelected(hideUnavailable(allGuiFilesInfo));
+        tableWithFiles.getItems().setAll(getGuiFilesInfoToShow(allGuiFilesInfo, hideUnavailableCheckbox.isSelected()));
 
         choicePane.setVisible(false);
         resultPane.setVisible(true);
@@ -174,6 +175,16 @@ public class RegularContentController {
         return files.stream().anyMatch(fileInfo -> StringUtils.isBlank(fileInfo.getUnavailabilityReason()));
     }
 
+    private static List<GuiFileInfo> getGuiFilesInfoToShow(List<GuiFileInfo> allFilesInfo, boolean hideUnavailable) {
+        if (!hideUnavailable) {
+            return allFilesInfo;
+        }
+
+        return allFilesInfo.stream()
+                .filter(file -> StringUtils.isBlank(file.getUnavailabilityReason()))
+                .collect(toList());
+    }
+
     @FXML
     private void directoryButtonClicked() {
         File directory = getDirectory(stage, guiContext.getSettings()).orElse(null);
@@ -194,11 +205,11 @@ public class RegularContentController {
 
         mode = Mode.DIRECTORY;
         this.directory = directory;
-        List<GuiFileInfo> guiFilesInfo = getGuiFilesInfo(Arrays.asList(files), mode, guiContext.getFfprobe());
+        allGuiFilesInfo = getGuiFilesInfo(Arrays.asList(files), mode, guiContext.getFfprobe());
         //todo in background + progress
         chosenDirectoryField.setText(directory.getAbsolutePath());
-        tableWithFiles.getItems().setAll(guiFilesInfo);
-        hideUnavailable.setValue(hideUnavailable(guiFilesInfo));
+        hideUnavailableCheckbox.setSelected(hideUnavailable(allGuiFilesInfo));
+        tableWithFiles.getItems().setAll(getGuiFilesInfoToShow(allGuiFilesInfo, hideUnavailableCheckbox.isSelected()));
         choicePane.setVisible(false);
         resultPane.setVisible(true);
         chosenDirectoryPane.setVisible(true);
@@ -228,10 +239,15 @@ public class RegularContentController {
             files = new File[]{};
         }
 
-        List<GuiFileInfo> guiFilesInfo = getGuiFilesInfo(Arrays.asList(files), mode, guiContext.getFfprobe());
+        allGuiFilesInfo = getGuiFilesInfo(Arrays.asList(files), mode, guiContext.getFfprobe());
         //todo in background + progress
-        tableWithFiles.getItems().setAll(guiFilesInfo);
-        hideUnavailable.setValue(hideUnavailable(guiFilesInfo));
+        hideUnavailableCheckbox.setSelected(hideUnavailable(allGuiFilesInfo));
+        tableWithFiles.getItems().setAll(getGuiFilesInfoToShow(allGuiFilesInfo, hideUnavailableCheckbox.isSelected()));
+    }
+
+    @FXML
+    private void hideUnavailableClicked() {
+        tableWithFiles.getItems().setAll(getGuiFilesInfoToShow(allGuiFilesInfo, hideUnavailableCheckbox.isSelected()));
     }
 
     private enum Mode {
