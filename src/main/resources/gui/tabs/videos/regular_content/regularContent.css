@@ -25,3 +25,19 @@
     -fx-background-color: -fx-box-border, -fx-inner-border, -fx-body-color;
     -fx-background-insets: 0, 0 0 1 0, 1 1 2 1;
 }
+
+.size-title {
+    -fx-font-size: 0.75em;
+}
+
+.last-modified-title {
+    -fx-font-size: 0.75em;
+}
+
+.size {
+    -fx-font-size: 0.75em;
+}
+
+.last-modified {
+    -fx-font-size: 0.75em;
+}

@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
@@ -94,7 +95,7 @@ public class RegularContentController {
         mode = Mode.FILES;
         directory = null;
         //todo in background + progress
-        List<GuiFileInfo> guiFilesInfo = getGuiFilesInfo(files, guiContext.getFfprobe());
+        List<GuiFileInfo> guiFilesInfo = getGuiFilesInfo(files, mode, guiContext.getFfprobe());
         tableWithFiles.getItems().setAll(guiFilesInfo);
         hideUnavailable.setValue(hideUnavailable(guiFilesInfo));
 
@@ -116,7 +117,7 @@ public class RegularContentController {
         return fileChooser.showOpenMultipleDialog(stage);
     }
 
-    private static List<GuiFileInfo> getGuiFilesInfo(List<File> files, Ffprobe ffprobe) {
+    private static List<GuiFileInfo> getGuiFilesInfo(List<File> files, Mode mode, Ffprobe ffprobe) {
         List<FileInfo> result = new ArrayList<>();
 
         for (File file : files) {
@@ -134,16 +135,21 @@ public class RegularContentController {
             );
         }
 
-        return guiFilesInfoFrom(result);
+        return result.stream().map(fileInfo -> guiFileInfoFrom(fileInfo, mode)).collect(Collectors.toList());
     }
 
-    private static List<GuiFileInfo> guiFilesInfoFrom(List<FileInfo> filesInfo) {
-        return filesInfo.stream().map(RegularContentController::guiFileInfoFrom).collect(toList());
-    }
+    private static GuiFileInfo guiFileInfoFrom(FileInfo fileInfo, Mode mode) {
+        String path;
+        if (mode == Mode.FILES) {
+            path = fileInfo.getFile().getAbsolutePath();
+        } else if (mode == Mode.DIRECTORY) {
+            path = fileInfo.getFile().getName();
+        } else {
+            throw new IllegalStateException();
+        }
 
-    private static GuiFileInfo guiFileInfoFrom(FileInfo fileInfo) {
         return new GuiFileInfo(
-                fileInfo.getFile().getAbsolutePath(),
+                path,
                 fileInfo.getLastModified(),
                 LocalDateTime.now(),
                 fileInfo.getSize(),
@@ -188,7 +194,7 @@ public class RegularContentController {
 
         mode = Mode.DIRECTORY;
         this.directory = directory;
-        List<GuiFileInfo> guiFilesInfo = getGuiFilesInfo(Arrays.asList(files), guiContext.getFfprobe());
+        List<GuiFileInfo> guiFilesInfo = getGuiFilesInfo(Arrays.asList(files), mode, guiContext.getFfprobe());
         //todo in background + progress
         chosenDirectoryField.setText(directory.getAbsolutePath());
         tableWithFiles.getItems().setAll(guiFilesInfo);
@@ -222,7 +228,7 @@ public class RegularContentController {
             files = new File[]{};
         }
 
-        List<GuiFileInfo> guiFilesInfo = getGuiFilesInfo(Arrays.asList(files), guiContext.getFfprobe());
+        List<GuiFileInfo> guiFilesInfo = getGuiFilesInfo(Arrays.asList(files), mode, guiContext.getFfprobe());
         //todo in background + progress
         tableWithFiles.getItems().setAll(guiFilesInfo);
         hideUnavailable.setValue(hideUnavailable(guiFilesInfo));
