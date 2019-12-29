@@ -1,10 +1,7 @@
 package kirill.subtitlesmerger.gui.tabs.videos.regular_content.table_with_files;
 
 import javafx.geometry.Insets;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -17,13 +14,19 @@ import java.util.List;
 public class TableWithFiles extends TableView<GuiFileInfo> {
     private static final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern("dd.MM.YYYY HH:mm");
 
+    public TableWithFiles() {
+        super();
+
+        getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        setPlaceholder(new Label("there are no files in the directory"));
+    }
+
     /*
      * Had to make this method because table is initialized with fxml and it happens after the constructor is called so
      * in the constructor columns aren't initialized yet.
      */
     public void initialize() {
         TableColumn<GuiFileInfo, ?> column = getColumns().get(0);
-
         column.setCellFactory(this::generateFileNameCell);
     }
 
