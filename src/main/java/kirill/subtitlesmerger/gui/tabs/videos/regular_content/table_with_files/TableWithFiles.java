@@ -1,7 +1,10 @@
 package kirill.subtitlesmerger.gui.tabs.videos.regular_content.table_with_files;
 
 import javafx.geometry.Insets;
-import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.layout.*;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -13,31 +16,6 @@ import java.util.List;
 
 public class TableWithFiles extends TableView<GuiFileInfo> {
     private static final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern("dd.MM.YYYY HH:mm");
-
-    public TableWithFiles() {
-        super();
-
-        setContextMenu(generateContextMenu());
-    }
-
-    private static ContextMenu generateContextMenu() {
-        ContextMenu result = new ContextMenu();
-
-        Menu menu = new Menu("_Sort files");
-
-        menu.getItems().addAll(
-                new MenuItem("By _Name"),
-                new MenuItem("By _Modification Time"),
-                new MenuItem("By _Size"),
-                new SeparatorMenuItem(),
-                new MenuItem("_Ascending"),
-                new MenuItem("_Descending")
-        );
-
-        result.getItems().add(menu);
-
-        return result;
-    }
 
     /*
      * Had to make this method because table is initialized with fxml and it happens after the constructor is called so

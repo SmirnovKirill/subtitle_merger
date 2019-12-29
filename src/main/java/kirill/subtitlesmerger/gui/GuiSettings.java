@@ -9,6 +9,7 @@ import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.FfmpegException;
 import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.Ffprobe;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -40,6 +41,10 @@ class GuiSettings {
     private LanguageAlpha3Code lowerLanguage;
 
     private File lastDirectoryWithVideos;
+
+    private SortBy sortBy;
+
+    private SortDirection sortDirection;
 
     /**
      * Settings required for merging in videos.
@@ -113,6 +118,22 @@ class GuiSettings {
             log.warn("incorrect last directory with videos in saved preferences: " + e.getMessage());
         }
 
+        try {
+            sortBy = getValidatedSortBy(
+                    preferences.get(SettingType.SORT_BY.getSettingCode(), "")
+            ).orElse(null);
+        } catch (ConfigException e) {
+            log.warn("incorrect sort by value in saved preferences: " + e.getMessage());
+        }
+
+        try {
+            sortDirection = getValidatedSortDirection(
+                    preferences.get(SettingType.SORT_DIRECTION.getSettingCode(), "")
+            ).orElse(null);
+        } catch (ConfigException e) {
+            log.warn("incorrect sort direction in saved preferences: " + e.getMessage());
+        }
+
         missingSettings = generateMissingSettings();
     }
 
@@ -171,6 +192,32 @@ class GuiSettings {
 
         if (!LogicConstants.ALLOWED_LANGUAGE_CODES.contains(result)) {
             throw new ConfigException("language code " + rawValue + " is not allowed");
+        }
+
+        return Optional.of(result);
+    }
+
+    private static Optional<SortBy> getValidatedSortBy(String rawValue) throws ConfigException {
+        if (StringUtils.isBlank(rawValue)) {
+            return Optional.empty();
+        }
+
+        SortBy result = EnumUtils.getEnum(SortBy.class, rawValue);
+        if (result == null) {
+            throw new ConfigException("value " + rawValue + " is not valid fot sorting");
+        }
+
+        return Optional.of(result);
+    }
+
+    private static Optional<SortDirection> getValidatedSortDirection(String rawValue) throws ConfigException {
+        if (StringUtils.isBlank(rawValue)) {
+            return Optional.empty();
+        }
+
+        SortDirection result = EnumUtils.getEnum(SortDirection.class, rawValue);
+        if (result == null) {
+            throw new ConfigException("value " + rawValue + " is not a valid sort direction");
         }
 
         return Optional.of(result);
@@ -282,6 +329,26 @@ class GuiSettings {
         preferences.put(SettingType.LAST_DIRECTORY_WITH_VIDEOS.getSettingCode(), directory.getAbsolutePath());
     }
 
+    public void saveSortBy(String rawValue) throws ConfigException {
+        SortBy sortBy = getValidatedSortBy(rawValue).orElse(null);
+        if (sortBy == null) {
+            throw new EmptyValueException();
+        }
+
+        this.sortBy = sortBy;
+        preferences.put(SettingType.SORT_BY.getSettingCode(), sortBy.toString());
+    }
+
+    public void saveSortDirection(String rawValue) throws ConfigException {
+        SortDirection sortDirection = getValidatedSortDirection(rawValue).orElse(null);
+        if (sortDirection == null) {
+            throw new EmptyValueException();
+        }
+
+        this.sortDirection = sortDirection;
+        preferences.put(SettingType.SORT_DIRECTION.getSettingCode(), sortDirection.toString());
+    }
+
     public static class ConfigException extends Exception {
         ConfigException(String message) {
             super(message);
@@ -294,6 +361,17 @@ class GuiSettings {
         }
     }
 
+    public enum SortBy {
+        NAME,
+        MODIFICATION_TIME,
+        SIZE
+    }
+
+    public enum SortDirection {
+        ASCENDING,
+        DESCENDING
+    }
+
     public enum SettingType {
         UPPER_SUBTITLES_LAST_DIRECTORY("upper_subtitles_last_directory"),
         LOWER_SUBTITLES_LAST_DIRECTORY("lower_subtitles_last_directory"),
@@ -302,7 +380,9 @@ class GuiSettings {
         FFMPEG_PATH("ffmpeg_path"),
         UPPER_LANGUAGE("upper_language"),
         LOWER_LANGUAGE("lower_language"),
-        LAST_DIRECTORY_WITH_VIDEOS("last_directory_with_videos");
+        LAST_DIRECTORY_WITH_VIDEOS("last_directory_with_videos"),
+        SORT_BY("sort_by"),
+        SORT_DIRECTION("sort_direction");
 
         @Getter
         private String settingCode;
