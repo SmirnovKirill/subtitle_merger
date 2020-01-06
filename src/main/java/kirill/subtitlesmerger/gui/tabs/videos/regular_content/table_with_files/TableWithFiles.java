@@ -18,7 +18,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         super();
 
         getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        setPlaceholder(new Label("there are no files in the directory"));
+        setPlaceholder(new Label("there are no files to display"));
     }
 
     /*

@@ -1,6 +1,7 @@
 package kirill.subtitlesmerger.gui.tabs.videos.regular_content;
 
 import javafx.beans.Observable;
+import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
@@ -17,13 +18,11 @@ import kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.Ffprobe;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.joda.time.LocalDateTime;
 
 import java.io.File;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
@@ -65,6 +64,12 @@ public class RegularContentController {
     @FXML
     private TableWithFiles tableWithFiles;
 
+    @FXML
+    private Pane addRemoveFilesPane;
+
+    @FXML
+    private Button removeSelectedButton;
+
     private ToggleGroup sortByGroup;
 
     private ToggleGroup sortDirectionGroup;
@@ -73,7 +78,7 @@ public class RegularContentController {
 
     private File directory;
 
-    private List<GuiFileInfo> allGuiFilesInfo;
+    private List<FileInfo> allFilesInfo;
 
     public void initialize(Stage stage, GuiContext guiContext) {
         this.stage = stage;
@@ -84,13 +89,15 @@ public class RegularContentController {
         this.sortDirectionGroup = new ToggleGroup();
         this.sortDirectionGroup.selectedToggleProperty().addListener(this::sortDirectionChanged);
         this.tableWithFiles.initialize();
-        this.allGuiFilesInfo = new ArrayList<>();
         this.tableWithFiles.setContextMenu(
                 generateContextMenu(
                         this.sortByGroup,
                         this.sortDirectionGroup,
                         guiContext.getSettings()
                 )
+        );
+        this.removeSelectedButton.disableProperty().bind(
+                Bindings.isEmpty(tableWithFiles.getSelectionModel().getSelectedIndices())
         );
     }
 
@@ -131,7 +138,8 @@ public class RegularContentController {
 
         tableWithFiles.getItems().setAll(
                 getGuiFilesInfoToShow(
-                        allGuiFilesInfo,
+                        allFilesInfo,
+                        mode,
                         hideUnavailableCheckbox.isSelected(),
                         guiContext.getSettings().getSortBy(),
                         guiContext.getSettings().getSortDirection()
@@ -159,7 +167,8 @@ public class RegularContentController {
 
         tableWithFiles.getItems().setAll(
                 getGuiFilesInfoToShow(
-                        allGuiFilesInfo,
+                        allFilesInfo,
+                        mode,
                         hideUnavailableCheckbox.isSelected(),
                         guiContext.getSettings().getSortBy(),
                         guiContext.getSettings().getSortDirection()
@@ -247,11 +256,12 @@ public class RegularContentController {
         mode = Mode.FILES;
         directory = null;
         //todo in background + progress
-        allGuiFilesInfo = getGuiFilesInfo(files, mode, guiContext.getFfprobe());
-        hideUnavailableCheckbox.setSelected(hideUnavailable(allGuiFilesInfo));
+        allFilesInfo = getFilesInfo(files, guiContext.getFfprobe());
+        hideUnavailableCheckbox.setSelected(hideUnavailable(allFilesInfo));
         tableWithFiles.getItems().setAll(
                 getGuiFilesInfoToShow(
-                        allGuiFilesInfo,
+                        allFilesInfo,
+                        mode,
                         hideUnavailableCheckbox.isSelected(),
                         guiContext.getSettings().getSortBy(),
                         guiContext.getSettings().getSortDirection()
@@ -262,6 +272,8 @@ public class RegularContentController {
         resultPane.setVisible(true);
         chosenDirectoryPane.setVisible(false);
         chosenDirectoryPane.setManaged(false);
+        addRemoveFilesPane.setVisible(true);
+        addRemoveFilesPane.setManaged(true);
     }
 
     private static List<File> getFiles(Stage stage, GuiSettings settings) {
@@ -276,7 +288,7 @@ public class RegularContentController {
         return fileChooser.showOpenMultipleDialog(stage);
     }
 
-    private static List<GuiFileInfo> getGuiFilesInfo(List<File> files, Mode mode, Ffprobe ffprobe) {
+    private static List<FileInfo> getFilesInfo(List<File> files, Ffprobe ffprobe) {
         List<FileInfo> result = new ArrayList<>();
 
         for (File file : files) {
@@ -294,7 +306,68 @@ public class RegularContentController {
             );
         }
 
-        return result.stream().map(fileInfo -> guiFileInfoFrom(fileInfo, mode)).collect(Collectors.toList());
+        return result;
+    }
+
+    /*
+     * Set "hide unavailable" checkbox by default if there is at least one available video. Otherwise it should
+     * not be checked because the user will see just an empty file list which isn't user friendly.
+     */
+    private static boolean hideUnavailable(List<FileInfo> files) {
+        return files.stream().anyMatch(fileInfo -> fileInfo.getUnavailabilityReason() == null);
+    }
+
+    private static List<GuiFileInfo> getGuiFilesInfoToShow(
+            List<FileInfo> allFilesInfo,
+            Mode mode,
+            boolean hideUnavailable,
+            GuiSettings.SortBy sortBy,
+            GuiSettings.SortDirection sortDirection
+    ) {
+        if (CollectionUtils.isEmpty(allFilesInfo)) {
+            return new ArrayList<>();
+        }
+
+        List<FileInfo> result = getSortedFilesInfo(allFilesInfo, sortBy, sortDirection);
+
+        if (hideUnavailable) {
+            result = result.stream().filter(fileInfo -> fileInfo.getUnavailabilityReason() == null).collect(toList());
+        }
+
+        return result.stream()
+                .map(fileInfo -> guiFileInfoFrom(fileInfo, mode))
+                .collect(toList());
+    }
+
+    private static List<FileInfo> getSortedFilesInfo(
+            List<FileInfo> filesInfo,
+            GuiSettings.SortBy sortBy,
+            GuiSettings.SortDirection sortDirection
+    ) {
+        List<FileInfo> result = new ArrayList<>(filesInfo);
+
+        Comparator<FileInfo> comparator;
+        switch (sortBy) {
+            case NAME:
+                comparator = Comparator.comparing(fileInfo -> fileInfo.getFile().getAbsolutePath());
+                break;
+            case MODIFICATION_TIME:
+                comparator = Comparator.comparing(FileInfo::getLastModified);
+                break;
+            case SIZE:
+                comparator = Comparator.comparing(FileInfo::getSize);
+                break;
+            default:
+                throw new IllegalStateException();
+        }
+
+        if (sortDirection == GuiSettings.SortDirection.DESCENDING) {
+            comparator = comparator.reversed();
+        }
+
+        result.sort(comparator);
+
+        return result;
     }
 
     private static GuiFileInfo guiFileInfoFrom(FileInfo fileInfo, Mode mode) {
@@ -325,62 +398,6 @@ public class RegularContentController {
         return unavailabilityReason.toString(); //todo
     }
 
-    /*
-     * Set "hide unavailable" checkbox by default if there is at least one available video. Otherwise it should
-     * not be checked because the user will see just an empty file list which isn't user friendly.
-     */
-    private static boolean hideUnavailable(List<GuiFileInfo> files) {
-        return files.stream().anyMatch(fileInfo -> StringUtils.isBlank(fileInfo.getUnavailabilityReason()));
-    }
-
-    private static List<GuiFileInfo> getGuiFilesInfoToShow(
-            List<GuiFileInfo> allFilesInfo,
-            boolean hideUnavailable,
-            GuiSettings.SortBy sortBy,
-            GuiSettings.SortDirection sortDirection
-    ) {
-        List<GuiFileInfo> result = getSortedFilesInfo(allFilesInfo, sortBy, sortDirection);
-
-        if (!hideUnavailable) {
-            return result;
-        }
-
-        return result.stream()
-                .filter(file -> StringUtils.isBlank(file.getUnavailabilityReason()))
-                .collect(toList());
-    }
-
-    private static List<GuiFileInfo> getSortedFilesInfo(
-            List<GuiFileInfo> filesInfo,
-            GuiSettings.SortBy sortBy,
-            GuiSettings.SortDirection sortDirection
-    ) {
-        List<GuiFileInfo> result = new ArrayList<>(filesInfo);
-
-        Comparator<GuiFileInfo> comparator;
-        switch (sortBy) {
-            case NAME:
-                comparator = Comparator.comparing(GuiFileInfo::getPath);
-                break;
-            case MODIFICATION_TIME:
-                comparator = Comparator.comparing(GuiFileInfo::getLastModified);
-                break;
-            case SIZE:
-                comparator = Comparator.comparing(GuiFileInfo::getSize);
-                break;
-            default:
-                throw new IllegalStateException();
-        }
-
-        if (sortDirection == GuiSettings.SortDirection.DESCENDING) {
-            comparator = comparator.reversed();
-        }
-
-        result.sort(comparator);
-
-        return result;
-    }
-
     @FXML
     private void directoryButtonClicked() {
         File directory = getDirectory(stage, guiContext.getSettings()).orElse(null);
@@ -401,13 +418,14 @@ public class RegularContentController {
 
         mode = Mode.DIRECTORY;
         this.directory = directory;
-        allGuiFilesInfo = getGuiFilesInfo(Arrays.asList(files), mode, guiContext.getFfprobe());
+        allFilesInfo = getFilesInfo(Arrays.asList(files), guiContext.getFfprobe());
         //todo in background + progress
         chosenDirectoryField.setText(directory.getAbsolutePath());
-        hideUnavailableCheckbox.setSelected(hideUnavailable(allGuiFilesInfo));
+        hideUnavailableCheckbox.setSelected(hideUnavailable(allFilesInfo));
         tableWithFiles.getItems().setAll(
                 getGuiFilesInfoToShow(
-                        allGuiFilesInfo,
+                        allFilesInfo,
+                        mode,
                         hideUnavailableCheckbox.isSelected(),
                         guiContext.getSettings().getSortBy(),
                         guiContext.getSettings().getSortDirection()
@@ -417,6 +435,8 @@ public class RegularContentController {
         resultPane.setVisible(true);
         chosenDirectoryPane.setVisible(true);
         chosenDirectoryPane.setManaged(true);
+        addRemoveFilesPane.setVisible(false);
+        addRemoveFilesPane.setManaged(false);
     }
 
     private static Optional<File> getDirectory(Stage stage, GuiSettings settings) {
@@ -442,12 +462,13 @@ public class RegularContentController {
             files = new File[]{};
         }
 
-        allGuiFilesInfo = getGuiFilesInfo(Arrays.asList(files), mode, guiContext.getFfprobe());
+        allFilesInfo = getFilesInfo(Arrays.asList(files), guiContext.getFfprobe());
         //todo in background + progress
-        hideUnavailableCheckbox.setSelected(hideUnavailable(allGuiFilesInfo));
+        hideUnavailableCheckbox.setSelected(hideUnavailable(allFilesInfo));
         tableWithFiles.getItems().setAll(
                 getGuiFilesInfoToShow(
-                        allGuiFilesInfo,
+                        allFilesInfo,
+                        mode,
                         hideUnavailableCheckbox.isSelected(),
                         guiContext.getSettings().getSortBy(),
                         guiContext.getSettings().getSortDirection()
@@ -459,7 +480,67 @@ public class RegularContentController {
     private void hideUnavailableClicked() {
         tableWithFiles.getItems().setAll(
                 getGuiFilesInfoToShow(
-                        allGuiFilesInfo,
+                        allFilesInfo,
+                        mode,
+                        hideUnavailableCheckbox.isSelected(),
+                        guiContext.getSettings().getSortBy(),
+                        guiContext.getSettings().getSortDirection()
+                )
+        );
+    }
+
+    @FXML
+    private void removeButtonClicked() {
+        List<Integer> indices = tableWithFiles.getSelectionModel().getSelectedIndices();
+        if (CollectionUtils.isEmpty(indices)) {
+            return;
+        }
+
+        List<String> selectedPaths = new ArrayList<>();
+        for (int index : indices) {
+            selectedPaths.add(tableWithFiles.getItems().get(index).getPath());
+        }
+
+        allFilesInfo.removeIf(fileInfo -> selectedPaths.contains(fileInfo.getFile().getAbsolutePath()));
+
+        tableWithFiles.getItems().setAll(
+                getGuiFilesInfoToShow(
+                        allFilesInfo,
+                        mode,
+                        hideUnavailableCheckbox.isSelected(),
+                        guiContext.getSettings().getSortBy(),
+                        guiContext.getSettings().getSortDirection()
+                )
+        );
+    }
+
+    @FXML
+    private void addButtonClicked() {
+        List<File> chosenFiles = getFiles(stage, guiContext.getSettings());
+        if (CollectionUtils.isEmpty(chosenFiles)) {
+            return;
+        }
+
+        try {
+            guiContext.getSettings().saveLastDirectoryWithVideos(chosenFiles.get(0).getParent());
+        } catch (GuiSettings.ConfigException e) {
+            log.error("failed to save last directory with videos, that shouldn't happen: " + getStackTrace(e));
+        }
+
+        //todo in background + progress
+        List<FileInfo> chosenFilesInfo = getFilesInfo(chosenFiles, guiContext.getFfprobe());
+        for (FileInfo chosenFileInfo : chosenFilesInfo) {
+            boolean alreadyAdded = allFilesInfo.stream()
+                    .anyMatch(fileInfo -> Objects.equals(fileInfo.getFile(), chosenFileInfo.getFile()));
+            if (!alreadyAdded) {
+                allFilesInfo.add(chosenFileInfo);
+            }
+        }
+
+        tableWithFiles.getItems().setAll(
+                getGuiFilesInfoToShow(
+                        allFilesInfo,
+                        mode,
                         hideUnavailableCheckbox.isSelected(),
                         guiContext.getSettings().getSortBy(),
                         guiContext.getSettings().getSortDirection()

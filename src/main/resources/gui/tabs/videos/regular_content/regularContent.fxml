@@ -92,6 +92,10 @@
                     </TableColumn>
                 </columns>
             </TableWithFiles>
+            <HBox fx:id="addRemoveFilesPane" alignment="CENTER_RIGHT" spacing="10">
+                <Button fx:id="removeSelectedButton" onAction="#removeButtonClicked" text="Remove selected"/>
+                <Button onAction="#addButtonClicked" text="Add files"/>
+            </HBox>
         </VBox>
     </VBox>
 </StackPane>
