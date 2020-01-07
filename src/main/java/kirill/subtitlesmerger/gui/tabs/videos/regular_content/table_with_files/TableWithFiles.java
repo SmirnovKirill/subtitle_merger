@@ -3,13 +3,9 @@ package kirill.subtitlesmerger.gui.tabs.videos.regular_content.table_with_files;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import kirill.subtitlesmerger.gui.GuiUtils;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.Arrays;
-import java.util.List;
 
 public class TableWithFiles extends TableView<GuiFileInfo> {
     private static final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern("dd.MM.YYYY HH:mm");
@@ -73,7 +69,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         Label lastModifiedTitle = new Label("last modified");
         lastModifiedTitle.getStyleClass().add("last-modified-title");
 
-        Label size = new Label(getFileSizeTextual(fileInfo.getSize()));
+        Label size = new Label(GuiUtils.getFileSizeTextual(fileInfo.getSize()));
         size.getStyleClass().add("size");
 
         Label lastModified = new Label(FORMATTER.print(fileInfo.getLastModified()));
@@ -91,24 +87,5 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         GridPane.setMargin(result.getChildren().get(2), new Insets(0, 0, 3, 0));
 
         return result;
-    }
-
-    private static String getFileSizeTextual(long size) {
-        List<String> sizes = Arrays.asList("B", "KB", "MB", "GB", "TB");
-
-        BigDecimal divisor = new BigDecimal(1024);
-        BigDecimal sizeBigDecimal = new BigDecimal(size);
-
-        int i = 0;
-        do {
-            if (sizeBigDecimal.compareTo(divisor) < 0) {
-                return sizeBigDecimal + " " + sizes.get(i);
-            }
-
-            sizeBigDecimal = sizeBigDecimal.divide(divisor, 2, RoundingMode.HALF_UP);
-            i++;
-        } while (i < sizes.size());
-
-        return sizeBigDecimal + " " + sizes.get(sizes.size() - 1);
     }
 }
