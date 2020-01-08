@@ -2,6 +2,8 @@ package kirill.subtitlesmerger.gui.tabs.videos.regular_content;
 
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
+import javafx.concurrent.Task;
+import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
@@ -10,6 +12,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kirill.subtitlesmerger.gui.GuiContext;
 import kirill.subtitlesmerger.gui.GuiSettings;
+import kirill.subtitlesmerger.gui.GuiUtils;
 import kirill.subtitlesmerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlesmerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles;
 import kirill.subtitlesmerger.logic.LogicConstants;
@@ -48,6 +51,15 @@ public class RegularContentController {
 
     @FXML
     private Pane choicePane;
+
+    @FXML
+    private Pane progressPane;
+
+    @FXML
+    private ProgressIndicator progressIndicator;
+
+    @FXML
+    private Label progressLabel;
 
     @FXML
     private Pane resultPane;
@@ -136,6 +148,10 @@ public class RegularContentController {
             log.error("failed to save sort by, should not happen: " + ExceptionUtils.getStackTrace(e));
         }
 
+        updateTableWithFiles();
+    }
+
+    private void updateTableWithFiles() {
         tableWithFiles.getItems().setAll(
                 getGuiFilesInfoToShow(
                         allFilesInfo,
@@ -145,176 +161,6 @@ public class RegularContentController {
                         guiContext.getSettings().getSortDirection()
                 )
         );
-    }
-
-    private void sortDirectionChanged(Observable observable) {
-        RadioMenuItem radioMenuItem = (RadioMenuItem) sortDirectionGroup.getSelectedToggle();
-
-        try {
-            switch (radioMenuItem.getText()) {
-                case SORT_ASCENDING_TEXT:
-                    guiContext.getSettings().saveSortDirection(GuiSettings.SortDirection.ASCENDING.toString());
-                    break;
-                case SORT_DESCENDING_TEXT:
-                    guiContext.getSettings().saveSortDirection(GuiSettings.SortDirection.DESCENDING.toString());
-                    break;
-                default:
-                    throw new IllegalStateException();
-            }
-        } catch (GuiSettings.ConfigException e) {
-            log.error("failed to save sort direction, should not happen: " + ExceptionUtils.getStackTrace(e));
-        }
-
-        tableWithFiles.getItems().setAll(
-                getGuiFilesInfoToShow(
-                        allFilesInfo,
-                        mode,
-                        hideUnavailableCheckbox.isSelected(),
-                        guiContext.getSettings().getSortBy(),
-                        guiContext.getSettings().getSortDirection()
-                )
-        );
-    }
-
-    private static ContextMenu generateContextMenu(
-            ToggleGroup sortByGroup,
-            ToggleGroup sortDirectionGroup,
-            GuiSettings settings
-    ) {
-        ContextMenu result = new ContextMenu();
-
-        Menu menu = new Menu("_Sort files");
-
-        GuiSettings.SortBy sortBy = settings.getSortBy();
-        GuiSettings.SortDirection sortDirection = settings.getSortDirection();
-
-        RadioMenuItem byName = new RadioMenuItem(SORT_BY_NAME_TEXT);
-        byName.setToggleGroup(sortByGroup);
-        if (sortBy == GuiSettings.SortBy.NAME) {
-            byName.setSelected(true);
-        }
-
-        RadioMenuItem byModificationTime = new RadioMenuItem(SORT_BY_MODIFICATION_TIME_TEXT);
-        byModificationTime.setToggleGroup(sortByGroup);
-        if (sortBy == GuiSettings.SortBy.MODIFICATION_TIME) {
-            byModificationTime.setSelected(true);
-        }
-
-        RadioMenuItem bySize = new RadioMenuItem(SORT_BY_SIZE_TEXT);
-        bySize.setToggleGroup(sortByGroup);
-        if (sortBy == GuiSettings.SortBy.SIZE) {
-            bySize.setSelected(true);
-        }
-
-        RadioMenuItem ascending = new RadioMenuItem(SORT_ASCENDING_TEXT);
-        ascending.setToggleGroup(sortDirectionGroup);
-        if (sortDirection == GuiSettings.SortDirection.ASCENDING) {
-            ascending.setSelected(true);
-        }
-
-        RadioMenuItem descending = new RadioMenuItem(SORT_DESCENDING_TEXT);
-        descending.setToggleGroup(sortDirectionGroup);
-        if (sortDirection == GuiSettings.SortDirection.DESCENDING) {
-            descending.setSelected(true);
-        }
-
-        menu.getItems().addAll(
-                byName,
-                byModificationTime,
-                bySize,
-                new SeparatorMenuItem(),
-                ascending,
-                descending
-        );
-
-        result.getItems().add(menu);
-
-        return result;
-    }
-
-    public void show() {
-        pane.setVisible(true);
-    }
-
-    public void hide() {
-        pane.setVisible(false);
-    }
-
-    @FXML
-    private void videosButtonClicked() {
-        List<File> files = getFiles(stage, guiContext.getSettings());
-        if (CollectionUtils.isEmpty(files)) {
-            return;
-        }
-
-        try {
-            guiContext.getSettings().saveLastDirectoryWithVideos(files.get(0).getParent());
-        } catch (GuiSettings.ConfigException e) {
-            log.error("failed to save last directory with videos, that shouldn't happen: " + getStackTrace(e));
-        }
-
-        mode = Mode.FILES;
-        directory = null;
-        //todo in background + progress
-        allFilesInfo = getFilesInfo(files, guiContext.getFfprobe());
-        hideUnavailableCheckbox.setSelected(hideUnavailable(allFilesInfo));
-        tableWithFiles.getItems().setAll(
-                getGuiFilesInfoToShow(
-                        allFilesInfo,
-                        mode,
-                        hideUnavailableCheckbox.isSelected(),
-                        guiContext.getSettings().getSortBy(),
-                        guiContext.getSettings().getSortDirection()
-                )
-        );
-
-        choicePane.setVisible(false);
-        resultPane.setVisible(true);
-        chosenDirectoryPane.setVisible(false);
-        chosenDirectoryPane.setManaged(false);
-        addRemoveFilesPane.setVisible(true);
-        addRemoveFilesPane.setManaged(true);
-    }
-
-    private static List<File> getFiles(Stage stage, GuiSettings settings) {
-        FileChooser fileChooser = new FileChooser();
-
-        fileChooser.setTitle("choose videos");
-        fileChooser.setInitialDirectory(settings.getLastDirectoryWithVideos());
-        fileChooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("mkv files (*.mkv)", "*.mkv")
-        );
-
-        return fileChooser.showOpenMultipleDialog(stage);
-    }
-
-    private static List<FileInfo> getFilesInfo(List<File> files, Ffprobe ffprobe) {
-        List<FileInfo> result = new ArrayList<>();
-
-        for (File file : files) {
-            if (file.isDirectory() || !file.exists()) {
-                continue;
-            }
-
-            result.add(
-                    FileInfoGetter.getFileInfoWithoutSubtitles(
-                            file,
-                            LogicConstants.ALLOWED_VIDEO_EXTENSIONS,
-                            LogicConstants.ALLOWED_VIDEO_MIME_TYPES,
-                            ffprobe
-                    )
-            );
-        }
-
-        return result;
-    }
-
-    /*
-     * Set "hide unavailable" checkbox by default if there is at least one available video. Otherwise it should
-     * not be checked because the user will see just an empty file list which isn't user friendly.
-     */
-    private static boolean hideUnavailable(List<FileInfo> files) {
-        return files.stream().anyMatch(fileInfo -> fileInfo.getUnavailabilityReason() == null);
     }
 
     private static List<GuiFileInfo> getGuiFilesInfoToShow(
@@ -398,16 +244,177 @@ public class RegularContentController {
         return unavailabilityReason.toString(); //todo
     }
 
+    private void sortDirectionChanged(Observable observable) {
+        RadioMenuItem radioMenuItem = (RadioMenuItem) sortDirectionGroup.getSelectedToggle();
+
+        try {
+            switch (radioMenuItem.getText()) {
+                case SORT_ASCENDING_TEXT:
+                    guiContext.getSettings().saveSortDirection(GuiSettings.SortDirection.ASCENDING.toString());
+                    break;
+                case SORT_DESCENDING_TEXT:
+                    guiContext.getSettings().saveSortDirection(GuiSettings.SortDirection.DESCENDING.toString());
+                    break;
+                default:
+                    throw new IllegalStateException();
+            }
+        } catch (GuiSettings.ConfigException e) {
+            log.error("failed to save sort direction, should not happen: " + ExceptionUtils.getStackTrace(e));
+        }
+
+        updateTableWithFiles();
+    }
+
+    private static ContextMenu generateContextMenu(
+            ToggleGroup sortByGroup,
+            ToggleGroup sortDirectionGroup,
+            GuiSettings settings
+    ) {
+        ContextMenu result = new ContextMenu();
+
+        Menu menu = new Menu("_Sort files");
+
+        GuiSettings.SortBy sortBy = settings.getSortBy();
+        GuiSettings.SortDirection sortDirection = settings.getSortDirection();
+
+        RadioMenuItem byName = new RadioMenuItem(SORT_BY_NAME_TEXT);
+        byName.setToggleGroup(sortByGroup);
+        if (sortBy == GuiSettings.SortBy.NAME) {
+            byName.setSelected(true);
+        }
+
+        RadioMenuItem byModificationTime = new RadioMenuItem(SORT_BY_MODIFICATION_TIME_TEXT);
+        byModificationTime.setToggleGroup(sortByGroup);
+        if (sortBy == GuiSettings.SortBy.MODIFICATION_TIME) {
+            byModificationTime.setSelected(true);
+        }
+
+        RadioMenuItem bySize = new RadioMenuItem(SORT_BY_SIZE_TEXT);
+        bySize.setToggleGroup(sortByGroup);
+        if (sortBy == GuiSettings.SortBy.SIZE) {
+            bySize.setSelected(true);
+        }
+
+        RadioMenuItem ascending = new RadioMenuItem(SORT_ASCENDING_TEXT);
+        ascending.setToggleGroup(sortDirectionGroup);
+        if (sortDirection == GuiSettings.SortDirection.ASCENDING) {
+            ascending.setSelected(true);
+        }
+
+        RadioMenuItem descending = new RadioMenuItem(SORT_DESCENDING_TEXT);
+        descending.setToggleGroup(sortDirectionGroup);
+        if (sortDirection == GuiSettings.SortDirection.DESCENDING) {
+            descending.setSelected(true);
+        }
+
+        menu.getItems().addAll(
+                byName,
+                byModificationTime,
+                bySize,
+                new SeparatorMenuItem(),
+                ascending,
+                descending
+        );
+
+        result.getItems().add(menu);
+
+        return result;
+    }
+
+    public void show() {
+        pane.setVisible(true);
+    }
+
+    public void hide() {
+        pane.setVisible(false);
+    }
+
+    @FXML
+    private void videosButtonClicked() {
+        List<File> files = getFiles(stage, guiContext.getSettings());
+        if (CollectionUtils.isEmpty(files)) {
+            return;
+        }
+
+        try {
+            guiContext.getSettings().saveLastDirectoryWithVideos(files.get(0).getParent());
+        } catch (GuiSettings.ConfigException e) {
+            log.error("failed to save last directory with videos, shouldn't happen: " + getStackTrace(e));
+        }
+
+        mode = Mode.FILES;
+        directory = null;
+
+        Task<List<FileInfo>> task = new GetFilesInfoTask(files, guiContext.getFfprobe());
+
+        task.setOnSucceeded(e -> {
+            allFilesInfo = task.getValue();
+            hideUnavailableCheckbox.setSelected(hideUnavailable(allFilesInfo));
+            updateTableWithFiles();
+            chosenDirectoryPane.setVisible(false);
+            chosenDirectoryPane.setManaged(false);
+            addRemoveFilesPane.setVisible(true);
+            addRemoveFilesPane.setManaged(true);
+            stopProgress();
+        });
+
+        task.setOnFailed(RegularContentController::taskFailed);
+        task.setOnCancelled(RegularContentController::taskCancelled);
+
+        showProgress(task);
+        GuiUtils.startTask(task);
+    }
+
+    private static List<File> getFiles(Stage stage, GuiSettings settings) {
+        FileChooser fileChooser = new FileChooser();
+
+        fileChooser.setTitle("choose videos");
+        fileChooser.setInitialDirectory(settings.getLastDirectoryWithVideos());
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("mkv files (*.mkv)", "*.mkv")
+        );
+
+        return fileChooser.showOpenMultipleDialog(stage);
+    }
+
+    /*
+     * Set "hide unavailable" checkbox by default if there is at least one available video. Otherwise it should
+     * not be checked because the user will see just an empty file list which isn't user friendly.
+     */
+    private static boolean hideUnavailable(List<FileInfo> files) {
+        return files.stream().anyMatch(fileInfo -> fileInfo.getUnavailabilityReason() == null);
+    }
+
+    private void stopProgress() {
+        progressPane.setVisible(false);
+        resultPane.setDisable(false);
+    }
+
+    private static void taskFailed(Event e) {
+        log.error("task has failed, shouldn't happen");
+        throw new IllegalStateException();
+    }
+
+    private static void taskCancelled(Event e) {
+        log.error("task has been cancelled, shouldn't happen");
+        throw new IllegalStateException();
+    }
+
+    private void showProgress(Task<?> task) {
+        choicePane.setVisible(false);
+        progressPane.setVisible(true);
+        resultPane.setVisible(true);
+        resultPane.setDisable(true);
+
+        progressIndicator.progressProperty().bind(task.progressProperty());
+        progressLabel.textProperty().bind(task.messageProperty());
+    }
+
     @FXML
     private void directoryButtonClicked() {
         File directory = getDirectory(stage, guiContext.getSettings()).orElse(null);
         if (directory == null) {
             return;
-        }
-        File[] files = directory.listFiles();
-        if (files == null) {
-            log.error("failed to get directory files, directory " + directory.getAbsolutePath());
-            files = new File[]{};
         }
 
         try {
@@ -418,25 +425,26 @@ public class RegularContentController {
 
         mode = Mode.DIRECTORY;
         this.directory = directory;
-        allFilesInfo = getFilesInfo(Arrays.asList(files), guiContext.getFfprobe());
-        //todo in background + progress
-        chosenDirectoryField.setText(directory.getAbsolutePath());
-        hideUnavailableCheckbox.setSelected(hideUnavailable(allFilesInfo));
-        tableWithFiles.getItems().setAll(
-                getGuiFilesInfoToShow(
-                        allFilesInfo,
-                        mode,
-                        hideUnavailableCheckbox.isSelected(),
-                        guiContext.getSettings().getSortBy(),
-                        guiContext.getSettings().getSortDirection()
-                )
-        );
-        choicePane.setVisible(false);
-        resultPane.setVisible(true);
-        chosenDirectoryPane.setVisible(true);
-        chosenDirectoryPane.setManaged(true);
-        addRemoveFilesPane.setVisible(false);
-        addRemoveFilesPane.setManaged(false);
+
+        Task<List<FileInfo>> task = new GetFilesInfoTask(this.directory, guiContext.getFfprobe());
+
+        task.setOnSucceeded(e -> {
+            allFilesInfo = task.getValue();
+            chosenDirectoryField.setText(directory.getAbsolutePath());
+            hideUnavailableCheckbox.setSelected(hideUnavailable(allFilesInfo));
+            updateTableWithFiles();
+            chosenDirectoryPane.setVisible(true);
+            chosenDirectoryPane.setManaged(true);
+            addRemoveFilesPane.setVisible(false);
+            addRemoveFilesPane.setManaged(false);
+            stopProgress();
+        });
+
+        task.setOnFailed(RegularContentController::taskFailed);
+        task.setOnCancelled(RegularContentController::taskCancelled);
+
+        showProgress(task);
+        GuiUtils.startTask(task);
     }
 
     private static Optional<File> getDirectory(Stage stage, GuiSettings settings) {
@@ -456,37 +464,25 @@ public class RegularContentController {
 
     @FXML
     private void refreshButtonClicked() {
-        File[] files = directory.listFiles();
-        if (files == null) {
-            log.error("failed to get directory files, directory " + directory.getAbsolutePath());
-            files = new File[]{};
-        }
+        Task<List<FileInfo>> task = new GetFilesInfoTask(this.directory, guiContext.getFfprobe());
 
-        allFilesInfo = getFilesInfo(Arrays.asList(files), guiContext.getFfprobe());
-        //todo in background + progress
-        hideUnavailableCheckbox.setSelected(hideUnavailable(allFilesInfo));
-        tableWithFiles.getItems().setAll(
-                getGuiFilesInfoToShow(
-                        allFilesInfo,
-                        mode,
-                        hideUnavailableCheckbox.isSelected(),
-                        guiContext.getSettings().getSortBy(),
-                        guiContext.getSettings().getSortDirection()
-                )
-        );
+        task.setOnSucceeded(e -> {
+            allFilesInfo = task.getValue();
+            hideUnavailableCheckbox.setSelected(hideUnavailable(allFilesInfo));
+            updateTableWithFiles();
+            stopProgress();
+        });
+
+        task.setOnFailed(RegularContentController::taskFailed);
+        task.setOnCancelled(RegularContentController::taskCancelled);
+
+        showProgress(task);
+        GuiUtils.startTask(task);
     }
 
     @FXML
     private void hideUnavailableClicked() {
-        tableWithFiles.getItems().setAll(
-                getGuiFilesInfoToShow(
-                        allFilesInfo,
-                        mode,
-                        hideUnavailableCheckbox.isSelected(),
-                        guiContext.getSettings().getSortBy(),
-                        guiContext.getSettings().getSortDirection()
-                )
-        );
+        updateTableWithFiles();
     }
 
     @FXML
@@ -503,15 +499,7 @@ public class RegularContentController {
 
         allFilesInfo.removeIf(fileInfo -> selectedPaths.contains(fileInfo.getFile().getAbsolutePath()));
 
-        tableWithFiles.getItems().setAll(
-                getGuiFilesInfoToShow(
-                        allFilesInfo,
-                        mode,
-                        hideUnavailableCheckbox.isSelected(),
-                        guiContext.getSettings().getSortBy(),
-                        guiContext.getSettings().getSortDirection()
-                )
-        );
+        updateTableWithFiles();
     }
 
     @FXML
@@ -527,29 +515,99 @@ public class RegularContentController {
             log.error("failed to save last directory with videos, that shouldn't happen: " + getStackTrace(e));
         }
 
-        //todo in background + progress
-        List<FileInfo> chosenFilesInfo = getFilesInfo(chosenFiles, guiContext.getFfprobe());
-        for (FileInfo chosenFileInfo : chosenFilesInfo) {
-            boolean alreadyAdded = allFilesInfo.stream()
-                    .anyMatch(fileInfo -> Objects.equals(fileInfo.getFile(), chosenFileInfo.getFile()));
-            if (!alreadyAdded) {
-                allFilesInfo.add(chosenFileInfo);
-            }
-        }
+        Task<List<FileInfo>> task = new GetFilesInfoTask(chosenFiles, guiContext.getFfprobe());
 
-        tableWithFiles.getItems().setAll(
-                getGuiFilesInfoToShow(
-                        allFilesInfo,
-                        mode,
-                        hideUnavailableCheckbox.isSelected(),
-                        guiContext.getSettings().getSortBy(),
-                        guiContext.getSettings().getSortDirection()
-                )
-        );
+        task.setOnSucceeded(e -> {
+            List<FileInfo> chosenFilesInfo = task.getValue();
+            for (FileInfo chosenFileInfo : chosenFilesInfo) {
+                boolean alreadyAdded = allFilesInfo.stream()
+                        .anyMatch(fileInfo -> Objects.equals(fileInfo.getFile(), chosenFileInfo.getFile()));
+                if (!alreadyAdded) {
+                    allFilesInfo.add(chosenFileInfo);
+                }
+            }
+
+            updateTableWithFiles();
+            stopProgress();
+        });
+
+        task.setOnFailed(RegularContentController::taskFailed);
+        task.setOnCancelled(RegularContentController::taskCancelled);
+
+        showProgress(task);
+        GuiUtils.startTask(task);
     }
 
     private enum Mode {
         FILES,
         DIRECTORY
+    }
+
+    private static class GetFilesInfoTask extends Task<List<FileInfo>> {
+        private List<File> files;
+
+        private File directory;
+
+        private Ffprobe ffprobe;
+
+        GetFilesInfoTask(List<File> files, Ffprobe ffprobe) {
+            this.files = files;
+            this.ffprobe = ffprobe;
+        }
+
+        GetFilesInfoTask(File directory, Ffprobe ffprobe) {
+            this.directory = directory;
+            this.ffprobe = ffprobe;
+        }
+
+        @Override
+        protected List<FileInfo> call() {
+            List<File> files;
+            if (directory != null) {
+                updateMessage("getting file list...");
+                File[] directoryFiles = directory.listFiles();
+                if (directoryFiles == null) {
+                    log.error("failed to get directory files, directory " + directory.getAbsolutePath());
+                    files = new ArrayList<>();
+                } else {
+                    files = Arrays.asList(directoryFiles);
+                }
+            } else {
+                files = this.files;
+            }
+
+            return getFilesInfo(files);
+        }
+
+        private List<FileInfo> getFilesInfo(List<File> files) {
+            List<FileInfo> result = new ArrayList<>();
+
+            updateProgress(0, files.size());
+
+            int i = 0;
+            for (File file : files) {
+                updateMessage("processing " + file.getName() + "...");
+
+                if (file.isDirectory() || !file.exists()) {
+                    updateProgress(i + 1, files.size());
+                    i++;
+                    continue;
+                }
+
+                result.add(
+                        FileInfoGetter.getFileInfoWithoutSubtitles(
+                                file,
+                                LogicConstants.ALLOWED_VIDEO_EXTENSIONS,
+                                LogicConstants.ALLOWED_VIDEO_MIME_TYPES,
+                                ffprobe
+                        )
+                );
+
+                updateProgress(i + 1, files.size());
+                i++;
+            }
+
+            return result;
+        }
     }
 }

@@ -41,6 +41,10 @@
             </BorderPane>
         </HBox>
     </VBox>
+    <VBox fx:id="progressPane" spacing="10" alignment="CENTER" visible="false">
+        <ProgressIndicator fx:id="progressIndicator"/>
+        <Label fx:id="progressLabel"/>
+    </VBox>
     <VBox fx:id="resultPane" spacing="40" visible="false">
         <VBox spacing="5">
             <Hyperlink onAction="#backToSelectionClicked" text="back to selection" styleClass="back-link"/>

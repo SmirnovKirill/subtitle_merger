@@ -1,5 +1,7 @@
 package kirill.subtitlesmerger.gui;
 
+import javafx.concurrent.Task;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Arrays;
@@ -22,5 +24,11 @@ public class GuiUtils {
         }
 
         return sizeBigDecimal.divide(divisor.pow(power), 2, RoundingMode.HALF_UP) + " " + sizes.get(power);
+    }
+
+    public static void startTask(Task<?> task) {
+        Thread thread = new Thread(task);
+        thread.setDaemon(true);
+        thread.start();
     }
 }
