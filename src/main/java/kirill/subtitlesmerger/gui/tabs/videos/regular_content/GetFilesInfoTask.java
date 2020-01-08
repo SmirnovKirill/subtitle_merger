@@ -119,39 +119,34 @@ public class GetFilesInfoTask extends Task<GetFilesInfoTask.FilesInfo> {
 
     @Override
     protected FilesInfo call() {
-        List<FileInfo> filesInfo = getFilesInfo();
-        filesInfo = getSortedFilesInfo(filesInfo, sortBy, sortDirection);
+        List<FileInfo> filesInfo = getFilesInfo(mode, this.filesInfo, files, directory, ffprobe, this);
+        filesInfo = getSortedFilesInfo(filesInfo, sortBy, sortDirection, this);
 
-        boolean hideUnavailable = shouldHideUnavailable(filesInfo);
+        boolean hideUnavailable = shouldHideUnavailable(mode, this.hideUnavailable, filesInfo);
 
-        List<GuiFileInfo> guiFilesInfo = getGuiFilesInfo(filesInfo, hideUnavailable);
+        List<GuiFileInfo> guiFilesInfo = getGuiFilesInfo(filesInfo, showFullFileName, hideUnavailable, this);
 
         return new FilesInfo(filesInfo, guiFilesInfo, hideUnavailable);
     }
 
-    private List<FileInfo> getFilesInfo() {
+    private static List<FileInfo> getFilesInfo(
+            Mode mode,
+            List<FileInfo> filesInfo,
+            List<File> files,
+            File directory,
+            Ffprobe ffprobe,
+            GetFilesInfoTask task
+    ) {
         if (mode == Mode.SEPARATE_FILES) {
-            return getFilesInfo(files);
+            return getFilesInfo(files, ffprobe, task);
         } else if (mode == Mode.DIRECTORY) {
-            updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
-            updateMessage("getting file list...");
-
-            File[] directoryFilesArray = directory.listFiles();
-            List<File> directoryFiles;
-            if (directoryFilesArray == null) {
-                log.warn("failed to get directory files, directory " + directory.getAbsolutePath());
-                directoryFiles = new ArrayList<>();
-            } else {
-                directoryFiles = Arrays.asList(directoryFilesArray);
-            }
-
-            return getFilesInfo(directoryFiles);
+            return getFilesInfo(getDirectoryFiles(directory, task), ffprobe, task);
         } else if (mode == Mode.ONLY_UPDATE_GUI) {
             return filesInfo;
         } else if (mode == Mode.ADD_SEPARATE_FILES) {
             List<FileInfo> result = new ArrayList<>(filesInfo);
 
-            List<FileInfo> chosenFilesInfo = getFilesInfo(files);
+            List<FileInfo> chosenFilesInfo = getFilesInfo(files, ffprobe, task);
 
             for (FileInfo chosenFileInfo : chosenFilesInfo) {
                 boolean alreadyAdded = filesInfo.stream()
@@ -167,44 +162,55 @@ public class GetFilesInfoTask extends Task<GetFilesInfoTask.FilesInfo> {
         }
     }
 
-    private List<FileInfo> getFilesInfo(List<File> files) {
+    private static List<FileInfo> getFilesInfo(List<File> files, Ffprobe ffprobe, GetFilesInfoTask task) {
         List<FileInfo> result = new ArrayList<>();
 
-        updateProgress(0, files.size());
+        task.updateProgress(0, files.size());
 
         int i = 0;
         for (File file : files) {
-            updateMessage("processing " + file.getName() + "...");
+            task.updateMessage("processing " + file.getName() + "...");
 
-            if (file.isDirectory() || !file.exists()) {
-                updateProgress(i + 1, files.size());
-                i++;
-                continue;
+            if (!file.isDirectory() && file.exists()) {
+                result.add(
+                        FileInfoGetter.getFileInfoWithoutSubtitles(
+                                file,
+                                LogicConstants.ALLOWED_VIDEO_EXTENSIONS,
+                                LogicConstants.ALLOWED_VIDEO_MIME_TYPES,
+                                ffprobe
+                        )
+                );
             }
 
-            result.add(
-                    FileInfoGetter.getFileInfoWithoutSubtitles(
-                            file,
-                            LogicConstants.ALLOWED_VIDEO_EXTENSIONS,
-                            LogicConstants.ALLOWED_VIDEO_MIME_TYPES,
-                            ffprobe
-                    )
-            );
-
-            updateProgress(i + 1, files.size());
+            task.updateProgress(i + 1, files.size());
             i++;
         }
 
         return result;
     }
 
-    private List<FileInfo> getSortedFilesInfo(
+    private static List<File> getDirectoryFiles(File directory, GetFilesInfoTask task) {
+        task.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
+        task.updateMessage("getting file list...");
+
+        File[] directoryFiles = directory.listFiles();
+
+        if (directoryFiles == null) {
+            log.warn("failed to get directory files, directory " + directory.getAbsolutePath());
+            return new ArrayList<>();
+        } else {
+            return Arrays.asList(directoryFiles);
+        }
+    }
+
+    private static List<FileInfo> getSortedFilesInfo(
             List<FileInfo> filesInfo,
             GuiSettings.SortBy sortBy,
-            GuiSettings.SortDirection sortDirection
+            GuiSettings.SortDirection sortDirection,
+            GetFilesInfoTask task
     ) {
-        updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
-        updateMessage("sorting file list...");
+        task.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
+        task.updateMessage("sorting file list...");
 
         List<FileInfo> result = new ArrayList<>(filesInfo);
 
@@ -232,7 +238,7 @@ public class GetFilesInfoTask extends Task<GetFilesInfoTask.FilesInfo> {
         return result;
     }
 
-    private boolean shouldHideUnavailable(List<FileInfo> filesInfo) {
+    private static boolean shouldHideUnavailable(Mode mode, boolean hideUnavailable, List<FileInfo> filesInfo) {
         if (mode == Mode.ADD_SEPARATE_FILES || mode == Mode.ONLY_UPDATE_GUI) {
             return hideUnavailable;
         } else if (mode == Mode.DIRECTORY || mode == Mode.SEPARATE_FILES) {
@@ -246,35 +252,36 @@ public class GetFilesInfoTask extends Task<GetFilesInfoTask.FilesInfo> {
         }
     }
 
-    private List<GuiFileInfo> getGuiFilesInfo(List<FileInfo> filesInfo, boolean hideUnavailable) {
+    private static List<GuiFileInfo> getGuiFilesInfo(
+            List<FileInfo> filesInfo,
+            boolean showFullFileName,
+            boolean hideUnavailable,
+            GetFilesInfoTask task
+    ) {
         List<GuiFileInfo> result = new ArrayList<>();
 
-        updateProgress(0, filesInfo.size());
+        task.updateProgress(0, filesInfo.size());
 
         int i = 0;
         for (FileInfo fileInfo : filesInfo) {
-            updateMessage("preparing to display " + fileInfo.getFile().getName() + "...");
+            task.updateMessage("preparing to display " + fileInfo.getFile().getName() + "...");
 
-            if (hideUnavailable && fileInfo.getUnavailabilityReason() != null) {
-                updateProgress(i + 1, filesInfo.size());
-                i++;
-                continue;
+            if (!hideUnavailable || fileInfo.getUnavailabilityReason() == null) {
+                String path = showFullFileName ? fileInfo.getFile().getAbsolutePath() : fileInfo.getFile().getName();
+
+                result.add(
+                        new GuiFileInfo(
+                                path,
+                                fileInfo.getLastModified(),
+                                LocalDateTime.now(),
+                                fileInfo.getSize(),
+                                convert(fileInfo.getUnavailabilityReason()),
+                                ""
+                        )
+                );
             }
 
-            String path = showFullFileName ? fileInfo.getFile().getAbsolutePath() : fileInfo.getFile().getName();
-
-            result.add(
-                    new GuiFileInfo(
-                            path,
-                            fileInfo.getLastModified(),
-                            LocalDateTime.now(),
-                            fileInfo.getSize(),
-                            convert(fileInfo.getUnavailabilityReason()),
-                            ""
-                    )
-            );
-
-            updateProgress(i + 1, filesInfo.size());
+            task.updateProgress(i + 1, filesInfo.size());
             i++;
         }
 
@@ -286,7 +293,22 @@ public class GetFilesInfoTask extends Task<GetFilesInfoTask.FilesInfo> {
             return "";
         }
 
-        return unavailabilityReason.toString(); //todo
+        switch (unavailabilityReason) {
+            case NO_EXTENSION:
+                return "file has no extension";
+            case NOT_ALLOWED_EXTENSION:
+                return "file has not allowed extension";
+            case FAILED_TO_GET_MIME_TYPE:
+                return "failed to get mime type";
+            case NOT_ALLOWED_MIME_TYPE:
+                return "file has mime type that is not allowed";
+            case FAILED_TO_GET_FFPROBE_INFO:
+                return "failed to get video info with ffprobe";
+            case NOT_ALLOWED_CONTAINER:
+                return "video has format that is not allowed";
+            default:
+                throw new IllegalStateException();
+        }
     }
 
     private enum Mode {
