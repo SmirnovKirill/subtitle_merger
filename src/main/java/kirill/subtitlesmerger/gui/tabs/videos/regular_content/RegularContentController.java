@@ -3,7 +3,6 @@ package kirill.subtitlesmerger.gui.tabs.videos.regular_content;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.concurrent.Task;
-import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
@@ -13,21 +12,17 @@ import javafx.stage.Stage;
 import kirill.subtitlesmerger.gui.GuiContext;
 import kirill.subtitlesmerger.gui.GuiSettings;
 import kirill.subtitlesmerger.gui.GuiUtils;
-import kirill.subtitlesmerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlesmerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles;
-import kirill.subtitlesmerger.logic.LogicConstants;
-import kirill.subtitlesmerger.logic.work_with_files.FileInfoGetter;
 import kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo;
-import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.Ffprobe;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.joda.time.LocalDateTime;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
 @CommonsLog
@@ -86,11 +81,9 @@ public class RegularContentController {
 
     private ToggleGroup sortDirectionGroup;
 
-    private Mode mode;
-
     private File directory;
 
-    private List<FileInfo> allFilesInfo;
+    private List<FileInfo> filesInfo;
 
     public void initialize(Stage stage, GuiContext guiContext) {
         this.stage = stage;
@@ -148,100 +141,40 @@ public class RegularContentController {
             log.error("failed to save sort by, should not happen: " + ExceptionUtils.getStackTrace(e));
         }
 
-        updateTableWithFiles();
-    }
-
-    private void updateTableWithFiles() {
-        tableWithFiles.getItems().setAll(
-                getGuiFilesInfoToShow(
-                        allFilesInfo,
-                        mode,
-                        hideUnavailableCheckbox.isSelected(),
-                        guiContext.getSettings().getSortBy(),
-                        guiContext.getSettings().getSortDirection()
-                )
+        Task<GetFilesInfoTask.FilesInfo> task = new GetFilesInfoTask(
+                filesInfo,
+                shouldShowFullFileName(),
+                hideUnavailableCheckbox.isSelected(),
+                guiContext.getSettings().getSortBy(),
+                guiContext.getSettings().getSortDirection()
         );
+
+        task.setOnSucceeded(e -> {
+            tableWithFiles.getItems().setAll(task.getValue().getGuiFilesInfo());
+            stopProgress();
+        });
+
+        showProgress(task);
+        GuiUtils.startTask(task);
     }
 
-    private static List<GuiFileInfo> getGuiFilesInfoToShow(
-            List<FileInfo> allFilesInfo,
-            Mode mode,
-            boolean hideUnavailable,
-            GuiSettings.SortBy sortBy,
-            GuiSettings.SortDirection sortDirection
-    ) {
-        if (CollectionUtils.isEmpty(allFilesInfo)) {
-            return new ArrayList<>();
-        }
-
-        List<FileInfo> result = getSortedFilesInfo(allFilesInfo, sortBy, sortDirection);
-
-        if (hideUnavailable) {
-            result = result.stream().filter(fileInfo -> fileInfo.getUnavailabilityReason() == null).collect(toList());
-        }
-
-        return result.stream()
-                .map(fileInfo -> guiFileInfoFrom(fileInfo, mode))
-                .collect(toList());
+    private boolean shouldShowFullFileName() {
+        return directory == null;
     }
 
-    private static List<FileInfo> getSortedFilesInfo(
-            List<FileInfo> filesInfo,
-            GuiSettings.SortBy sortBy,
-            GuiSettings.SortDirection sortDirection
-    ) {
-        List<FileInfo> result = new ArrayList<>(filesInfo);
-
-        Comparator<FileInfo> comparator;
-        switch (sortBy) {
-            case NAME:
-                comparator = Comparator.comparing(fileInfo -> fileInfo.getFile().getAbsolutePath());
-                break;
-            case MODIFICATION_TIME:
-                comparator = Comparator.comparing(FileInfo::getLastModified);
-                break;
-            case SIZE:
-                comparator = Comparator.comparing(FileInfo::getSize);
-                break;
-            default:
-                throw new IllegalStateException();
-        }
-
-        if (sortDirection == GuiSettings.SortDirection.DESCENDING) {
-            comparator = comparator.reversed();
-        }
-
-        result.sort(comparator);
-
-        return result;
+    private void stopProgress() {
+        progressPane.setVisible(false);
+        resultPane.setDisable(false);
     }
 
-    private static GuiFileInfo guiFileInfoFrom(FileInfo fileInfo, Mode mode) {
-        String path;
-        if (mode == Mode.FILES) {
-            path = fileInfo.getFile().getAbsolutePath();
-        } else if (mode == Mode.DIRECTORY) {
-            path = fileInfo.getFile().getName();
-        } else {
-            throw new IllegalStateException();
-        }
+    private void showProgress(Task<?> task) {
+        choicePane.setVisible(false);
+        progressPane.setVisible(true);
+        resultPane.setVisible(true);
+        resultPane.setDisable(true);
 
-        return new GuiFileInfo(
-                path,
-                fileInfo.getLastModified(),
-                LocalDateTime.now(),
-                fileInfo.getSize(),
-                convert(fileInfo.getUnavailabilityReason()),
-                ""
-        );
-    }
-
-    private static String convert(FileInfo.UnavailabilityReason unavailabilityReason) {
-        if (unavailabilityReason == null) {
-            return "";
-        }
-
-        return unavailabilityReason.toString(); //todo
+        progressIndicator.progressProperty().bind(task.progressProperty());
+        progressLabel.textProperty().bind(task.messageProperty());
     }
 
     private void sortDirectionChanged(Observable observable) {
@@ -262,7 +195,21 @@ public class RegularContentController {
             log.error("failed to save sort direction, should not happen: " + ExceptionUtils.getStackTrace(e));
         }
 
-        updateTableWithFiles();
+        Task<GetFilesInfoTask.FilesInfo> task = new GetFilesInfoTask(
+                filesInfo,
+                shouldShowFullFileName(),
+                hideUnavailableCheckbox.isSelected(),
+                guiContext.getSettings().getSortBy(),
+                guiContext.getSettings().getSortDirection()
+        );
+
+        task.setOnSucceeded(e -> {
+            tableWithFiles.getItems().setAll(task.getValue().getGuiFilesInfo());
+            stopProgress();
+        });
+
+        showProgress(task);
+        GuiUtils.startTask(task);
     }
 
     private static ContextMenu generateContextMenu(
@@ -330,7 +277,7 @@ public class RegularContentController {
     }
 
     @FXML
-    private void videosButtonClicked() {
+    private void separateFilesButtonClicked() {
         List<File> files = getFiles(stage, guiContext.getSettings());
         if (CollectionUtils.isEmpty(files)) {
             return;
@@ -342,24 +289,27 @@ public class RegularContentController {
             log.error("failed to save last directory with videos, shouldn't happen: " + getStackTrace(e));
         }
 
-        mode = Mode.FILES;
         directory = null;
 
-        Task<List<FileInfo>> task = new GetFilesInfoTask(files, guiContext.getFfprobe());
+        Task<GetFilesInfoTask.FilesInfo> task = new GetFilesInfoTask(
+                files,
+                guiContext.getSettings().getSortBy(),
+                guiContext.getSettings().getSortDirection(),
+                guiContext.getFfprobe()
+        );
 
         task.setOnSucceeded(e -> {
-            allFilesInfo = task.getValue();
-            hideUnavailableCheckbox.setSelected(hideUnavailable(allFilesInfo));
-            updateTableWithFiles();
+            filesInfo = task.getValue().getFilesInfo();
+            hideUnavailableCheckbox.setSelected(task.getValue().isHideUnavailable());
+            tableWithFiles.getItems().setAll(task.getValue().getGuiFilesInfo());
+
             chosenDirectoryPane.setVisible(false);
             chosenDirectoryPane.setManaged(false);
             addRemoveFilesPane.setVisible(true);
             addRemoveFilesPane.setManaged(true);
+
             stopProgress();
         });
-
-        task.setOnFailed(RegularContentController::taskFailed);
-        task.setOnCancelled(RegularContentController::taskCancelled);
 
         showProgress(task);
         GuiUtils.startTask(task);
@@ -377,39 +327,6 @@ public class RegularContentController {
         return fileChooser.showOpenMultipleDialog(stage);
     }
 
-    /*
-     * Set "hide unavailable" checkbox by default if there is at least one available video. Otherwise it should
-     * not be checked because the user will see just an empty file list which isn't user friendly.
-     */
-    private static boolean hideUnavailable(List<FileInfo> files) {
-        return files.stream().anyMatch(fileInfo -> fileInfo.getUnavailabilityReason() == null);
-    }
-
-    private void stopProgress() {
-        progressPane.setVisible(false);
-        resultPane.setDisable(false);
-    }
-
-    private static void taskFailed(Event e) {
-        log.error("task has failed, shouldn't happen");
-        throw new IllegalStateException();
-    }
-
-    private static void taskCancelled(Event e) {
-        log.error("task has been cancelled, shouldn't happen");
-        throw new IllegalStateException();
-    }
-
-    private void showProgress(Task<?> task) {
-        choicePane.setVisible(false);
-        progressPane.setVisible(true);
-        resultPane.setVisible(true);
-        resultPane.setDisable(true);
-
-        progressIndicator.progressProperty().bind(task.progressProperty());
-        progressLabel.textProperty().bind(task.messageProperty());
-    }
-
     @FXML
     private void directoryButtonClicked() {
         File directory = getDirectory(stage, guiContext.getSettings()).orElse(null);
@@ -423,25 +340,28 @@ public class RegularContentController {
             log.error("failed to save last directory with videos, that shouldn't happen: " + getStackTrace(e));
         }
 
-        mode = Mode.DIRECTORY;
         this.directory = directory;
 
-        Task<List<FileInfo>> task = new GetFilesInfoTask(this.directory, guiContext.getFfprobe());
+        Task<GetFilesInfoTask.FilesInfo> task = new GetFilesInfoTask(
+                this.directory,
+                guiContext.getSettings().getSortBy(),
+                guiContext.getSettings().getSortDirection(),
+                guiContext.getFfprobe()
+        );
 
         task.setOnSucceeded(e -> {
-            allFilesInfo = task.getValue();
+            filesInfo = task.getValue().getFilesInfo();
+            hideUnavailableCheckbox.setSelected(task.getValue().isHideUnavailable());
+            tableWithFiles.getItems().setAll(task.getValue().getGuiFilesInfo());
             chosenDirectoryField.setText(directory.getAbsolutePath());
-            hideUnavailableCheckbox.setSelected(hideUnavailable(allFilesInfo));
-            updateTableWithFiles();
+
             chosenDirectoryPane.setVisible(true);
             chosenDirectoryPane.setManaged(true);
             addRemoveFilesPane.setVisible(false);
             addRemoveFilesPane.setManaged(false);
+
             stopProgress();
         });
-
-        task.setOnFailed(RegularContentController::taskFailed);
-        task.setOnCancelled(RegularContentController::taskCancelled);
 
         showProgress(task);
         GuiUtils.startTask(task);
@@ -464,17 +384,19 @@ public class RegularContentController {
 
     @FXML
     private void refreshButtonClicked() {
-        Task<List<FileInfo>> task = new GetFilesInfoTask(this.directory, guiContext.getFfprobe());
+        Task<GetFilesInfoTask.FilesInfo> task = new GetFilesInfoTask(
+                this.directory,
+                guiContext.getSettings().getSortBy(),
+                guiContext.getSettings().getSortDirection(),
+                guiContext.getFfprobe()
+        );
 
         task.setOnSucceeded(e -> {
-            allFilesInfo = task.getValue();
-            hideUnavailableCheckbox.setSelected(hideUnavailable(allFilesInfo));
-            updateTableWithFiles();
+            filesInfo = task.getValue().getFilesInfo();
+            hideUnavailableCheckbox.setSelected(task.getValue().isHideUnavailable());
+            tableWithFiles.getItems().setAll(task.getValue().getGuiFilesInfo());
             stopProgress();
         });
-
-        task.setOnFailed(RegularContentController::taskFailed);
-        task.setOnCancelled(RegularContentController::taskCancelled);
 
         showProgress(task);
         GuiUtils.startTask(task);
@@ -482,7 +404,21 @@ public class RegularContentController {
 
     @FXML
     private void hideUnavailableClicked() {
-        updateTableWithFiles();
+        Task<GetFilesInfoTask.FilesInfo> task = new GetFilesInfoTask(
+                filesInfo,
+                shouldShowFullFileName(),
+                hideUnavailableCheckbox.isSelected(),
+                guiContext.getSettings().getSortBy(),
+                guiContext.getSettings().getSortDirection()
+        );
+
+        task.setOnSucceeded(e -> {
+            tableWithFiles.getItems().setAll(task.getValue().getGuiFilesInfo());
+            stopProgress();
+        });
+
+        showProgress(task);
+        GuiUtils.startTask(task);
     }
 
     @FXML
@@ -497,9 +433,23 @@ public class RegularContentController {
             selectedPaths.add(tableWithFiles.getItems().get(index).getPath());
         }
 
-        allFilesInfo.removeIf(fileInfo -> selectedPaths.contains(fileInfo.getFile().getAbsolutePath()));
+        filesInfo.removeIf(fileInfo -> selectedPaths.contains(fileInfo.getFile().getAbsolutePath()));
 
-        updateTableWithFiles();
+        Task<GetFilesInfoTask.FilesInfo> task = new GetFilesInfoTask(
+                filesInfo,
+                shouldShowFullFileName(),
+                hideUnavailableCheckbox.isSelected(),
+                guiContext.getSettings().getSortBy(),
+                guiContext.getSettings().getSortDirection()
+        );
+
+        task.setOnSucceeded(e -> {
+            tableWithFiles.getItems().setAll(task.getValue().getGuiFilesInfo());
+            stopProgress();
+        });
+
+        showProgress(task);
+        GuiUtils.startTask(task);
     }
 
     @FXML
@@ -515,99 +465,22 @@ public class RegularContentController {
             log.error("failed to save last directory with videos, that shouldn't happen: " + getStackTrace(e));
         }
 
-        Task<List<FileInfo>> task = new GetFilesInfoTask(chosenFiles, guiContext.getFfprobe());
+        Task<GetFilesInfoTask.FilesInfo> task = new GetFilesInfoTask(
+                filesInfo,
+                chosenFiles,
+                hideUnavailableCheckbox.isSelected(),
+                guiContext.getSettings().getSortBy(),
+                guiContext.getSettings().getSortDirection(),
+                guiContext.getFfprobe()
+        );
 
         task.setOnSucceeded(e -> {
-            List<FileInfo> chosenFilesInfo = task.getValue();
-            for (FileInfo chosenFileInfo : chosenFilesInfo) {
-                boolean alreadyAdded = allFilesInfo.stream()
-                        .anyMatch(fileInfo -> Objects.equals(fileInfo.getFile(), chosenFileInfo.getFile()));
-                if (!alreadyAdded) {
-                    allFilesInfo.add(chosenFileInfo);
-                }
-            }
-
-            updateTableWithFiles();
+            filesInfo = task.getValue().getFilesInfo();
+            tableWithFiles.getItems().setAll(task.getValue().getGuiFilesInfo());
             stopProgress();
         });
 
-        task.setOnFailed(RegularContentController::taskFailed);
-        task.setOnCancelled(RegularContentController::taskCancelled);
-
         showProgress(task);
         GuiUtils.startTask(task);
-    }
-
-    private enum Mode {
-        FILES,
-        DIRECTORY
-    }
-
-    private static class GetFilesInfoTask extends Task<List<FileInfo>> {
-        private List<File> files;
-
-        private File directory;
-
-        private Ffprobe ffprobe;
-
-        GetFilesInfoTask(List<File> files, Ffprobe ffprobe) {
-            this.files = files;
-            this.ffprobe = ffprobe;
-        }
-
-        GetFilesInfoTask(File directory, Ffprobe ffprobe) {
-            this.directory = directory;
-            this.ffprobe = ffprobe;
-        }
-
-        @Override
-        protected List<FileInfo> call() {
-            List<File> files;
-            if (directory != null) {
-                updateMessage("getting file list...");
-                File[] directoryFiles = directory.listFiles();
-                if (directoryFiles == null) {
-                    log.error("failed to get directory files, directory " + directory.getAbsolutePath());
-                    files = new ArrayList<>();
-                } else {
-                    files = Arrays.asList(directoryFiles);
-                }
-            } else {
-                files = this.files;
-            }
-
-            return getFilesInfo(files);
-        }
-
-        private List<FileInfo> getFilesInfo(List<File> files) {
-            List<FileInfo> result = new ArrayList<>();
-
-            updateProgress(0, files.size());
-
-            int i = 0;
-            for (File file : files) {
-                updateMessage("processing " + file.getName() + "...");
-
-                if (file.isDirectory() || !file.exists()) {
-                    updateProgress(i + 1, files.size());
-                    i++;
-                    continue;
-                }
-
-                result.add(
-                        FileInfoGetter.getFileInfoWithoutSubtitles(
-                                file,
-                                LogicConstants.ALLOWED_VIDEO_EXTENSIONS,
-                                LogicConstants.ALLOWED_VIDEO_MIME_TYPES,
-                                ffprobe
-                        )
-                );
-
-                updateProgress(i + 1, files.size());
-                i++;
-            }
-
-            return result;
-        }
     }
 }

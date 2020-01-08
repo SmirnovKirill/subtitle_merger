@@ -24,7 +24,7 @@
                             <Insets top="20" right="20" bottom="20" left="20"/>
                         </padding>
                         <Label>One or more videos</Label>
-                        <Button onAction="#videosButtonClicked" text="choose videos"/>
+                        <Button onAction="#separateFilesButtonClicked" text="choose videos"/>
                     </HBox>
                 </center>
             </BorderPane>
