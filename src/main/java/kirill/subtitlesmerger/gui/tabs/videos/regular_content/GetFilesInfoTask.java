@@ -147,10 +147,6 @@ public class GetFilesInfoTask extends Task<GetFilesInfoTask.FilesInfo> {
 
             return getFilesInfo(directoryFiles);
         } else if (mode == Mode.ONLY_UPDATE_GUI) {
-            if (filesInfo == null) {
-                return new ArrayList<>();
-            }
-
             return filesInfo;
         } else if (mode == Mode.ADD_SEPARATE_FILES) {
             List<FileInfo> result = new ArrayList<>(filesInfo);

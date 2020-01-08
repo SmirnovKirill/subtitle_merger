@@ -90,9 +90,7 @@ public class RegularContentController {
         this.guiContext = guiContext;
         saveDefaultSortSettingsIfNotSet(guiContext.getSettings());
         this.sortByGroup = new ToggleGroup();
-        this.sortByGroup.selectedToggleProperty().addListener(this::sortByChanged);
         this.sortDirectionGroup = new ToggleGroup();
-        this.sortDirectionGroup.selectedToggleProperty().addListener(this::sortDirectionChanged);
         this.tableWithFiles.initialize();
         this.tableWithFiles.setContextMenu(
                 generateContextMenu(
@@ -101,6 +99,9 @@ public class RegularContentController {
                         guiContext.getSettings()
                 )
         );
+
+        this.sortByGroup.selectedToggleProperty().addListener(this::sortByChanged);
+        this.sortDirectionGroup.selectedToggleProperty().addListener(this::sortDirectionChanged);
         this.removeSelectedButton.disableProperty().bind(
                 Bindings.isEmpty(tableWithFiles.getSelectionModel().getSelectedIndices())
         );
