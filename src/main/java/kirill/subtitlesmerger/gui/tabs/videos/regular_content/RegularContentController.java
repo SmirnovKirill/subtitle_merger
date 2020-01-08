@@ -2,6 +2,7 @@ package kirill.subtitlesmerger.gui.tabs.videos.regular_content;
 
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
+import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -142,7 +143,7 @@ public class RegularContentController {
             log.error("failed to save sort by, should not happen: " + ExceptionUtils.getStackTrace(e));
         }
 
-        Task<GetFilesInfoTask.FilesInfo> task = new GetFilesInfoTask(
+        GetFilesInfoTask task = new GetFilesInfoTask(
                 filesInfo,
                 shouldShowFullFileName(),
                 hideUnavailableCheckbox.isSelected(),
@@ -151,7 +152,7 @@ public class RegularContentController {
         );
 
         task.setOnSucceeded(e -> {
-            tableWithFiles.getItems().setAll(task.getValue().getGuiFilesInfo());
+            updateTableContent(task);
             stopProgress();
         });
 
@@ -161,6 +162,10 @@ public class RegularContentController {
 
     private boolean shouldShowFullFileName() {
         return directory == null;
+    }
+
+    private void updateTableContent(GetFilesInfoTask task) {
+        tableWithFiles.setItems(FXCollections.observableArrayList(task.getValue().getGuiFilesInfo()));
     }
 
     private void stopProgress() {
@@ -196,7 +201,7 @@ public class RegularContentController {
             log.error("failed to save sort direction, should not happen: " + ExceptionUtils.getStackTrace(e));
         }
 
-        Task<GetFilesInfoTask.FilesInfo> task = new GetFilesInfoTask(
+        GetFilesInfoTask task = new GetFilesInfoTask(
                 filesInfo,
                 shouldShowFullFileName(),
                 hideUnavailableCheckbox.isSelected(),
@@ -205,7 +210,7 @@ public class RegularContentController {
         );
 
         task.setOnSucceeded(e -> {
-            tableWithFiles.getItems().setAll(task.getValue().getGuiFilesInfo());
+            updateTableContent(task);
             stopProgress();
         });
 
@@ -292,7 +297,7 @@ public class RegularContentController {
 
         directory = null;
 
-        Task<GetFilesInfoTask.FilesInfo> task = new GetFilesInfoTask(
+        GetFilesInfoTask task = new GetFilesInfoTask(
                 files,
                 guiContext.getSettings().getSortBy(),
                 guiContext.getSettings().getSortDirection(),
@@ -302,7 +307,7 @@ public class RegularContentController {
         task.setOnSucceeded(e -> {
             filesInfo = task.getValue().getFilesInfo();
             hideUnavailableCheckbox.setSelected(task.getValue().isHideUnavailable());
-            tableWithFiles.getItems().setAll(task.getValue().getGuiFilesInfo());
+            updateTableContent(task);
 
             chosenDirectoryPane.setVisible(false);
             chosenDirectoryPane.setManaged(false);
@@ -343,7 +348,7 @@ public class RegularContentController {
 
         this.directory = directory;
 
-        Task<GetFilesInfoTask.FilesInfo> task = new GetFilesInfoTask(
+        GetFilesInfoTask task = new GetFilesInfoTask(
                 this.directory,
                 guiContext.getSettings().getSortBy(),
                 guiContext.getSettings().getSortDirection(),
@@ -353,7 +358,7 @@ public class RegularContentController {
         task.setOnSucceeded(e -> {
             filesInfo = task.getValue().getFilesInfo();
             hideUnavailableCheckbox.setSelected(task.getValue().isHideUnavailable());
-            tableWithFiles.getItems().setAll(task.getValue().getGuiFilesInfo());
+            updateTableContent(task);
             chosenDirectoryField.setText(directory.getAbsolutePath());
 
             chosenDirectoryPane.setVisible(true);
@@ -385,7 +390,7 @@ public class RegularContentController {
 
     @FXML
     private void refreshButtonClicked() {
-        Task<GetFilesInfoTask.FilesInfo> task = new GetFilesInfoTask(
+        GetFilesInfoTask task = new GetFilesInfoTask(
                 this.directory,
                 guiContext.getSettings().getSortBy(),
                 guiContext.getSettings().getSortDirection(),
@@ -395,7 +400,8 @@ public class RegularContentController {
         task.setOnSucceeded(e -> {
             filesInfo = task.getValue().getFilesInfo();
             hideUnavailableCheckbox.setSelected(task.getValue().isHideUnavailable());
-            tableWithFiles.getItems().setAll(task.getValue().getGuiFilesInfo());
+            updateTableContent(task);
+
             stopProgress();
         });
 
@@ -405,7 +411,7 @@ public class RegularContentController {
 
     @FXML
     private void hideUnavailableClicked() {
-        Task<GetFilesInfoTask.FilesInfo> task = new GetFilesInfoTask(
+        GetFilesInfoTask task = new GetFilesInfoTask(
                 filesInfo,
                 shouldShowFullFileName(),
                 hideUnavailableCheckbox.isSelected(),
@@ -414,7 +420,7 @@ public class RegularContentController {
         );
 
         task.setOnSucceeded(e -> {
-            tableWithFiles.getItems().setAll(task.getValue().getGuiFilesInfo());
+            updateTableContent(task);
             stopProgress();
         });
 
@@ -436,7 +442,7 @@ public class RegularContentController {
 
         filesInfo.removeIf(fileInfo -> selectedPaths.contains(fileInfo.getFile().getAbsolutePath()));
 
-        Task<GetFilesInfoTask.FilesInfo> task = new GetFilesInfoTask(
+        GetFilesInfoTask task = new GetFilesInfoTask(
                 filesInfo,
                 shouldShowFullFileName(),
                 hideUnavailableCheckbox.isSelected(),
@@ -445,7 +451,7 @@ public class RegularContentController {
         );
 
         task.setOnSucceeded(e -> {
-            tableWithFiles.getItems().setAll(task.getValue().getGuiFilesInfo());
+            updateTableContent(task);
             stopProgress();
         });
 
@@ -466,7 +472,7 @@ public class RegularContentController {
             log.error("failed to save last directory with videos, that shouldn't happen: " + getStackTrace(e));
         }
 
-        Task<GetFilesInfoTask.FilesInfo> task = new GetFilesInfoTask(
+        GetFilesInfoTask task = new GetFilesInfoTask(
                 filesInfo,
                 chosenFiles,
                 hideUnavailableCheckbox.isSelected(),
@@ -477,7 +483,8 @@ public class RegularContentController {
 
         task.setOnSucceeded(e -> {
             filesInfo = task.getValue().getFilesInfo();
-            tableWithFiles.getItems().setAll(task.getValue().getGuiFilesInfo());
+            updateTableContent(task);
+
             stopProgress();
         });
 
