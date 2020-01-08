@@ -166,6 +166,12 @@ public class RegularContentController {
 
     private void updateTableContent(GetFilesInfoTask task) {
         tableWithFiles.setItems(FXCollections.observableArrayList(task.getValue().getGuiFilesInfo()));
+
+        /*
+         * Have to do it because otherwise when rows are reduced scrollbar is displayed incorrectly sometimes.
+         * Haven't found the bug on the tracker though.
+         */
+        tableWithFiles.scrollTo(0);
     }
 
     private void stopProgress() {
