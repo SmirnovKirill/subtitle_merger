@@ -384,6 +384,9 @@ public class RegularContentController {
 
     @FXML
     private void backToSelectionClicked() {
+        /* Just in case. See the huge comment in the hideUnavailableClicked() method. */
+        tableWithFiles.setItems(FXCollections.emptyObservableList());
+
         choicePane.setVisible(true);
         resultPane.setVisible(false);
     }
