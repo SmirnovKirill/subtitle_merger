@@ -23,14 +23,25 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
      */
     public void initialize() {
         TableColumn<GuiFileInfo, ?> column = getColumns().get(0);
-        column.setCellFactory(TableWithFiles::generateFileNameCell);
+        column.setCellFactory(this::generateFileNameCell);
     }
 
-    private static <T> TableCell<GuiFileInfo, T> generateFileNameCell(TableColumn<GuiFileInfo, T> column) {
+    private <T> TableCell<GuiFileInfo, T> generateFileNameCell(TableColumn<GuiFileInfo, T> column) {
         return new TableCell<>() {
             @Override
             protected void updateItem(T item, boolean empty) {
                 super.updateItem(item, empty);
+
+                /*
+                 * There is a strange bug with TableView - when the list is shrunk in size (because for example
+                 * "hide unavailable" checkbox is checked) and both big list and shrunk list have vertical scrollbars
+                 * table isn't shrunk unless you move the scrollbar. I've noticed that while this is happening
+                 * getIndex() returns values higher than the items amount. So I've found the following workaround -
+                 * if this is the case just move scroll to the last element.
+                 */
+                if (getIndex() > getItems().size() - 1) {
+                    scrollTo(getItems().size() - 1);
+                }
 
                 GuiFileInfo fileInfo = getTableRow().getItem();
 
