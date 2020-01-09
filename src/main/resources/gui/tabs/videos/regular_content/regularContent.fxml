@@ -91,7 +91,7 @@
                     <TableColumn sortable="false" reorderable="false" minWidth="100">
                         <text>lower subtitles</text>
                     </TableColumn>
-                    <TableColumn sortable="false" reorderable="false" styleClass="last-column-header" minWidth="100">
+                    <TableColumn sortable="false" reorderable="false" styleClass="last-column" minWidth="100">
                         <text>action</text>
                     </TableColumn>
                 </columns>
