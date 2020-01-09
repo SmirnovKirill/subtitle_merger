@@ -3,10 +3,10 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import kirill.subtitlesmerger.gui.GuiConstants?>
-<?import kirill.subtitlesmerger.gui.tabs.subtitle_files.SubtitleFilesTabController?>
+<?import kirill.subtitlemerger.gui.GuiConstants?>
+<?import kirill.subtitlemerger.gui.tabs.subtitle_files.SubtitleFilesTabController?>
 <Tab xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-     fx:controller="kirill.subtitlesmerger.gui.tabs.subtitle_files.SubtitleFilesTabController"
+     fx:controller="kirill.subtitlemerger.gui.tabs.subtitle_files.SubtitleFilesTabController"
      text="Subtitle files">
     <GridPane hgap="30" vgap="40">
         <gridLinesVisible><GuiConstants fx:constant="DEBUG"/></gridLinesVisible>

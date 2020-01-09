@@ -4,10 +4,10 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import kirill.subtitlesmerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles?>
+<?import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles?>
 <StackPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
            fx:id="pane"
-           fx:controller="kirill.subtitlesmerger.gui.tabs.videos.regular_content.RegularContentController"
+           fx:controller="kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController"
            stylesheets="/gui/tabs/videos/regular_content/regularContent.css"
 >
     <padding>

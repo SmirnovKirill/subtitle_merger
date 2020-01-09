@@ -4,10 +4,10 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import kirill.subtitlesmerger.gui.GuiConstants?>
+<?import kirill.subtitlemerger.gui.GuiConstants?>
 <?import javafx.util.Duration?>
 <Tab xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-     fx:controller="kirill.subtitlesmerger.gui.tabs.settings.SettingsTabController"
+     fx:controller="kirill.subtitlemerger.gui.tabs.settings.SettingsTabController"
      text="Settings">
     <fx:define>
         <Tooltip fx:id="languageTooltip" text="this setting will be used to auto-detect subtitles&#10;or merging when working with videos">

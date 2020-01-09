@@ -4,10 +4,10 @@
 <?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.VBox?>
-<?import kirill.subtitlesmerger.gui.tabs.videos.missing_settings.PaneWithMissingSettingLabels?>
+<?import kirill.subtitlemerger.gui.tabs.videos.missing_settings.PaneWithMissingSettingLabels?>
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
       fx:id="pane"
-      fx:controller="kirill.subtitlesmerger.gui.tabs.videos.missing_settings.MissingSettingsController"
+      fx:controller="kirill.subtitlemerger.gui.tabs.videos.missing_settings.MissingSettingsController"
       spacing="10">
     <padding>
         <Insets top="20" right="20" bottom="20" left="20"/>
