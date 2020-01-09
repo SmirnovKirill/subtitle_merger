@@ -20,7 +20,7 @@
             <fileMode>744</fileMode>
         </file>
         <file>
-            <source>${project.build.directory}/subtitles-merger.exe</source>
+            <source>${project.build.directory}/subtitle-merger.exe</source>
             <fileMode>744</fileMode>
         </file>
     </files>

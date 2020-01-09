@@ -159,7 +159,7 @@
                             <jar>${project.build.finalName}.jar</jar>
                             <dontWrapJar>true</dontWrapJar>
                             <headerType>gui</headerType>
-                            <outfile>${project.build.directory}/subtitles-merger.exe</outfile>
+                            <outfile>${project.build.directory}/subtitle-merger.exe</outfile>
                             <jre>
                                 <path>jre</path>
                             </jre>

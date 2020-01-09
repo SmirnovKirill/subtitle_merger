@@ -19,7 +19,7 @@ import java.util.List;
 public class Ffmpeg {
     private static final File TEMP_SUBTITLE_FILE = new File(
             System.getProperty("java.io.tmpdir"),
-            "subtitles_merger_temp.srt"
+            "subtitle_merger_temp.srt"
     );
 
     private File ffmpegFile;
