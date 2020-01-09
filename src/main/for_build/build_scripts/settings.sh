@@ -16,8 +16,8 @@ JDK_LINUX_64_DOWNLOAD_URL="https://download.java.net/java/GA/jdk11/9/GPL/openjdk
 JDK_WIN_64_DOWNLOAD_URL="https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_windows-x64_bin.zip"
 
 #https://gluonhq.com/products/javafx/
-OPENJFX_JMODS_LINUX_DOWNLOAD_URL="https://gluonhq.com/download/javafx-11-0-2-jmods-linux"
-OPENJFX_JMODS_WIN_DOWNLOAD_URL="https://gluonhq.com/download/javafx-11-0-2-jmods-windows/"
+OPENJFX_JMODS_LINUX_DOWNLOAD_URL="https://gluonhq.com/download/javafx-13.0.1-jmods-linux/"
+OPENJFX_JMODS_WIN_DOWNLOAD_URL="https://gluonhq.com/download/javafx-13.0.1-jmods-windows/"
 
 #https://www.ffmpeg.org/download.html
 FFMPEG_LINUX_64_DOWNLOAD_URL="https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz"
