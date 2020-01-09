@@ -53,31 +53,18 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
      * in the constructor columns aren't initialized yet.
      */
     public void initialize() {
-        TableColumn<GuiFileInfo, ?> column = getColumns().get(0);
-        column.setCellFactory(this::generateFileNameCell);
+        TableColumn<GuiFileInfo, ?> fileDescriptionColumn = getColumns().get(0);
+        fileDescriptionColumn.setCellFactory(this::generateFileDescriptionCell);
+
+        TableColumn<GuiFileInfo, ?> upperSubtitlesColumn = getColumns().get(1);
+        upperSubtitlesColumn.setCellFactory(this::generateUpperSubtitlesCell);
     }
 
-    private <T> TableCell<GuiFileInfo, T> generateFileNameCell(TableColumn<GuiFileInfo, T> column) {
-        return new TableCell<>() {
-            @Override
-            protected void updateItem(T item, boolean empty) {
-                super.updateItem(item, empty);
-
-                GuiFileInfo fileInfo = getTableRow().getItem();
-
-                if (empty || fileInfo == null) {
-                    setGraphic(null);
-                    setText(null);
-                    return;
-                }
-
-                setGraphic(generateFileNameCellPane(fileInfo));
-                setText(null);
-            }
-        };
+    private <T> TableWithFilesCell<T> generateFileDescriptionCell(TableColumn<GuiFileInfo, T> column) {
+        return new TableWithFilesCell<>(TableWithFiles::generateFileDescriptionCellPane);
     }
 
-    private static Pane generateFileNameCellPane(GuiFileInfo fileInfo) {
+    private static Pane generateFileDescriptionCellPane(GuiFileInfo fileInfo) {
         VBox result = new VBox();
 
         result.setPadding(new Insets(3));
@@ -129,6 +116,18 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         /* Labels of the first row. */
         GridPane.setMargin(result.getChildren().get(0), new Insets(0, 0, 3, 0));
         GridPane.setMargin(result.getChildren().get(2), new Insets(0, 0, 3, 0));
+
+        return result;
+    }
+
+    private <T> TableWithFilesCell<T> generateUpperSubtitlesCell(TableColumn<GuiFileInfo, T> column) {
+        return new TableWithFilesCell<>(TableWithFiles::generateUpperSubtitlesCellPane);
+    }
+
+    private static Pane generateUpperSubtitlesCellPane(GuiFileInfo fileInfo) {
+        VBox result = new VBox();
+
+        result.getChildren().add(new Label("check"));
 
         return result;
     }
