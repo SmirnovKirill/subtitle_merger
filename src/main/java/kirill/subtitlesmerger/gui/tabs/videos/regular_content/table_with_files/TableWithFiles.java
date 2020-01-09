@@ -23,10 +23,10 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
      */
     public void initialize() {
         TableColumn<GuiFileInfo, ?> column = getColumns().get(0);
-        column.setCellFactory(this::generateFileNameCell);
+        column.setCellFactory(TableWithFiles::generateFileNameCell);
     }
 
-    private <T> TableCell<GuiFileInfo, T> generateFileNameCell(TableColumn<GuiFileInfo, T> column) {
+    private static <T> TableCell<GuiFileInfo, T> generateFileNameCell(TableColumn<GuiFileInfo, T> column) {
         return new TableCell<>() {
             @Override
             protected void updateItem(T item, boolean empty) {
