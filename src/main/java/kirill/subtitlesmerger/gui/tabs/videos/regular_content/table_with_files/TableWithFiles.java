@@ -3,18 +3,49 @@ package kirill.subtitlesmerger.gui.tabs.videos.regular_content.table_with_files;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.util.Duration;
 import kirill.subtitlesmerger.gui.GuiUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import java.util.Collections;
+
 public class TableWithFiles extends TableView<GuiFileInfo> {
     private static final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern("dd.MM.YYYY HH:mm");
+
+    private static final String ROW_UNAVAILABLE_CLASS = "row-unavailable";
 
     public TableWithFiles() {
         super();
 
         getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         setPlaceholder(new Label("there are no files to display"));
+
+        setRowFactory(this::generateRow);
+    }
+
+    private TableRow<GuiFileInfo> generateRow(TableView<GuiFileInfo> tableView) {
+        return new TableRow<>() {
+            @Override
+            protected void updateItem(GuiFileInfo fileInfo, boolean empty){
+                super.updateItem(fileInfo, empty);
+
+                if (empty || fileInfo == null) {
+                    setGraphic(null);
+                    setText(null);
+                    return;
+                }
+
+                if (StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
+                    getStyleClass().removeAll(Collections.singleton(ROW_UNAVAILABLE_CLASS));
+                } else {
+                    if (!getStyleClass().contains(ROW_UNAVAILABLE_CLASS)) {
+                        getStyleClass().add(ROW_UNAVAILABLE_CLASS);
+                    }
+                }
+            }
+        };
     }
 
     /*
@@ -53,9 +84,22 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         result.setSpacing(10);
 
         Label pathLabel = new Label(fileInfo.getPath());
+        if (!StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
+            pathLabel.setTooltip(generateUnavailableTooltip(fileInfo.getUnavailabilityReason()));
+        }
+
         Pane paneWithSizeAndLastModifiedTime = generatePaneWithSizeAndLastModifiedTime(fileInfo);
 
         result.getChildren().addAll(pathLabel, paneWithSizeAndLastModifiedTime);
+
+        return result;
+    }
+
+    private static Tooltip generateUnavailableTooltip(String text) {
+        Tooltip result = new Tooltip(text);
+
+        result.setShowDelay(Duration.ZERO);
+        result.setShowDuration(Duration.INDEFINITE);
 
         return result;
     }

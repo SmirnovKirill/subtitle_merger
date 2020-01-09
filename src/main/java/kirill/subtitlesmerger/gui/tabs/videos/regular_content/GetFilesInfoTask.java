@@ -297,15 +297,15 @@ public class GetFilesInfoTask extends Task<GetFilesInfoTask.FilesInfo> {
             case NO_EXTENSION:
                 return "file has no extension";
             case NOT_ALLOWED_EXTENSION:
-                return "file has not allowed extension";
+                return "file has a not allowed extension";
             case FAILED_TO_GET_MIME_TYPE:
-                return "failed to get mime type";
+                return "failed to get the mime type";
             case NOT_ALLOWED_MIME_TYPE:
-                return "file has mime type that is not allowed";
+                return "file has a mime type that is not allowed";
             case FAILED_TO_GET_FFPROBE_INFO:
-                return "failed to get video info with ffprobe";
+                return "failed to get video info with the ffprobe";
             case NOT_ALLOWED_CONTAINER:
-                return "video has format that is not allowed";
+                return "video has a format that is not allowed";
             default:
                 throw new IllegalStateException();
         }

@@ -41,3 +41,7 @@
 .last-modified {
     -fx-font-size: 0.75em;
 }
+
+.row-unavailable {
+    -fx-opacity: 0.4;
+}
