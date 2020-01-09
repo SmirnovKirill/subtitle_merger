@@ -5,6 +5,7 @@ import kirill.subtitlesmerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlesmerger.logic.work_with_files.entities.SubtitleCodec;
 import kirill.subtitlesmerger.logic.work_with_files.entities.SubtitleStreamInfo;
 import kirill.subtitlesmerger.logic.work_with_files.entities.VideoFormat;
+import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.FfmpegException;
 import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.Ffprobe;
 import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.json.JsonFfprobeFileInfo;
 import kirill.subtitlesmerger.logic.work_with_files.ffmpeg.json.JsonStream;
@@ -63,6 +64,8 @@ public class FileInfoGetter {
         JsonFfprobeFileInfo ffprobeInfo;
         try {
             ffprobeInfo = ffprobe.getFileInfo(file);
+        } catch (FfmpegException e) {
+            return new FileInfo(file, FAILED_TO_GET_FFPROBE_INFO, null, null);
         } catch (Exception e) {
             log.warn("failed to get ffprobe info for file " + file.getAbsolutePath() + ": "
                     + ExceptionUtils.getStackTrace(e)
