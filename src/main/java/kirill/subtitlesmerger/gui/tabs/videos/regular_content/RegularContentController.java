@@ -402,6 +402,9 @@ public class RegularContentController {
             hideUnavailableCheckbox.setSelected(task.getValue().isHideUnavailable());
             updateTableContent(task);
 
+            /* See the huge comment in the hideUnavailableClicked() method. */
+            tableWithFiles.scrollTo(0);
+
             stopProgress();
         });
 
@@ -421,6 +424,17 @@ public class RegularContentController {
 
         task.setOnSucceeded(e -> {
             updateTableContent(task);
+
+            /*
+             * There is a strange bug with TableView - when the list is shrunk in size (because for example
+             * "hide unavailable" checkbox is checked but it can also happen when refresh is clicked I suppose) and both
+             * big list and shrunk list have vertical scrollbars table isn't shrunk unless you move the scrollbar.
+             * I've tried many workaround but this one seems the best so far - just show the beginning of the table.
+             * I couldn't find a bug with precise description but these ones fit quite well -
+             * https://bugs.openjdk.java.net/browse/JDK-8095384, https://bugs.openjdk.java.net/browse/JDK-8087833.
+             */
+            tableWithFiles.scrollTo(0);
+
             stopProgress();
         });
 
