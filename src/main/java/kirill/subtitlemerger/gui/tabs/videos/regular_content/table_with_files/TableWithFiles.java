@@ -5,6 +5,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.util.Duration;
 import kirill.subtitlemerger.gui.GuiUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -127,7 +128,26 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
     private static Pane generateUpperSubtitlesCellPane(GuiFileInfo fileInfo) {
         VBox result = new VBox();
 
-        result.getChildren().add(new Label("check"));
+        result.setSpacing(2);
+
+        if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreamsInfo())) {
+            return result;
+        }
+
+        for (GuiSubtitleStreamInfo subtitleStreamInfo : fileInfo.getSubtitleStreamsInfo()) {
+            RadioButton subtitleRadioButton = new RadioButton();
+
+            subtitleRadioButton.getStyleClass().add("subtitle-radio");
+
+            String text = subtitleStreamInfo.getLanguage();
+            if (!StringUtils.isBlank(subtitleStreamInfo.getTitle())) {
+                text += " (" + subtitleStreamInfo.getTitle() + ")";
+            }
+
+            subtitleRadioButton.setText(text);
+
+            result.getChildren().add(subtitleRadioButton);
+        }
 
         return result;
     }

@@ -5,17 +5,21 @@ import javafx.event.Event;
 import javafx.scene.control.ProgressIndicator;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStreamInfo;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.work_with_files.FileInfoGetter;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
+import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStreamInfo;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffprobe;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.collections4.CollectionUtils;
 import org.joda.time.LocalDateTime;
 
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @CommonsLog
 public class GetFilesInfoTask extends Task<GetFilesInfoTask.FilesInfo> {
@@ -267,18 +271,7 @@ public class GetFilesInfoTask extends Task<GetFilesInfoTask.FilesInfo> {
             task.updateMessage("preparing to display " + fileInfo.getFile().getName() + "...");
 
             if (!hideUnavailable || fileInfo.getUnavailabilityReason() == null) {
-                String path = showFullFileName ? fileInfo.getFile().getAbsolutePath() : fileInfo.getFile().getName();
-
-                result.add(
-                        new GuiFileInfo(
-                                path,
-                                fileInfo.getLastModified(),
-                                LocalDateTime.now(),
-                                fileInfo.getSize(),
-                                convert(fileInfo.getUnavailabilityReason()),
-                                ""
-                        )
-                );
+                result.add(from(fileInfo, showFullFileName));
             }
 
             task.updateProgress(i + 1, filesInfo.size());
@@ -288,7 +281,28 @@ public class GetFilesInfoTask extends Task<GetFilesInfoTask.FilesInfo> {
         return result;
     }
 
-    private static String convert(FileInfo.UnavailabilityReason unavailabilityReason) {
+    private static GuiFileInfo from(FileInfo fileInfo, boolean showFullFileName) {
+        String path = showFullFileName ? fileInfo.getFile().getAbsolutePath() : fileInfo.getFile().getName();
+
+        List<GuiSubtitleStreamInfo> subtitleStreamsInfo = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(fileInfo.getSubtitleStreamsInfo())) {
+            subtitleStreamsInfo = fileInfo.getSubtitleStreamsInfo().stream()
+                    .map(GetFilesInfoTask::from)
+                    .collect(Collectors.toList());
+        }
+
+        return new GuiFileInfo(
+                path,
+                fileInfo.getLastModified(),
+                LocalDateTime.now(),
+                fileInfo.getSize(),
+                guiTextFrom(fileInfo.getUnavailabilityReason()),
+                "",
+                subtitleStreamsInfo
+        );
+    }
+
+    private static String guiTextFrom(FileInfo.UnavailabilityReason unavailabilityReason) {
         if (unavailabilityReason == null) {
             return "";
         }
@@ -309,6 +323,26 @@ public class GetFilesInfoTask extends Task<GetFilesInfoTask.FilesInfo> {
             default:
                 throw new IllegalStateException();
         }
+    }
+
+    private static GuiSubtitleStreamInfo from(SubtitleStreamInfo subtitleStreamInfo) {
+        return new GuiSubtitleStreamInfo(
+                guiTextFrom(subtitleStreamInfo.getUnavailabilityReason()),
+                subtitleStreamInfo.getLanguage() != null ? subtitleStreamInfo.getLanguage().toString() : "unknown",
+                subtitleStreamInfo.getTitle()
+        );
+    }
+
+    private static String guiTextFrom(SubtitleStreamInfo.UnavailabilityReason unavailabilityReason) {
+        if (unavailabilityReason == null) {
+            return "";
+        }
+
+        if (unavailabilityReason == SubtitleStreamInfo.UnavailabilityReason.NOT_ALLOWED_CODEC) {
+            return "subtitle has a not allowed type";
+        }
+
+        throw new IllegalStateException();
     }
 
     private enum Mode {

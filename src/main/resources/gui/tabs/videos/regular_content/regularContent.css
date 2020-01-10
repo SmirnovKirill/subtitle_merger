@@ -26,6 +26,10 @@
     -fx-background-insets: 0, 0 0 1 0, 1 0 2 1;
 }
 
+.row-unavailable {
+    -fx-opacity: 0.4;
+}
+
 .size-title {
     -fx-font-size: 0.75em;
 }
@@ -42,6 +46,6 @@
     -fx-font-size: 0.75em;
 }
 
-.row-unavailable {
-    -fx-opacity: 0.4;
+.subtitle-radio {
+    -fx-font-size: 0.75em;
 }

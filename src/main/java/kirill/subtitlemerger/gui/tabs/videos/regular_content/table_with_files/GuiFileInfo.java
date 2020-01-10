@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.joda.time.LocalDateTime;
 
+import java.util.List;
+
 @AllArgsConstructor
 @Getter
 public class GuiFileInfo {
@@ -21,4 +23,6 @@ public class GuiFileInfo {
     private String unavailabilityReason;
 
     private String error;
+
+    private List<GuiSubtitleStreamInfo> subtitleStreamsInfo;
 }

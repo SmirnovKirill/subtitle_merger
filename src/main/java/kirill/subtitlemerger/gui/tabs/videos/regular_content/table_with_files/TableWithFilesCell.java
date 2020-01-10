@@ -23,9 +23,9 @@ public class TableWithFilesCell<T> extends TableCell<GuiFileInfo, T> {
         setGraphic(cellNodeGenerator.generateNode(fileInfo));
         setText(null);
     }
-}
 
-@FunctionalInterface
-interface CellNodeGenerator {
-    Node generateNode(GuiFileInfo fileInfo);
+    @FunctionalInterface
+    interface CellNodeGenerator {
+        Node generateNode(GuiFileInfo fileInfo);
+    }
 }
