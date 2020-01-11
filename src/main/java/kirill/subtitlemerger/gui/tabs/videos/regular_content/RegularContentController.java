@@ -176,7 +176,8 @@ public class RegularContentController {
          */
         TableColumn<GuiFileInfo, ?> fileDescriptionColumn = tableWithFiles.getColumns().get(1);
         double actualWidth = fileDescriptionColumn.getWidth();
-        double desiredWidth = tableWithFiles.getWidth() * 0.3;
+        /* Without rounding horizontal scroll may appear. */
+        double desiredWidth = Math.round(tableWithFiles.getWidth() * 0.3);
         tableWithFiles.resizeColumn(fileDescriptionColumn, desiredWidth - actualWidth);
     }
 
