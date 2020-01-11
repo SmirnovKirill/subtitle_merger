@@ -72,6 +72,13 @@
                         </ImageView>
                     </graphic>
                 </Button>
+                <Button text="Get all subtitle sizes">
+                    <graphic>
+                        <ImageView fitHeight="16" fitWidth="16">
+                            <Image url="/gui/icons/get.png"/>
+                        </ImageView>
+                    </graphic>
+                </Button>
                 <Button text="Go!">
                     <graphic>
                         <ImageView fitHeight="16" fitWidth="16">

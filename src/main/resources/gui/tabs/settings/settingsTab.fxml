@@ -104,6 +104,18 @@
         <ComboBox fx:id="lowerLanguageComboBox" onAction="#lowerLanguageChanged"
                   maxWidth="Infinity" GridPane.halignment="RIGHT" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
 
+        <Label text="Video merge mode" GridPane.halignment="LEFT" GridPane.rowIndex="5" GridPane.columnIndex="0">
+            <GridPane.margin>
+                <Insets top="40"/>
+            </GridPane.margin>
+        </Label>
+        <ComboBox fx:id="mergeModeComboBox" onAction="#lowerLanguageChanged"
+                  maxWidth="Infinity" GridPane.halignment="RIGHT" GridPane.rowIndex="5" GridPane.columnIndex="1">
+            <GridPane.margin>
+                <Insets top="40"/>
+            </GridPane.margin>
+        </ComboBox>
+
         <Label fx:id="resultLabel"
                GridPane.halignment="LEFT" GridPane.rowIndex="5" GridPane.columnIndex="0" GridPane.columnSpan="2">
             <GridPane.margin>
