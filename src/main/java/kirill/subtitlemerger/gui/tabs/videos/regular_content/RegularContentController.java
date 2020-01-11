@@ -83,6 +83,8 @@ public class RegularContentController {
 
     private ToggleGroup sortDirectionGroup;
 
+    private boolean descriptionColumnWidthSet;
+
     private File directory;
 
     private List<FileInfo> filesInfo;
@@ -168,17 +170,21 @@ public class RegularContentController {
     private void updateTableContent(GetFilesInfoTask task) {
         tableWithFiles.setItems(FXCollections.observableArrayList(task.getValue().getGuiFilesInfo()));
 
-        /*
-         * JavaFX can't set initial column size when using CONSTRAINED_RESIZE_POLICY
-         * (https://bugs.openjdk.java.net/browse/JDK-8091269). So here is a workaround - after setting table's
-         * content resize the required column manually. I want the column with the file description to have 30% width
-         * here.
-         */
-        TableColumn<GuiFileInfo, ?> fileDescriptionColumn = tableWithFiles.getColumns().get(1);
-        double actualWidth = fileDescriptionColumn.getWidth();
-        /* Without rounding horizontal scroll may appear. */
-        double desiredWidth = Math.round(tableWithFiles.getWidth() * 0.3);
-        tableWithFiles.resizeColumn(fileDescriptionColumn, desiredWidth - actualWidth);
+        if (!descriptionColumnWidthSet) {
+            /*
+             * JavaFX can't set initial column size when using CONSTRAINED_RESIZE_POLICY
+             * (https://bugs.openjdk.java.net/browse/JDK-8091269). So here is a workaround - after setting table's
+             * content resize the required column manually. I want the column with the file description to have 30% width
+             * here.
+             */
+            TableColumn<GuiFileInfo, ?> fileDescriptionColumn = tableWithFiles.getColumns().get(1);
+            double actualWidth = fileDescriptionColumn.getWidth();
+            /* Without rounding horizontal scroll may appear. */
+            double desiredWidth = Math.round(tableWithFiles.getWidth() * 0.3);
+            tableWithFiles.resizeColumn(fileDescriptionColumn, desiredWidth - actualWidth);
+
+            descriptionColumnWidthSet = true;
+        }
     }
 
     private void stopProgress() {
@@ -399,6 +405,7 @@ public class RegularContentController {
     private void backToSelectionClicked() {
         /* Just in case. See the huge comment in the hideUnavailableClicked() method. */
         tableWithFiles.setItems(FXCollections.emptyObservableList());
+        descriptionColumnWidthSet = false;
 
         choicePane.setVisible(true);
         resultPane.setVisible(false);
