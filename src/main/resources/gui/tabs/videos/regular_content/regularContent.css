@@ -26,26 +26,16 @@
     -fx-background-insets: 0, 0 0 1 0, 1 0 2 1;
 }
 
+.table-view .table-row-cell .label,
+.table-view .table-row-cell .radio-button,
+.table-view .table-row-cell .hyperlink {
+    -fx-font-size: 0.75em;
+}
+
 .row-unavailable {
     -fx-opacity: 0.4;
 }
 
-.size-title {
-    -fx-font-size: 0.75em;
-}
-
-.last-modified-title {
-    -fx-font-size: 0.75em;
-}
-
-.size {
-    -fx-font-size: 0.75em;
-}
-
-.last-modified {
-    -fx-font-size: 0.75em;
-}
-
-.subtitle-radio {
-    -fx-font-size: 0.75em;
+.table-view .table-row-cell .path-label {
+    -fx-font-size: 1.0em;
 }

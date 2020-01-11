@@ -1,6 +1,7 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files;
 
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.util.Duration;
@@ -54,11 +55,29 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
      * in the constructor columns aren't initialized yet.
      */
     public void initialize() {
-        TableColumn<GuiFileInfo, ?> fileDescriptionColumn = getColumns().get(0);
+        TableColumn<GuiFileInfo, ?> selectedColumn = getColumns().get(0);
+        selectedColumn.setGraphic(new CheckBox());
+        selectedColumn.setCellFactory(this::generateSelectedCell);
+
+        TableColumn<GuiFileInfo, ?> fileDescriptionColumn = getColumns().get(1);
         fileDescriptionColumn.setCellFactory(this::generateFileDescriptionCell);
 
-        TableColumn<GuiFileInfo, ?> upperSubtitlesColumn = getColumns().get(1);
+        TableColumn<GuiFileInfo, ?> upperSubtitlesColumn = getColumns().get(2);
         upperSubtitlesColumn.setCellFactory(this::generateUpperSubtitlesCell);
+    }
+
+    private <T> TableWithFilesCell<T> generateSelectedCell(TableColumn<GuiFileInfo, T> column) {
+        return new TableWithFilesCell<>(TableWithFiles::generateSelectedCellPane);
+    }
+
+    private static Pane generateSelectedCellPane(GuiFileInfo fileInfo) {
+        HBox result = new HBox();
+
+        result.setAlignment(Pos.TOP_LEFT);
+
+        result.getChildren().add(new CheckBox());
+
+        return result;
     }
 
     private <T> TableWithFilesCell<T> generateFileDescriptionCell(TableColumn<GuiFileInfo, T> column) {
@@ -72,6 +91,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         result.setSpacing(10);
 
         Label pathLabel = new Label(fileInfo.getPath());
+        pathLabel.getStyleClass().add("path-label");
         if (!StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
             pathLabel.setTooltip(generateUnavailableTooltip(fileInfo.getUnavailabilityReason()));
         }
@@ -96,16 +116,12 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         GridPane result = new GridPane();
 
         Label sizeTitle = new Label("size");
-        sizeTitle.getStyleClass().add("size-title");
 
         Label lastModifiedTitle = new Label("last modified");
-        lastModifiedTitle.getStyleClass().add("last-modified-title");
 
         Label size = new Label(GuiUtils.getFileSizeTextual(fileInfo.getSize()));
-        size.getStyleClass().add("size");
 
         Label lastModified = new Label(FORMATTER.print(fileInfo.getLastModified()));
-        lastModified.getStyleClass().add("last-modified");
 
         result.addRow(0, sizeTitle, new Region(), size);
         result.addRow(1, lastModifiedTitle, new Region(), lastModified);
@@ -135,6 +151,8 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         }
 
         for (GuiSubtitleStreamInfo subtitleStreamInfo : fileInfo.getSubtitleStreamsInfo()) {
+            HBox subtitleStreamPane = new HBox();
+
             RadioButton subtitleRadioButton = new RadioButton();
 
             subtitleRadioButton.getStyleClass().add("subtitle-radio");
@@ -146,7 +164,23 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
             subtitleRadioButton.setText(text);
 
-            result.getChildren().add(subtitleRadioButton);
+            Region spacer = new Region();
+
+            HBox sizePane = new HBox();
+            HBox.setHgrow(sizePane, Priority.NEVER);
+            sizePane.setSpacing(5);
+            sizePane.setAlignment(Pos.CENTER);
+
+            Label sizeLabel = new Label("Size: ? KB ");
+
+            Hyperlink getSizeLink = new Hyperlink("get size");
+
+            sizePane.getChildren().addAll(sizeLabel, getSizeLink);
+
+            subtitleStreamPane.getChildren().addAll(subtitleRadioButton, spacer, sizePane);
+            HBox.setHgrow(spacer, Priority.ALWAYS);
+
+            result.getChildren().add(subtitleStreamPane);
         }
 
         return result;

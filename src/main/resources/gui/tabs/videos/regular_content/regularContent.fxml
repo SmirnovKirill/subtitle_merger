@@ -60,14 +60,15 @@
             </HBox>
         </VBox>
 
-        <VBox spacing="15" VBox.vgrow="ALWAYS">
+        <VBox spacing="10" VBox.vgrow="ALWAYS">
+            <HBox><Label text="0 videos selected"/></HBox>
             <HBox spacing="10" alignment="CENTER_LEFT">
                 <CheckBox fx:id="hideUnavailableCheckbox" onAction="#hideUnavailableClicked" text="hide unavailable"/>
                 <Region HBox.hgrow="ALWAYS"/>
-                <Button text="Get all sizes">
+                <Button text="Auto-select subtitles">
                     <graphic>
                         <ImageView fitHeight="16" fitWidth="16">
-                            <Image url="/gui/icons/get.png"/>
+                            <Image url="/gui/icons/computer.png"/>
                         </ImageView>
                     </graphic>
                 </Button>
@@ -82,17 +83,13 @@
             <TableWithFiles fx:id="tableWithFiles" VBox.vgrow="ALWAYS">
                 <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
                 <columns>
+                    <TableColumn sortable="false" reorderable="false" minWidth="26" maxWidth="26" resizable="false">
+                    </TableColumn>
                     <TableColumn sortable="false" reorderable="false" minWidth="170">
                         <text>file</text>
                     </TableColumn>
-                    <TableColumn sortable="false" reorderable="false" minWidth="100">
-                        <text>upper subtitles</text>
-                    </TableColumn>
-                    <TableColumn sortable="false" reorderable="false" minWidth="100">
-                        <text>lower subtitles</text>
-                    </TableColumn>
                     <TableColumn sortable="false" reorderable="false" styleClass="last-column" minWidth="100">
-                        <text>action</text>
+                        <text>subtitles</text>
                     </TableColumn>
                 </columns>
             </TableWithFiles>

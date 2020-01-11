@@ -13,6 +13,7 @@ import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.GuiUtils;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import lombok.extern.apachecommons.CommonsLog;
@@ -166,6 +167,17 @@ public class RegularContentController {
 
     private void updateTableContent(GetFilesInfoTask task) {
         tableWithFiles.setItems(FXCollections.observableArrayList(task.getValue().getGuiFilesInfo()));
+
+        /*
+         * JavaFX can't set initial column size when using CONSTRAINED_RESIZE_POLICY
+         * (https://bugs.openjdk.java.net/browse/JDK-8091269). So here is a workaround - after setting table's
+         * content resize the required column manually. I want the column with the file description to have 30% width
+         * here.
+         */
+        TableColumn<GuiFileInfo, ?> fileDescriptionColumn = tableWithFiles.getColumns().get(1);
+        double actualWidth = fileDescriptionColumn.getWidth();
+        double desiredWidth = tableWithFiles.getWidth() * 0.3;
+        tableWithFiles.resizeColumn(fileDescriptionColumn, desiredWidth - actualWidth);
     }
 
     private void stopProgress() {
