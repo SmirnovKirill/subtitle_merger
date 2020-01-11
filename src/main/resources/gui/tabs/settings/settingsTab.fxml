@@ -10,7 +10,7 @@
      fx:controller="kirill.subtitlemerger.gui.tabs.settings.SettingsTabController"
      text="Settings">
     <fx:define>
-        <Tooltip fx:id="languageTooltip" text="this setting will be used to auto-detect subtitles&#10;or merging when working with videos">
+        <Tooltip fx:id="languageTooltip" text="this setting will be used to auto-select subtitles&#10;to merge when working with videos">
             <showDelay><Duration fx:constant="ZERO"/></showDelay>
             <showDuration><Duration fx:constant="INDEFINITE"/></showDuration>
         </Tooltip>
