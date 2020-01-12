@@ -32,6 +32,7 @@
 }
 
 .table-view .table-row-cell .label,
+.table-view .table-row-cell .button,
 .table-view .table-row-cell .radio-button,
 .table-view .table-row-cell .hyperlink {
     -fx-font-size: 0.75em;
@@ -43,4 +44,16 @@
 
 .table-view .table-row-cell .path-label {
     -fx-font-size: 1.0em;
+}
+
+.add-subtitle-file {
+    -fx-padding: 3;
+    -fx-background-color: transparent;
+}
+
+.add-subtitle-file:hover {
+    -fx-background-color: -fx-shadow-highlight-color, -fx-outer-border, -fx-inner-border, -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+    -fx-color: -fx-hover-base;
 }

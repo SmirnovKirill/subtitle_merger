@@ -1,8 +1,11 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files;
 
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.util.Duration;
 import kirill.subtitlemerger.gui.GuiUtils;
@@ -11,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 public class TableWithFiles extends TableView<GuiFileInfo> {
@@ -33,9 +37,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             protected void updateItem(GuiFileInfo fileInfo, boolean empty){
                 super.updateItem(fileInfo, empty);
 
-                if (empty || fileInfo == null) {
-                    setGraphic(null);
-                    setText(null);
+                if (fileInfo == null) {
                     return;
                 }
 
@@ -62,8 +64,8 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         TableColumn<GuiFileInfo, ?> fileDescriptionColumn = getColumns().get(1);
         fileDescriptionColumn.setCellFactory(this::generateFileDescriptionCell);
 
-        TableColumn<GuiFileInfo, ?> upperSubtitlesColumn = getColumns().get(2);
-        upperSubtitlesColumn.setCellFactory(this::generateUpperSubtitlesCell);
+        TableColumn<GuiFileInfo, ?> subtitlesColumn = getColumns().get(2);
+        subtitlesColumn.setCellFactory(this::generateSubtitlesCell);
     }
 
     private <T> TableWithFilesCell<T> generateSelectedCell(TableColumn<GuiFileInfo, T> column) {
@@ -87,7 +89,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
     private static Pane generateFileDescriptionCellPane(GuiFileInfo fileInfo) {
         VBox result = new VBox();
 
-        result.setPadding(new Insets(3));
+        result.setPadding(new Insets(3, 5, 3, 3));
         result.setSpacing(10);
 
         Label pathLabel = new Label(fileInfo.getPath());
@@ -137,51 +139,104 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         return result;
     }
 
-    private <T> TableWithFilesCell<T> generateUpperSubtitlesCell(TableColumn<GuiFileInfo, T> column) {
-        return new TableWithFilesCell<>(TableWithFiles::generateUpperSubtitlesCellPane);
+    private <T> TableWithFilesCell<T> generateSubtitlesCell(TableColumn<GuiFileInfo, T> column) {
+        return new TableWithFilesCell<>(TableWithFiles::generateSubtitlesCellPane);
     }
 
-    private static Pane generateUpperSubtitlesCellPane(GuiFileInfo fileInfo) {
-        VBox result = new VBox();
+    private static Pane generateSubtitlesCellPane(GuiFileInfo fileInfo) {
+        GridPane result = new GridPane();
 
-        result.setSpacing(2);
+        result.setPadding(new Insets(3, 3, 3, 5));
 
         if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreamsInfo())) {
             return result;
         }
 
+        Pane hiddenPane = generateHiddenPane();
+
+        Hyperlink getAllSizes = new Hyperlink("get all sizes");
+
+        result.addRow(result.getRowCount(), hiddenPane, getAllSizes, new Region());
+
+        GridPane.setColumnSpan(getAllSizes, 2);
+        GridPane.setHalignment(getAllSizes, HPos.CENTER);
+
+        GridPane.setMargin(hiddenPane, new Insets(0, 0, 10, 0));
+        GridPane.setMargin(getAllSizes, new Insets(0, 5, 10, 0));
+        GridPane.setMargin(result.getChildren().get(2), new Insets(0, 0, 10, 0));
+
         for (GuiSubtitleStreamInfo subtitleStreamInfo : fileInfo.getSubtitleStreamsInfo()) {
-            HBox subtitleStreamPane = new HBox();
-
-            RadioButton subtitleRadioButton = new RadioButton();
-
-            subtitleRadioButton.getStyleClass().add("subtitle-radio");
-
-            String text = subtitleStreamInfo.getLanguage();
-            if (!StringUtils.isBlank(subtitleStreamInfo.getTitle())) {
-                text += " (" + subtitleStreamInfo.getTitle() + ")";
+            if (!Arrays.asList("rus", "eng").contains(subtitleStreamInfo.getLanguage())) {
+                continue;
             }
 
-            subtitleRadioButton.setText(text);
+            HBox titlePane = new HBox();
 
-            Region spacer = new Region();
+            Label language = new Label(subtitleStreamInfo.getLanguage().toUpperCase());
+            titlePane.getChildren().add(language);
 
-            HBox sizePane = new HBox();
-            HBox.setHgrow(sizePane, Priority.NEVER);
-            sizePane.setSpacing(5);
-            sizePane.setAlignment(Pos.CENTER);
+            if (!StringUtils.isBlank(subtitleStreamInfo.getTitle())) {
+                titlePane.getChildren().add(new Label(" (" + subtitleStreamInfo.getTitle() + ")"));
+            }
 
             Label sizeLabel = new Label("Size: ? KB ");
 
             Hyperlink getSizeLink = new Hyperlink("get size");
 
-            sizePane.getChildren().addAll(sizeLabel, getSizeLink);
+            HBox radios = new HBox();
+            radios.setSpacing(10);
+            radios.setAlignment(Pos.CENTER);
 
-            subtitleStreamPane.getChildren().addAll(subtitleRadioButton, spacer, sizePane);
-            HBox.setHgrow(spacer, Priority.ALWAYS);
+            ToggleGroup toggleGroup = new ToggleGroup();
 
-            result.getChildren().add(subtitleStreamPane);
+            RadioButton upper = new RadioButton("upper");
+            upper.setToggleGroup(toggleGroup);
+            RadioButton lower = new RadioButton("lower");
+            lower.setToggleGroup(toggleGroup);
+
+            radios.getChildren().addAll(upper, lower);
+
+            result.addRow(result.getRowCount(), titlePane, sizeLabel, getSizeLink, radios);
+            GridPane.setHgrow(titlePane, Priority.ALWAYS);
+
+            int bottomMargin = 2;
+
+            titlePane.getStyleClass().add("dott2ed");
+            sizeLabel.getStyleClass().add("dott2ed");
+            getSizeLink.getStyleClass().add("dott2ed");
+            radios.getStyleClass().add("dot2ted");
+
+            GridPane.setMargin(titlePane, new Insets(0, 0, bottomMargin, 0));
+            GridPane.setMargin(sizeLabel, new Insets(0, 0, bottomMargin, 0));
+            GridPane.setMargin(getSizeLink, new Insets(0, 5, bottomMargin, 0));
+            GridPane.setMargin(radios, new Insets(0, 0, bottomMargin, 0));
         }
+
+        Button button = new Button("Add subtitle file");
+        button.getStyleClass().add("add-subtitle-file");
+        Image image = new Image("/gui/icons/add.png");
+        ImageView imageView = new ImageView(image);
+        imageView.setFitWidth(8);
+        imageView.setFitHeight(imageView.getFitWidth());
+        button.setGraphic(imageView);
+
+        result.addRow(result.getRowCount(), button);
+
+        GridPane.setColumnSpan(button, 4);
+        GridPane.setMargin(button, new Insets(5, 0, 0, 0));
+
+        return result;
+    }
+
+    private static Pane generateHiddenPane() {
+        HBox result = new HBox();
+
+        result.setAlignment(Pos.CENTER_LEFT);
+
+        result.getChildren().addAll(
+                new Label("8 hidden "),
+                new Hyperlink("show all")
+        );
 
         return result;
     }
