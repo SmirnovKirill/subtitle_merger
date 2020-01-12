@@ -26,6 +26,11 @@
     -fx-background-insets: 0, 0 0 1 0, 1 0 2 1;
 }
 
+.table-view:focused .table-row-cell:selected .hyperlink {
+    -fx-text-fill: white;
+    -fx-underline: true;
+}
+
 .table-view .table-row-cell .label,
 .table-view .table-row-cell .radio-button,
 .table-view .table-row-cell .hyperlink {
