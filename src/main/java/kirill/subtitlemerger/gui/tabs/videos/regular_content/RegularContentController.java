@@ -13,6 +13,7 @@ import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.GuiUtils;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.*;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
@@ -21,7 +22,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -89,6 +89,8 @@ public class RegularContentController {
 
     private List<FileInfo> filesInfo;
 
+    private List<GuiFileInfo> allGuiFilesInfo;
+
     public void initialize(Stage stage, GuiContext guiContext) {
         this.stage = stage;
         this.guiContext = guiContext;
@@ -146,16 +148,15 @@ public class RegularContentController {
             log.error("failed to save sort by, should not happen: " + ExceptionUtils.getStackTrace(e));
         }
 
-        GetFilesInfoTask task = new GetFilesInfoTask(
-                filesInfo,
-                shouldShowFullFileName(),
+        SortOrShowHideUnavailableTask task = new SortOrShowHideUnavailableTask(
+                allGuiFilesInfo,
                 hideUnavailableCheckbox.isSelected(),
                 guiContext.getSettings().getSortBy(),
                 guiContext.getSettings().getSortDirection()
         );
 
         task.setOnSucceeded(e -> {
-            updateTableContent(task);
+            updateTableContent(task.getValue());
             stopProgress();
         });
 
@@ -163,12 +164,8 @@ public class RegularContentController {
         GuiUtils.startTask(task);
     }
 
-    private boolean shouldShowFullFileName() {
-        return directory == null;
-    }
-
-    private void updateTableContent(GetFilesInfoTask task) {
-        tableWithFiles.setItems(FXCollections.observableArrayList(task.getValue().getGuiFilesInfo()));
+    private void updateTableContent(List<GuiFileInfo> guiFilesToShowInfo) {
+        tableWithFiles.setItems(FXCollections.observableArrayList(guiFilesToShowInfo));
 
         if (!descriptionColumnWidthSet) {
             /*
@@ -220,16 +217,15 @@ public class RegularContentController {
             log.error("failed to save sort direction, should not happen: " + ExceptionUtils.getStackTrace(e));
         }
 
-        GetFilesInfoTask task = new GetFilesInfoTask(
-                filesInfo,
-                shouldShowFullFileName(),
+        SortOrShowHideUnavailableTask task = new SortOrShowHideUnavailableTask(
+                allGuiFilesInfo,
                 hideUnavailableCheckbox.isSelected(),
                 guiContext.getSettings().getSortBy(),
                 guiContext.getSettings().getSortDirection()
         );
 
         task.setOnSucceeded(e -> {
-            updateTableContent(task);
+            updateTableContent(task.getValue());
             stopProgress();
         });
 
@@ -316,7 +312,7 @@ public class RegularContentController {
 
         directory = null;
 
-        GetFilesInfoTask task = new GetFilesInfoTask(
+        LoadSeparateFilesTask task = new LoadSeparateFilesTask(
                 files,
                 guiContext.getSettings().getSortBy(),
                 guiContext.getSettings().getSortDirection(),
@@ -325,8 +321,9 @@ public class RegularContentController {
 
         task.setOnSucceeded(e -> {
             filesInfo = task.getValue().getFilesInfo();
+            allGuiFilesInfo = task.getValue().getAllGuiFilesInfo();
+            updateTableContent(task.getValue().getGuiFilesToShowInfo());
             hideUnavailableCheckbox.setSelected(task.getValue().isHideUnavailable());
-            updateTableContent(task);
 
             chosenDirectoryPane.setVisible(false);
             chosenDirectoryPane.setManaged(false);
@@ -367,7 +364,7 @@ public class RegularContentController {
 
         this.directory = directory;
 
-        GetFilesInfoTask task = new GetFilesInfoTask(
+        LoadDirectoryFilesTask task = new LoadDirectoryFilesTask(
                 this.directory,
                 guiContext.getSettings().getSortBy(),
                 guiContext.getSettings().getSortDirection(),
@@ -376,8 +373,9 @@ public class RegularContentController {
 
         task.setOnSucceeded(e -> {
             filesInfo = task.getValue().getFilesInfo();
+            allGuiFilesInfo = task.getValue().getAllGuiFilesInfo();
+            updateTableContent(task.getValue().getGuiFilesToShowInfo());
             hideUnavailableCheckbox.setSelected(task.getValue().isHideUnavailable());
-            updateTableContent(task);
             chosenDirectoryField.setText(directory.getAbsolutePath());
 
             chosenDirectoryPane.setVisible(true);
@@ -413,7 +411,7 @@ public class RegularContentController {
 
     @FXML
     private void refreshButtonClicked() {
-        GetFilesInfoTask task = new GetFilesInfoTask(
+        LoadDirectoryFilesTask task = new LoadDirectoryFilesTask(
                 this.directory,
                 guiContext.getSettings().getSortBy(),
                 guiContext.getSettings().getSortDirection(),
@@ -422,8 +420,9 @@ public class RegularContentController {
 
         task.setOnSucceeded(e -> {
             filesInfo = task.getValue().getFilesInfo();
+            allGuiFilesInfo = task.getValue().getAllGuiFilesInfo();
+            updateTableContent(task.getValue().getGuiFilesToShowInfo());
             hideUnavailableCheckbox.setSelected(task.getValue().isHideUnavailable());
-            updateTableContent(task);
 
             /* See the huge comment in the hideUnavailableClicked() method. */
             tableWithFiles.scrollTo(0);
@@ -437,16 +436,15 @@ public class RegularContentController {
 
     @FXML
     private void hideUnavailableClicked() {
-        GetFilesInfoTask task = new GetFilesInfoTask(
-                filesInfo,
-                shouldShowFullFileName(),
+        SortOrShowHideUnavailableTask task = new SortOrShowHideUnavailableTask(
+                allGuiFilesInfo,
                 hideUnavailableCheckbox.isSelected(),
                 guiContext.getSettings().getSortBy(),
                 guiContext.getSettings().getSortDirection()
         );
 
         task.setOnSucceeded(e -> {
-            updateTableContent(task);
+            updateTableContent(task.getValue());
 
             /*
              * There is a strange bug with TableView - when the list is shrunk in size (because for example
@@ -472,23 +470,18 @@ public class RegularContentController {
             return;
         }
 
-        List<String> selectedPaths = new ArrayList<>();
-        for (int index : indices) {
-            selectedPaths.add(tableWithFiles.getItems().get(index).getPath());
-        }
-
-        filesInfo.removeIf(fileInfo -> selectedPaths.contains(fileInfo.getFile().getAbsolutePath()));
-
-        GetFilesInfoTask task = new GetFilesInfoTask(
+        RemoveFilesTask task = new RemoveFilesTask(
                 filesInfo,
-                shouldShowFullFileName(),
-                hideUnavailableCheckbox.isSelected(),
-                guiContext.getSettings().getSortBy(),
-                guiContext.getSettings().getSortDirection()
+                allGuiFilesInfo,
+                tableWithFiles.getItems(),
+                indices
         );
 
         task.setOnSucceeded(e -> {
-            updateTableContent(task);
+            filesInfo = task.getValue().getFilesInfo();
+            allGuiFilesInfo = task.getValue().getAllGuiFilesInfo();
+            updateTableContent(task.getValue().getGuiFilesToShowInfo());
+
             stopProgress();
         });
 
@@ -498,20 +491,21 @@ public class RegularContentController {
 
     @FXML
     private void addButtonClicked() {
-        List<File> chosenFiles = getFiles(stage, guiContext.getSettings());
-        if (CollectionUtils.isEmpty(chosenFiles)) {
+        List<File> filesToAdd = getFiles(stage, guiContext.getSettings());
+        if (CollectionUtils.isEmpty(filesToAdd)) {
             return;
         }
 
         try {
-            guiContext.getSettings().saveLastDirectoryWithVideos(chosenFiles.get(0).getParent());
+            guiContext.getSettings().saveLastDirectoryWithVideos(filesToAdd.get(0).getParent());
         } catch (GuiSettings.ConfigException e) {
             log.error("failed to save last directory with videos, that shouldn't happen: " + getStackTrace(e));
         }
 
-        GetFilesInfoTask task = new GetFilesInfoTask(
+        AddFilesTask task = new AddFilesTask(
                 filesInfo,
-                chosenFiles,
+                filesToAdd,
+                allGuiFilesInfo,
                 hideUnavailableCheckbox.isSelected(),
                 guiContext.getSettings().getSortBy(),
                 guiContext.getSettings().getSortDirection(),
@@ -520,7 +514,8 @@ public class RegularContentController {
 
         task.setOnSucceeded(e -> {
             filesInfo = task.getValue().getFilesInfo();
-            updateTableContent(task);
+            allGuiFilesInfo = task.getValue().getAllGuiFilesInfo();
+            updateTableContent(task.getValue().getGuiFilesToShowInfo());
 
             stopProgress();
         });
