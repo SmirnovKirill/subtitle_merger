@@ -77,7 +77,14 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
         result.setAlignment(Pos.TOP_LEFT);
 
-        result.getChildren().add(new CheckBox());
+        if (!StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
+            return result;
+        }
+
+        CheckBox checkBox = new CheckBox();
+        checkBox.selectedProperty().bindBidirectional(fileInfo.selectedProperty());
+
+        result.getChildren().add(checkBox);
 
         return result;
     }
