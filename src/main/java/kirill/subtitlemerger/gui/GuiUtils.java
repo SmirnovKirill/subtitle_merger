@@ -1,6 +1,8 @@
 package kirill.subtitlemerger.gui;
 
 import javafx.concurrent.Task;
+import javafx.scene.control.Tooltip;
+import javafx.util.Duration;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -30,5 +32,14 @@ public class GuiUtils {
         Thread thread = new Thread(task);
         thread.setDaemon(true);
         thread.start();
+    }
+
+    public static Tooltip generateTooltip(String text) {
+        Tooltip result = new Tooltip(text);
+
+        result.setShowDelay(Duration.ZERO);
+        result.setShowDuration(Duration.INDEFINITE);
+
+        return result;
     }
 }

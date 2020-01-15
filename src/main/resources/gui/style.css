@@ -8,7 +8,7 @@
 }
 
 .label-warn {
-    -fx-text-fill: orange;
+    -fx-text-fill: #ff8c00;
 }
 
 .label-error {

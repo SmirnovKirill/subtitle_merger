@@ -85,6 +85,12 @@ public class RegularContentController {
     private CheckBox hideUnavailableCheckbox;
 
     @FXML
+    private Pane autoSelectButtonWrapper;
+
+    @FXML
+    private Button autoSelectButton;
+
+    @FXML
     private TableWithFiles tableWithFiles;
 
     @FXML
@@ -120,6 +126,7 @@ public class RegularContentController {
                         guiContext.getSettings()
                 )
         );
+        this.tableWithFiles.selectedProperty().addListener(this::autoSelectedVisibleListener);
 
         this.sortByGroup.selectedToggleProperty().addListener(this::sortByChanged);
         this.sortDirectionGroup.selectedToggleProperty().addListener(this::sortDirectionChanged);
@@ -157,6 +164,16 @@ public class RegularContentController {
                         .then(oneItemBinding)
                         .otherwise(zeroOrMultipleItemsBinding)
         );
+    }
+
+    private void autoSelectedVisibleListener(Observable observable) {
+        if (tableWithFiles.getSelected() == 0) {
+            autoSelectButton.setDisable(true);
+            Tooltip.install(autoSelectButtonWrapper, GuiUtils.generateTooltip("no videos are selected for merge"));
+        } else {
+            autoSelectButton.setDisable(false);
+            Tooltip.install(autoSelectButtonWrapper, null);
+        }
     }
 
     private void sortByChanged(Observable observable) {
@@ -345,23 +362,23 @@ public class RegularContentController {
     }
 
     void setResult(String success, String warn, String error) {
-        if (!StringUtils.isBlank(success)) {
+        if (!StringUtils.isBlank(success) && (!StringUtils.isBlank(warn) || !StringUtils.isBlank(error))) {
+            resultLabelSuccess.setText(success + ", ");
+        } else if (!StringUtils.isBlank(success)) {
             resultLabelSuccess.setText(success);
         } else {
             resultLabelSuccess.setText("");
         }
 
-        if (!StringUtils.isBlank(warn) && !StringUtils.isBlank(success)) {
-            resultLabelWarn.setText(", " + warn);
+        if (!StringUtils.isBlank(warn) && !StringUtils.isBlank(error)) {
+            resultLabelWarn.setText(warn + ", ");
         } else if (!StringUtils.isBlank(warn)) {
             resultLabelWarn.setText(warn);
         } else {
             resultLabelWarn.setText("");
         }
 
-        if (!StringUtils.isBlank(error) && (!StringUtils.isBlank(success) || !StringUtils.isBlank(warn))) {
-            resultLabelError.setText(", " + error);
-        } else if (!StringUtils.isBlank(error)) {
+        if (!StringUtils.isBlank(error)) {
             resultLabelError.setText(error);
         } else {
             resultLabelError.setText("");

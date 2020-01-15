@@ -133,21 +133,12 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         Label pathLabel = new Label(fileInfo.getPath());
         pathLabel.getStyleClass().add("path-label");
         if (!StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
-            pathLabel.setTooltip(generateUnavailableTooltip(fileInfo.getUnavailabilityReason()));
+            pathLabel.setTooltip(GuiUtils.generateTooltip(fileInfo.getUnavailabilityReason()));
         }
 
         Pane paneWithSizeAndLastModifiedTime = generatePaneWithSizeAndLastModifiedTime(fileInfo, selected);
 
         result.getChildren().addAll(pathLabel, paneWithSizeAndLastModifiedTime);
-
-        return result;
-    }
-
-    private static Tooltip generateUnavailableTooltip(String text) {
-        Tooltip result = new Tooltip(text);
-
-        result.setShowDelay(Duration.ZERO);
-        result.setShowDuration(Duration.INDEFINITE);
 
         return result;
     }

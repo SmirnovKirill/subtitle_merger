@@ -69,13 +69,16 @@
             <HBox spacing="10" alignment="CENTER_LEFT">
                 <CheckBox fx:id="hideUnavailableCheckbox" onAction="#hideUnavailableClicked" text="hide unavailable"/>
                 <Region HBox.hgrow="ALWAYS"/>
-                <Button text="Auto-select subtitles">
-                    <graphic>
-                        <ImageView fitHeight="16" fitWidth="16">
-                            <Image url="/gui/icons/computer.png"/>
-                        </ImageView>
-                    </graphic>
-                </Button>
+                <!-- To be able to use tooltip when button is disabled. -->
+                <Pane fx:id="autoSelectButtonWrapper">
+                    <Button fx:id="autoSelectButton" text="Auto-select subtitles">
+                        <graphic>
+                            <ImageView fitHeight="16" fitWidth="16">
+                                <Image url="/gui/icons/computer.png"/>
+                            </ImageView>
+                        </graphic>
+                    </Button>
+                </Pane>
                 <Button text="Get all subtitle sizes">
                     <graphic>
                         <ImageView fitHeight="16" fitWidth="16">
