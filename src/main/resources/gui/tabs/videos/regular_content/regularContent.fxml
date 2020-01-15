@@ -61,7 +61,7 @@
         </VBox>
 
         <VBox spacing="10" VBox.vgrow="ALWAYS">
-            <HBox><Label text="0 videos selected for merge"/></HBox>
+            <HBox><Label fx:id="selectedForMergeLabel"/></HBox>
             <HBox spacing="10" alignment="CENTER_LEFT">
                 <CheckBox fx:id="hideUnavailableCheckbox" onAction="#hideUnavailableClicked" text="hide unavailable"/>
                 <Region HBox.hgrow="ALWAYS"/>

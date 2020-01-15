@@ -1,5 +1,10 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files;
 
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.LongProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleLongProperty;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -22,8 +27,12 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
     private static final String ROW_UNAVAILABLE_CLASS = "row-unavailable";
 
+    private LongProperty selected;
+
     public TableWithFiles() {
         super();
+
+        this.selected = new SimpleLongProperty(0);
 
         getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         setPlaceholder(new Label("there are no files to display"));
@@ -69,10 +78,10 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
     }
 
     private <T> TableWithFilesCell<T> generateSelectedCell(TableColumn<GuiFileInfo, T> column) {
-        return new TableWithFilesCell<>(TableWithFiles::generateSelectedCellPane);
+        return new TableWithFilesCell<>(this::generateSelectedCellPane);
     }
 
-    private static Pane generateSelectedCellPane(GuiFileInfo fileInfo) {
+    private Pane generateSelectedCellPane(GuiFileInfo fileInfo) {
         HBox result = new HBox();
 
         result.setAlignment(Pos.TOP_LEFT);
@@ -82,7 +91,16 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         }
 
         CheckBox checkBox = new CheckBox();
-        checkBox.selectedProperty().bindBidirectional(fileInfo.selectedProperty());
+
+        checkBox.setSelected(fileInfo.isSelected());
+        checkBox.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            if (Boolean.TRUE.equals(newValue)) {
+                selected.set(selected.getValue() + 1);
+            } else {
+                selected.set(selected.getValue() - 1);
+            }
+            fileInfo.setSelected(newValue);
+        });
 
         result.getChildren().add(checkBox);
 
@@ -90,10 +108,10 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
     }
 
     private <T> TableWithFilesCell<T> generateFileDescriptionCell(TableColumn<GuiFileInfo, T> column) {
-        return new TableWithFilesCell<>(TableWithFiles::generateFileDescriptionCellPane);
+        return new TableWithFilesCell<>(this::generateFileDescriptionCellPane);
     }
 
-    private static Pane generateFileDescriptionCellPane(GuiFileInfo fileInfo) {
+    private Pane generateFileDescriptionCellPane(GuiFileInfo fileInfo) {
         VBox result = new VBox();
 
         result.setPadding(new Insets(3, 5, 3, 3));
@@ -105,7 +123,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             pathLabel.setTooltip(generateUnavailableTooltip(fileInfo.getUnavailabilityReason()));
         }
 
-        Pane paneWithSizeAndLastModifiedTime = generatePaneWithSizeAndLastModifiedTime(fileInfo);
+        Pane paneWithSizeAndLastModifiedTime = generatePaneWithSizeAndLastModifiedTime(fileInfo, selected);
 
         result.getChildren().addAll(pathLabel, paneWithSizeAndLastModifiedTime);
 
@@ -121,12 +139,13 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         return result;
     }
 
-    private static Pane generatePaneWithSizeAndLastModifiedTime(GuiFileInfo fileInfo) {
+    private static Pane generatePaneWithSizeAndLastModifiedTime(GuiFileInfo fileInfo, LongProperty selectedProperty) {
         GridPane result = new GridPane();
 
         Label sizeTitle = new Label("size");
 
         Label lastModifiedTitle = new Label("last modified");
+        lastModifiedTitle.textProperty().bind(Bindings.convert(selectedProperty));
 
         Label size = new Label(GuiUtils.getFileSizeTextual(fileInfo.getSize()));
 
@@ -246,5 +265,17 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         );
 
         return result;
+    }
+
+    public long getSelected() {
+        return selected.get();
+    }
+
+    public LongProperty selectedProperty() {
+        return selected;
+    }
+
+    public void setSelected(long selected) {
+        this.selected.set(selected);
     }
 }

@@ -2,6 +2,7 @@ package kirill.subtitlemerger.gui.tabs.videos.regular_content;
 
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.StringBinding;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -68,6 +69,9 @@ public class RegularContentController {
     private TextField chosenDirectoryField;
 
     @FXML
+    private Label selectedForMergeLabel;
+
+    @FXML
     private CheckBox hideUnavailableCheckbox;
 
     @FXML
@@ -95,6 +99,7 @@ public class RegularContentController {
         this.stage = stage;
         this.guiContext = guiContext;
         saveDefaultSortSettingsIfNotSet(guiContext.getSettings());
+        bindSelectedForMergeText();
         this.sortByGroup = new ToggleGroup();
         this.sortDirectionGroup = new ToggleGroup();
         this.tableWithFiles.initialize();
@@ -125,6 +130,23 @@ public class RegularContentController {
         } catch (GuiSettings.ConfigException e) {
             log.error("failed to save sort parameters, should not happen: " + ExceptionUtils.getStackTrace(e));
         }
+    }
+
+    private void bindSelectedForMergeText() {
+        String suffix = "selected for merge";
+
+        StringBinding oneItemBinding = Bindings.createStringBinding(
+                () -> "1 video " + suffix, tableWithFiles.selectedProperty()
+        );
+        StringBinding zeroOrMultipleItemsBinding = Bindings.createStringBinding(
+                () -> tableWithFiles.getSelected() + " videos " + suffix, tableWithFiles.selectedProperty()
+        );
+
+        selectedForMergeLabel.textProperty().bind(
+                Bindings.when(tableWithFiles.selectedProperty().isEqualTo(1))
+                        .then(oneItemBinding)
+                        .otherwise(zeroOrMultipleItemsBinding)
+        );
     }
 
     private void sortByChanged(Observable observable) {
@@ -165,6 +187,7 @@ public class RegularContentController {
     }
 
     private void updateTableContent(List<GuiFileInfo> guiFilesToShowInfo) {
+        tableWithFiles.setSelected(guiFilesToShowInfo.stream().filter(GuiFileInfo::isSelected).count());
         tableWithFiles.setItems(FXCollections.observableArrayList(guiFilesToShowInfo));
 
         if (!descriptionColumnWidthSet) {
@@ -402,6 +425,7 @@ public class RegularContentController {
     @FXML
     private void backToSelectionClicked() {
         /* Just in case. See the huge comment in the hideUnavailableClicked() method. */
+        tableWithFiles.setSelected(0);
         tableWithFiles.setItems(FXCollections.emptyObservableList());
         descriptionColumnWidthSet = false;
 
