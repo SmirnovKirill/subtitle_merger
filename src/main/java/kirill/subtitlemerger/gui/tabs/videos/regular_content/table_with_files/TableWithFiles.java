@@ -1,9 +1,9 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files;
 
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.LongProperty;
-import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -27,11 +27,14 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
     private static final String ROW_UNAVAILABLE_CLASS = "row-unavailable";
 
+    private BooleanProperty allSelected;
+
     private LongProperty selected;
 
     public TableWithFiles() {
         super();
 
+        this.allSelected = new SimpleBooleanProperty(false);
         this.selected = new SimpleLongProperty(0);
 
         getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
@@ -67,7 +70,17 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
      */
     public void initialize() {
         TableColumn<GuiFileInfo, ?> selectedColumn = getColumns().get(0);
-        selectedColumn.setGraphic(new CheckBox());
+        CheckBox selectAllCheckBox = new CheckBox();
+        selectAllCheckBox.selectedProperty().bindBidirectional(allSelected);
+        selectAllCheckBox.setOnAction(event -> {
+            getItems().forEach(fileInfo -> fileInfo.setSelected(selectAllCheckBox.isSelected()));
+            if (selectAllCheckBox.isSelected()) {
+                selected.setValue(getItems().size());
+            } else {
+                selected.setValue(0);
+            }
+        });
+        selectedColumn.setGraphic(selectAllCheckBox);
         selectedColumn.setCellFactory(this::generateSelectedCell);
 
         TableColumn<GuiFileInfo, ?> fileDescriptionColumn = getColumns().get(1);
@@ -92,14 +105,14 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
         CheckBox checkBox = new CheckBox();
 
-        checkBox.setSelected(fileInfo.isSelected());
-        checkBox.selectedProperty().addListener((observable, oldValue, newValue) -> {
-            if (Boolean.TRUE.equals(newValue)) {
+        checkBox.selectedProperty().bindBidirectional(fileInfo.selectedProperty());
+        checkBox.setOnAction((event) -> {
+            if (checkBox.isSelected()) {
                 selected.set(selected.getValue() + 1);
             } else {
                 selected.set(selected.getValue() - 1);
             }
-            fileInfo.setSelected(newValue);
+            allSelected.set(!CollectionUtils.isEmpty(getItems()) && selected.getValue() == getItems().size());
         });
 
         result.getChildren().add(checkBox);
@@ -265,6 +278,10 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         );
 
         return result;
+    }
+
+    public void setAllSelected(boolean allSelected) {
+        this.allSelected.set(allSelected);
     }
 
     public long getSelected() {

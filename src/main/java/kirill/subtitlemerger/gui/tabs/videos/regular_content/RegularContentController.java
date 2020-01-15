@@ -189,6 +189,10 @@ public class RegularContentController {
     private void updateTableContent(List<GuiFileInfo> guiFilesToShowInfo) {
         tableWithFiles.setSelected(guiFilesToShowInfo.stream().filter(GuiFileInfo::isSelected).count());
         tableWithFiles.setItems(FXCollections.observableArrayList(guiFilesToShowInfo));
+        tableWithFiles.setAllSelected(
+                !CollectionUtils.isEmpty(tableWithFiles.getItems())
+                        && tableWithFiles.getSelected() == tableWithFiles.getItems().size()
+        );
 
         if (!descriptionColumnWidthSet) {
             /*
@@ -427,6 +431,7 @@ public class RegularContentController {
         /* Just in case. See the huge comment in the hideUnavailableClicked() method. */
         tableWithFiles.setSelected(0);
         tableWithFiles.setItems(FXCollections.emptyObservableList());
+        tableWithFiles.setAllSelected(false);
         descriptionColumnWidthSet = false;
 
         choicePane.setVisible(true);
