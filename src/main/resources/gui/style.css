@@ -7,6 +7,10 @@
     -fx-text-fill: green;
 }
 
+.label-warn {
+    -fx-text-fill: orange;
+}
+
 .label-error {
     -fx-text-fill: red;
 }

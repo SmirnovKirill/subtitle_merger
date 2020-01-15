@@ -20,6 +20,7 @@ import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.Ta
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
@@ -67,6 +68,15 @@ public class RegularContentController {
 
     @FXML
     private TextField chosenDirectoryField;
+
+    @FXML
+    private Label resultLabelSuccess;
+
+    @FXML
+    private Label resultLabelWarn;
+
+    @FXML
+    private Label resultLabelError;
 
     @FXML
     private Label selectedForMergeLabel;
@@ -150,6 +160,8 @@ public class RegularContentController {
     }
 
     private void sortByChanged(Observable observable) {
+        clearResult();
+
         RadioMenuItem radioMenuItem = (RadioMenuItem) sortByGroup.getSelectedToggle();
 
         try {
@@ -184,6 +196,12 @@ public class RegularContentController {
 
         showProgress(task);
         GuiUtils.startTask(task);
+    }
+
+    private void clearResult() {
+        resultLabelSuccess.setText("");
+        resultLabelWarn.setText("");
+        resultLabelError.setText("");
     }
 
     private void updateTableContent(List<GuiFileInfo> guiFilesToShowInfo) {
@@ -227,6 +245,8 @@ public class RegularContentController {
     }
 
     private void sortDirectionChanged(Observable observable) {
+        clearResult();
+
         RadioMenuItem radioMenuItem = (RadioMenuItem) sortDirectionGroup.getSelectedToggle();
 
         try {
@@ -324,8 +344,34 @@ public class RegularContentController {
         pane.setVisible(false);
     }
 
+    void setResult(String success, String warn, String error) {
+        if (!StringUtils.isBlank(success)) {
+            resultLabelSuccess.setText(success);
+        } else {
+            resultLabelSuccess.setText("");
+        }
+
+        if (!StringUtils.isBlank(warn) && !StringUtils.isBlank(success)) {
+            resultLabelWarn.setText(", " + warn);
+        } else if (!StringUtils.isBlank(warn)) {
+            resultLabelWarn.setText(warn);
+        } else {
+            resultLabelWarn.setText("");
+        }
+
+        if (!StringUtils.isBlank(error) && (!StringUtils.isBlank(success) || !StringUtils.isBlank(warn))) {
+            resultLabelError.setText(", " + error);
+        } else if (!StringUtils.isBlank(error)) {
+            resultLabelError.setText(error);
+        } else {
+            resultLabelError.setText("");
+        }
+    }
+
     @FXML
     private void separateFilesButtonClicked() {
+        clearResult();
+
         List<File> files = getFiles(stage, guiContext.getSettings());
         if (CollectionUtils.isEmpty(files)) {
             return;
@@ -378,6 +424,8 @@ public class RegularContentController {
 
     @FXML
     private void directoryButtonClicked() {
+        clearResult();
+
         File directory = getDirectory(stage, guiContext.getSettings()).orElse(null);
         if (directory == null) {
             return;
@@ -440,6 +488,8 @@ public class RegularContentController {
 
     @FXML
     private void refreshButtonClicked() {
+        clearResult();
+
         LoadDirectoryFilesTask task = new LoadDirectoryFilesTask(
                 this.directory,
                 guiContext.getSettings().getSortBy(),
@@ -465,6 +515,8 @@ public class RegularContentController {
 
     @FXML
     private void hideUnavailableClicked() {
+        clearResult();
+
         SortOrShowHideUnavailableTask task = new SortOrShowHideUnavailableTask(
                 allGuiFilesInfo,
                 hideUnavailableCheckbox.isSelected(),
@@ -494,6 +546,8 @@ public class RegularContentController {
 
     @FXML
     private void removeButtonClicked() {
+        clearResult();
+
         List<Integer> indices = tableWithFiles.getSelectionModel().getSelectedIndices();
         if (CollectionUtils.isEmpty(indices)) {
             return;
@@ -520,6 +574,8 @@ public class RegularContentController {
 
     @FXML
     private void addButtonClicked() {
+        clearResult();
+
         List<File> filesToAdd = getFiles(stage, guiContext.getSettings());
         if (CollectionUtils.isEmpty(filesToAdd)) {
             return;

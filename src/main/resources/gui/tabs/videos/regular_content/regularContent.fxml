@@ -45,7 +45,7 @@
         <ProgressIndicator fx:id="progressIndicator"/>
         <Label fx:id="progressLabel"/>
     </VBox>
-    <VBox fx:id="resultPane" spacing="40" visible="false">
+    <VBox fx:id="resultPane" visible="false">
         <VBox spacing="5">
             <Hyperlink onAction="#backToSelectionClicked" text="back to selection" styleClass="back-link"/>
             <HBox fx:id="chosenDirectoryPane" spacing="10" alignment="CENTER_LEFT">
@@ -59,9 +59,13 @@
                 </Button>
             </HBox>
         </VBox>
-
+        <HBox minHeight="40" maxHeight="40" alignment="CENTER">
+            <Label fx:id="resultLabelSuccess" styleClass="label-success"/>
+            <Label fx:id="resultLabelWarn" styleClass="label-warn"/>
+            <Label fx:id="resultLabelError" styleClass="label-error"/>
+        </HBox>
         <VBox spacing="10" VBox.vgrow="ALWAYS">
-            <HBox><Label fx:id="selectedForMergeLabel"/></HBox>
+            <HBox spacing="20"><Label fx:id="selectedForMergeLabel"/></HBox>
             <HBox spacing="10" alignment="CENTER_LEFT">
                 <CheckBox fx:id="hideUnavailableCheckbox" onAction="#hideUnavailableClicked" text="hide unavailable"/>
                 <Region HBox.hgrow="ALWAYS"/>
