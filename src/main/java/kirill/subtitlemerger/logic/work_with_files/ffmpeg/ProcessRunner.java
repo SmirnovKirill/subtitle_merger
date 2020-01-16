@@ -1,12 +1,17 @@
 package kirill.subtitlemerger.logic.work_with_files.ffmpeg;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@CommonsLog
 class ProcessRunner {
     /**
      *
@@ -26,8 +31,8 @@ class ProcessRunner {
             throw new ProcessException(ProcessException.Code.FAILED_TO_START, null);
         }
 
-        try {
-            String result;
+        String result = "";
+        try (OutputStream ignored1 = process.getOutputStream(); InputStream ignored2 = process.getErrorStream()){
             try {
                 result = IOUtils.toString(process.getInputStream(), StandardCharsets.UTF_8);
             } catch (IOException e) {
@@ -47,9 +52,9 @@ class ProcessRunner {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new ProcessException(ProcessException.Code.INTERRUPTED, null);
-        } finally {
-            IOUtils.closeQuietly(process.getOutputStream());
-            IOUtils.closeQuietly(process.getErrorStream());
+        } catch (IOException e) {
+            log.warn("failed to close streams: " + ExceptionUtils.getStackTrace(e));
+            return result;
         }
     }
 }

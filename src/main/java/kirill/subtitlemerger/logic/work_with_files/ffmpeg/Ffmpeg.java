@@ -44,6 +44,10 @@ public class Ffmpeg {
                 throw new FfmpegException(FfmpegException.Code.INCORRECT_FFMPEG_PATH);
             }
         } catch (ProcessException e) {
+            if (e.getCode() == ProcessException.Code.INTERRUPTED) {
+                throw  new FfmpegException(FfmpegException.Code.INTERRUPTED);
+            }
+
             log.info("failed to check ffmpeg: " + e.getCode());
             throw new FfmpegException(FfmpegException.Code.INCORRECT_FFMPEG_PATH);
         }
@@ -70,6 +74,10 @@ public class Ffmpeg {
                     )
             );
         } catch (ProcessException e) {
+            if (e.getCode() == ProcessException.Code.INTERRUPTED) {
+                throw  new FfmpegException(FfmpegException.Code.INTERRUPTED);
+            }
+
             log.warn("failed to extract subtitles with ffmpeg: " + e.getCode());
             throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
         }
@@ -118,6 +126,10 @@ public class Ffmpeg {
                         )
                 );
             } catch (ProcessException e) {
+                if (e.getCode() == ProcessException.Code.INTERRUPTED) {
+                    throw  new FfmpegException(FfmpegException.Code.INTERRUPTED);
+                }
+
                 log.warn("failed to inject subtitles with ffmpeg: " + e.getCode());
                 throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
             }
