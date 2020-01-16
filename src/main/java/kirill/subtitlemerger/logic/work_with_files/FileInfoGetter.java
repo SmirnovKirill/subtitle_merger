@@ -98,7 +98,8 @@ public class FileInfoGetter {
                                 null,
                                 SubtitleStreamInfo.UnavailabilityReason.NOT_ALLOWED_CODEC,
                                 getLanguage(stream).orElse(null),
-                                getTitle(stream).orElse(null)
+                                getTitle(stream).orElse(null),
+                                null
                         )
                 );
                 continue;
@@ -110,7 +111,8 @@ public class FileInfoGetter {
                             codec,
                             null,
                             getLanguage(stream).orElse(null),
-                            getTitle(stream).orElse(null)
+                            getTitle(stream).orElse(null),
+                            null
                     )
             );
         }

@@ -5,6 +5,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
@@ -139,6 +140,7 @@ public class RegularContentController {
                 )
         );
         this.tableWithFiles.selectedProperty().addListener(this::selectedAmountChangeListener);
+        this.getAllSizesButton.setOnAction(this::getAllSizesButtonClicked);
 
         this.sortByGroup.selectedToggleProperty().addListener(this::sortByChanged);
         this.sortDirectionGroup.selectedToggleProperty().addListener(this::sortDirectionChanged);
@@ -204,6 +206,22 @@ public class RegularContentController {
             goButton.setDisable(false);
             Tooltip.install(goButtonWrapper, null);
         }
+    }
+
+    private void getAllSizesButtonClicked(ActionEvent event) {
+        LoadSubtitlesTask task = new LoadSubtitlesTask(
+                filesInfo,
+                allGuiFilesInfo,
+                guiContext.getFfmpeg()
+        );
+
+        task.setOnSucceeded(e -> {
+            setResult(task.getValue().getLoadedQuantity() + " loaded", null, null);
+            stopProgress();
+        });
+
+        showProgress(task);
+        GuiUtils.startTask(task);
     }
 
     private void sortByChanged(Observable observable) {
