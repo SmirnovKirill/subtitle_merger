@@ -69,12 +69,13 @@ public class LoadSubtitlesTask extends BackgroundTask<LoadSubtitlesTask.Result> 
         updateMessage("calculating number of subtitles to load...");
 
         int subtitleToLoadCount = getSubtitleToLoadCount();
-        updateProgress(0, subtitleToLoadCount);
 
         int loadableCount = 0;
         int failedToLoadCount = 0;
-        int alreadyLoadedCount = 0;
-        int loadedCount = 0;
+        int loadedBeforeCount = 0;
+        int loadedSuccessfullyCount = 0;
+        int processedCount = 0;
+
         for (FileInfo fileInfo : filesInfo) {
             if (!CollectionUtils.isEmpty(fileInfo.getSubtitleStreamsInfo())) {
                 for (SubtitleStreamInfo subtitleStream : fileInfo.getSubtitleStreamsInfo()) {
@@ -89,12 +90,19 @@ public class LoadSubtitlesTask extends BackgroundTask<LoadSubtitlesTask.Result> 
                     loadableCount++;
 
                     if (subtitleStream.getSubtitles() != null) {
-                        alreadyLoadedCount++;
+                        loadedBeforeCount++;
                         continue;
                     }
 
                     try {
-                        updateMessage(getUpdateMessage(subtitleStream, fileInfo.getFile()));
+                        updateMessage(
+                                getUpdateMessage(
+                                        processedCount,
+                                        subtitleToLoadCount,
+                                        subtitleStream,
+                                        fileInfo.getFile()
+                                )
+                        );
 
                         String subtitleText = ffmpeg.getSubtitlesText(subtitleStream.getIndex(), fileInfo.getFile());
                         subtitleStream.setSubtitles(
@@ -104,16 +112,18 @@ public class LoadSubtitlesTask extends BackgroundTask<LoadSubtitlesTask.Result> 
                                         subtitleStream.getLanguage()
                                 )
                         );
-                        updateProgress(++loadedCount, subtitleToLoadCount);
+                        loadedSuccessfullyCount++;
                     } catch (FfmpegException | Parser.IncorrectFormatException e) {
                         //todo save reason
                         failedToLoadCount++;
                     }
+
+                    processedCount++;
                 }
             }
         }
 
-        return new Result(loadableCount, failedToLoadCount, alreadyLoadedCount, loadedCount);
+        return new Result(loadableCount, failedToLoadCount, loadedBeforeCount, loadedSuccessfullyCount);
     }
 
     private int getSubtitleToLoadCount() {
@@ -146,11 +156,16 @@ public class LoadSubtitlesTask extends BackgroundTask<LoadSubtitlesTask.Result> 
         }
     }
 
-    private static String getUpdateMessage(SubtitleStreamInfo subtitleStream, File file) {
+    private static String getUpdateMessage(
+            int processedCount,
+            int subtitleToLoadCount,
+            SubtitleStreamInfo subtitleStream,
+            File file
+    ) {
         String language = subtitleStream.getLanguage() != null
                 ? subtitleStream.getLanguage().toString().toUpperCase()
                 : "UNKNOWN LANGUAGE";
-        return "getting subtitle "
+        return (processedCount + 1) + "/" + subtitleToLoadCount + " getting subtitle "
                 + language
                 + (StringUtils.isBlank(subtitleStream.getTitle()) ? "" : " " + subtitleStream.getTitle())
                 + " in " + file.getName();
@@ -163,8 +178,8 @@ public class LoadSubtitlesTask extends BackgroundTask<LoadSubtitlesTask.Result> 
 
         private int failedToLoadCount;
 
-        private int alreadyLoadedCount;
+        private int loadedBeforeCount;
 
-        private int loadedCount;
+        private int loadedSuccessfullyCount;
     }
 }

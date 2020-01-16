@@ -216,7 +216,7 @@ public class RegularContentController {
         );
 
         task.setOnSucceeded(e -> {
-            setResult(task.getValue().getLoadedCount() + " loaded", null, null);
+            setResult(task.getValue().getLoadedSuccessfullyCount() + " loaded", null, null);
             stopProgress();
         });
 
