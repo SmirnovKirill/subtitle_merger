@@ -167,6 +167,10 @@ public class RegularContentController {
     }
 
     private void autoSelectedVisibleListener(Observable observable) {
+        setAutoSelectVisibility();
+    }
+
+    private void setAutoSelectVisibility() {
         if (tableWithFiles.getSelected() == 0) {
             autoSelectButton.setDisable(true);
             Tooltip.install(autoSelectButtonWrapper, GuiUtils.generateTooltip("no videos are selected for merge"));
@@ -222,7 +226,12 @@ public class RegularContentController {
     }
 
     private void updateTableContent(List<GuiFileInfo> guiFilesToShowInfo) {
+        long oldSelected = tableWithFiles.getSelected();
         tableWithFiles.setSelected(guiFilesToShowInfo.stream().filter(GuiFileInfo::isSelected).count());
+        if (oldSelected == tableWithFiles.getSelected()) {
+            setAutoSelectVisibility();
+        }
+
         tableWithFiles.setItems(FXCollections.observableArrayList(guiFilesToShowInfo));
         tableWithFiles.setAllSelected(
                 !CollectionUtils.isEmpty(tableWithFiles.getItems())
