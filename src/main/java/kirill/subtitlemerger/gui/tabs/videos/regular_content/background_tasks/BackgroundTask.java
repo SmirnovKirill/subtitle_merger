@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @CommonsLog
-abstract class BackgroundTask<T> extends Task<T> {
+public abstract class BackgroundTask<T> extends Task<T> {
     BackgroundTask() {
         setFailedCancelledCallbacks();
     }

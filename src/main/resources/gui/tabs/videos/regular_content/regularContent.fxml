@@ -41,10 +41,6 @@
             </BorderPane>
         </HBox>
     </VBox>
-    <VBox fx:id="progressPane" spacing="10" alignment="CENTER" visible="false">
-        <ProgressIndicator fx:id="progressIndicator"/>
-        <Label fx:id="progressLabel"/>
-    </VBox>
     <VBox fx:id="resultPane" visible="false">
         <VBox spacing="5">
             <Hyperlink onAction="#backToSelectionClicked" text="back to selection" styleClass="back-link"/>
@@ -116,5 +112,18 @@
                 <Button onAction="#addButtonClicked" text="Add files"/>
             </HBox>
         </VBox>
+    </VBox>
+    <VBox fx:id="progressPane" spacing="10" alignment="CENTER" visible="false">
+        <ProgressIndicator fx:id="progressIndicator"/>
+        <Label fx:id="progressLabel"/>
+        <HBox fx:id="cancelTaskPane" alignment="CENTER" visible="false">
+            <Label text="Please be patient, this may take a while depending on the size. If you want to cancel the task click "/>
+            <Hyperlink fx:id="cancelTaskLink" text="here">
+                <padding>
+                    <Insets/>
+                </padding>
+            </Hyperlink>
+            <Label text="."/>
+        </HBox>
     </VBox>
 </StackPane>

@@ -112,9 +112,17 @@ public class RegularContentController {
     @FXML
     private Button removeSelectedButton;
 
+    @FXML
+    private Pane cancelTaskPane;
+
+    @FXML
+    private Hyperlink cancelTaskLink;
+
     private ToggleGroup sortByGroup;
 
     private ToggleGroup sortDirectionGroup;
+
+    private BackgroundTask<?> currentCancellableTask;
 
     private boolean descriptionColumnWidthSet;
 
@@ -147,6 +155,7 @@ public class RegularContentController {
         this.removeSelectedButton.disableProperty().bind(
                 Bindings.isEmpty(tableWithFiles.getSelectionModel().getSelectedIndices())
         );
+        this.cancelTaskLink.setOnAction(this::cancelTaskClicked);
     }
 
     private static void saveDefaultSortSettingsIfNotSet(GuiSettings settings) {
@@ -214,13 +223,18 @@ public class RegularContentController {
                 allGuiFilesInfo,
                 guiContext.getFfmpeg()
         );
+        currentCancellableTask = task;
 
         task.setOnSucceeded(e -> {
-            setResult(task.getValue().getLoadedSuccessfullyCount() + " loaded", null, null);
+            setResult(task.getLoadedSuccessfullyCount() + " loaded", null, null);
+            stopProgress();
+        });
+        task.setOnCancelled(e -> {
+            setResult(task.getLoadedSuccessfullyCount() + " loaded but cancelled", null, null);
             stopProgress();
         });
 
-        showProgress(task);
+        showProgress(task, true);
         GuiUtils.startTask(task);
     }
 
@@ -259,7 +273,7 @@ public class RegularContentController {
             stopProgress();
         });
 
-        showProgress(task);
+        showProgress(task, false);
         GuiUtils.startTask(task);
     }
 
@@ -304,7 +318,8 @@ public class RegularContentController {
         resultPane.setDisable(false);
     }
 
-    private void showProgress(Task<?> task) {
+    private void showProgress(Task<?> task, boolean canCancel) {
+        cancelTaskPane.setVisible(canCancel);
         choicePane.setVisible(false);
         progressPane.setVisible(true);
         resultPane.setVisible(true);
@@ -346,7 +361,7 @@ public class RegularContentController {
             stopProgress();
         });
 
-        showProgress(task);
+        showProgress(task, false);
         GuiUtils.startTask(task);
     }
 
@@ -404,6 +419,15 @@ public class RegularContentController {
         result.getItems().add(menu);
 
         return result;
+    }
+
+    private void cancelTaskClicked(ActionEvent event) {
+        if (currentCancellableTask == null) {
+            log.error("task is null, that shouldn't happen");
+            return;
+        }
+
+        currentCancellableTask.cancel();
     }
 
     public void show() {
@@ -476,7 +500,7 @@ public class RegularContentController {
             stopProgress();
         });
 
-        showProgress(task);
+        showProgress(task, false);
         GuiUtils.startTask(task);
     }
 
@@ -531,7 +555,7 @@ public class RegularContentController {
             stopProgress();
         });
 
-        showProgress(task);
+        showProgress(task, false);
         GuiUtils.startTask(task);
     }
 
@@ -579,7 +603,7 @@ public class RegularContentController {
             stopProgress();
         });
 
-        showProgress(task);
+        showProgress(task, false);
         GuiUtils.startTask(task);
     }
 
@@ -610,7 +634,7 @@ public class RegularContentController {
             stopProgress();
         });
 
-        showProgress(task);
+        showProgress(task, false);
         GuiUtils.startTask(task);
     }
 
@@ -638,7 +662,7 @@ public class RegularContentController {
             stopProgress();
         });
 
-        showProgress(task);
+        showProgress(task, false);
         GuiUtils.startTask(task);
     }
 
@@ -675,7 +699,7 @@ public class RegularContentController {
             stopProgress();
         });
 
-        showProgress(task);
+        showProgress(task, false);
         GuiUtils.startTask(task);
     }
 }
