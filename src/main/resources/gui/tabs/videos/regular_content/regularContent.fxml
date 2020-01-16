@@ -79,20 +79,24 @@
                         </graphic>
                     </Button>
                 </Pane>
-                <Button text="Get all subtitle sizes">
-                    <graphic>
-                        <ImageView fitHeight="16" fitWidth="16">
-                            <Image url="/gui/icons/get.png"/>
-                        </ImageView>
-                    </graphic>
-                </Button>
-                <Button text="Go!">
-                    <graphic>
-                        <ImageView fitHeight="16" fitWidth="16">
-                            <Image url="/gui/icons/go.png"/>
-                        </ImageView>
-                    </graphic>
-                </Button>
+                <Pane fx:id="getAllSizesButtonWrapper">
+                    <Button fx:id="getAllSizesButton" text="Get all subtitle sizes">
+                        <graphic>
+                            <ImageView fitHeight="16" fitWidth="16">
+                                <Image url="/gui/icons/get.png"/>
+                            </ImageView>
+                        </graphic>
+                    </Button>
+                </Pane>
+                <Pane fx:id="goButtonWrapper">
+                    <Button fx:id="goButton" text="Go!">
+                        <graphic>
+                            <ImageView fitHeight="16" fitWidth="16">
+                                <Image url="/gui/icons/go.png"/>
+                            </ImageView>
+                        </graphic>
+                    </Button>
+                </Pane>
             </HBox>
             <TableWithFiles fx:id="tableWithFiles" VBox.vgrow="ALWAYS">
                 <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>

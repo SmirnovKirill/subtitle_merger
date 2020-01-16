@@ -91,6 +91,18 @@ public class RegularContentController {
     private Button autoSelectButton;
 
     @FXML
+    private Pane getAllSizesButtonWrapper;
+
+    @FXML
+    private Button getAllSizesButton;
+
+    @FXML
+    private Pane goButtonWrapper;
+
+    @FXML
+    private Button goButton;
+
+    @FXML
     private TableWithFiles tableWithFiles;
 
     @FXML
@@ -126,7 +138,7 @@ public class RegularContentController {
                         guiContext.getSettings()
                 )
         );
-        this.tableWithFiles.selectedProperty().addListener(this::autoSelectedVisibleListener);
+        this.tableWithFiles.selectedProperty().addListener(this::selectedAmountChangeListener);
 
         this.sortByGroup.selectedToggleProperty().addListener(this::sortByChanged);
         this.sortDirectionGroup.selectedToggleProperty().addListener(this::sortDirectionChanged);
@@ -166,17 +178,31 @@ public class RegularContentController {
         );
     }
 
-    private void autoSelectedVisibleListener(Observable observable) {
-        setAutoSelectVisibility();
+    private void selectedAmountChangeListener(Observable observable) {
+        setActionButtonsVisibility();
     }
 
-    private void setAutoSelectVisibility() {
+    private void setActionButtonsVisibility() {
         if (tableWithFiles.getSelected() == 0) {
+            String tooltipText = "no videos are selected for merge";
+
             autoSelectButton.setDisable(true);
-            Tooltip.install(autoSelectButtonWrapper, GuiUtils.generateTooltip("no videos are selected for merge"));
+            Tooltip.install(autoSelectButtonWrapper, GuiUtils.generateTooltip(tooltipText));
+
+            getAllSizesButton.setDisable(true);
+            Tooltip.install(getAllSizesButtonWrapper, GuiUtils.generateTooltip(tooltipText));
+
+            goButton.setDisable(true);
+            Tooltip.install(goButtonWrapper, GuiUtils.generateTooltip(tooltipText));
         } else {
             autoSelectButton.setDisable(false);
             Tooltip.install(autoSelectButtonWrapper, null);
+
+            getAllSizesButton.setDisable(false);
+            Tooltip.install(getAllSizesButtonWrapper, null);
+
+            goButton.setDisable(false);
+            Tooltip.install(goButtonWrapper, null);
         }
     }
 
@@ -229,7 +255,7 @@ public class RegularContentController {
         long oldSelected = tableWithFiles.getSelected();
         tableWithFiles.setSelected(guiFilesToShowInfo.stream().filter(GuiFileInfo::isSelected).count());
         if (oldSelected == tableWithFiles.getSelected()) {
-            setAutoSelectVisibility();
+            setActionButtonsVisibility();
         }
 
         tableWithFiles.setItems(FXCollections.observableArrayList(guiFilesToShowInfo));
