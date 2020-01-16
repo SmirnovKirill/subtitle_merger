@@ -68,13 +68,13 @@ public class LoadSubtitlesTask extends BackgroundTask<LoadSubtitlesTask.Result> 
         updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
         updateMessage("calculating number of subtitles to load...");
 
-        int subtitlesToLoadQuantity = getSubtitlesToLoadQuantity();
-        updateProgress(0, subtitlesToLoadQuantity);
+        int subtitleToLoadCount = getSubtitleToLoadCount();
+        updateProgress(0, subtitleToLoadCount);
 
-        int loadableQuantity = 0;
-        int failedToLoadQuantity = 0;
-        int alreadyLoadedQuantity = 0;
-        int loadedQuantity = 0;
+        int loadableCount = 0;
+        int failedToLoadCount = 0;
+        int alreadyLoadedCount = 0;
+        int loadedCount = 0;
         for (FileInfo fileInfo : filesInfo) {
             if (!CollectionUtils.isEmpty(fileInfo.getSubtitleStreamsInfo())) {
                 for (SubtitleStreamInfo subtitleStream : fileInfo.getSubtitleStreamsInfo()) {
@@ -86,10 +86,10 @@ public class LoadSubtitlesTask extends BackgroundTask<LoadSubtitlesTask.Result> 
                         continue;
                     }
 
-                    loadableQuantity++;
+                    loadableCount++;
 
                     if (subtitleStream.getSubtitles() != null) {
-                        alreadyLoadedQuantity++;
+                        alreadyLoadedCount++;
                         continue;
                     }
 
@@ -104,18 +104,19 @@ public class LoadSubtitlesTask extends BackgroundTask<LoadSubtitlesTask.Result> 
                                         subtitleStream.getLanguage()
                                 )
                         );
-                        updateProgress(++loadedQuantity, subtitlesToLoadQuantity);
+                        updateProgress(++loadedCount, subtitleToLoadCount);
                     } catch (FfmpegException | Parser.IncorrectFormatException e) {
-                        failedToLoadQuantity++;
+                        //todo save reason
+                        failedToLoadCount++;
                     }
                 }
             }
         }
 
-        return new Result(loadableQuantity, failedToLoadQuantity, alreadyLoadedQuantity, loadedQuantity);
+        return new Result(loadableCount, failedToLoadCount, alreadyLoadedCount, loadedCount);
     }
 
-    private int getSubtitlesToLoadQuantity() {
+    private int getSubtitleToLoadCount() {
         if (subtitleIndex != null) {
             return  1;
         } else {
@@ -158,12 +159,12 @@ public class LoadSubtitlesTask extends BackgroundTask<LoadSubtitlesTask.Result> 
     @AllArgsConstructor
     @Getter
     public static class Result {
-        private int loadableQuantity;
+        private int loadableCount;
 
-        private int failedToLoadQuantity;
+        private int failedToLoadCount;
 
-        private int alreadyLoadedQuantity;
+        private int alreadyLoadedCount;
 
-        private int loadedQuantity;
+        private int loadedCount;
     }
 }

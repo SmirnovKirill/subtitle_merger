@@ -139,7 +139,7 @@ public class RegularContentController {
                         guiContext.getSettings()
                 )
         );
-        this.tableWithFiles.selectedProperty().addListener(this::selectedAmountChangeListener);
+        this.tableWithFiles.selectedProperty().addListener(this::selectedCountChangeListener);
         this.getAllSizesButton.setOnAction(this::getAllSizesButtonClicked);
 
         this.sortByGroup.selectedToggleProperty().addListener(this::sortByChanged);
@@ -180,7 +180,7 @@ public class RegularContentController {
         );
     }
 
-    private void selectedAmountChangeListener(Observable observable) {
+    private void selectedCountChangeListener(Observable observable) {
         setActionButtonsVisibility();
     }
 
@@ -216,7 +216,7 @@ public class RegularContentController {
         );
 
         task.setOnSucceeded(e -> {
-            setResult(task.getValue().getLoadedQuantity() + " loaded", null, null);
+            setResult(task.getValue().getLoadedCount() + " loaded", null, null);
             stopProgress();
         });
 

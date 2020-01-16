@@ -27,7 +27,7 @@ public class SubtitleInjector {
                 result,
                 title,
                 mainLanguage,
-                fileInfo.getSubtitleStreamsInfo().size(), //todo take highest index + 1, check
+                fileInfo.getSubtitleStreamsInfo().size(),
                 fileInfo.getFile()
         );
     }

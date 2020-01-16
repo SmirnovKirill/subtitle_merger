@@ -89,7 +89,7 @@ public class Ffmpeg {
             Subtitles subtitles,
             String title,
             LanguageAlpha3Code mainLanguage,
-            int subtitleStreamsAmount,
+            int subtitleStreamCount,
             File videoFile
     ) throws FfmpegException {
         /*
@@ -112,7 +112,7 @@ public class Ffmpeg {
                         getArgumentsInjectToFile(
                                 title,
                                 mainLanguage,
-                                subtitleStreamsAmount,
+                                subtitleStreamCount,
                                 videoFile,
                                 outputTemp
                         )
@@ -138,7 +138,7 @@ public class Ffmpeg {
     private List<String> getArgumentsInjectToFile(
             String title,
             LanguageAlpha3Code mainLanguage,
-            int subtitleStreamsAmount,
+            int subtitleStreamCount,
             File videoFile,
             File outputTemp
     ) {
@@ -165,11 +165,11 @@ public class Ffmpeg {
         result.addAll(Arrays.asList("-max_interleave_delta", "0"));
 
         if (mainLanguage != null) {
-            result.addAll(Arrays.asList("-metadata:s:s:" + subtitleStreamsAmount, "language=" + mainLanguage));
+            result.addAll(Arrays.asList("-metadata:s:s:" + subtitleStreamCount, "language=" + mainLanguage));
         }
 
-        result.addAll(Arrays.asList("-metadata:s:s:" + subtitleStreamsAmount, "title=" + title));
-        result.addAll(Arrays.asList("-disposition:s:" + subtitleStreamsAmount, "default"));
+        result.addAll(Arrays.asList("-metadata:s:s:" + subtitleStreamCount, "title=" + title));
+        result.addAll(Arrays.asList("-disposition:s:" + subtitleStreamCount, "default"));
         result.addAll(Arrays.asList("-map", "0"));
         result.addAll(Arrays.asList("-map", "1"));
         result.add(outputTemp.getAbsolutePath());
