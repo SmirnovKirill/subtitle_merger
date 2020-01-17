@@ -1,6 +1,5 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
-import javafx.event.Event;
 import javafx.scene.control.ProgressIndicator;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.logic.core.Parser;
@@ -29,16 +28,19 @@ public class LoadSubtitlesTask extends BackgroundTask<Void> {
     private boolean cancelled;
 
     @Getter
-    private int loadableCount;
+    private int allSubtitleCount;
 
     @Getter
-    private int failedToLoadCount;
+    private int processedCount;
+
+    @Getter
+    private int loadedSuccessfullyCount;
 
     @Getter
     private int loadedBeforeCount;
 
     @Getter
-    private int loadedSuccessfullyCount;
+    private int failedToLoadCount;
 
     public LoadSubtitlesTask(
             List<FileInfo> filesInfo,
@@ -46,7 +48,6 @@ public class LoadSubtitlesTask extends BackgroundTask<Void> {
             Ffmpeg ffmpeg
     ) {
         super();
-        setOnCancelled(this::taskCancelled);
 
         this.filesInfo = filesInfo;
         this.guiFilesInfo = guiFilesInfo;
@@ -59,7 +60,6 @@ public class LoadSubtitlesTask extends BackgroundTask<Void> {
             Ffmpeg ffmpeg
     ) {
         super();
-        setOnCancelled(this::taskCancelled);
 
         this.filesInfo = Collections.singletonList(fileInfo);
         this.guiFilesInfo = Collections.singletonList(guiFileInfo);
@@ -73,7 +73,6 @@ public class LoadSubtitlesTask extends BackgroundTask<Void> {
             Ffmpeg ffmpeg
     ) {
         super();
-        setOnCancelled(this::taskCancelled);
 
         this.subtitleIndex = subtitleIndex;
         this.filesInfo = Collections.singletonList(fileInfo);
@@ -81,18 +80,13 @@ public class LoadSubtitlesTask extends BackgroundTask<Void> {
         this.ffmpeg = ffmpeg;
     }
 
-    private void taskCancelled(Event e) {
-        cancel();
-    }
-
     @Override
     protected Void call() {
         updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
         updateMessage("calculating number of subtitles to load...");
 
-        int subtitleToLoadCount = getSubtitleToLoadCount();
+        initializeCounters();
 
-        int processedCount = 0;
         mainLoop: for (FileInfo fileInfo : filesInfo) {
             if (!CollectionUtils.isEmpty(fileInfo.getSubtitleStreamsInfo())) {
                 for (SubtitleStreamInfo subtitleStream : fileInfo.getSubtitleStreamsInfo()) {
@@ -109,10 +103,8 @@ public class LoadSubtitlesTask extends BackgroundTask<Void> {
                         continue;
                     }
 
-                    loadableCount++;
-
                     if (subtitleStream.getSubtitles() != null) {
-                        loadedBeforeCount++;
+                        processedCount++;
                         continue;
                     }
 
@@ -120,7 +112,7 @@ public class LoadSubtitlesTask extends BackgroundTask<Void> {
                         updateMessage(
                                 getUpdateMessage(
                                         processedCount,
-                                        subtitleToLoadCount,
+                                        allSubtitleCount,
                                         subtitleStream,
                                         fileInfo.getFile()
                                 )
@@ -134,6 +126,7 @@ public class LoadSubtitlesTask extends BackgroundTask<Void> {
                                         subtitleStream.getLanguage()
                                 )
                         );
+
                         loadedSuccessfullyCount++;
                     } catch (FfmpegException e) {
                         if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
@@ -156,33 +149,25 @@ public class LoadSubtitlesTask extends BackgroundTask<Void> {
         return null;
     }
 
-    private int getSubtitleToLoadCount() {
-        if (subtitleIndex != null) {
-            return  1;
-        } else {
-            int result = 0;
+    private void initializeCounters() {
+        for (FileInfo fileInfo : filesInfo) {
+            if (!CollectionUtils.isEmpty(fileInfo.getSubtitleStreamsInfo())) {
+                for (SubtitleStreamInfo subtitleStream : fileInfo.getSubtitleStreamsInfo()) {
+                    if (subtitleStream.getUnavailabilityReason() != null) {
+                        continue;
+                    }
 
-            for (FileInfo fileInfo : filesInfo) {
-                if (!CollectionUtils.isEmpty(fileInfo.getSubtitleStreamsInfo())) {
-                    for (SubtitleStreamInfo subtitleStream : fileInfo.getSubtitleStreamsInfo()) {
-                        if (subtitleStream.getUnavailabilityReason() != null) {
-                            continue;
-                        }
+                    if (subtitleIndex != null && subtitleIndex != subtitleStream.getIndex()) {
+                        continue;
+                    }
 
-                        if (subtitleIndex != null && subtitleIndex != subtitleStream.getIndex()) {
-                            continue;
-                        }
+                    allSubtitleCount++;
 
-                        if (subtitleStream.getSubtitles() != null) {
-                            continue;
-                        }
-
-                        result++;
+                    if (subtitleStream.getSubtitles() != null) {
+                        loadedBeforeCount++;
                     }
                 }
             }
-
-            return result;
         }
     }
 

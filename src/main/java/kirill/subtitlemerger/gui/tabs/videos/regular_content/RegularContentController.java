@@ -226,16 +226,67 @@ public class RegularContentController {
         currentCancellableTask = task;
 
         task.setOnSucceeded(e -> {
-            setResult(task.getLoadedSuccessfullyCount() + " loaded", null, null);
+            showResult(task, false);
             stopProgress();
         });
         task.setOnCancelled(e -> {
-            setResult(task.getLoadedSuccessfullyCount() + " loaded but cancelled", null, null);
+            showResult(task, true);
             stopProgress();
         });
 
         showProgress(task, true);
         GuiUtils.startTask(task);
+    }
+
+    private void showResult(LoadSubtitlesTask task, boolean canceled) {
+        if (task.getAllSubtitleCount() == 0) {
+            if (tableWithFiles.getSelected() == 1) {
+                setResult("nothing to load for the selected file", null, null);
+            } else {
+                setResult("nothing to load for the selected files", null, null);
+            }
+        } else if (task.getProcessedCount() == 0) {
+            if (!canceled) {
+                log.error("that shouldn't happen");
+                throw new IllegalStateException();
+            }
+
+            setResult(null, "haven't load anything because of the cancellation", null);
+        } else {
+            String success = "";
+            if (task.getLoadedSuccessfullyCount() != 0) {
+                success += task.getLoadedSuccessfullyCount() + "/" + task.getAllSubtitleCount();
+                success += " loaded successfully";
+            }
+
+            if (task.getLoadedBeforeCount() != 0) {
+                if (!StringUtils.isBlank(success)) {
+                    success += ", ";
+                }
+
+                success += task.getLoadedBeforeCount() + "/" + task.getAllSubtitleCount();
+                success += " loaded before";
+            }
+
+            String warn = "";
+            if (task.getProcessedCount() != task.getAllSubtitleCount()) {
+                if (!canceled) {
+                    log.error("that shouldn't happen");
+                    throw new IllegalStateException();
+                }
+
+                warn += (task.getAllSubtitleCount() - task.getProcessedCount()) + "/" + task.getAllSubtitleCount();
+                warn += " cancelled";
+            }
+
+            String error = "";
+            if (task.getFailedToLoadCount() != 0) {
+                error += "failed to load " + task.getFailedToLoadCount() + "/" + task.getAllSubtitleCount();
+                error += " subtitles";
+            }
+
+            setResult(success, warn, error);
+        }
     }
 
     private void sortByChanged(Observable observable) {
