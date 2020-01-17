@@ -252,6 +252,24 @@ public class RegularContentController {
             }
 
             setResult(null, "haven't load anything because of the cancellation", null);
+        } else if (task.getLoadedSuccessfullyCount() == task.getAllSubtitleCount()) {
+            if (task.getAllSubtitleCount() == 1) {
+                setResult("subtitle size has been loaded successfully", null, null);
+            } else {
+                setResult("all " + task.getAllSubtitleCount() + " subtitle sizes have been loaded successfully", null, null);
+            }
+        } else if (task.getLoadedBeforeCount() == task.getAllSubtitleCount()) {
+            if (task.getAllSubtitleCount() == 1) {
+                setResult("subtitle size has already been loaded successfully", null, null);
+            } else {
+                setResult("all " + task.getAllSubtitleCount() + " subtitle sizes have already been loaded successfully", null, null);
+            }
+        } else if (task.getFailedToLoadCount() == task.getAllSubtitleCount()) {
+            if (task.getAllSubtitleCount() == 1) {
+                setResult(null, null, "failed to load subtitle size");
+            } else {
+                setResult(null, null, "failed to load all " + task.getAllSubtitleCount() + " subtitle sizes");
+            }
         } else {
             String success = "";
             if (task.getLoadedSuccessfullyCount() != 0) {
