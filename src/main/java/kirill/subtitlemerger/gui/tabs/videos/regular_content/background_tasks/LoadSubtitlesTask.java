@@ -1,8 +1,11 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
+import javafx.application.Platform;
 import javafx.scene.control.ProgressIndicator;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStreamInfo;
 import kirill.subtitlemerger.logic.core.Parser;
+import kirill.subtitlemerger.logic.core.Writer;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStreamInfo;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffmpeg;
@@ -14,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public class LoadSubtitlesTask extends BackgroundTask<Void> {
     private Integer subtitleIndex;
@@ -88,7 +92,21 @@ public class LoadSubtitlesTask extends BackgroundTask<Void> {
         initializeCounters();
 
         mainLoop: for (FileInfo fileInfo : filesInfo) {
+            //todo refactor, ugly
+            boolean absolutePaths = new File(guiFilesInfo.get(0).getPath()).isAbsolute();
+            GuiFileInfo guiFileInfo;
+            if (absolutePaths) {
+                guiFileInfo = guiFilesInfo.stream()
+                        .filter(currentFileInfo -> Objects.equals(currentFileInfo.getPath(), fileInfo.getFile().getAbsolutePath()))
+                        .findFirst().orElseThrow(IllegalStateException::new);
+            } else {
+                guiFileInfo = guiFilesInfo.stream()
+                        .filter(currentFileInfo -> Objects.equals(currentFileInfo.getPath(), fileInfo.getFile().getName()))
+                        .findFirst().orElseThrow(IllegalStateException::new);
+            }
+
             if (!CollectionUtils.isEmpty(fileInfo.getSubtitleStreamsInfo())) {
+                int index = 0;
                 for (SubtitleStreamInfo subtitleStream : fileInfo.getSubtitleStreamsInfo()) {
                     if (isCancelled()) {
                         cancelled = true;
@@ -96,15 +114,18 @@ public class LoadSubtitlesTask extends BackgroundTask<Void> {
                     }
 
                     if (subtitleStream.getUnavailabilityReason() != null) {
+                        index++;
                         continue;
                     }
 
                     if (subtitleIndex != null && subtitleIndex != subtitleStream.getIndex()) {
+                        index++;
                         continue;
                     }
 
                     if (subtitleStream.getSubtitles() != null) {
                         processedCount++;
+                        index++;
                         continue;
                     }
 
@@ -127,6 +148,14 @@ public class LoadSubtitlesTask extends BackgroundTask<Void> {
                                 )
                         );
 
+                        GuiSubtitleStreamInfo guiSubtitleStreamInfo = guiFileInfo.getSubtitleStreamsInfo().get(index);
+                        int subtitleSize = Writer.toSubRipText(subtitleStream.getSubtitles()).getBytes().length;
+
+                        /*
+                         * Have to call this in the JavaFX thread because this change can lead to updates on the screen.
+                         */
+                        Platform.runLater(() -> guiSubtitleStreamInfo.setSize(subtitleSize));
+
                         loadedSuccessfullyCount++;
                     } catch (FfmpegException e) {
                         if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
@@ -142,6 +171,7 @@ public class LoadSubtitlesTask extends BackgroundTask<Void> {
                     }
 
                     processedCount++;
+                    index++;
                 }
             }
         }

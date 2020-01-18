@@ -1,6 +1,7 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files;
 
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.StringBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -12,7 +13,6 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
-import javafx.util.Duration;
 import kirill.subtitlemerger.gui.GuiUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -136,20 +136,19 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             pathLabel.setTooltip(GuiUtils.generateTooltip(fileInfo.getUnavailabilityReason()));
         }
 
-        Pane paneWithSizeAndLastModifiedTime = generatePaneWithSizeAndLastModifiedTime(fileInfo, selected);
+        Pane paneWithSizeAndLastModifiedTime = generatePaneWithSizeAndLastModifiedTime(fileInfo);
 
         result.getChildren().addAll(pathLabel, paneWithSizeAndLastModifiedTime);
 
         return result;
     }
 
-    private static Pane generatePaneWithSizeAndLastModifiedTime(GuiFileInfo fileInfo, LongProperty selectedProperty) {
+    private static Pane generatePaneWithSizeAndLastModifiedTime(GuiFileInfo fileInfo) {
         GridPane result = new GridPane();
 
         Label sizeTitle = new Label("size");
 
         Label lastModifiedTitle = new Label("last modified");
-        lastModifiedTitle.textProperty().bind(Bindings.convert(selectedProperty));
 
         Label size = new Label(GuiUtils.getFileSizeTextual(fileInfo.getSize()));
 
@@ -209,7 +208,20 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
                 titlePane.getChildren().add(new Label(" (" + subtitleStreamInfo.getTitle() + ")"));
             }
 
-            Label sizeLabel = new Label("Size: ? KB ");
+            Label sizeLabel = new Label();
+
+            StringBinding unknownSizeBinding = Bindings.createStringBinding(
+                    () -> "Size: ? KB ", subtitleStreamInfo.sizeProperty()
+            );
+            StringBinding knownSizeBinding = Bindings.createStringBinding(
+                    () -> "Size: " + GuiUtils.getFileSizeTextual(subtitleStreamInfo.getSize()), subtitleStreamInfo.sizeProperty()
+            );
+
+            sizeLabel.textProperty().bind(
+                    Bindings.when(subtitleStreamInfo.sizeProperty().isEqualTo(0))
+                            .then(unknownSizeBinding)
+                            .otherwise(knownSizeBinding)
+            );
 
             Hyperlink getSizeLink = new Hyperlink("get size");
 

@@ -238,6 +238,8 @@ public class RegularContentController {
         GuiUtils.startTask(task);
     }
 
+    //todo test
+    //todo make reusable probably
     private void showResult(LoadSubtitlesTask task, boolean canceled) {
         if (task.getAllSubtitleCount() == 0) {
             if (tableWithFiles.getSelected() == 1) {

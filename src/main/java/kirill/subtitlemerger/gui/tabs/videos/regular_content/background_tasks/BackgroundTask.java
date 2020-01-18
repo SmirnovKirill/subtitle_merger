@@ -7,6 +7,7 @@ import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStreamInfo;
 import kirill.subtitlemerger.logic.LogicConstants;
+import kirill.subtitlemerger.logic.core.Writer;
 import kirill.subtitlemerger.logic.work_with_files.FileInfoGetter;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStreamInfo;
@@ -171,7 +172,10 @@ public abstract class BackgroundTask<T> extends Task<T> {
         return new GuiSubtitleStreamInfo(
                 guiTextFrom(subtitleStreamInfo.getUnavailabilityReason()),
                 subtitleStreamInfo.getLanguage() != null ? subtitleStreamInfo.getLanguage().toString() : "unknown",
-                subtitleStreamInfo.getTitle()
+                subtitleStreamInfo.getTitle(),
+                subtitleStreamInfo.getSubtitles() != null
+                        ? Writer.toSubRipText(subtitleStreamInfo.getSubtitles()).getBytes().length
+                        : 0
         );
     }
 
