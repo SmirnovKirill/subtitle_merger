@@ -192,7 +192,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             return result;
         }
 
-        Pane hiddenPane = generateHiddenPane();
+        Pane hiddenPane = generateHiddenPane(fileInfo);
 
         Hyperlink getAllSizes = new Hyperlink("get all sizes");
         getAllSizes.setOnAction(event -> allSizesLoader.load(fileInfo));
@@ -282,15 +282,34 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         return result;
     }
 
-    private static Pane generateHiddenPane() {
+    private static Pane generateHiddenPane(GuiFileInfo fileInfo) {
         HBox result = new HBox();
 
         result.setAlignment(Pos.CENTER_LEFT);
 
-        result.getChildren().addAll(
-                new Label("8 hidden "),
-                new Hyperlink("show all")
+        StringBinding hiddenBinding = Bindings.createStringBinding(
+                () -> fileInfo.getSubtitleToHideCount() + " hidden ", fileInfo.subtitleToHideCountProperty()
         );
+
+        Label hiddenLabel = new Label();
+        hiddenLabel.visibleProperty().bind(fileInfo.subtitleToHideCountProperty().greaterThan(0));
+        hiddenLabel.managedProperty().bind(fileInfo.subtitleToHideCountProperty().greaterThan(0));
+        hiddenLabel.textProperty().bind(
+                Bindings.when(fileInfo.someSubtitlesHiddenProperty())
+                        .then(hiddenBinding)
+                        .otherwise("")
+        );
+
+        Hyperlink showAllLink = new Hyperlink();
+        showAllLink.visibleProperty().bind(fileInfo.subtitleToHideCountProperty().greaterThan(0));
+        showAllLink.managedProperty().bind(fileInfo.subtitleToHideCountProperty().greaterThan(0));
+        showAllLink.textProperty().bind(
+                Bindings.when(fileInfo.someSubtitlesHiddenProperty())
+                        .then("show all")
+                        .otherwise("hide extra subtitles")
+        );
+
+        result.getChildren().addAll(hiddenLabel, showAllLink);
 
         return result;
     }

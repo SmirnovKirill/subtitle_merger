@@ -831,9 +831,9 @@ public class RegularContentController {
                 .anyMatch(subtitleStreamInfo -> subtitleStreamInfo.getSubtitles() == null);
     }
 
-    public static boolean haveSubtitlesToHide(FileInfo fileInfo, GuiSettings guiSettings) {
+    public static int getSubtitleCanBeHiddenCount(FileInfo fileInfo, GuiSettings guiSettings) {
         if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreamsInfo())) {
-            return false;
+            return 0;
         }
 
         boolean hasSubtitlesWithUpperLanguage = fileInfo.getSubtitleStreamsInfo().stream()
@@ -842,10 +842,16 @@ public class RegularContentController {
         boolean hasSubtitlesWithLowerLanguage = fileInfo.getSubtitleStreamsInfo().stream()
                 .filter(subtitleStreamInfo -> subtitleStreamInfo.getUnavailabilityReason() == null)
                 .anyMatch(subtitleStreamInfo -> subtitleStreamInfo.getLanguage() == guiSettings.getLowerLanguage());
-        boolean hasSubtitlesWithOtherLanguage = fileInfo.getSubtitleStreamsInfo().stream()
+        int subtitlesWithOtherLanguage = (int) fileInfo.getSubtitleStreamsInfo().stream()
                 .filter(subtitleStreamInfo -> subtitleStreamInfo.getUnavailabilityReason() == null)
                 .filter(subtitleStreamInfo -> subtitleStreamInfo.getLanguage() != guiSettings.getUpperLanguage())
-                .anyMatch(subtitleStreamInfo -> subtitleStreamInfo.getLanguage() != guiSettings.getLowerLanguage());
-        return hasSubtitlesWithUpperLanguage && hasSubtitlesWithLowerLanguage && hasSubtitlesWithOtherLanguage;
+                .filter(subtitleStreamInfo -> subtitleStreamInfo.getLanguage() != guiSettings.getLowerLanguage())
+                .count();
+
+        if (!hasSubtitlesWithUpperLanguage || !hasSubtitlesWithLowerLanguage) {
+            return 0;
+        }
+
+        return subtitlesWithOtherLanguage;
     }
 }

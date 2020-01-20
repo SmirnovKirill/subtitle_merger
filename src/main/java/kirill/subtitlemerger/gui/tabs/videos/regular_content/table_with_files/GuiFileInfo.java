@@ -1,7 +1,9 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files;
 
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import lombok.AccessLevel;
 import lombok.Getter;
 import org.joda.time.LocalDateTime;
@@ -32,7 +34,7 @@ public class GuiFileInfo {
 
     private BooleanProperty haveSubtitleSizesToLoad;
 
-    private BooleanProperty haveSubtitlesToHide;
+    private IntegerProperty subtitleToHideCount;
 
     private BooleanProperty someSubtitlesHidden;
 
@@ -48,7 +50,7 @@ public class GuiFileInfo {
             String unavailabilityReason,
             String error,
             boolean haveSubtitleSizesToLoad,
-            boolean haveSubtitlesToHide,
+            int subtitleToHideCount,
             boolean someSubtitlesHidden,
             List<GuiSubtitleStreamInfo> subtitleStreamsInfo
     ) {
@@ -61,7 +63,7 @@ public class GuiFileInfo {
         this.unavailabilityReason = unavailabilityReason;
         this.error = error;
         this.haveSubtitleSizesToLoad = new SimpleBooleanProperty(haveSubtitleSizesToLoad);
-        this.haveSubtitlesToHide = new SimpleBooleanProperty(haveSubtitlesToHide);
+        this.subtitleToHideCount = new SimpleIntegerProperty(subtitleToHideCount);
         this.someSubtitlesHidden = new SimpleBooleanProperty(someSubtitlesHidden);
         this.subtitleStreamsInfo = subtitleStreamsInfo;
     }
@@ -90,16 +92,16 @@ public class GuiFileInfo {
         this.haveSubtitleSizesToLoad.set(haveSubtitleSizesToLoad);
     }
 
-    public boolean isHaveSubtitlesToHide() {
-        return haveSubtitlesToHide.get();
+    public int getSubtitleToHideCount() {
+        return subtitleToHideCount.get();
     }
 
-    public BooleanProperty haveSubtitlesToHideProperty() {
-        return haveSubtitlesToHide;
+    public IntegerProperty subtitleToHideCountProperty() {
+        return subtitleToHideCount;
     }
 
-    public void setHaveSubtitlesToHide(boolean haveSubtitlesToHide) {
-        this.haveSubtitlesToHide.set(haveSubtitlesToHide);
+    public void setSubtitleToHideCount(int subtitleToHideCount) {
+        this.subtitleToHideCount.set(subtitleToHideCount);
     }
 
     public boolean isSomeSubtitlesHidden() {

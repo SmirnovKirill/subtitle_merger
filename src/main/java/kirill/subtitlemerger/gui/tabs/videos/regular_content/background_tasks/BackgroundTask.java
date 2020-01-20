@@ -173,8 +173,8 @@ public abstract class BackgroundTask<T> extends Task<T> {
                 guiTextFrom(fileInfo.getUnavailabilityReason()),
                 "",
                 RegularContentController.haveSubtitlesToLoad(fileInfo),
-                RegularContentController.haveSubtitlesToHide(fileInfo, guiSettings),
-                RegularContentController.haveSubtitlesToHide(fileInfo, guiSettings),
+                RegularContentController.getSubtitleCanBeHiddenCount(fileInfo, guiSettings),
+                RegularContentController.getSubtitleCanBeHiddenCount(fileInfo, guiSettings) != 0,
                 subtitleStreamsInfo
         );
     }
