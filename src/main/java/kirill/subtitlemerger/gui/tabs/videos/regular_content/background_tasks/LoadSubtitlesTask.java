@@ -2,6 +2,7 @@ package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
 import javafx.application.Platform;
 import javafx.scene.control.ProgressIndicator;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStreamInfo;
 import kirill.subtitlemerger.logic.core.Parser;
@@ -17,7 +18,6 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 public class LoadSubtitlesTask extends BackgroundTask<Void> {
     private Integer subtitleIndex;
@@ -92,19 +92,7 @@ public class LoadSubtitlesTask extends BackgroundTask<Void> {
         initializeCounters();
 
         mainLoop: for (FileInfo fileInfo : filesInfo) {
-            //todo refactor, ugly
-            boolean absolutePaths = new File(guiFilesInfo.get(0).getPath()).isAbsolute();
-            GuiFileInfo guiFileInfo;
-            if (absolutePaths) {
-                guiFileInfo = guiFilesInfo.stream()
-                        .filter(currentFileInfo -> Objects.equals(currentFileInfo.getPath(), fileInfo.getFile().getAbsolutePath()))
-                        .findFirst().orElseThrow(IllegalStateException::new);
-            } else {
-                guiFileInfo = guiFilesInfo.stream()
-                        .filter(currentFileInfo -> Objects.equals(currentFileInfo.getPath(), fileInfo.getFile().getName()))
-                        .findFirst().orElseThrow(IllegalStateException::new);
-            }
-
+            GuiFileInfo guiFileInfo = RegularContentController.findMatchingGuiFileInfo(fileInfo, guiFilesInfo);
             if (!CollectionUtils.isEmpty(fileInfo.getSubtitleStreamsInfo())) {
                 int index = 0;
                 for (SubtitleStreamInfo subtitleStream : fileInfo.getSubtitleStreamsInfo()) {

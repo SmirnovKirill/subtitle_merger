@@ -38,12 +38,12 @@ public class RemoveFilesTask extends BackgroundTask<RemoveFilesTask.Result> {
 
         List<String> selectedPaths = new ArrayList<>();
         for (int index : selectedIndices) {
-            selectedPaths.add(guiFilesToShowInfo.get(index).getPath());
+            selectedPaths.add(guiFilesToShowInfo.get(index).getFullPath());
         }
 
         filesInfo.removeIf(fileInfo -> selectedPaths.contains(fileInfo.getFile().getAbsolutePath()));
-        allGuiFilesInfo.removeIf(fileInfo -> selectedPaths.contains(fileInfo.getPath()));
-        guiFilesToShowInfo.removeIf(fileInfo -> selectedPaths.contains(fileInfo.getPath()));
+        allGuiFilesInfo.removeIf(fileInfo -> selectedPaths.contains(fileInfo.getFullPath()));
+        guiFilesToShowInfo.removeIf(fileInfo -> selectedPaths.contains(fileInfo.getFullPath()));
 
         return new Result(filesInfo, allGuiFilesInfo, guiFilesToShowInfo);
     }

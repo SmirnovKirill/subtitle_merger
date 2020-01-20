@@ -10,7 +10,9 @@ import java.util.List;
 
 @Getter
 public class GuiFileInfo {
-    private String path;
+    private String pathToDisplay;
+
+    private String fullPath;
 
     @Getter(AccessLevel.NONE)
     private BooleanProperty selected;
@@ -31,7 +33,8 @@ public class GuiFileInfo {
     private List<GuiSubtitleStreamInfo> subtitleStreamsInfo;
 
     public GuiFileInfo(
-            String path,
+            String pathToDisplay,
+            String fullPath,
             boolean selected,
             LocalDateTime lastModified,
             LocalDateTime added,
@@ -40,7 +43,8 @@ public class GuiFileInfo {
             String error,
             List<GuiSubtitleStreamInfo> subtitleStreamsInfo
     ) {
-        this.path = path;
+        this.pathToDisplay = pathToDisplay;
+        this.fullPath = fullPath;
         this.selected = new SimpleBooleanProperty(selected);
         this.lastModified = lastModified;
         this.added = added;

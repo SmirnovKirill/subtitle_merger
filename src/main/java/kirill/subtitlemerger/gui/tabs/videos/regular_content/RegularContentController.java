@@ -26,6 +26,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
@@ -139,7 +140,10 @@ public class RegularContentController {
         bindSelectedForMergeText();
         this.sortByGroup = new ToggleGroup();
         this.sortDirectionGroup = new ToggleGroup();
-        this.tableWithFiles.initialize();
+        this.tableWithFiles.initialize(
+                this::loadAllFileSubtitleSizes,
+                this::loadSingleFileSubtitleSize
+        );
         this.tableWithFiles.setContextMenu(
                 generateContextMenu(
                         this.sortByGroup,
@@ -218,6 +222,52 @@ public class RegularContentController {
     }
 
     private void getAllSizesButtonClicked(ActionEvent event) {
+        runLoadSubtitlesTask(
+                new LoadSubtitlesTask(
+                        filesInfo,
+                        allGuiFilesInfo,
+                        guiContext.getFfmpeg()
+                )
+        );
+    }
+
+    private void runLoadSubtitlesTask(LoadSubtitlesTask task) {
+        currentCancellableTask = task;
+
+        task.setOnSucceeded(e -> {
+            showResult(task, false);
+            stopProgress();
+        });
+        task.setOnCancelled(e -> {
+            showResult(task, true);
+            stopProgress();
+        });
+
+        showProgress(task, true);
+        GuiUtils.startTask(task);
+    }
+
+    private void loadAllFileSubtitleSizes(GuiFileInfo guiFileInfo) {
+        runLoadSubtitlesTask(
+                new LoadSubtitlesTask(
+                        findMatchingFileInfo(guiFileInfo, filesInfo),
+                        guiFileInfo,
+                        guiContext.getFfmpeg()
+                )
+        );
+    }
+
+    private void loadSingleFileSubtitleSize(GuiFileInfo guiFileInfo, int subtitleIndex) {
+        runLoadSubtitlesTask(
+                new LoadSubtitlesTask(
+                        filesInfo,
+                        allGuiFilesInfo,
+                        guiContext.getFfmpeg()
+                )
+        );
+    }
+
+    private void getAllFileSizesButtonClicked(ActionEvent event) {
         LoadSubtitlesTask task = new LoadSubtitlesTask(
                 filesInfo,
                 allGuiFilesInfo,
@@ -772,5 +822,17 @@ public class RegularContentController {
 
         showProgress(task, false);
         GuiUtils.startTask(task);
+    }
+
+    public static GuiFileInfo findMatchingGuiFileInfo(FileInfo fileInfo, List<GuiFileInfo> guiFilesInfo) {
+        return guiFilesInfo.stream()
+                .filter(guiFileInfo -> Objects.equals(guiFileInfo.getFullPath(), fileInfo.getFile().getAbsolutePath()))
+                .findFirst().orElseThrow(IllegalStateException::new);
+    }
+
+    private static FileInfo findMatchingFileInfo(GuiFileInfo guiFileInfo, List<FileInfo> filesInfo) {
+        return filesInfo.stream()
+                .filter(fileInfo -> Objects.equals(fileInfo.getFile().getAbsolutePath(), guiFileInfo.getFullPath()))
+                .findFirst().orElseThrow(IllegalStateException::new);
     }
 }

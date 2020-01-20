@@ -64,7 +64,7 @@ public abstract class BackgroundTask<T> extends Task<T> {
         Comparator<GuiFileInfo> comparator;
         switch (sortBy) {
             case NAME:
-                comparator = Comparator.comparing(GuiFileInfo::getPath);
+                comparator = Comparator.comparing(GuiFileInfo::getPathToDisplay);
                 break;
             case MODIFICATION_TIME:
                 comparator = Comparator.comparing(GuiFileInfo::getLastModified);
@@ -147,7 +147,7 @@ public abstract class BackgroundTask<T> extends Task<T> {
     }
 
     private static GuiFileInfo from(FileInfo fileInfo, boolean showFullFileName, boolean selected) {
-        String path = showFullFileName ? fileInfo.getFile().getAbsolutePath() : fileInfo.getFile().getName();
+        String pathToDisplay = showFullFileName ? fileInfo.getFile().getAbsolutePath() : fileInfo.getFile().getName();
 
         List<GuiSubtitleStreamInfo> subtitleStreamsInfo = new ArrayList<>();
         if (!CollectionUtils.isEmpty(fileInfo.getSubtitleStreamsInfo())) {
@@ -157,7 +157,8 @@ public abstract class BackgroundTask<T> extends Task<T> {
         }
 
         return new GuiFileInfo(
-                path,
+                pathToDisplay,
+                fileInfo.getFile().getAbsolutePath(),
                 selected,
                 fileInfo.getLastModified(),
                 LocalDateTime.now(),

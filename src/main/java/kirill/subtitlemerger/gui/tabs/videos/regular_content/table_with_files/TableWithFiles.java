@@ -27,6 +27,10 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
     private static final String ROW_UNAVAILABLE_CLASS = "row-unavailable";
 
+    private AllFileSubtitleSizesLoader allSizesLoader;
+
+    private SingleFileSubtitleSizeLoader singleSizeLoader;
+
     private BooleanProperty allSelected;
 
     private LongProperty selected;
@@ -68,7 +72,14 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
      * Had to make this method because table is initialized with fxml and it happens after the constructor is called so
      * in the constructor columns aren't initialized yet.
      */
-    public void initialize() {
+    //todo move everything to the constructor
+    public void initialize(
+            AllFileSubtitleSizesLoader allSizesLoader,
+            SingleFileSubtitleSizeLoader singleSizeLoader
+    ) {
+        this.allSizesLoader = allSizesLoader;
+        this.singleSizeLoader = singleSizeLoader;
+
         TableColumn<GuiFileInfo, ?> selectedColumn = getColumns().get(0);
         CheckBox selectAllCheckBox = new CheckBox();
         selectAllCheckBox.selectedProperty().bindBidirectional(allSelected);
@@ -130,7 +141,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         result.setPadding(new Insets(3, 5, 3, 3));
         result.setSpacing(10);
 
-        Label pathLabel = new Label(fileInfo.getPath());
+        Label pathLabel = new Label(fileInfo.getPathToDisplay());
         pathLabel.getStyleClass().add("path-label");
         if (!StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
             pathLabel.setTooltip(GuiUtils.generateTooltip(fileInfo.getUnavailabilityReason()));
@@ -169,10 +180,10 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
     }
 
     private <T> TableWithFilesCell<T> generateSubtitlesCell(TableColumn<GuiFileInfo, T> column) {
-        return new TableWithFilesCell<>(TableWithFiles::generateSubtitlesCellPane);
+        return new TableWithFilesCell<>(this::generateSubtitlesCellPane);
     }
 
-    private static Pane generateSubtitlesCellPane(GuiFileInfo fileInfo) {
+    private Pane generateSubtitlesCellPane(GuiFileInfo fileInfo) {
         GridPane result = new GridPane();
 
         result.setPadding(new Insets(3, 3, 3, 5));
@@ -184,6 +195,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         Pane hiddenPane = generateHiddenPane();
 
         Hyperlink getAllSizes = new Hyperlink("get all sizes");
+        getAllSizes.setOnAction(event -> allSizesLoader.load(fileInfo));
 
         result.addRow(result.getRowCount(), hiddenPane, getAllSizes, new Region());
 
@@ -297,5 +309,15 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
     public void setSelected(long selected) {
         this.selected.set(selected);
+    }
+
+    @FunctionalInterface
+    public interface AllFileSubtitleSizesLoader {
+        void load(GuiFileInfo guiFileInfo);
+    }
+
+    @FunctionalInterface
+    public interface SingleFileSubtitleSizeLoader {
+        void load(GuiFileInfo guiFileInfo, int subtitleIndex);
     }
 }
