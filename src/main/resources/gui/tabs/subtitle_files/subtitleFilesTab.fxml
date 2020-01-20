@@ -8,7 +8,7 @@
 <Tab xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
      fx:controller="kirill.subtitlemerger.gui.tabs.subtitle_files.SubtitleFilesTabController"
      text="Subtitle files">
-    <GridPane hgap="30" vgap="40">
+    <GridPane hgap="55" vgap="40">
         <gridLinesVisible><GuiConstants fx:constant="DEBUG"/></gridLinesVisible>
 
         <padding>
@@ -17,38 +17,38 @@
 
         <Label text="Please choose the file with the upper subtitles"
                GridPane.halignment="LEFT" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-        <TextField fx:id="upperSubtitlesPathField" editable="false"
-               GridPane.halignment="RIGHT" GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS">
-            <SubtitleFilesTabController fx:constant="FILE_NOT_CHOSEN_PATH"/>
-        </TextField>
-        <Button fx:id="upperSubtitlesChooseButton" onAction="#upperSubtitlesButtonClicked"
-                text="Choose file"
-                GridPane.halignment="RIGHT" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+        <HBox alignment="CENTER_RIGHT" spacing="20"
+              GridPane.halignment="RIGHT" GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS">
+            <TextField fx:id="upperSubtitlesPathField" editable="false" HBox.hgrow="ALWAYS">
+                <SubtitleFilesTabController fx:constant="FILE_NOT_CHOSEN_PATH"/>
+            </TextField>
+            <Button fx:id="upperSubtitlesChooseButton" onAction="#upperSubtitlesButtonClicked" text="Choose file"/>
+        </HBox>
 
         <Label text="Please choose the file with the lower subtitles"
                GridPane.halignment="LEFT" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-        <TextField fx:id="lowerSubtitlesPathField" editable="false"
-               GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS">
-            <SubtitleFilesTabController fx:constant="FILE_NOT_CHOSEN_PATH"/>
-        </TextField>
-        <Button fx:id="lowerSubtitlesChooseButton" onAction="#lowerSubtitlesButtonClicked"
-                text="Choose file"
-                GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+        <HBox alignment="CENTER_RIGHT" spacing="20"
+              GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS">
+            <TextField fx:id="lowerSubtitlesPathField" editable="false" HBox.hgrow="ALWAYS">
+                <SubtitleFilesTabController fx:constant="FILE_NOT_CHOSEN_PATH"/>
+            </TextField>
+            <Button fx:id="lowerSubtitlesChooseButton" onAction="#lowerSubtitlesButtonClicked" text="Choose file"/>
+        </HBox>
 
         <Label text="Please choose where to save the result"
                GridPane.halignment="LEFT" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-        <TextField fx:id="mergedSubtitlesPathField" editable="false"
-               GridPane.halignment="LEFT" GridPane.rowIndex="2" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS">
-            <SubtitleFilesTabController fx:constant="FILE_NOT_CHOSEN_PATH"/>
-        </TextField>
-        <Button fx:id="mergedSubtitlesChooseButton" onAction="#mergedSubtitlesButtonClicked"
-                text="Choose file"
-                GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
+        <HBox alignment="CENTER_RIGHT" spacing="20"
+              GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS">
+            <TextField fx:id="mergedSubtitlesPathField" editable="false" HBox.hgrow="ALWAYS">
+                <SubtitleFilesTabController fx:constant="FILE_NOT_CHOSEN_PATH"/>
+            </TextField>
+            <Button fx:id="mergedSubtitlesChooseButton" onAction="#mergedSubtitlesButtonClicked" text="Choose file"/>
+        </HBox>
 
         <Button fx:id="mergeButton" onAction="#mergeButtonClicked"
                 text="Merge subtitles" disable="true"
-                GridPane.rowIndex="3" GridPane.columnSpan="3"/>
+                GridPane.rowIndex="3" GridPane.columnSpan="2"/>
 
-        <Label fx:id="resultLabel" GridPane.rowIndex="4" GridPane.columnSpan="3"/>
+        <Label fx:id="resultLabel" GridPane.rowIndex="4" GridPane.columnSpan="2"/>
     </GridPane>
 </Tab>
