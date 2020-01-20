@@ -57,3 +57,12 @@
     -fx-background-radius: 3px, 3px, 2px, 1px;
     -fx-color: -fx-hover-base;
 }
+
+.table-view:focused .table-row-cell:selected .add-subtitle-file {
+    -fx-background-color: transparent;
+}
+
+.table-view:focused .table-row-cell:selected .add-subtitle-file:hover {
+    -fx-text-fill: white;
+    -fx-underline: true;
+}

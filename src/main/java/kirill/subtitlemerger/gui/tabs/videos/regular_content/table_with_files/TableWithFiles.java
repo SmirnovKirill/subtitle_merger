@@ -198,7 +198,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         getAllSizes.visibleProperty().bind(fileInfo.haveSubtitleSizesToLoadProperty());
         getAllSizes.managedProperty().bind(fileInfo.haveSubtitleSizesToLoadProperty());
 
-        result.addRow(result.getRowCount(), hiddenPane, getAllSizes, new Region());
+        result.addRow(0, hiddenPane, getAllSizes, new Region());
 
         GridPane.setColumnSpan(getAllSizes, 2);
         GridPane.setHalignment(getAllSizes, HPos.CENTER);
@@ -207,6 +207,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         GridPane.setMargin(getAllSizes, new Insets(0, 5, 10, 0));
         GridPane.setMargin(result.getChildren().get(2), new Insets(0, 0, 10, 0));
 
+        int streamIndex = 0;
         for (GuiSubtitleStreamInfo streamInfo : fileInfo.getSubtitleStreamsInfo()) {
             HBox titlePane = new HBox();
 
@@ -234,8 +235,6 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
             Hyperlink getSizeLink = new Hyperlink("get size");
             getSizeLink.setOnAction(event -> singleSizeLoader.load(fileInfo, streamInfo.getIndex()));
-            getSizeLink.visibleProperty().bind(streamInfo.sizeProperty().isEqualTo(0));
-            getSizeLink.managedProperty().bind(streamInfo.sizeProperty().isEqualTo(0));
 
             HBox radios = new HBox();
             radios.setSpacing(10);
@@ -250,27 +249,35 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
             radios.getChildren().addAll(upper, lower);
 
-            result.addRow(result.getRowCount(), titlePane, sizeLabel, getSizeLink, radios);
+            result.add(titlePane, 0, 1 + streamIndex);
+            result.add(sizeLabel, 1, 1 + streamIndex);
+            result.add(getSizeLink, 2, 1 + streamIndex);
+            result.add(radios, 3, 1 + streamIndex);
             GridPane.setHgrow(titlePane, Priority.ALWAYS);
 
             int bottomMargin = 2;
 
-          /*  if (streamInfo.isExtra()) {
+            if (streamInfo.isExtra()) {
                 titlePane.visibleProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()));
                 //todo refactor, ugly
-                titlePane.managedProperty().bind(titlePane.visibleProperty());
-                sizeLabel.visibleProperty().bind(titlePane.visibleProperty());
-                sizeLabel.managedProperty().bind(titlePane.visibleProperty());
-                getSizeLink.visibleProperty().bind(titlePane.visibleProperty());
-                getSizeLink.managedProperty().bind(titlePane.visibleProperty());
-                radios.visibleProperty().bind(titlePane.visibleProperty());
-                radios.managedProperty().bind(titlePane.visibleProperty());
-            }*/
+                titlePane.managedProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()));
+                sizeLabel.visibleProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()));
+                sizeLabel.managedProperty().bind(sizeLabel.visibleProperty());
+                getSizeLink.visibleProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()).and(streamInfo.sizeProperty().isEqualTo(0)));
+                getSizeLink.managedProperty().bind(getSizeLink.visibleProperty());
+                radios.visibleProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()));
+                radios.managedProperty().bind(radios.visibleProperty());
+            } else {
+                getSizeLink.visibleProperty().bind(streamInfo.sizeProperty().isEqualTo(0));
+                getSizeLink.managedProperty().bind(streamInfo.sizeProperty().isEqualTo(0));
+            }
 
             GridPane.setMargin(titlePane, new Insets(0, 0, bottomMargin, 0));
             GridPane.setMargin(sizeLabel, new Insets(0, 0, bottomMargin, 0));
             GridPane.setMargin(getSizeLink, new Insets(0, 5, bottomMargin, 0));
             GridPane.setMargin(radios, new Insets(0, 0, bottomMargin, 0));
+
+            streamIndex++;
         }
 
         Button button = new Button("Add subtitle file");
@@ -281,12 +288,10 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         imageView.setFitHeight(imageView.getFitWidth());
         button.setGraphic(imageView);
 
-        result.addRow(result.getRowCount(), button);
+        result.addRow(2 + fileInfo.getSubtitleStreamsInfo().size(), button);
 
         GridPane.setColumnSpan(button, 4);
         GridPane.setMargin(button, new Insets(5, 0, 0, 0));
-
-        result.setMaxHeight(Double.MAX_VALUE);
 
         return result;
     }
