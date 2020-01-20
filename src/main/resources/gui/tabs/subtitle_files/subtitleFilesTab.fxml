@@ -15,16 +15,10 @@
             <Insets top="20" right="20" bottom="20" left="20"/>
         </padding>
 
-        <columnConstraints>
-            <ColumnConstraints/>
-            <ColumnConstraints hgrow="ALWAYS"/>
-            <ColumnConstraints/>
-        </columnConstraints>
-
         <Label text="Please choose the file with the upper subtitles"
                GridPane.halignment="LEFT" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
         <TextField fx:id="upperSubtitlesPathField" editable="false"
-               GridPane.halignment="RIGHT" GridPane.rowIndex="0" GridPane.columnIndex="1">
+               GridPane.halignment="RIGHT" GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS">
             <SubtitleFilesTabController fx:constant="FILE_NOT_CHOSEN_PATH"/>
         </TextField>
         <Button fx:id="upperSubtitlesChooseButton" onAction="#upperSubtitlesButtonClicked"
@@ -34,7 +28,7 @@
         <Label text="Please choose the file with the lower subtitles"
                GridPane.halignment="LEFT" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
         <TextField fx:id="lowerSubtitlesPathField" editable="false"
-               GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.columnIndex="1">
+               GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS">
             <SubtitleFilesTabController fx:constant="FILE_NOT_CHOSEN_PATH"/>
         </TextField>
         <Button fx:id="lowerSubtitlesChooseButton" onAction="#lowerSubtitlesButtonClicked"
@@ -44,7 +38,7 @@
         <Label text="Please choose where to save the result"
                GridPane.halignment="LEFT" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
         <TextField fx:id="mergedSubtitlesPathField" editable="false"
-               GridPane.halignment="LEFT" GridPane.rowIndex="2" GridPane.columnIndex="1">
+               GridPane.halignment="LEFT" GridPane.rowIndex="2" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS">
             <SubtitleFilesTabController fx:constant="FILE_NOT_CHOSEN_PATH"/>
         </TextField>
         <Button fx:id="mergedSubtitlesChooseButton" onAction="#mergedSubtitlesButtonClicked"
