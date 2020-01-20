@@ -19,7 +19,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-import java.util.Arrays;
 import java.util.Collections;
 
 public class TableWithFiles extends TableView<GuiFileInfo> {
@@ -209,10 +208,6 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         GridPane.setMargin(result.getChildren().get(2), new Insets(0, 0, 10, 0));
 
         for (GuiSubtitleStreamInfo streamInfo : fileInfo.getSubtitleStreamsInfo()) {
-            if (!Arrays.asList("rus", "eng").contains(streamInfo.getLanguage())) {
-                continue;
-            }
-
             HBox titlePane = new HBox();
 
             Label language = new Label(streamInfo.getLanguage().toUpperCase());
@@ -260,6 +255,18 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
             int bottomMargin = 2;
 
+          /*  if (streamInfo.isExtra()) {
+                titlePane.visibleProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()));
+                //todo refactor, ugly
+                titlePane.managedProperty().bind(titlePane.visibleProperty());
+                sizeLabel.visibleProperty().bind(titlePane.visibleProperty());
+                sizeLabel.managedProperty().bind(titlePane.visibleProperty());
+                getSizeLink.visibleProperty().bind(titlePane.visibleProperty());
+                getSizeLink.managedProperty().bind(titlePane.visibleProperty());
+                radios.visibleProperty().bind(titlePane.visibleProperty());
+                radios.managedProperty().bind(titlePane.visibleProperty());
+            }*/
+
             GridPane.setMargin(titlePane, new Insets(0, 0, bottomMargin, 0));
             GridPane.setMargin(sizeLabel, new Insets(0, 0, bottomMargin, 0));
             GridPane.setMargin(getSizeLink, new Insets(0, 5, bottomMargin, 0));
@@ -278,6 +285,8 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
         GridPane.setColumnSpan(button, 4);
         GridPane.setMargin(button, new Insets(5, 0, 0, 0));
+
+        result.setMaxHeight(Double.MAX_VALUE);
 
         return result;
     }
@@ -308,6 +317,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
                         .then("show all")
                         .otherwise("hide extra subtitles")
         );
+        showAllLink.setOnAction(event -> fileInfo.setSomeSubtitlesHidden(!fileInfo.isSomeSubtitlesHidden()));
 
         result.getChildren().addAll(hiddenLabel, showAllLink);
 

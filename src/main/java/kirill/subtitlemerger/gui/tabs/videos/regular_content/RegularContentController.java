@@ -19,6 +19,7 @@ import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.*;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
+import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStreamInfo;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -829,6 +830,11 @@ public class RegularContentController {
 
         return fileInfo.getSubtitleStreamsInfo().stream()
                 .anyMatch(subtitleStreamInfo -> subtitleStreamInfo.getSubtitles() == null);
+    }
+
+    public static boolean isExtra(SubtitleStreamInfo subtitleStream, GuiSettings guiSettings) {
+        return subtitleStream.getLanguage() != guiSettings.getUpperLanguage()
+                && subtitleStream.getLanguage() != guiSettings.getLowerLanguage();
     }
 
     public static int getSubtitleCanBeHiddenCount(FileInfo fileInfo, GuiSettings guiSettings) {

@@ -18,6 +18,8 @@ public class GuiSubtitleStreamInfo {
      */
     private int index;
 
+    private boolean extra;
+
     @Getter(AccessLevel.NONE)
     private IntegerProperty size;
 
@@ -26,12 +28,14 @@ public class GuiSubtitleStreamInfo {
             String language,
             String title,
             int index,
+            boolean extra,
             int size
     ) {
         this.unavailabilityReason = unavailabilityReason;
         this.language = language;
         this.title = title;
         this.index = index;
+        this.extra = extra;
         this.size = new SimpleIntegerProperty(size);
     }
 

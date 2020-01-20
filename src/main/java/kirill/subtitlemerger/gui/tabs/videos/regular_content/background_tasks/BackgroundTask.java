@@ -159,7 +159,7 @@ public abstract class BackgroundTask<T> extends Task<T> {
         List<GuiSubtitleStreamInfo> subtitleStreamsInfo = new ArrayList<>();
         if (!CollectionUtils.isEmpty(fileInfo.getSubtitleStreamsInfo())) {
             subtitleStreamsInfo = fileInfo.getSubtitleStreamsInfo().stream()
-                    .map(BackgroundTask::from)
+                    .map(subtitleStream -> from(subtitleStream, guiSettings))
                     .collect(Collectors.toList());
         }
 
@@ -179,12 +179,13 @@ public abstract class BackgroundTask<T> extends Task<T> {
         );
     }
 
-    private static GuiSubtitleStreamInfo from(SubtitleStreamInfo subtitleStreamInfo) {
+    private static GuiSubtitleStreamInfo from(SubtitleStreamInfo subtitleStreamInfo, GuiSettings guiSettings) {
         return new GuiSubtitleStreamInfo(
                 guiTextFrom(subtitleStreamInfo.getUnavailabilityReason()),
                 subtitleStreamInfo.getLanguage() != null ? subtitleStreamInfo.getLanguage().toString() : "unknown",
                 subtitleStreamInfo.getTitle(),
                 subtitleStreamInfo.getIndex(),
+                RegularContentController.isExtra(subtitleStreamInfo, guiSettings),
                 subtitleStreamInfo.getSubtitles() != null
                         ? Writer.toSubRipText(subtitleStreamInfo.getSubtitles()).getBytes().length
                         : 0
