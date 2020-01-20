@@ -226,6 +226,8 @@ public class RegularContentController {
                 new LoadSubtitlesTask(
                         filesInfo,
                         allGuiFilesInfo,
+                        guiContext.getSettings().getSortBy(),
+                        guiContext.getSettings().getSortDirection(),
                         guiContext.getFfmpeg()
                 )
         );
@@ -252,6 +254,8 @@ public class RegularContentController {
                 new LoadSubtitlesTask(
                         findMatchingFileInfo(guiFileInfo, filesInfo),
                         guiFileInfo,
+                        guiContext.getSettings().getSortBy(),
+                        guiContext.getSettings().getSortDirection(),
                         guiContext.getFfmpeg()
                 )
         );
@@ -263,30 +267,11 @@ public class RegularContentController {
                         subtitleIndex,
                         findMatchingFileInfo(guiFileInfo, filesInfo),
                         guiFileInfo,
+                        guiContext.getSettings().getSortBy(),
+                        guiContext.getSettings().getSortDirection(),
                         guiContext.getFfmpeg()
                 )
         );
-    }
-
-    private void getAllFileSizesButtonClicked(ActionEvent event) {
-        LoadSubtitlesTask task = new LoadSubtitlesTask(
-                filesInfo,
-                allGuiFilesInfo,
-                guiContext.getFfmpeg()
-        );
-        currentCancellableTask = task;
-
-        task.setOnSucceeded(e -> {
-            showResult(task, false);
-            stopProgress();
-        });
-        task.setOnCancelled(e -> {
-            showResult(task, true);
-            stopProgress();
-        });
-
-        showProgress(task, true);
-        GuiUtils.startTask(task);
     }
 
     //todo test

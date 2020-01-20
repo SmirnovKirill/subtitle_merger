@@ -2,6 +2,7 @@ package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
 import javafx.application.Platform;
 import javafx.scene.control.ProgressIndicator;
+import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStreamInfo;
@@ -16,17 +17,23 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class LoadSubtitlesTask extends BackgroundTask<Void> {
     private Integer subtitleIndex;
 
-    private List<FileInfo> filesInfo;
+    private List<FileInfo> unsortedFilesInfo;
 
     private List<GuiFileInfo> guiFilesInfo;
 
     private Ffmpeg ffmpeg;
+
+    private GuiSettings.SortBy sortBy;
+
+    private GuiSettings.SortDirection sortDirection;
 
     @Getter
     private boolean cancelled;
@@ -49,24 +56,32 @@ public class LoadSubtitlesTask extends BackgroundTask<Void> {
     public LoadSubtitlesTask(
             List<FileInfo> filesInfo,
             List<GuiFileInfo> guiFilesInfo,
+            GuiSettings.SortBy sortBy,
+            GuiSettings.SortDirection sortDirection,
             Ffmpeg ffmpeg
     ) {
         super();
 
-        this.filesInfo = filesInfo;
+        this.unsortedFilesInfo = filesInfo;
         this.guiFilesInfo = guiFilesInfo;
+        this.sortBy = sortBy;
+        this.sortDirection = sortDirection;
         this.ffmpeg = ffmpeg;
     }
 
     public LoadSubtitlesTask(
             FileInfo fileInfo,
             GuiFileInfo guiFileInfo,
+            GuiSettings.SortBy sortBy,
+            GuiSettings.SortDirection sortDirection,
             Ffmpeg ffmpeg
     ) {
         super();
 
-        this.filesInfo = Collections.singletonList(fileInfo);
+        this.unsortedFilesInfo = Collections.singletonList(fileInfo);
         this.guiFilesInfo = Collections.singletonList(guiFileInfo);
+        this.sortBy = sortBy;
+        this.sortDirection = sortDirection;
         this.ffmpeg = ffmpeg;
     }
 
@@ -74,13 +89,17 @@ public class LoadSubtitlesTask extends BackgroundTask<Void> {
             int subtitleIndex,
             FileInfo fileInfo,
             GuiFileInfo guiFileInfo,
+            GuiSettings.SortBy sortBy,
+            GuiSettings.SortDirection sortDirection,
             Ffmpeg ffmpeg
     ) {
         super();
 
         this.subtitleIndex = subtitleIndex;
-        this.filesInfo = Collections.singletonList(fileInfo);
+        this.unsortedFilesInfo = Collections.singletonList(fileInfo);
         this.guiFilesInfo = Collections.singletonList(guiFileInfo);
+        this.sortBy = sortBy;
+        this.sortDirection = sortDirection;
         this.ffmpeg = ffmpeg;
     }
 
@@ -88,10 +107,18 @@ public class LoadSubtitlesTask extends BackgroundTask<Void> {
     protected Void call() {
         updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
         updateMessage("calculating number of subtitles to load...");
-
         initializeCounters();
 
-        mainLoop: for (FileInfo fileInfo : filesInfo) {
+        /*
+         * We should process files in order the user sees them because the scene is updated during the process
+         * and it would look strange for the user if the order won't meet his or her expectations.
+         * We will sort the copy of the original list of course.
+         */
+        updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
+        updateMessage("sorting files...");
+        List<FileInfo> sortedFilesInfo = getSortedFilesInfo(unsortedFilesInfo, sortBy, sortDirection);
+
+        mainLoop: for (FileInfo fileInfo : sortedFilesInfo) {
             GuiFileInfo guiFileInfo = RegularContentController.findMatchingGuiFileInfo(fileInfo, guiFilesInfo);
             if (!CollectionUtils.isEmpty(fileInfo.getSubtitleStreamsInfo())) {
                 int index = 0;
@@ -170,7 +197,7 @@ public class LoadSubtitlesTask extends BackgroundTask<Void> {
     }
 
     private void initializeCounters() {
-        for (FileInfo fileInfo : filesInfo) {
+        for (FileInfo fileInfo : unsortedFilesInfo) {
             if (!CollectionUtils.isEmpty(fileInfo.getSubtitleStreamsInfo())) {
                 for (SubtitleStreamInfo subtitleStream : fileInfo.getSubtitleStreamsInfo()) {
                     if (subtitleStream.getUnavailabilityReason() != null) {
@@ -189,6 +216,37 @@ public class LoadSubtitlesTask extends BackgroundTask<Void> {
                 }
             }
         }
+    }
+
+    private static List<FileInfo> getSortedFilesInfo(
+            List<FileInfo> unsortedFilesInfo,
+            GuiSettings.SortBy sortBy,
+            GuiSettings.SortDirection sortDirection
+    ) {
+        List<FileInfo> result = new ArrayList<>(unsortedFilesInfo);
+
+        Comparator<FileInfo> comparator;
+        switch (sortBy) {
+            case NAME:
+                comparator = Comparator.comparing(fileInfo -> fileInfo.getFile().getAbsolutePath());
+                break;
+            case MODIFICATION_TIME:
+                comparator = Comparator.comparing(FileInfo::getLastModified);
+                break;
+            case SIZE:
+                comparator = Comparator.comparing(FileInfo::getSize);
+                break;
+            default:
+                throw new IllegalStateException();
+        }
+
+        if (sortDirection == GuiSettings.SortDirection.DESCENDING) {
+            comparator = comparator.reversed();
+        }
+
+        result.sort(comparator);
+
+        return result;
     }
 
     private static String getUpdateMessage(
