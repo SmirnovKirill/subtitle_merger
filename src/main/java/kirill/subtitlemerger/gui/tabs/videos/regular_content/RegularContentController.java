@@ -260,8 +260,9 @@ public class RegularContentController {
     private void loadSingleFileSubtitleSize(GuiFileInfo guiFileInfo, int subtitleIndex) {
         runLoadSubtitlesTask(
                 new LoadSubtitlesTask(
-                        filesInfo,
-                        allGuiFilesInfo,
+                        subtitleIndex,
+                        findMatchingFileInfo(guiFileInfo, filesInfo),
+                        guiFileInfo,
                         guiContext.getFfmpeg()
                 )
         );
@@ -834,5 +835,14 @@ public class RegularContentController {
         return filesInfo.stream()
                 .filter(fileInfo -> Objects.equals(fileInfo.getFile().getAbsolutePath(), guiFileInfo.getFullPath()))
                 .findFirst().orElseThrow(IllegalStateException::new);
+    }
+
+    public static boolean haveSubtitlesToLoad(FileInfo fileInfo) {
+        if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreamsInfo())) {
+            return false;
+        }
+
+        return fileInfo.getSubtitleStreamsInfo().stream()
+                .anyMatch(subtitleStreamInfo -> subtitleStreamInfo.getSubtitles() == null);
     }
 }

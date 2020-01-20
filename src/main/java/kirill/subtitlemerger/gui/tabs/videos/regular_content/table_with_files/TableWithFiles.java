@@ -196,6 +196,8 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
         Hyperlink getAllSizes = new Hyperlink("get all sizes");
         getAllSizes.setOnAction(event -> allSizesLoader.load(fileInfo));
+        getAllSizes.visibleProperty().bind(fileInfo.haveSubtitleSizesToLoadProperty());
+        getAllSizes.managedProperty().bind(fileInfo.haveSubtitleSizesToLoadProperty());
 
         result.addRow(result.getRowCount(), hiddenPane, getAllSizes, new Region());
 
@@ -206,36 +208,39 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         GridPane.setMargin(getAllSizes, new Insets(0, 5, 10, 0));
         GridPane.setMargin(result.getChildren().get(2), new Insets(0, 0, 10, 0));
 
-        for (GuiSubtitleStreamInfo subtitleStreamInfo : fileInfo.getSubtitleStreamsInfo()) {
-            if (!Arrays.asList("rus", "eng").contains(subtitleStreamInfo.getLanguage())) {
+        for (GuiSubtitleStreamInfo streamInfo : fileInfo.getSubtitleStreamsInfo()) {
+            if (!Arrays.asList("rus", "eng").contains(streamInfo.getLanguage())) {
                 continue;
             }
 
             HBox titlePane = new HBox();
 
-            Label language = new Label(subtitleStreamInfo.getLanguage().toUpperCase());
+            Label language = new Label(streamInfo.getLanguage().toUpperCase());
             titlePane.getChildren().add(language);
 
-            if (!StringUtils.isBlank(subtitleStreamInfo.getTitle())) {
-                titlePane.getChildren().add(new Label(" (" + subtitleStreamInfo.getTitle() + ")"));
+            if (!StringUtils.isBlank(streamInfo.getTitle())) {
+                titlePane.getChildren().add(new Label(" (" + streamInfo.getTitle() + ")"));
             }
 
             Label sizeLabel = new Label();
 
             StringBinding unknownSizeBinding = Bindings.createStringBinding(
-                    () -> "Size: ? KB ", subtitleStreamInfo.sizeProperty()
+                    () -> "Size: ? KB ", streamInfo.sizeProperty()
             );
             StringBinding knownSizeBinding = Bindings.createStringBinding(
-                    () -> "Size: " + GuiUtils.getFileSizeTextual(subtitleStreamInfo.getSize()), subtitleStreamInfo.sizeProperty()
+                    () -> "Size: " + GuiUtils.getFileSizeTextual(streamInfo.getSize()), streamInfo.sizeProperty()
             );
 
             sizeLabel.textProperty().bind(
-                    Bindings.when(subtitleStreamInfo.sizeProperty().isEqualTo(0))
+                    Bindings.when(streamInfo.sizeProperty().isEqualTo(0))
                             .then(unknownSizeBinding)
                             .otherwise(knownSizeBinding)
             );
 
             Hyperlink getSizeLink = new Hyperlink("get size");
+            getSizeLink.setOnAction(event -> singleSizeLoader.load(fileInfo, streamInfo.getIndex()));
+            getSizeLink.visibleProperty().bind(streamInfo.sizeProperty().isEqualTo(0));
+            getSizeLink.managedProperty().bind(streamInfo.sizeProperty().isEqualTo(0));
 
             HBox radios = new HBox();
             radios.setSpacing(10);
@@ -254,11 +259,6 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             GridPane.setHgrow(titlePane, Priority.ALWAYS);
 
             int bottomMargin = 2;
-
-            titlePane.getStyleClass().add("dott2ed");
-            sizeLabel.getStyleClass().add("dott2ed");
-            getSizeLink.getStyleClass().add("dott2ed");
-            radios.getStyleClass().add("dot2ted");
 
             GridPane.setMargin(titlePane, new Insets(0, 0, bottomMargin, 0));
             GridPane.setMargin(sizeLabel, new Insets(0, 0, bottomMargin, 0));

@@ -162,6 +162,8 @@ public class LoadSubtitlesTask extends BackgroundTask<Void> {
                     index++;
                 }
             }
+
+            guiFileInfo.setHaveSubtitleSizesToLoad(RegularContentController.haveSubtitlesToLoad(fileInfo));
         }
 
         return null;

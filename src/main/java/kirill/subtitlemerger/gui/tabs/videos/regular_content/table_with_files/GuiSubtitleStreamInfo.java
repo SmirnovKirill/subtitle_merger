@@ -13,13 +13,25 @@ public class GuiSubtitleStreamInfo {
 
     private String title;
 
+    /*
+     * Index got from ffprobe.
+     */
+    private int index;
+
     @Getter(AccessLevel.NONE)
     private IntegerProperty size;
 
-    public GuiSubtitleStreamInfo(String unavailabilityReason, String language, String title, int size) {
+    public GuiSubtitleStreamInfo(
+            String unavailabilityReason,
+            String language,
+            String title,
+            int index,
+            int size
+    ) {
         this.unavailabilityReason = unavailabilityReason;
         this.language = language;
         this.title = title;
+        this.index = index;
         this.size = new SimpleIntegerProperty(size);
     }
 

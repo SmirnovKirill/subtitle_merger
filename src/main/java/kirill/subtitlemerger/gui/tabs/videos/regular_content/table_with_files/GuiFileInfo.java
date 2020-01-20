@@ -30,6 +30,8 @@ public class GuiFileInfo {
 
     private String error;
 
+    private BooleanProperty haveSubtitleSizesToLoad;
+
     private List<GuiSubtitleStreamInfo> subtitleStreamsInfo;
 
     public GuiFileInfo(
@@ -41,6 +43,7 @@ public class GuiFileInfo {
             long size,
             String unavailabilityReason,
             String error,
+            boolean haveSubtitleSizesToLoad,
             List<GuiSubtitleStreamInfo> subtitleStreamsInfo
     ) {
         this.pathToDisplay = pathToDisplay;
@@ -51,6 +54,7 @@ public class GuiFileInfo {
         this.size = size;
         this.unavailabilityReason = unavailabilityReason;
         this.error = error;
+        this.haveSubtitleSizesToLoad = new SimpleBooleanProperty(haveSubtitleSizesToLoad);
         this.subtitleStreamsInfo = subtitleStreamsInfo;
     }
 
@@ -64,5 +68,17 @@ public class GuiFileInfo {
 
     public void setSelected(boolean selected) {
         this.selected.set(selected);
+    }
+
+    public boolean isHaveSubtitleSizesToLoad() {
+        return haveSubtitleSizesToLoad.get();
+    }
+
+    public BooleanProperty haveSubtitleSizesToLoadProperty() {
+        return haveSubtitleSizesToLoad;
+    }
+
+    public void setHaveSubtitleSizesToLoad(boolean haveSubtitleSizesToLoad) {
+        this.haveSubtitleSizesToLoad.set(haveSubtitleSizesToLoad);
     }
 }

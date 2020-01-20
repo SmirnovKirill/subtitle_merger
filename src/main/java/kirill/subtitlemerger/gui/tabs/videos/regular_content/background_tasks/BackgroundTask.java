@@ -4,6 +4,7 @@ import javafx.concurrent.Task;
 import javafx.event.Event;
 import javafx.scene.control.ProgressIndicator;
 import kirill.subtitlemerger.gui.GuiSettings;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStreamInfo;
 import kirill.subtitlemerger.logic.LogicConstants;
@@ -165,6 +166,7 @@ public abstract class BackgroundTask<T> extends Task<T> {
                 fileInfo.getSize(),
                 guiTextFrom(fileInfo.getUnavailabilityReason()),
                 "",
+                RegularContentController.haveSubtitlesToLoad(fileInfo),
                 subtitleStreamsInfo
         );
     }
@@ -174,6 +176,7 @@ public abstract class BackgroundTask<T> extends Task<T> {
                 guiTextFrom(subtitleStreamInfo.getUnavailabilityReason()),
                 subtitleStreamInfo.getLanguage() != null ? subtitleStreamInfo.getLanguage().toString() : "unknown",
                 subtitleStreamInfo.getTitle(),
+                subtitleStreamInfo.getIndex(),
                 subtitleStreamInfo.getSubtitles() != null
                         ? Writer.toSubRipText(subtitleStreamInfo.getSubtitles()).getBytes().length
                         : 0
