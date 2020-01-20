@@ -1,9 +1,9 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
+import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
-import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffprobe;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -25,7 +25,7 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
 
     private GuiSettings.SortDirection sortDirection;
 
-    private Ffprobe ffprobe;
+    private GuiContext guiContext;
 
     public AddFilesTask(
             List<FileInfo> filesInfo,
@@ -34,7 +34,7 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
             boolean hideUnavailable,
             GuiSettings.SortBy sortBy,
             GuiSettings.SortDirection sortDirection,
-            Ffprobe ffprobe
+            GuiContext guiContext
     ) {
         super();
         this.filesInfo = filesInfo;
@@ -43,18 +43,19 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
         this.hideUnavailable = hideUnavailable;
         this.sortBy = sortBy;
         this.sortDirection = sortDirection;
-        this.ffprobe = ffprobe;
+        this.guiContext = guiContext;
     }
 
     @Override
     protected Result call() {
-        List<FileInfo> filesToAddInfo = getFilesInfo(filesToAdd, ffprobe, this);
+        List<FileInfo> filesToAddInfo = getFilesInfo(filesToAdd, guiContext.getFfprobe(), this);
         removeAlreadyAdded(filesToAddInfo, filesInfo);
         List<GuiFileInfo> guiFilesToAddInfo = convert(
                 filesToAddInfo,
                 true,
                 true,
-                this
+                this,
+                guiContext.getSettings()
         );
         filesInfo.addAll(filesToAddInfo);
         allGuiFilesInfo.addAll(guiFilesToAddInfo);

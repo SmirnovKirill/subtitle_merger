@@ -32,6 +32,10 @@ public class GuiFileInfo {
 
     private BooleanProperty haveSubtitleSizesToLoad;
 
+    private BooleanProperty haveSubtitlesToHide;
+
+    private BooleanProperty someSubtitlesHidden;
+
     private List<GuiSubtitleStreamInfo> subtitleStreamsInfo;
 
     public GuiFileInfo(
@@ -44,6 +48,8 @@ public class GuiFileInfo {
             String unavailabilityReason,
             String error,
             boolean haveSubtitleSizesToLoad,
+            boolean haveSubtitlesToHide,
+            boolean someSubtitlesHidden,
             List<GuiSubtitleStreamInfo> subtitleStreamsInfo
     ) {
         this.pathToDisplay = pathToDisplay;
@@ -55,6 +61,8 @@ public class GuiFileInfo {
         this.unavailabilityReason = unavailabilityReason;
         this.error = error;
         this.haveSubtitleSizesToLoad = new SimpleBooleanProperty(haveSubtitleSizesToLoad);
+        this.haveSubtitlesToHide = new SimpleBooleanProperty(haveSubtitlesToHide);
+        this.someSubtitlesHidden = new SimpleBooleanProperty(someSubtitlesHidden);
         this.subtitleStreamsInfo = subtitleStreamsInfo;
     }
 
@@ -80,5 +88,29 @@ public class GuiFileInfo {
 
     public void setHaveSubtitleSizesToLoad(boolean haveSubtitleSizesToLoad) {
         this.haveSubtitleSizesToLoad.set(haveSubtitleSizesToLoad);
+    }
+
+    public boolean isHaveSubtitlesToHide() {
+        return haveSubtitlesToHide.get();
+    }
+
+    public BooleanProperty haveSubtitlesToHideProperty() {
+        return haveSubtitlesToHide;
+    }
+
+    public void setHaveSubtitlesToHide(boolean haveSubtitlesToHide) {
+        this.haveSubtitlesToHide.set(haveSubtitlesToHide);
+    }
+
+    public boolean isSomeSubtitlesHidden() {
+        return someSubtitlesHidden.get();
+    }
+
+    public BooleanProperty someSubtitlesHiddenProperty() {
+        return someSubtitlesHidden;
+    }
+
+    public void setSomeSubtitlesHidden(boolean someSubtitlesHidden) {
+        this.someSubtitlesHidden.set(someSubtitlesHidden);
     }
 }

@@ -590,7 +590,7 @@ public class RegularContentController {
                 files,
                 guiContext.getSettings().getSortBy(),
                 guiContext.getSettings().getSortDirection(),
-                guiContext.getFfprobe()
+                guiContext
         );
 
         task.setOnSucceeded(e -> {
@@ -644,7 +644,7 @@ public class RegularContentController {
                 this.directory,
                 guiContext.getSettings().getSortBy(),
                 guiContext.getSettings().getSortDirection(),
-                guiContext.getFfprobe()
+                guiContext
         );
 
         task.setOnSucceeded(e -> {
@@ -695,7 +695,7 @@ public class RegularContentController {
                 this.directory,
                 guiContext.getSettings().getSortBy(),
                 guiContext.getSettings().getSortDirection(),
-                guiContext.getFfprobe()
+                guiContext
         );
 
         task.setOnSucceeded(e -> {
@@ -795,7 +795,7 @@ public class RegularContentController {
                 hideUnavailableCheckbox.isSelected(),
                 guiContext.getSettings().getSortBy(),
                 guiContext.getSettings().getSortDirection(),
-                guiContext.getFfprobe()
+                guiContext
         );
 
         task.setOnSucceeded(e -> {
@@ -829,5 +829,23 @@ public class RegularContentController {
 
         return fileInfo.getSubtitleStreamsInfo().stream()
                 .anyMatch(subtitleStreamInfo -> subtitleStreamInfo.getSubtitles() == null);
+    }
+
+    public static boolean haveSubtitlesToHide(FileInfo fileInfo, GuiSettings guiSettings) {
+        if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreamsInfo())) {
+            return false;
+        }
+
+        boolean hasSubtitlesWithUpperLanguage = fileInfo.getSubtitleStreamsInfo().stream()
+                .filter(subtitleStreamInfo -> subtitleStreamInfo.getUnavailabilityReason() == null)
+                .anyMatch(subtitleStreamInfo -> subtitleStreamInfo.getLanguage() == guiSettings.getUpperLanguage());
+        boolean hasSubtitlesWithLowerLanguage = fileInfo.getSubtitleStreamsInfo().stream()
+                .filter(subtitleStreamInfo -> subtitleStreamInfo.getUnavailabilityReason() == null)
+                .anyMatch(subtitleStreamInfo -> subtitleStreamInfo.getLanguage() == guiSettings.getLowerLanguage());
+        boolean hasSubtitlesWithOtherLanguage = fileInfo.getSubtitleStreamsInfo().stream()
+                .filter(subtitleStreamInfo -> subtitleStreamInfo.getUnavailabilityReason() == null)
+                .filter(subtitleStreamInfo -> subtitleStreamInfo.getLanguage() != guiSettings.getUpperLanguage())
+                .anyMatch(subtitleStreamInfo -> subtitleStreamInfo.getLanguage() != guiSettings.getLowerLanguage());
+        return hasSubtitlesWithUpperLanguage && hasSubtitlesWithLowerLanguage && hasSubtitlesWithOtherLanguage;
     }
 }

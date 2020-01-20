@@ -1,10 +1,10 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
 import javafx.scene.control.ProgressIndicator;
+import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
-import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffprobe;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
@@ -22,30 +22,31 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
 
     private GuiSettings.SortDirection sortDirection;
 
-    private Ffprobe ffprobe;
+    private GuiContext guiContext;
 
     public LoadDirectoryFilesTask(
             File directory,
             GuiSettings.SortBy sortBy,
             GuiSettings.SortDirection sortDirection,
-            Ffprobe ffprobe
+            GuiContext guiContext
     ) {
         super();
         this.directory = directory;
         this.sortBy = sortBy;
         this.sortDirection = sortDirection;
-        this.ffprobe = ffprobe;
+        this.guiContext = guiContext;
     }
 
     @Override
     protected Result call() {
         List<File> files = getDirectoryFiles(directory, this);
-        List<FileInfo> filesInfo = getFilesInfo(files, ffprobe, this);
+        List<FileInfo> filesInfo = getFilesInfo(files, guiContext.getFfprobe(), this);
         List<GuiFileInfo> allGuiFilesInfo = convert(
                 filesInfo,
                 false,
                 false,
-                this
+                this,
+                guiContext.getSettings()
         );
 
         boolean hideUnavailable = shouldHideUnavailable(filesInfo, this);

@@ -128,7 +128,8 @@ public abstract class BackgroundTask<T> extends Task<T> {
             List<FileInfo> filesInfo,
             boolean showFullFileName,
             boolean selectByDefault,
-            BackgroundTask<?> task
+            BackgroundTask<?> task,
+            GuiSettings guiSettings
     ) {
         List<GuiFileInfo> result = new ArrayList<>();
 
@@ -138,7 +139,7 @@ public abstract class BackgroundTask<T> extends Task<T> {
         for (FileInfo fileInfo : filesInfo) {
             task.updateMessage("creating object for " + fileInfo.getFile().getName() + "...");
 
-            result.add(from(fileInfo, showFullFileName, selectByDefault));
+            result.add(from(fileInfo, showFullFileName, selectByDefault, guiSettings));
 
             task.updateProgress(i + 1, filesInfo.size());
             i++;
@@ -147,7 +148,12 @@ public abstract class BackgroundTask<T> extends Task<T> {
         return result;
     }
 
-    private static GuiFileInfo from(FileInfo fileInfo, boolean showFullFileName, boolean selected) {
+    private static GuiFileInfo from(
+            FileInfo fileInfo,
+            boolean showFullFileName,
+            boolean selected,
+            GuiSettings guiSettings
+    ) {
         String pathToDisplay = showFullFileName ? fileInfo.getFile().getAbsolutePath() : fileInfo.getFile().getName();
 
         List<GuiSubtitleStreamInfo> subtitleStreamsInfo = new ArrayList<>();
@@ -167,6 +173,8 @@ public abstract class BackgroundTask<T> extends Task<T> {
                 guiTextFrom(fileInfo.getUnavailabilityReason()),
                 "",
                 RegularContentController.haveSubtitlesToLoad(fileInfo),
+                RegularContentController.haveSubtitlesToHide(fileInfo, guiSettings),
+                RegularContentController.haveSubtitlesToHide(fileInfo, guiSettings),
                 subtitleStreamsInfo
         );
     }
