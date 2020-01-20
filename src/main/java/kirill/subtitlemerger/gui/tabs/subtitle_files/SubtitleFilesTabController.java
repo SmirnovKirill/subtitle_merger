@@ -3,6 +3,7 @@ package kirill.subtitlemerger.gui.tabs.subtitle_files;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiConstants;
@@ -38,19 +39,19 @@ public class SubtitleFilesTabController {
     private Button upperSubtitlesChooseButton;
 
     @FXML
-    private Label upperSubtitlesPathLabel;
+    private TextField upperSubtitlesPathField;
 
     @FXML
     private Button lowerSubtitlesChooseButton;
 
     @FXML
-    private Label lowerSubtitlesPathLabel;
+    private TextField lowerSubtitlesPathField;
 
     @FXML
     private Button mergedSubtitlesChooseButton;
 
     @FXML
-    private Label mergedSubtitlesPathLabel;
+    private TextField mergedSubtitlesPathField;
 
     @FXML
     private Button mergeButton;
@@ -330,14 +331,14 @@ public class SubtitleFilesTabController {
         switch (fileType) {
             case UPPER_SUBTITLES:
                 file = upperSubtitlesFileInfo != null ? upperSubtitlesFileInfo.getFile() : null;
-                upperSubtitlesPathLabel.setText(getPathText(file));
+                upperSubtitlesPathField.setText(getPathText(file));
                 break;
             case LOWER_SUBTITLES:
                 file = lowerSubtitlesFileInfo != null ? lowerSubtitlesFileInfo.getFile() : null;
-                lowerSubtitlesPathLabel.setText(getPathText(file));
+                lowerSubtitlesPathField.setText(getPathText(file));
                 break;
             case MERGED_SUBTITLES:
-                mergedSubtitlesPathLabel.setText(getPathText(mergedSubtitlesFile));
+                mergedSubtitlesPathField.setText(getPathText(mergedSubtitlesFile));
                 break;
             default:
                 throw new IllegalStateException();
