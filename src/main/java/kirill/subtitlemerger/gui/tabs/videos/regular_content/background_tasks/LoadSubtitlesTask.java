@@ -23,7 +23,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public class LoadSubtitlesTask extends BackgroundTask<Void> {
-    private Integer subtitleIndex;
+    private Integer subtitleId;
 
     private List<FileInfo> unsortedFilesInfo;
 
@@ -86,7 +86,7 @@ public class LoadSubtitlesTask extends BackgroundTask<Void> {
     }
 
     public LoadSubtitlesTask(
-            int subtitleIndex,
+            int subtitleId,
             FileInfo fileInfo,
             GuiFileInfo guiFileInfo,
             GuiSettings.SortBy sortBy,
@@ -95,7 +95,7 @@ public class LoadSubtitlesTask extends BackgroundTask<Void> {
     ) {
         super();
 
-        this.subtitleIndex = subtitleIndex;
+        this.subtitleId = subtitleId;
         this.unsortedFilesInfo = Collections.singletonList(fileInfo);
         this.guiFilesInfo = Collections.singletonList(guiFileInfo);
         this.sortBy = sortBy;
@@ -133,7 +133,7 @@ public class LoadSubtitlesTask extends BackgroundTask<Void> {
                         continue;
                     }
 
-                    if (subtitleIndex != null && subtitleIndex != subtitleStream.getIndex()) {
+                    if (subtitleId != null && subtitleId != subtitleStream.getId()) {
                         index++;
                         continue;
                     }
@@ -154,7 +154,7 @@ public class LoadSubtitlesTask extends BackgroundTask<Void> {
                                 )
                         );
 
-                        String subtitleText = ffmpeg.getSubtitlesText(subtitleStream.getIndex(), fileInfo.getFile());
+                        String subtitleText = ffmpeg.getSubtitlesText(subtitleStream.getId(), fileInfo.getFile());
                         subtitleStream.setSubtitles(
                                 Parser.fromSubRipText(
                                         subtitleText,
@@ -204,7 +204,7 @@ public class LoadSubtitlesTask extends BackgroundTask<Void> {
                         continue;
                     }
 
-                    if (subtitleIndex != null && subtitleIndex != subtitleStream.getIndex()) {
+                    if (subtitleId != null && subtitleId != subtitleStream.getId()) {
                         continue;
                     }
 

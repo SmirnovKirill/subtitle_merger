@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 public
 class SubtitleStreamInfo {
-    private int index;
+    private int id;
 
     private boolean merged;
 
@@ -28,14 +28,14 @@ class SubtitleStreamInfo {
     private Subtitles subtitles;
 
     public SubtitleStreamInfo(
-            int index,
+            int id,
             SubtitleCodec codec,
             UnavailabilityReason unavailabilityReason,
             LanguageAlpha3Code language,
             String title,
             Subtitles subtitles
     ) {
-        this.index = index;
+        this.id = id;
         this.merged = title != null && title.startsWith("Merged subtitles");
         this.codec = codec;
         this.unavailabilityReason = unavailabilityReason;

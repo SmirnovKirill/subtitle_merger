@@ -32,11 +32,20 @@ public class GuiFileInfo {
 
     private String error;
 
+    @Getter(AccessLevel.NONE)
     private BooleanProperty haveSubtitleSizesToLoad;
 
+    @Getter(AccessLevel.NONE)
     private IntegerProperty subtitleToHideCount;
 
+    @Getter(AccessLevel.NONE)
     private BooleanProperty someSubtitlesHidden;
+
+    @Getter(AccessLevel.NONE)
+    private IntegerProperty upperSubtitleId;
+
+    @Getter(AccessLevel.NONE)
+    private IntegerProperty lowerSubtitleId;
 
     private List<GuiSubtitleStreamInfo> subtitleStreamsInfo;
 
@@ -52,6 +61,8 @@ public class GuiFileInfo {
             boolean haveSubtitleSizesToLoad,
             int subtitleToHideCount,
             boolean someSubtitlesHidden,
+            Integer upperSubtitleId,
+            Integer lowerSubtitleId,
             List<GuiSubtitleStreamInfo> subtitleStreamsInfo
     ) {
         this.pathToDisplay = pathToDisplay;
@@ -65,6 +76,16 @@ public class GuiFileInfo {
         this.haveSubtitleSizesToLoad = new SimpleBooleanProperty(haveSubtitleSizesToLoad);
         this.subtitleToHideCount = new SimpleIntegerProperty(subtitleToHideCount);
         this.someSubtitlesHidden = new SimpleBooleanProperty(someSubtitlesHidden);
+        if (upperSubtitleId == null) {
+            this.upperSubtitleId = new SimpleIntegerProperty(-1);
+        } else {
+            this.upperSubtitleId = new SimpleIntegerProperty(upperSubtitleId);
+        }
+        if (lowerSubtitleId == null) {
+            this.lowerSubtitleId = new SimpleIntegerProperty(-1);
+        } else {
+            this.lowerSubtitleId = new SimpleIntegerProperty(lowerSubtitleId);
+        }
         this.subtitleStreamsInfo = subtitleStreamsInfo;
     }
 
@@ -114,5 +135,29 @@ public class GuiFileInfo {
 
     public void setSomeSubtitlesHidden(boolean someSubtitlesHidden) {
         this.someSubtitlesHidden.set(someSubtitlesHidden);
+    }
+
+    public int getUpperSubtitleId() {
+        return upperSubtitleId.get();
+    }
+
+    public IntegerProperty upperSubtitleIdProperty() {
+        return upperSubtitleId;
+    }
+
+    public void setUpperSubtitleId(int upperSubtitleId) {
+        this.upperSubtitleId.set(upperSubtitleId);
+    }
+
+    public int getLowerSubtitleId() {
+        return lowerSubtitleId.get();
+    }
+
+    public IntegerProperty lowerSubtitleIdProperty() {
+        return lowerSubtitleId;
+    }
+
+    public void setLowerSubtitleId(int lowerSubtitleId) {
+        this.lowerSubtitleId.set(lowerSubtitleId);
     }
 }

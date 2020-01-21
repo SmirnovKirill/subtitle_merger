@@ -175,16 +175,18 @@ public abstract class BackgroundTask<T> extends Task<T> {
                 RegularContentController.haveSubtitlesToLoad(fileInfo),
                 RegularContentController.getSubtitleCanBeHiddenCount(fileInfo, guiSettings),
                 RegularContentController.getSubtitleCanBeHiddenCount(fileInfo, guiSettings) != 0,
+                null,
+                null,
                 subtitleStreamsInfo
         );
     }
 
     private static GuiSubtitleStreamInfo from(SubtitleStreamInfo subtitleStreamInfo, GuiSettings guiSettings) {
         return new GuiSubtitleStreamInfo(
+                subtitleStreamInfo.getId(),
                 guiTextFrom(subtitleStreamInfo.getUnavailabilityReason()),
                 subtitleStreamInfo.getLanguage() != null ? subtitleStreamInfo.getLanguage().toString() : "unknown",
                 subtitleStreamInfo.getTitle(),
-                subtitleStreamInfo.getIndex(),
                 RegularContentController.isExtra(subtitleStreamInfo, guiSettings),
                 subtitleStreamInfo.getSubtitles() != null
                         ? Writer.toSubRipText(subtitleStreamInfo.getSubtitles()).getBytes().length

@@ -262,10 +262,10 @@ public class RegularContentController {
         );
     }
 
-    private void loadSingleFileSubtitleSize(GuiFileInfo guiFileInfo, int subtitleIndex) {
+    private void loadSingleFileSubtitleSize(GuiFileInfo guiFileInfo, int subtitleId) {
         runLoadSubtitlesTask(
                 new LoadSubtitlesTask(
-                        subtitleIndex,
+                        subtitleId,
                         findMatchingFileInfo(guiFileInfo, filesInfo),
                         guiFileInfo,
                         guiContext.getSettings().getSortBy(),

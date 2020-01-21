@@ -7,16 +7,13 @@ import lombok.Getter;
 
 @Getter
 public class GuiSubtitleStreamInfo {
+    private int id;
+
     private String unavailabilityReason;
 
     private String language;
 
     private String title;
-
-    /*
-     * Index got from ffprobe.
-     */
-    private int index;
 
     private boolean extra;
 
@@ -24,17 +21,17 @@ public class GuiSubtitleStreamInfo {
     private IntegerProperty size;
 
     public GuiSubtitleStreamInfo(
+            int id,
             String unavailabilityReason,
             String language,
             String title,
-            int index,
             boolean extra,
             int size
     ) {
+        this.id = id;
         this.unavailabilityReason = unavailabilityReason;
         this.language = language;
         this.title = title;
-        this.index = index;
         this.extra = extra;
         this.size = new SimpleIntegerProperty(size);
     }

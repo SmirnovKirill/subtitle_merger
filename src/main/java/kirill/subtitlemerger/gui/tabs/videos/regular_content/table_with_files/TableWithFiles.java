@@ -234,7 +234,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             );
 
             Hyperlink getSizeLink = new Hyperlink("get size");
-            getSizeLink.setOnAction(event -> singleSizeLoader.load(fileInfo, streamInfo.getIndex()));
+            getSizeLink.setOnAction(event -> singleSizeLoader.load(fileInfo, streamInfo.getId()));
 
             HBox radios = new HBox();
             radios.setSpacing(10);
@@ -243,8 +243,11 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             ToggleGroup toggleGroup = new ToggleGroup();
 
             RadioButton upper = new RadioButton("upper");
+            upper.setSelected(fileInfo.getUpperSubtitleId() == streamInfo.getId());
             upper.setToggleGroup(toggleGroup);
+
             RadioButton lower = new RadioButton("lower");
+            lower.setSelected(fileInfo.getUpperSubtitleId() == streamInfo.getId());
             lower.setToggleGroup(toggleGroup);
 
             radios.getChildren().addAll(upper, lower);
@@ -352,6 +355,6 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
     @FunctionalInterface
     public interface SingleFileSubtitleSizeLoader {
-        void load(GuiFileInfo guiFileInfo, int subtitleIndex);
+        void load(GuiFileInfo guiFileInfo, int subtitleId);
     }
 }
