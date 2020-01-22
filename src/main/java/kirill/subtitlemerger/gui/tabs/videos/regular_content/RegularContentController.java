@@ -17,6 +17,7 @@ import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.GuiUtils;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.*;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStreamInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStreamInfo;
@@ -224,13 +225,7 @@ public class RegularContentController {
 
     private void getAllSizesButtonClicked(ActionEvent event) {
         runLoadSubtitlesTask(
-                new LoadSubtitlesTask(
-                        filesInfo,
-                        allGuiFilesInfo,
-                        guiContext.getSettings().getSortBy(),
-                        guiContext.getSettings().getSortDirection(),
-                        guiContext.getFfmpeg()
-                )
+                new LoadSeveralFilesAllSubtitlesTask(filesInfo, tableWithFiles.getItems(), guiContext.getFfmpeg())
         );
     }
 
@@ -252,11 +247,9 @@ public class RegularContentController {
 
     private void loadAllFileSubtitleSizes(GuiFileInfo guiFileInfo) {
         runLoadSubtitlesTask(
-                new LoadSubtitlesTask(
+                new LoadSingleFileAllSubtitlesTask(
                         findMatchingFileInfo(guiFileInfo, filesInfo),
                         guiFileInfo,
-                        guiContext.getSettings().getSortBy(),
-                        guiContext.getSettings().getSortDirection(),
                         guiContext.getFfmpeg()
                 )
         );
@@ -264,12 +257,10 @@ public class RegularContentController {
 
     private void loadSingleFileSubtitleSize(GuiFileInfo guiFileInfo, int subtitleId) {
         runLoadSubtitlesTask(
-                new LoadSubtitlesTask(
+                new LoadSingleSubtitleTask(
                         subtitleId,
                         findMatchingFileInfo(guiFileInfo, filesInfo),
                         guiFileInfo,
-                        guiContext.getSettings().getSortBy(),
-                        guiContext.getSettings().getSortDirection(),
                         guiContext.getFfmpeg()
                 )
         );
@@ -817,9 +808,15 @@ public class RegularContentController {
                 .findFirst().orElseThrow(IllegalStateException::new);
     }
 
-    private static FileInfo findMatchingFileInfo(GuiFileInfo guiFileInfo, List<FileInfo> filesInfo) {
+    public static FileInfo findMatchingFileInfo(GuiFileInfo guiFileInfo, List<FileInfo> filesInfo) {
         return filesInfo.stream()
                 .filter(fileInfo -> Objects.equals(fileInfo.getFile().getAbsolutePath(), guiFileInfo.getFullPath()))
+                .findFirst().orElseThrow(IllegalStateException::new);
+    }
+
+    public static GuiSubtitleStreamInfo findMatchingGuiStreamInfo(int id, List<GuiSubtitleStreamInfo> guiStreamsInfo) {
+        return guiStreamsInfo.stream()
+                .filter(stream -> stream.getId() == id)
                 .findFirst().orElseThrow(IllegalStateException::new);
     }
 
