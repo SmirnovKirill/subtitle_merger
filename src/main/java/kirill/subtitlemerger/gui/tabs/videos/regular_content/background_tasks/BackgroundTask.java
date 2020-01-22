@@ -163,7 +163,7 @@ public abstract class BackgroundTask<T> extends Task<T> {
                     .collect(Collectors.toList());
         }
 
-        return new GuiFileInfo(
+        GuiFileInfo result = new GuiFileInfo(
                 pathToDisplay,
                 fileInfo.getFile().getAbsolutePath(),
                 selected,
@@ -175,10 +175,40 @@ public abstract class BackgroundTask<T> extends Task<T> {
                 RegularContentController.haveSubtitlesToLoad(fileInfo),
                 RegularContentController.getSubtitleCanBeHiddenCount(fileInfo, guiSettings),
                 RegularContentController.getSubtitleCanBeHiddenCount(fileInfo, guiSettings) != 0,
-                null,
-                null,
                 subtitleStreamsInfo
         );
+
+        for (GuiSubtitleStreamInfo stream : result.getSubtitleStreamsInfo()) {
+            stream.selectedAsUpperProperty().addListener((observableValue, oldValue, newValue) -> {
+                if (!Boolean.TRUE.equals(newValue)) {
+                    return;
+                }
+
+                for (GuiSubtitleStreamInfo currentStream : result.getSubtitleStreamsInfo()) {
+                    if (currentStream.getId() == stream.getId()) {
+                        currentStream.setSelectedAsLower(false);
+                    } else {
+                        currentStream.setSelectedAsUpper(false);
+                    }
+                }
+            });
+
+            stream.selectedAsLowerProperty().addListener((observableValue, oldValue, newValue) -> {
+                if (!Boolean.TRUE.equals(newValue)) {
+                    return;
+                }
+
+                for (GuiSubtitleStreamInfo currentStream : result.getSubtitleStreamsInfo()) {
+                    if (currentStream.getId() == stream.getId()) {
+                        currentStream.setSelectedAsUpper(false);
+                    } else {
+                        currentStream.setSelectedAsLower(false);
+                    }
+                }
+            });
+        }
+
+        return result;
     }
 
     private static GuiSubtitleStreamInfo from(SubtitleStreamInfo subtitleStreamInfo, GuiSettings guiSettings) {
@@ -190,7 +220,9 @@ public abstract class BackgroundTask<T> extends Task<T> {
                 RegularContentController.isExtra(subtitleStreamInfo, guiSettings),
                 subtitleStreamInfo.getSubtitles() != null
                         ? Writer.toSubRipText(subtitleStreamInfo.getSubtitles()).getBytes().length
-                        : 0
+                        : 0,
+                false,
+                false
         );
     }
 

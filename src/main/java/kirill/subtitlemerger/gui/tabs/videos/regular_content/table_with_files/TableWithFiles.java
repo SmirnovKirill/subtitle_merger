@@ -240,15 +240,11 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             radios.setSpacing(10);
             radios.setAlignment(Pos.CENTER);
 
-            ToggleGroup toggleGroup = new ToggleGroup();
-
             RadioButton upper = new RadioButton("upper");
-            upper.setSelected(fileInfo.getUpperSubtitleId() == streamInfo.getId());
-            upper.setToggleGroup(toggleGroup);
+            upper.selectedProperty().bindBidirectional(streamInfo.selectedAsUpperProperty());
 
             RadioButton lower = new RadioButton("lower");
-            lower.setSelected(fileInfo.getUpperSubtitleId() == streamInfo.getId());
-            lower.setToggleGroup(toggleGroup);
+            lower.selectedProperty().bindBidirectional(streamInfo.selectedAsLowerProperty());
 
             radios.getChildren().addAll(upper, lower);
 
