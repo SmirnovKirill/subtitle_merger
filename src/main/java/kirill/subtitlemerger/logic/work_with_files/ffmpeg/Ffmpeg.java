@@ -3,6 +3,7 @@ package kirill.subtitlemerger.logic.work_with_files.ffmpeg;
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.logic.core.Writer;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
+import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStreamInfo;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -98,7 +99,7 @@ public class Ffmpeg {
             Subtitles subtitles,
             String title,
             LanguageAlpha3Code mainLanguage,
-            int subtitleStreamCount,
+            List<SubtitleStreamInfo> subtitleStreamsInfo,
             File videoFile
     ) throws FfmpegException {
         /*
@@ -121,7 +122,7 @@ public class Ffmpeg {
                         getArgumentsInjectToFile(
                                 title,
                                 mainLanguage,
-                                subtitleStreamCount,
+                                subtitleStreamsInfo,
                                 videoFile,
                                 outputTemp
                         )
@@ -151,11 +152,13 @@ public class Ffmpeg {
     private List<String> getArgumentsInjectToFile(
             String title,
             LanguageAlpha3Code mainLanguage,
-            int subtitleStreamCount,
+            List<SubtitleStreamInfo> subtitleStreamsInfo,
             File videoFile,
             File outputTemp
     ) {
         List<String> result = new ArrayList<>();
+
+        int newStreamIndex = subtitleStreamsInfo.size();
 
         result.add(ffmpegFile.getAbsolutePath());
         result.add("-y");
@@ -178,11 +181,18 @@ public class Ffmpeg {
         result.addAll(Arrays.asList("-max_interleave_delta", "0"));
 
         if (mainLanguage != null) {
-            result.addAll(Arrays.asList("-metadata:s:s:" + subtitleStreamCount, "language=" + mainLanguage));
+            result.addAll(Arrays.asList("-metadata:s:s:" + newStreamIndex, "language=" + mainLanguage));
         }
 
-        result.addAll(Arrays.asList("-metadata:s:s:" + subtitleStreamCount, "title=" + title));
-        result.addAll(Arrays.asList("-disposition:s:" + subtitleStreamCount, "default"));
+        result.addAll(Arrays.asList("-metadata:s:s:" + newStreamIndex, "title=" + title));
+
+        for (SubtitleStreamInfo subtitleStreamInfo : subtitleStreamsInfo) {
+            if (subtitleStreamInfo.isDefaultDisposition()) {
+                result.addAll(Arrays.asList("-disposition:s:" + subtitleStreamInfo.getId(), "0"));
+            }
+        }
+        result.addAll(Arrays.asList("-disposition:s:" + newStreamIndex, "default"));
+
         result.addAll(Arrays.asList("-map", "0"));
         result.addAll(Arrays.asList("-map", "1"));
         result.add(outputTemp.getAbsolutePath());

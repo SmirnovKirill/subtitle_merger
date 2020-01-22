@@ -27,7 +27,7 @@ public class SubtitleInjector {
                 result,
                 title,
                 mainLanguage,
-                fileInfo.getSubtitleStreamsInfo().size(),
+                fileInfo.getSubtitleStreamsInfo(),
                 fileInfo.getFile()
         );
     }
