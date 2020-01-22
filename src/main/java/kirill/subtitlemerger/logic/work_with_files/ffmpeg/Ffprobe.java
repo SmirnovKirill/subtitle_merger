@@ -10,6 +10,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.List;
 
 @CommonsLog
 public class Ffprobe {
@@ -35,61 +36,64 @@ public class Ffprobe {
 
     public static void validate(File ffprobeFile) throws FfmpegException {
         try {
-            String consoleOutput = ProcessRunner.run(
-                    Arrays.asList(
-                            ffprobeFile.getAbsolutePath(),
-                            "-version"
-                    )
+            List<String> arguments = Arrays.asList(
+                    ffprobeFile.getAbsolutePath(),
+                    "-version"
             );
+
+            log.debug("run ffprobe with the following arguments: " + arguments);
+            String consoleOutput = ProcessRunner.run(arguments);
+            log.debug("ffprobe console output: " + consoleOutput);
 
             if (!consoleOutput.startsWith("ffprobe version")) {
                 log.info("console output doesn't start with the ffprobe version");
-                throw new FfmpegException(FfmpegException.Code.INCORRECT_FFPROBE_PATH);
+                throw new FfmpegException(FfmpegException.Code.INCORRECT_FFPROBE_PATH, consoleOutput);
             }
         } catch (ProcessException e) {
             if (e.getCode() == ProcessException.Code.INTERRUPTED) {
-                throw  new FfmpegException(FfmpegException.Code.INTERRUPTED);
+                throw  new FfmpegException(FfmpegException.Code.INTERRUPTED, null);
             }
 
-            log.info("failed to check ffprobe: " + e.getCode());
-            throw new FfmpegException(FfmpegException.Code.INCORRECT_FFPROBE_PATH);
+            log.warn("failed to check ffprobe: " + e.getCode());
+            throw new FfmpegException(FfmpegException.Code.INCORRECT_FFPROBE_PATH, null);
         }
     }
 
     public JsonFfprobeFileInfo getFileInfo(File file) throws FfmpegException {
         String consoleOutput;
         try {
-            consoleOutput = ProcessRunner.run(
-                    Arrays.asList(
-                            ffprobeFile.getAbsolutePath(),
-                            "-v",
-                            "quiet",
-                            "-show_format",
-                            "-show_streams",
-                            "-print_format",
-                            "json",
-                            file.getAbsolutePath()
-
-                    )
+            List<String> arguments = Arrays.asList(
+                    ffprobeFile.getAbsolutePath(),
+                    "-v",
+                    "quiet",
+                    "-show_format",
+                    "-show_streams",
+                    "-print_format",
+                    "json",
+                    file.getAbsolutePath()
             );
+
+            log.debug("run ffprobe with the following arguments: " + arguments);
+            consoleOutput = ProcessRunner.run(arguments);
+            log.debug("ffprobe console output: " + consoleOutput);
         } catch (ProcessException e) {
             if (e.getCode() == ProcessException.Code.INTERRUPTED) {
-                throw  new FfmpegException(FfmpegException.Code.INTERRUPTED);
+                throw  new FfmpegException(FfmpegException.Code.INTERRUPTED, null);
             }
 
             log.warn("failed to get file info with ffprobe: " + e.getCode());
-            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
+            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, null);
         }
 
         try {
             return JSON_OBJECT_MAPPER.readValue(consoleOutput, JsonFfprobeFileInfo.class);
         } catch (JsonProcessingException e) {
-            log.warn("failed to convert console output to json: "
+            log.error("failed to convert console output to json: "
                     + ExceptionUtils.getStackTrace(e)
                     + ", output is "
                     + consoleOutput
             );
-            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
+            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, consoleOutput);
         }
     }
 }

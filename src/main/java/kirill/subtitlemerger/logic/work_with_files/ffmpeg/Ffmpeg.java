@@ -34,24 +34,26 @@ public class Ffmpeg {
 
     public static void validate(File ffmpegFile) throws FfmpegException {
         try {
-            String consoleOutput = ProcessRunner.run(
-                    Arrays.asList(
-                            ffmpegFile.getAbsolutePath(),
-                            "-version"
-                    )
+            List<String> arguments = Arrays.asList(
+                    ffmpegFile.getAbsolutePath(),
+                    "-version"
             );
+
+            log.debug("run ffmpeg with the following arguments: " + arguments);
+            String consoleOutput = ProcessRunner.run(arguments);
+            log.debug("ffmpeg console output: " + consoleOutput);
 
             if (!consoleOutput.startsWith("ffmpeg version")) {
                 log.info("console output doesn't start with the ffmpeg version");
-                throw new FfmpegException(FfmpegException.Code.INCORRECT_FFMPEG_PATH);
+                throw new FfmpegException(FfmpegException.Code.INCORRECT_FFMPEG_PATH, consoleOutput);
             }
         } catch (ProcessException e) {
             if (e.getCode() == ProcessException.Code.INTERRUPTED) {
-                throw  new FfmpegException(FfmpegException.Code.INTERRUPTED);
+                throw  new FfmpegException(FfmpegException.Code.INTERRUPTED, null);
             }
 
-            log.info("failed to check ffmpeg: " + e.getCode());
-            throw new FfmpegException(FfmpegException.Code.INCORRECT_FFMPEG_PATH);
+            log.warn("failed to check ffmpeg: " + e.getCode());
+            throw new FfmpegException(FfmpegException.Code.INCORRECT_FFMPEG_PATH, null);
         }
     }
 
@@ -59,36 +61,39 @@ public class Ffmpeg {
      * Synchronized because we use one temporary file with subtitles.
      */
     public synchronized String getSubtitlesText(int streamIndex, File videoFile) throws FfmpegException {
+        String consoleOutput;
         try {
-            ProcessRunner.run(
-                    /*
-                     * We have to pass -y to agree with file overwriting, it's always required
-                     * because java will have created temporary file by the time ffmpeg is called.
-                     */
-                    Arrays.asList(
-                            ffmpegFile.getAbsolutePath(),
-                            "-y",
-                            "-i",
-                            videoFile.getAbsolutePath(),
-                            "-map",
-                            "0:" + streamIndex,
-                            TEMP_SUBTITLE_FILE.getAbsolutePath()
-                    )
+            /*
+             * We have to pass -y to agree with file overwriting, it's always required
+             * because java will have created temporary file by the time ffmpeg is called.
+             */
+            List<String> arguments = Arrays.asList(
+                    ffmpegFile.getAbsolutePath(),
+                    "-y",
+                    "-i",
+                    videoFile.getAbsolutePath(),
+                    "-map",
+                    "0:" + streamIndex,
+                    TEMP_SUBTITLE_FILE.getAbsolutePath()
             );
+
+            log.debug("run ffmpeg with the following arguments: " + arguments);
+            consoleOutput = ProcessRunner.run(arguments);
+            log.debug("ffmpeg console output: " + consoleOutput);
         } catch (ProcessException e) {
             if (e.getCode() == ProcessException.Code.INTERRUPTED) {
-                throw  new FfmpegException(FfmpegException.Code.INTERRUPTED);
+                throw  new FfmpegException(FfmpegException.Code.INTERRUPTED, null);
             }
 
             log.warn("failed to extract subtitles with ffmpeg: " + e.getCode());
-            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
+            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, null);
         }
 
         try {
             return FileUtils.readFileToString(TEMP_SUBTITLE_FILE, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            log.warn("failed to read subtitles from the file: " + ExceptionUtils.getStackTrace(e));
-            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
+            log.error("failed to read subtitles from the file: " + ExceptionUtils.getStackTrace(e));
+            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, consoleOutput);
         }
     }
 
@@ -113,35 +118,38 @@ public class Ffmpeg {
             FileUtils.writeStringToFile(TEMP_SUBTITLE_FILE, Writer.toSubRipText(subtitles), StandardCharsets.UTF_8);
         } catch (IOException e) {
             log.warn("failed to write merged subtitles to the temp file: " + ExceptionUtils.getStackTrace(e));
-            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
+            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, null);
         }
 
         try {
+            String consoleOutput;
             try {
-                ProcessRunner.run(
-                        getArgumentsInjectToFile(
-                                title,
-                                mainLanguage,
-                                subtitleStreamsInfo,
-                                videoFile,
-                                outputTemp
-                        )
+                List<String> arguments = getArgumentsInjectToFile(
+                        title,
+                        mainLanguage,
+                        subtitleStreamsInfo,
+                        videoFile,
+                        outputTemp
                 );
+
+                log.debug("run ffmpeg with the following arguments: " + arguments);
+                consoleOutput = ProcessRunner.run(arguments);
+                log.debug("ffmpeg console output: " + consoleOutput);
             } catch (ProcessException e) {
                 if (e.getCode() == ProcessException.Code.INTERRUPTED) {
-                    throw  new FfmpegException(FfmpegException.Code.INTERRUPTED);
+                    throw  new FfmpegException(FfmpegException.Code.INTERRUPTED, null);
                 }
 
                 log.warn("failed to inject subtitles with ffmpeg: " + e.getCode());
-                throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
+                throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, null);
             }
 
             if (outputTemp.length() <= videoFile.length()) {
-                log.warn("resulting file size is less than the original one");
-                throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
+                log.error("resulting file size is less than the original one");
+                throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, consoleOutput);
             }
 
-            overwriteOriginalVideo(outputTemp, videoFile);
+            overwriteOriginalVideo(outputTemp, videoFile, consoleOutput);
         } finally {
             if (outputTemp.exists() && !outputTemp.delete()) {
                 log.warn("failed to delete temp video file " + outputTemp.getAbsolutePath());
@@ -200,7 +208,11 @@ public class Ffmpeg {
         return result;
     }
 
-    private static void overwriteOriginalVideo(File outputTemp, File videoFile) throws FfmpegException {
+    private static void overwriteOriginalVideo(
+            File outputTemp,
+            File videoFile,
+            String consoleOutput
+    ) throws FfmpegException {
         /*
          * Save this flag here to restore it at the end of the method. Because otherwise if the file has had only
          * read access initially we will give it write access as well before renaming, and leave it like that.
@@ -209,14 +221,14 @@ public class Ffmpeg {
 
         if (!videoFile.setWritable(true, true)) {
             log.warn("failed to make video file " + videoFile.getAbsolutePath() + " writable");
-            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR);
+            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, consoleOutput);
         }
 
         try {
             Files.move(outputTemp.toPath(), videoFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             log.warn("failed to move temp video: " + ExceptionUtils.getStackTrace(e));
-            throw new FfmpegException(FfmpegException.Code.FAILED_TO_MOVE_TEMP_VIDEO);
+            throw new FfmpegException(FfmpegException.Code.FAILED_TO_MOVE_TEMP_VIDEO, consoleOutput);
         }
 
         if (!originallyWritable) {

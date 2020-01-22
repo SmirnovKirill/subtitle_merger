@@ -6,9 +6,12 @@ import lombok.Getter;
 public class FfmpegException extends Exception {
     private Code code;
 
-    FfmpegException(Code code) {
+    private String consoleOutput;
+
+    FfmpegException(Code code, String consoleOutput) {
         super();
         this.code = code;
+        this.consoleOutput = consoleOutput;
     }
 
     public enum Code {
