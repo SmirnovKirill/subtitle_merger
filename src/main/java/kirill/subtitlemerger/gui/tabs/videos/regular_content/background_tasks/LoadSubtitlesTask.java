@@ -27,18 +27,18 @@ public abstract class LoadSubtitlesTask extends BackgroundTask<Void> {
     protected int allSubtitleCount;
 
     @Getter
+    protected int loadedBeforeCount;
+
+    @Getter
     protected int processedCount;
 
     @Getter
     protected int loadedSuccessfullyCount;
 
     @Getter
-    protected int loadedBeforeCount;
-
-    @Getter
     protected int failedToLoadCount;
 
-    public LoadSubtitlesTask(
+    LoadSubtitlesTask(
             Ffmpeg ffmpeg
     ) {
         super();
@@ -137,11 +137,11 @@ public abstract class LoadSubtitlesTask extends BackgroundTask<Void> {
                 ? subtitleStream.getLanguage().toString().toUpperCase()
                 : "UNKNOWN LANGUAGE";
 
-        String progressPrefix = allSubtitleCount > 1
-                ? (processedCount + 1) + "/" + allSubtitleCount + " "
-                : "";
+        String part = allSubtitleCount > 1
+                ? (processedCount + 1) + "/" + allSubtitleCount + " getting subtitle"
+                : "Getting subtitle";
 
-        return progressPrefix + "getting subtitle "
+        return part
                 + language
                 + (StringUtils.isBlank(subtitleStream.getTitle()) ? "" : " " + subtitleStream.getTitle())
                 + " in " + file.getName();
