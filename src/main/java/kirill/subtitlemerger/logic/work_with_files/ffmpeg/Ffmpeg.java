@@ -197,7 +197,7 @@ public class Ffmpeg {
 
         for (SubtitleStreamInfo subtitleStreamInfo : subtitleStreamsInfo) {
             if (subtitleStreamInfo.isDefaultDisposition()) {
-                result.addAll(Arrays.asList("-disposition:s:" + subtitleStreamInfo.getId(), "0"));
+                result.addAll(Arrays.asList("-disposition:" + subtitleStreamInfo.getId(), "0"));
             }
         }
         result.addAll(Arrays.asList("-disposition:s:" + newStreamIndex, "default"));

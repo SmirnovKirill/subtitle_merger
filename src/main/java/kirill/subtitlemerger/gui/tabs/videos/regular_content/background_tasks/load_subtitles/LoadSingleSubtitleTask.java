@@ -35,7 +35,7 @@ public class LoadSingleSubtitleTask extends LoadSubtitlesTask {
         allSubtitleCount = 1;
         loadedBeforeCount = subtitleStreamInfo.getSubtitles() != null ? 1 : 0;
 
-        load(null, Collections.singletonList(guiFileInfo), Collections.singletonList(fileInfo));
+        load(subtitleId, Collections.singletonList(guiFileInfo), Collections.singletonList(fileInfo));
 
         return null;
     }

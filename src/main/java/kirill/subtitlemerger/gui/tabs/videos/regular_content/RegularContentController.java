@@ -23,8 +23,11 @@ import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.lo
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStreamInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles;
+import kirill.subtitlemerger.logic.core.Merger;
+import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStreamInfo;
+import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -272,6 +275,37 @@ public class RegularContentController {
 
         showProgress(task, true);
         GuiUtils.startTask(task);
+    }
+
+    @FXML
+    private void goButtonClicked() throws FfmpegException {
+        GuiFileInfo guiFileInfo = tableWithFiles.getItems().get(0);
+        FileInfo fileInfo = findMatchingFileInfo(guiFileInfo, filesInfo);
+
+        GuiSubtitleStreamInfo guiUpperSubtitles = guiFileInfo.getSubtitleStreamsInfo().stream()
+                .filter(GuiSubtitleStreamInfo::isSelectedAsUpper)
+                .findFirst().orElseThrow(IllegalStateException::new);
+        SubtitleStreamInfo upperSubtitles = SubtitleStreamInfo.getById(
+                guiUpperSubtitles.getId(),
+                fileInfo.getSubtitleStreamsInfo()
+        );
+
+        GuiSubtitleStreamInfo guiLowerSubtitles = guiFileInfo.getSubtitleStreamsInfo().stream()
+                .filter(GuiSubtitleStreamInfo::isSelectedAsLower)
+                .findFirst().orElseThrow(IllegalStateException::new);
+        SubtitleStreamInfo lowerSubtitles = SubtitleStreamInfo.getById(
+                guiLowerSubtitles.getId(),
+                fileInfo.getSubtitleStreamsInfo()
+        );
+
+        Subtitles mergedSubtitles = Merger.mergeSubtitles(upperSubtitles.getSubtitles(), lowerSubtitles.getSubtitles());
+        guiContext.getFfmpeg().injectSubtitlesToFile(
+                mergedSubtitles,
+                "merged",
+                upperSubtitles.getLanguage(),
+                fileInfo.getSubtitleStreamsInfo(),
+                fileInfo.getFile()
+        );
     }
 
     private void loadAllFileSubtitleSizes(GuiFileInfo guiFileInfo) {

@@ -86,7 +86,7 @@
                     </Button>
                 </HBox>
                 <HBox fx:id="goButtonWrapper" alignment="CENTER">
-                    <Button fx:id="goButton" text="Go!">
+                    <Button fx:id="goButton" onAction="#goButtonClicked" text="Go!">
                         <graphic>
                             <ImageView fitHeight="16" fitWidth="16">
                                 <Image url="/gui/icons/go.png"/>

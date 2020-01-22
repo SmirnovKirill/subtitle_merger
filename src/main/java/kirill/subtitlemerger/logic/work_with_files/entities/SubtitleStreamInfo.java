@@ -5,6 +5,8 @@ import kirill.subtitlemerger.logic.core.Writer;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import lombok.Getter;
 
+import java.util.List;
+
 @Getter
 public
 class SubtitleStreamInfo {
@@ -55,6 +57,12 @@ class SubtitleStreamInfo {
     public void setSubtitlesAndSize(Subtitles subtitles) {
         this.subtitles = subtitles;
         this.subtitleSize = getSubtitleSize(subtitles);
+    }
+
+    public static SubtitleStreamInfo getById(int id, List<SubtitleStreamInfo> allSubtitleStreams) {
+        return allSubtitleStreams.stream()
+                .filter(stream -> stream.getId() == id)
+                .findFirst().orElseThrow(IllegalAccessError::new);
     }
 
     private static int getSubtitleSize(Subtitles subtitles) {
