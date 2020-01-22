@@ -99,6 +99,7 @@ public class FileInfoGetter {
                                 SubtitleStreamInfo.UnavailabilityReason.NOT_ALLOWED_CODEC,
                                 getLanguage(stream).orElse(null),
                                 getTitle(stream).orElse(null),
+                                isDefaultDisposition(stream),
                                 null
                         )
                 );
@@ -112,6 +113,7 @@ public class FileInfoGetter {
                             null,
                             getLanguage(stream).orElse(null),
                             getTitle(stream).orElse(null),
+                            isDefaultDisposition(stream),
                             null
                     )
             );
@@ -148,5 +150,9 @@ public class FileInfoGetter {
         }
 
         return Optional.ofNullable(stream.getTags().get("title"));
+    }
+
+    private static boolean isDefaultDisposition(JsonStream stream) {
+        return stream.getDisposition().getDefaultDisposition() == 1;
     }
 }

@@ -1,5 +1,6 @@
 package kirill.subtitlemerger.logic.work_with_files.ffmpeg.json;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -10,13 +11,10 @@ import java.util.Map;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 public class JsonStream {
-    @JsonProperty(value = "index")
     private int index;
 
-    @JsonProperty(value = "codec_type")
     private String codecType;
 
-    @JsonProperty(value = "codec_name")
     private String codecName;
 
     /*
@@ -25,6 +23,27 @@ public class JsonStream {
      * Later it turned out that there's more to the format, it's possible to use hyphens as well, see the documentation
      * https://www.ffmpeg.org/ffmpeg-formats.html#matroska.
      */
-    @JsonProperty(value = "tags")
     private Map<String, String> tags;
+
+    private JsonDisposition disposition;
+
+    @JsonCreator
+    public JsonStream(
+            @JsonProperty(value = "index", required = true)
+                    int index,
+            @JsonProperty(value = "codec_type")
+                    String codecType,
+            @JsonProperty(value = "codec_name")
+                    String codecName,
+            @JsonProperty(value = "tags")
+                    Map<String, String> tags,
+            @JsonProperty(value = "disposition", required = true)
+                    JsonDisposition disposition
+    ) {
+        this.index = index;
+        this.codecType = codecType;
+        this.codecName = codecName;
+        this.tags = tags;
+        this.disposition = disposition;
+    }
 }

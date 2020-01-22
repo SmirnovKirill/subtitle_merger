@@ -24,6 +24,8 @@ class SubtitleStreamInfo {
 
     private String title;
 
+    private boolean defaultDisposition;
+
     private Subtitles subtitles;
 
     private Integer subtitleSize;
@@ -34,6 +36,7 @@ class SubtitleStreamInfo {
             UnavailabilityReason unavailabilityReason,
             LanguageAlpha3Code language,
             String title,
+            boolean defaultDisposition,
             Subtitles subtitles
     ) {
         this.id = id;
@@ -42,6 +45,7 @@ class SubtitleStreamInfo {
         this.unavailabilityReason = unavailabilityReason;
         this.language = language;
         this.title = title;
+        this.defaultDisposition = defaultDisposition;
         this.subtitles = subtitles;
         if (subtitles != null) {
             this.subtitleSize = getSubtitleSize(subtitles);

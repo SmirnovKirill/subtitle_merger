@@ -8,14 +8,14 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
-public class JsonFormat {
-    private String formatName;
+public class JsonDisposition {
+    private int defaultDisposition;
 
     @JsonCreator
-    public JsonFormat(
-            @JsonProperty(value = "format_name")
-                    String formatName
+    public JsonDisposition(
+            @JsonProperty(value = "default", required = true)
+                    int defaultDisposition
     ) {
-        this.formatName = formatName;
+        this.defaultDisposition = defaultDisposition;
     }
 }
