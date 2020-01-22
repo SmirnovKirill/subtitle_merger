@@ -67,7 +67,7 @@
                 <Region HBox.hgrow="ALWAYS"/>
                 <!-- To be able to use tooltip when button is disabled. -->
                 <HBox fx:id="autoSelectButtonWrapper" alignment="CENTER">
-                    <Button fx:id="autoSelectButton" text="Auto-select subtitles">
+                    <Button fx:id="autoSelectButton" onAction="#autoSelectButtonClicked"  text="Auto-select subtitles">
                         <graphic>
                             <ImageView fitHeight="16" fitWidth="16">
                                 <Image url="/gui/icons/computer.png"/>
@@ -76,7 +76,8 @@
                     </Button>
                 </HBox>
                 <HBox fx:id="getAllSizesButtonWrapper" alignment="CENTER">
-                    <Button fx:id="getAllSizesButton" text="Get all subtitle sizes">
+                    <Button fx:id="getAllSizesButton" onAction="#getAllSizesButtonClicked"
+                            text="Get all subtitle sizes">
                         <graphic>
                             <ImageView fitHeight="16" fitWidth="16">
                                 <Image url="/gui/icons/get.png"/>

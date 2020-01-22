@@ -154,7 +154,6 @@ public class RegularContentController {
                 )
         );
         this.tableWithFiles.selectedProperty().addListener(this::selectedCountChangeListener);
-        this.getAllSizesButton.setOnAction(this::getAllSizesButtonClicked);
 
         this.sortByGroup.selectedToggleProperty().addListener(this::sortByChanged);
         this.sortDirectionGroup.selectedToggleProperty().addListener(this::sortDirectionChanged);
@@ -223,7 +222,33 @@ public class RegularContentController {
         }
     }
 
-    private void getAllSizesButtonClicked(ActionEvent event) {
+    @FXML
+    private void autoSelectButtonClicked() {
+        BackgroundTask<?> task = new AutoSelectSubtitlesTask(
+                filesInfo,
+                tableWithFiles.getItems(),
+                guiContext.getFfmpeg(),
+                guiContext.getSettings()
+        );
+        currentCancellableTask = task;
+
+        task.setOnSucceeded(e -> {
+           //todo implement
+            // showResult(task, false);
+            stopProgress();
+        });
+        task.setOnCancelled(e -> {
+            //todo implement
+           // showResult(task, true);
+            stopProgress();
+        });
+
+        showProgress(task, true);
+        GuiUtils.startTask(task);
+    }
+
+    @FXML
+    private void getAllSizesButtonClicked() {
         runLoadSubtitlesTask(
                 new LoadSeveralFilesAllSubtitlesTask(filesInfo, tableWithFiles.getItems(), guiContext.getFfmpeg())
         );

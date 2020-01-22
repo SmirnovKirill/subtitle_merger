@@ -43,7 +43,7 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<Void> {
     @Getter
     private int failedCount;
 
-    AutoSelectSubtitlesTask(
+    public AutoSelectSubtitlesTask(
             List<FileInfo> allFilesInfo,
             List<GuiFileInfo> displayedGuiFilesInfo,
             Ffmpeg ffmpeg,
