@@ -228,7 +228,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             );
 
             sizeLabel.textProperty().bind(
-                    Bindings.when(streamInfo.sizeProperty().isEqualTo(0))
+                    Bindings.when(streamInfo.sizeProperty().isEqualTo(-1))
                             .then(unknownSizeBinding)
                             .otherwise(knownSizeBinding)
             );
@@ -262,13 +262,13 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
                 titlePane.managedProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()));
                 sizeLabel.visibleProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()));
                 sizeLabel.managedProperty().bind(sizeLabel.visibleProperty());
-                getSizeLink.visibleProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()).and(streamInfo.sizeProperty().isEqualTo(0)));
+                getSizeLink.visibleProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()).and(streamInfo.sizeProperty().isEqualTo(-1)));
                 getSizeLink.managedProperty().bind(getSizeLink.visibleProperty());
                 radios.visibleProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()));
                 radios.managedProperty().bind(radios.visibleProperty());
             } else {
-                getSizeLink.visibleProperty().bind(streamInfo.sizeProperty().isEqualTo(0));
-                getSizeLink.managedProperty().bind(streamInfo.sizeProperty().isEqualTo(0));
+                getSizeLink.visibleProperty().bind(streamInfo.sizeProperty().isEqualTo(-1));
+                getSizeLink.managedProperty().bind(streamInfo.sizeProperty().isEqualTo(-1));
             }
 
             GridPane.setMargin(titlePane, new Insets(0, 0, bottomMargin, 0));

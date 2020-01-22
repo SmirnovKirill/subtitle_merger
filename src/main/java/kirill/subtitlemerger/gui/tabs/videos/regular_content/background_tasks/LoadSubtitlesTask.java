@@ -5,7 +5,6 @@ import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentContr
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStreamInfo;
 import kirill.subtitlemerger.logic.core.Parser;
-import kirill.subtitlemerger.logic.core.Writer;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStreamInfo;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffmpeg;
@@ -58,7 +57,7 @@ public abstract class LoadSubtitlesTask extends BackgroundTask<Void> {
             }
 
             for (SubtitleStreamInfo subtitleStream : fileInfo.getSubtitleStreamsInfo()) {
-                if (isCancelled()) {
+                if (super.isCancelled()) {
                     cancelled = true;
                     break mainLoop;
                 }
@@ -87,7 +86,7 @@ public abstract class LoadSubtitlesTask extends BackgroundTask<Void> {
                     );
 
                     String subtitleText = ffmpeg.getSubtitlesText(subtitleStream.getId(), fileInfo.getFile());
-                    subtitleStream.setSubtitles(
+                    subtitleStream.setSubtitlesAndSize(
                             Parser.fromSubRipText(
                                     subtitleText,
                                     subtitleStream.getTitle(),
@@ -99,12 +98,11 @@ public abstract class LoadSubtitlesTask extends BackgroundTask<Void> {
                             subtitleStream.getId(),
                             guiFileInfo.getSubtitleStreamsInfo()
                     );
-                    int subtitleSize = Writer.toSubRipText(subtitleStream.getSubtitles()).getBytes().length;
 
                     /*
                      * Have to call this in the JavaFX thread because this change can lead to updates on the screen.
                      */
-                    Platform.runLater(() -> guiSubtitleStreamInfo.setSize(subtitleSize));
+                    Platform.runLater(() -> guiSubtitleStreamInfo.setSize(subtitleStream.getSubtitleSize()));
 
                     loadedSuccessfullyCount++;
                 } catch (FfmpegException e) {
@@ -137,11 +135,11 @@ public abstract class LoadSubtitlesTask extends BackgroundTask<Void> {
                 ? subtitleStream.getLanguage().toString().toUpperCase()
                 : "UNKNOWN LANGUAGE";
 
-        String part = allSubtitleCount > 1
-                ? (processedCount + 1) + "/" + allSubtitleCount + " getting subtitle"
-                : "Getting subtitle";
+        String progressPrefix = allSubtitleCount > 1
+                ? (processedCount + 1) + "/" + allSubtitleCount + " "
+                : "";
 
-        return part
+        return progressPrefix + "getting subtitle "
                 + language
                 + (StringUtils.isBlank(subtitleStream.getTitle()) ? "" : " " + subtitleStream.getTitle())
                 + " in " + file.getName();

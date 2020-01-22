@@ -1,9 +1,9 @@
 package kirill.subtitlemerger.logic.work_with_files.entities;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
+import kirill.subtitlemerger.logic.core.Writer;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
 public
@@ -24,8 +24,9 @@ class SubtitleStreamInfo {
 
     private String title;
 
-    @Setter
     private Subtitles subtitles;
+
+    private Integer subtitleSize;
 
     public SubtitleStreamInfo(
             int id,
@@ -42,6 +43,18 @@ class SubtitleStreamInfo {
         this.language = language;
         this.title = title;
         this.subtitles = subtitles;
+        if (subtitles != null) {
+            this.subtitleSize = getSubtitleSize(subtitles);
+        }
+    }
+
+    public void setSubtitlesAndSize(Subtitles subtitles) {
+        this.subtitles = subtitles;
+        this.subtitleSize = getSubtitleSize(subtitles);
+    }
+
+    private static int getSubtitleSize(Subtitles subtitles) {
+        return Writer.toSubRipText(subtitles).getBytes().length;
     }
 
     public enum UnavailabilityReason {
