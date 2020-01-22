@@ -66,7 +66,7 @@
                 <CheckBox fx:id="hideUnavailableCheckbox" onAction="#hideUnavailableClicked" text="hide unavailable"/>
                 <Region HBox.hgrow="ALWAYS"/>
                 <!-- To be able to use tooltip when button is disabled. -->
-                <Pane fx:id="autoSelectButtonWrapper">
+                <HBox fx:id="autoSelectButtonWrapper" alignment="CENTER">
                     <Button fx:id="autoSelectButton" text="Auto-select subtitles">
                         <graphic>
                             <ImageView fitHeight="16" fitWidth="16">
@@ -74,8 +74,8 @@
                             </ImageView>
                         </graphic>
                     </Button>
-                </Pane>
-                <Pane fx:id="getAllSizesButtonWrapper">
+                </HBox>
+                <HBox fx:id="getAllSizesButtonWrapper" alignment="CENTER">
                     <Button fx:id="getAllSizesButton" text="Get all subtitle sizes">
                         <graphic>
                             <ImageView fitHeight="16" fitWidth="16">
@@ -83,8 +83,8 @@
                             </ImageView>
                         </graphic>
                     </Button>
-                </Pane>
-                <Pane fx:id="goButtonWrapper">
+                </HBox>
+                <HBox fx:id="goButtonWrapper" alignment="CENTER">
                     <Button fx:id="goButton" text="Go!">
                         <graphic>
                             <ImageView fitHeight="16" fitWidth="16">
@@ -92,7 +92,7 @@
                             </ImageView>
                         </graphic>
                     </Button>
-                </Pane>
+                </HBox>
             </HBox>
             <TableWithFiles fx:id="tableWithFiles" VBox.vgrow="ALWAYS">
                 <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
