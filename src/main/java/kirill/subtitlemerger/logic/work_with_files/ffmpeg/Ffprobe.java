@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.json.JsonFfprobeFileInfo;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
@@ -41,7 +42,7 @@ public class Ffprobe {
                     "-version"
             );
 
-            log.debug("run ffprobe with the following arguments: " + arguments);
+            log.debug("run ffprobe " + StringUtils.join(arguments, " "));
             String consoleOutput = ProcessRunner.run(arguments);
             log.debug("ffprobe console output: " + consoleOutput);
 
@@ -73,7 +74,7 @@ public class Ffprobe {
                     file.getAbsolutePath()
             );
 
-            log.debug("run ffprobe with the following arguments: " + arguments);
+            log.debug("run ffprobe " + StringUtils.join(arguments, " "));
             consoleOutput = ProcessRunner.run(arguments);
             log.debug("ffprobe console output: " + consoleOutput);
         } catch (ProcessException e) {

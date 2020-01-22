@@ -6,6 +6,7 @@ import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStreamInfo;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
@@ -39,7 +40,7 @@ public class Ffmpeg {
                     "-version"
             );
 
-            log.debug("run ffmpeg with the following arguments: " + arguments);
+            log.debug("run ffmpeg " + StringUtils.join(arguments, " "));
             String consoleOutput = ProcessRunner.run(arguments);
             log.debug("ffmpeg console output: " + consoleOutput);
 
@@ -77,7 +78,7 @@ public class Ffmpeg {
                     TEMP_SUBTITLE_FILE.getAbsolutePath()
             );
 
-            log.debug("run ffmpeg with the following arguments: " + arguments);
+            log.debug("run ffmpeg " + StringUtils.join(arguments, " "));
             consoleOutput = ProcessRunner.run(arguments);
             log.debug("ffmpeg console output: " + consoleOutput);
         } catch (ProcessException e) {
@@ -132,7 +133,7 @@ public class Ffmpeg {
                         outputTemp
                 );
 
-                log.debug("run ffmpeg with the following arguments: " + arguments);
+                log.debug("run ffmpeg " + StringUtils.join(arguments, " "));
                 consoleOutput = ProcessRunner.run(arguments);
                 log.debug("ffmpeg console output: " + consoleOutput);
             } catch (ProcessException e) {
