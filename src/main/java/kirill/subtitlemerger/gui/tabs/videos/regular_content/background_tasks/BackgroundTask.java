@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 @CommonsLog
 public abstract class BackgroundTask<T> extends Task<T> {
-    BackgroundTask() {
+    public BackgroundTask() {
         setFailedCancelledCallbacks();
     }
 

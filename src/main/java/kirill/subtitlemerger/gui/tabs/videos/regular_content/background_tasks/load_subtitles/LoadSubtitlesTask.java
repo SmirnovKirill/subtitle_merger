@@ -1,7 +1,8 @@
-package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
+package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.load_subtitles;
 
 import javafx.application.Platform;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStreamInfo;
 import kirill.subtitlemerger.logic.core.Parser;

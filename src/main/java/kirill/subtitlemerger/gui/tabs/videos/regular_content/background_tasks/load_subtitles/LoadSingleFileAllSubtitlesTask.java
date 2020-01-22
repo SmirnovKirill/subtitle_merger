@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
+package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.load_subtitles;
 
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
