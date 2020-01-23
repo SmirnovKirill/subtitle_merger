@@ -57,7 +57,7 @@
 
         <HBox alignment="CENTER_LEFT" GridPane.rowIndex="2" GridPane.columnIndex="0">
             <Label text="Preferred language for upper subtitles"/>
-            <Region prefWidth="10"/>
+            <Region minWidth="10" HBox.hgrow="ALWAYS"/>
             <Label tooltip="$languageTooltip" alignment="CENTER">
                 <graphic>
                     <ImageView fitHeight="16" fitWidth="16">
@@ -88,7 +88,7 @@
 
         <HBox alignment="CENTER_LEFT" GridPane.rowIndex="4" GridPane.columnIndex="0">
             <Label text="Preferred language for lower subtitles"/>
-            <Region prefWidth="10"/>
+            <Region minWidth="10" HBox.hgrow="ALWAYS"/>
             <Label tooltip="$languageTooltip" alignment="CENTER">
                 <graphic>
                     <ImageView fitHeight="16" fitWidth="16">
@@ -163,7 +163,7 @@
                 <convenienceStyleClass>orange</convenienceStyleClass>
                 <safetyText>YES</safetyText>
                 <safetyStyleClass>green</safetyStyleClass>
-                <diskUsageText>VERT HIGH</diskUsageText>
+                <diskUsageText>VERY HIGH</diskUsageText>
                 <diskUsageStyleClass>red</diskUsageStyleClass>
             </MergeModeCharacteristicTable>
             <MergeModeCharacteristicTable GridPane.rowIndex="1" GridPane.columnIndex="2">
@@ -171,7 +171,7 @@
                 <convenienceStyleClass>red</convenienceStyleClass>
                 <safetyText>YES</safetyText>
                 <safetyStyleClass>green</safetyStyleClass>
-                <diskUsageText>VERT LOW</diskUsageText>
+                <diskUsageText>VERY LOW</diskUsageText>
                 <diskUsageStyleClass>green</diskUsageStyleClass>
             </MergeModeCharacteristicTable>
         </GridPane>
