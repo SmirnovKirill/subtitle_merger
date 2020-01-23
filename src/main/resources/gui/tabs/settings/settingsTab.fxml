@@ -181,7 +181,7 @@
 
         <Label fx:id="resultLabel" GridPane.rowIndex="7" GridPane.columnIndex="0" GridPane.columnSpan="2">
             <GridPane.margin>
-                <Insets top="10" bottom="10"/>
+                <Insets top="40" bottom="40"/>
             </GridPane.margin>
         </Label>
     </GridPane>
