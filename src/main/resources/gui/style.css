@@ -40,3 +40,8 @@
 .hyperlink:hover:visited {
     -fx-text-fill: -fx-accent;
 }
+
+.tooltip {
+    -fx-background-color: -fx-body-color;
+    -fx-text-fill: -fx-text-base-color;
+}

@@ -8,7 +8,7 @@
 <Tab xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
      fx:controller="kirill.subtitlemerger.gui.tabs.subtitle_files.SubtitleFilesTabController"
      text="Subtitle files">
-    <GridPane hgap="55" vgap="40">
+    <GridPane hgap="35" vgap="40">
         <gridLinesVisible><GuiConstants fx:constant="DEBUG"/></gridLinesVisible>
 
         <padding>

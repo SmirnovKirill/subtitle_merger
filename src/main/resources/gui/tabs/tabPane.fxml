@@ -5,7 +5,7 @@
 <TabPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
          fx:id="tabPane" fx:controller="kirill.subtitlemerger.gui.tabs.TabPaneController"
          tabClosingPolicy="UNAVAILABLE" tabDragPolicy="FIXED"
-         prefWidth="800" prefHeight="600">
+         prefWidth="900" prefHeight="600">
     <minWidth><Region fx:constant="USE_PREF_SIZE"/></minWidth>
     <minHeight><Region fx:constant="USE_PREF_SIZE"/></minHeight>
     <fx:include fx:id="subtitleFilesTab" source="subtitle_files/subtitleFilesTab.fxml"/>

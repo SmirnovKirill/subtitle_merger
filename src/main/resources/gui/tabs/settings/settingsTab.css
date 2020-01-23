@@ -1,0 +1,19 @@
+.characteristic-title {
+    -fx-font-size: 0.916667em;
+}
+
+.characteristic-value {
+    -fx-font-size: 0.916667em;
+}
+
+.characteristic-value.green {
+    -fx-text-fill: green;
+}
+
+.characteristic-value.orange {
+    -fx-text-fill: #ff8c00;
+}
+
+.characteristic-value.red {
+    -fx-text-fill: red;
+}
