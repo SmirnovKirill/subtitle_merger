@@ -6,6 +6,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.util.*?>
 <?import kirill.subtitlemerger.gui.GuiConstants?>
+<?import kirill.subtitlemerger.gui.tabs.settings.CharacteristicsTable?>
 <Tab xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
      fx:controller="kirill.subtitlemerger.gui.tabs.settings.SettingsTabController"
      text="Settings">
@@ -104,14 +105,7 @@
                 <Insets top="40" bottom="40"/>
             </GridPane.margin>
         </Label>
-       <!-- <VBox spacing="10" GridPane.rowIndex="5" GridPane.columnIndex="1">
-            <GridPane.margin>
-                <Insets top="40"/>
-            </GridPane.margin>
-            <RadioButton text="Original video"/>
-            <RadioButton text="Copy of the video"/>
-            <RadioButton text="Separate subtitle file"/>
-        </VBox>-->
+
         <GridPane hgap="20" vgap="15" GridPane.rowIndex="5" GridPane.columnIndex="1">
             <gridLinesVisible><GuiConstants fx:constant="DEBUG"/></gridLinesVisible>
 
@@ -198,90 +192,30 @@
                 </Label>
             </HBox>
 
-            <GridPane hgap="5" GridPane.rowIndex="1" GridPane.columnIndex="0">
-                <columnConstraints>
-                    <ColumnConstraints hgrow="ALWAYS"/>
-                    <ColumnConstraints hgrow="ALWAYS"/>
-                </columnConstraints>
-
-                <Label styleClass="characteristic-title" GridPane.rowIndex="0" GridPane.columnIndex="0">
-                    Convenience:
-                </Label>
-                <Label styleClass="characteristic-value, green"
-                       GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.halignment="RIGHT">
-                    HIGH
-                </Label>
-                <Label styleClass="characteristic-title" GridPane.rowIndex="1" GridPane.columnIndex="0">
-                    Safe:
-                </Label>
-                <Label styleClass="characteristic-value, red"
-                       GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.halignment="RIGHT">
-                    NO
-                </Label>
-                <Label styleClass="characteristic-title" GridPane.rowIndex="2" GridPane.columnIndex="0">
-                    Disk usage:
-                </Label>
-                <Label styleClass="characteristic-value, orange"
-                       GridPane.rowIndex="2" GridPane.columnIndex="1" GridPane.halignment="RIGHT">
-                    MEDIUM
-                </Label>
-            </GridPane>
-            <GridPane hgap="5" GridPane.rowIndex="1" GridPane.columnIndex="1">
-                <columnConstraints>
-                    <ColumnConstraints hgrow="ALWAYS"/>
-                    <ColumnConstraints hgrow="ALWAYS"/>
-                </columnConstraints>
-
-                <Label styleClass="characteristic-title" GridPane.rowIndex="0" GridPane.columnIndex="0">
-                    Convenience:
-                </Label>
-                <Label styleClass="characteristic-value, orange"
-                       GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.halignment="RIGHT">
-                    MEDIUM
-                </Label>
-                <Label styleClass="characteristic-title" GridPane.rowIndex="1" GridPane.columnIndex="0">
-                    Safe:
-                </Label>
-                <Label styleClass="characteristic-value, green"
-                       GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.halignment="RIGHT">
-                    YES
-                </Label>
-                <Label styleClass="characteristic-title" GridPane.rowIndex="2" GridPane.columnIndex="0">
-                    Disk usage:
-                </Label>
-                <Label styleClass="characteristic-value, red"
-                       GridPane.rowIndex="2" GridPane.columnIndex="1" GridPane.halignment="RIGHT">
-                    VERY HIGH
-                </Label>
-            </GridPane>
-            <GridPane hgap="5" GridPane.rowIndex="1" GridPane.columnIndex="2">
-                <columnConstraints>
-                    <ColumnConstraints hgrow="ALWAYS"/>
-                    <ColumnConstraints hgrow="ALWAYS"/>
-                </columnConstraints>
-
-                <Label styleClass="characteristic-title" GridPane.rowIndex="0" GridPane.columnIndex="0">
-                    Convenience:
-                </Label>
-                <Label styleClass="characteristic-value, red"
-                       GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.halignment="RIGHT">
-                    LOW
-                </Label>
-                <Label styleClass="characteristic-title" GridPane.rowIndex="1" GridPane.columnIndex="0">
-                    Safe:
-                </Label>
-                <Label styleClass="characteristic-value, green"
-                       GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.halignment="RIGHT">
-                    YES
-                </Label>
-                <Label styleClass="characteristic-title" GridPane.rowIndex="2" GridPane.columnIndex="0">
-                    Disk usage:
-                </Label>
-                <Label styleClass="characteristic-value, green"
-                       GridPane.rowIndex="2" GridPane.columnIndex="1" GridPane.halignment="RIGHT">
-                    VERY LOW
-                </Label>
-            </GridPane>
+            <CharacteristicsTable GridPane.rowIndex="1" GridPane.columnIndex="0">
+                <convenienceText>HIGH</convenienceText>
+                <convenienceStyleClass>green</convenienceStyleClass>
+                <safetyText>NO</safetyText>
+                <safetyStyleClass>red</safetyStyleClass>
+                <diskUsageText>MEDIUM</diskUsageText>
+                <diskUsageStyleClass>orange</diskUsageStyleClass>
+            </CharacteristicsTable>
+            <CharacteristicsTable GridPane.rowIndex="1" GridPane.columnIndex="1">
+                <convenienceText>MEDIUM</convenienceText>
+                <convenienceStyleClass>orange</convenienceStyleClass>
+                <safetyText>YES</safetyText>
+                <safetyStyleClass>green</safetyStyleClass>
+                <diskUsageText>VERT HIGH</diskUsageText>
+                <diskUsageStyleClass>red</diskUsageStyleClass>
+            </CharacteristicsTable>
+            <CharacteristicsTable GridPane.rowIndex="1" GridPane.columnIndex="2">
+                <convenienceText>LOW</convenienceText>
+                <convenienceStyleClass>red</convenienceStyleClass>
+                <safetyText>YES</safetyText>
+                <safetyStyleClass>green</safetyStyleClass>
+                <diskUsageText>VERT LOW</diskUsageText>
+                <diskUsageStyleClass>green</diskUsageStyleClass>
+            </CharacteristicsTable>
         </GridPane>
 
         <Label text="Mark merged subtitle streams as default" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
