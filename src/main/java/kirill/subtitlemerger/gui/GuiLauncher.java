@@ -49,6 +49,18 @@ public class GuiLauncher extends Application {
             splash.close();
         }
 
+        /*
+         * I've encountered a very strange behaviour - at first stage's width and height are set to their computed sizes
+         * but very soon after this method (start) is called during the startup window sizes are changed for a reason
+         * completely unknown to me. Sizes are changed because com.sun.glass.ui.Window::notifyResize is called. This
+         * method is called from a native method com.sun.glass.ui.gtk.GtkApplication::_runLoop so I can't understand why
+         * that happens. Anyway, I've discovered that if I set stage's width and height explicitly these original sizes
+         * will be restored after those weird changes.
+         */
+        //todo check arch&windows
+        stage.setWidth(stage.getWidth());
+        stage.setHeight(stage.getHeight());
+
         stage.setMinWidth(stage.getWidth());
         stage.setMinHeight(stage.getHeight());
         stage.widthProperty().addListener(this::widthChanged);
