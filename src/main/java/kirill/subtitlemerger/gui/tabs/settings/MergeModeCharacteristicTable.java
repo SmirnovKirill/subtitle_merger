@@ -11,7 +11,7 @@ import lombok.Getter;
 import java.io.IOException;
 
 @Getter
-public class CharacteristicsTable extends GridPane {
+public class MergeModeCharacteristicTable extends GridPane {
     @FXML
     private Label convenienceLabel;
 
@@ -21,9 +21,9 @@ public class CharacteristicsTable extends GridPane {
     @FXML
     private Label diskUsageLabel;
 
-    public CharacteristicsTable() throws IOException {
+    public MergeModeCharacteristicTable() throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(
-                getClass().getResource("/gui/tabs/settings/characteristicsTable.fxml")
+                getClass().getResource("/gui/tabs/settings/mergeModeCharacteristicTable.fxml")
         );
         fxmlLoader.setRoot(this);
         fxmlLoader.setController(this);

@@ -4,9 +4,9 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.util.*?>
+<?import javafx.util.Duration?>
 <?import kirill.subtitlemerger.gui.GuiConstants?>
-<?import kirill.subtitlemerger.gui.tabs.settings.CharacteristicsTable?>
+<?import kirill.subtitlemerger.gui.tabs.settings.*?>
 <Tab xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
      fx:controller="kirill.subtitlemerger.gui.tabs.settings.SettingsTabController"
      text="Settings">
@@ -119,103 +119,61 @@
                 <ColumnConstraints hgrow="ALWAYS"/>
             </columnConstraints>
 
-            <HBox alignment="CENTER_LEFT" GridPane.rowIndex="0" GridPane.columnIndex="0">
-                <RadioButton text="Original videos"/>
-                <Region HBox.hgrow="ALWAYS"/>
-                <Label>
-                    <graphic>
-                        <ImageView fitHeight="16" fitWidth="16">
-                            <Image url="/gui/icons/question.png"/>
-                        </ImageView>
-                    </graphic>
-                    <tooltip>
-                        <Tooltip wrapText="true" prefWidth="300">
-                            <showDelay><Duration fx:constant="ZERO"/></showDelay>
-                            <showDuration><Duration fx:constant="INDEFINITE"/></showDuration>
-                            <text>
-                                With this option application will inject merged subtitles into the original video files. It is the most
-                                convenient option since everything will look as before except for the new merged subtitles in the
-                                subtitle list. This approach requires extra disk space during the merge process (equal to the size of
-                                the largest video to process) because application will create temporary file first and then will
-                                overwrite the original video with this temporary one. Note that the original files will be overwritten!
-                                And if something goes wrong during the merge you will lose your video files.
-                            </text>
-                        </Tooltip>
-                    </tooltip>
-                </Label>
-            </HBox>
-            <HBox alignment="CENTER_LEFT" GridPane.rowIndex="0" GridPane.columnIndex="1">
-                <RadioButton text="Copies of the videos"/>
-                <Region HBox.hgrow="ALWAYS"/>
-                <Label>
-                    <graphic>
-                        <ImageView fitHeight="16" fitWidth="16">
-                            <Image url="/gui/icons/question.png"/>
-                        </ImageView>
-                    </graphic>
-                    <tooltip>
-                        <Tooltip wrapText="true" prefWidth="300">
-                            <showDelay><Duration fx:constant="ZERO"/></showDelay>
-                            <showDuration><Duration fx:constant="INDEFINITE"/></showDuration>
-                            <text>
-                                With this option application will make copies of the original videos and inject merged subtitles into
-                                these copies. This option is still pretty convenient because all you have to do after the merge is
-                                open the copy of the video and subtitles will be there. Also this option is safe because original
-                                files won't be modified in any way. But you will end up with twice as much files as before, it's
-                                extremely disk space consuming.
-                            </text>
-                        </Tooltip>
-                    </tooltip>
-                </Label>
-            </HBox>
-            <HBox alignment="CENTER_LEFT" GridPane.rowIndex="0" GridPane.columnIndex="2">
-                <RadioButton text="Separate subtitle files"/>
-                <Region HBox.hgrow="ALWAYS"/>
-                <Label>
-                    <graphic>
-                        <ImageView fitHeight="16" fitWidth="16">
-                            <Image url="/gui/icons/question.png"/>
-                        </ImageView>
-                    </graphic>
-                    <tooltip>
-                        <Tooltip wrapText="true" prefWidth="300">
-                            <showDelay><Duration fx:constant="ZERO"/></showDelay>
-                            <showDuration><Duration fx:constant="INDEFINITE"/></showDuration>
-                            <text>
-                                With this option application will create separate subtitle files next to the videos. This option is the
-                                least convenient because after the merge you will have to add subtitle files manually when watching
-                                videos. But this option is safe because original files won't be modified in any way. And it also doesn't
-                                require almost any extra disk space.
-                            </text>
-                        </Tooltip>
-                    </tooltip>
-                </Label>
-            </HBox>
+            <MergeModeOption GridPane.rowIndex="0" GridPane.columnIndex="0">
+                <radioButtonText>Original videos</radioButtonText>
+                <tooltipText>
+                    With this option application will inject merged subtitles into the original video files. It is the most
+                    convenient option since everything will look as before except for the new merged subtitles in the
+                    subtitle list. This approach requires extra disk space during the merge process (equal to the size of
+                    the largest video to process) because application will create temporary file first and then will
+                    overwrite the original video with this temporary one. Note that the original files will be overwritten!
+                    And if something goes wrong during the merge you will lose your video files.
+                </tooltipText>
+            </MergeModeOption>
+            <MergeModeOption GridPane.rowIndex="0" GridPane.columnIndex="1">
+                <radioButtonText>Copies of the videos</radioButtonText>
+                <tooltipText>
+                    With this option application will make copies of the original videos and inject merged subtitles into
+                    these copies. This option is still pretty convenient because all you have to do after the merge is
+                    open the copy of the video and subtitles will be there. Also this option is safe because original
+                    files won't be modified in any way. But you will end up with twice as much files as before, it's
+                    extremely disk space consuming.
+                </tooltipText>
+            </MergeModeOption>
+            <MergeModeOption GridPane.rowIndex="0" GridPane.columnIndex="2">
+                <radioButtonText>Separate subtitle files</radioButtonText>
+                <tooltipText>
+                    With this option application will create separate subtitle files next to the videos. This option is the
+                    least convenient because after the merge you will have to add subtitle files manually when watching
+                    videos. But this option is safe because original files won't be modified in any way. And it also doesn't
+                    require almost any extra disk space.
+                </tooltipText>
+            </MergeModeOption>
 
-            <CharacteristicsTable GridPane.rowIndex="1" GridPane.columnIndex="0">
+            <MergeModeCharacteristicTable GridPane.rowIndex="1" GridPane.columnIndex="0">
                 <convenienceText>HIGH</convenienceText>
                 <convenienceStyleClass>green</convenienceStyleClass>
                 <safetyText>NO</safetyText>
                 <safetyStyleClass>red</safetyStyleClass>
                 <diskUsageText>MEDIUM</diskUsageText>
                 <diskUsageStyleClass>orange</diskUsageStyleClass>
-            </CharacteristicsTable>
-            <CharacteristicsTable GridPane.rowIndex="1" GridPane.columnIndex="1">
+            </MergeModeCharacteristicTable>
+            <MergeModeCharacteristicTable GridPane.rowIndex="1" GridPane.columnIndex="1">
                 <convenienceText>MEDIUM</convenienceText>
                 <convenienceStyleClass>orange</convenienceStyleClass>
                 <safetyText>YES</safetyText>
                 <safetyStyleClass>green</safetyStyleClass>
                 <diskUsageText>VERT HIGH</diskUsageText>
                 <diskUsageStyleClass>red</diskUsageStyleClass>
-            </CharacteristicsTable>
-            <CharacteristicsTable GridPane.rowIndex="1" GridPane.columnIndex="2">
+            </MergeModeCharacteristicTable>
+            <MergeModeCharacteristicTable GridPane.rowIndex="1" GridPane.columnIndex="2">
                 <convenienceText>LOW</convenienceText>
                 <convenienceStyleClass>red</convenienceStyleClass>
                 <safetyText>YES</safetyText>
                 <safetyStyleClass>green</safetyStyleClass>
                 <diskUsageText>VERT LOW</diskUsageText>
                 <diskUsageStyleClass>green</diskUsageStyleClass>
-            </CharacteristicsTable>
+            </MergeModeCharacteristicTable>
         </GridPane>
 
         <Label text="Mark merged subtitle streams as default" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
