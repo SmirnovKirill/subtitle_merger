@@ -2,10 +2,7 @@ package kirill.subtitlemerger.gui.tabs.settings;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
@@ -61,6 +58,9 @@ public class SettingsTabController {
     private Button swapLanguagesButton;
 
     @FXML
+    private CheckBox markMergedStreamAsDefaultCheckBox;
+
+    @FXML
     private Label resultLabel;
 
     public void initialize(Stage stage, GuiContext context) {
@@ -68,20 +68,11 @@ public class SettingsTabController {
         this.context = context;
         this.settings = context.getSettings();
 
-        initializeComboBoxes();
-        initializeTextFields();
+        setInitialValues();
         setSwapLanguagesButtonVisibility();
     }
 
-    private void initializeComboBoxes() {
-        upperLanguageComboBox.getItems().setAll(LogicConstants.ALLOWED_LANGUAGE_CODES);
-        upperLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
-
-        lowerLanguageComboBox.getItems().setAll(LogicConstants.ALLOWED_LANGUAGE_CODES);
-        lowerLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
-    }
-
-    private void initializeTextFields() {
+    private void setInitialValues() {
         File ffprobeFile = settings.getFfprobeFile();
         File ffmpegFile = settings.getFfmpegFile();
 
@@ -99,15 +90,21 @@ public class SettingsTabController {
             ffmpegSetButton.setText("choose path to ffmpeg");
         }
 
+        upperLanguageComboBox.getItems().setAll(LogicConstants.ALLOWED_LANGUAGE_CODES);
+        upperLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
         LanguageAlpha3Code upperLanguage = settings.getUpperLanguage();
         if (upperLanguage != null) {
             upperLanguageComboBox.getSelectionModel().select(upperLanguage);
         }
 
+        lowerLanguageComboBox.getItems().setAll(LogicConstants.ALLOWED_LANGUAGE_CODES);
+        lowerLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
         LanguageAlpha3Code lowerLanguage = settings.getLowerLanguage();
         if (lowerLanguage != null) {
             lowerLanguageComboBox.getSelectionModel().select(lowerLanguage);
         }
+
+        markMergedStreamAsDefaultCheckBox.setSelected(settings.isMarkMergedStreamAsDefault());
     }
 
     private void setSwapLanguagesButtonVisibility() {

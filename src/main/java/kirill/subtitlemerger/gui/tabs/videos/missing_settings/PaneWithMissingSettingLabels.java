@@ -45,6 +45,8 @@ public class PaneWithMissingSettingLabels extends VBox {
                 return "preferred language for upper subtitles";
             case LOWER_LANGUAGE:
                 return "preferred language for lower subtitles";
+            case MERGE_MODE:
+                return "merge mode";
             default:
                 throw new IllegalStateException();
         }

@@ -2,7 +2,8 @@
 
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.util.Duration?>
 <?import kirill.subtitlemerger.gui.GuiConstants?>
@@ -55,17 +56,12 @@
             <Button fx:id="ffmpegSetButton" onAction="#ffmpegFileButtonClicked"/>
         </HBox>
 
-        <HBox alignment="CENTER_LEFT" GridPane.rowIndex="2" GridPane.columnIndex="0">
-            <Label text="Preferred language for upper subtitles"/>
-            <Region minWidth="10" HBox.hgrow="ALWAYS"/>
-            <Label tooltip="$languageTooltip" alignment="CENTER">
-                <graphic>
-                    <ImageView fitHeight="16" fitWidth="16">
-                        <Image url="/gui/icons/question.png"/>
-                    </ImageView>
-                </graphic>
-            </Label>
-        </HBox>
+        <LabelWithQuestionMark GridPane.rowIndex="2" GridPane.columnIndex="0">
+            <labelText>Preferred language for upper subtitle</labelText>
+            <tooltipText>
+                This setting will be used to auto-select subtitles to merge when working with videos
+            </tooltipText>
+        </LabelWithQuestionMark>
         <ComboBox fx:id="upperLanguageComboBox" onAction="#upperLanguageChanged" maxWidth="Infinity"
                   GridPane.rowIndex="2" GridPane.columnIndex="1">
         </ComboBox>
@@ -86,17 +82,12 @@
             </graphic>
         </Button>
 
-        <HBox alignment="CENTER_LEFT" GridPane.rowIndex="4" GridPane.columnIndex="0">
-            <Label text="Preferred language for lower subtitles"/>
-            <Region minWidth="10" HBox.hgrow="ALWAYS"/>
-            <Label tooltip="$languageTooltip" alignment="CENTER">
-                <graphic>
-                    <ImageView fitHeight="16" fitWidth="16">
-                        <Image url="/gui/icons/question.png"/>
-                    </ImageView>
-                </graphic>
-            </Label>
-        </HBox>
+        <LabelWithQuestionMark GridPane.rowIndex="4" GridPane.columnIndex="0">
+            <labelText>Preferred language for lower subtitle</labelText>
+            <tooltipText>
+                This setting will be used to auto-select subtitles to merge when working with videos
+            </tooltipText>
+        </LabelWithQuestionMark>
         <ComboBox fx:id="lowerLanguageComboBox" onAction="#lowerLanguageChanged" maxWidth="Infinity"
                   GridPane.rowIndex="4" GridPane.columnIndex="1"/>
 
@@ -122,20 +113,20 @@
             <MergeModeOption GridPane.rowIndex="0" GridPane.columnIndex="0">
                 <radioButtonText>Original videos</radioButtonText>
                 <tooltipText>
-                    With this option application will inject merged subtitles into the original video files. It is the most
-                    convenient option since everything will look as before except for the new merged subtitles in the
-                    subtitle list. This approach requires extra disk space during the merge process (equal to the size of
-                    the largest video to process) because application will create temporary file first and then will
-                    overwrite the original video with this temporary one. Note that the original files will be overwritten!
-                    And if something goes wrong during the merge you will lose your video files.
+                    With this option application will inject merged subtitles into the original video files. It is the
+                    most convenient option since everything will look as before except for the new merged subtitles in
+                    the subtitle list. This approach requires extra disk space during the merge process (equal to the
+                    size of the largest video to process) because application will create temporary file first and then
+                    will overwrite the original video with this temporary one. Note that the original files will be
+                    overwritten! And if something goes wrong during the merge you will lose your video files.
                 </tooltipText>
             </MergeModeOption>
             <MergeModeOption GridPane.rowIndex="0" GridPane.columnIndex="1">
                 <radioButtonText>Copies of the videos</radioButtonText>
                 <tooltipText>
-                    With this option application will make copies of the original videos and inject merged subtitles into
-                    these copies. This option is still pretty convenient because all you have to do after the merge is
-                    open the copy of the video and subtitles will be there. Also this option is safe because original
+                    With this option application will make copies of the original videos and inject merged subtitles
+                    into these copies. This option is still pretty convenient because all you have to do after the merge
+                    is open the copy of the video and subtitles will be there. Also this option is safe because original
                     files won't be modified in any way. But you will end up with twice as much files as before, it's
                     extremely disk space consuming.
                 </tooltipText>
@@ -143,10 +134,10 @@
             <MergeModeOption GridPane.rowIndex="0" GridPane.columnIndex="2">
                 <radioButtonText>Separate subtitle files</radioButtonText>
                 <tooltipText>
-                    With this option application will create separate subtitle files next to the videos. This option is the
-                    least convenient because after the merge you will have to add subtitle files manually when watching
-                    videos. But this option is safe because original files won't be modified in any way. And it also doesn't
-                    require almost any extra disk space.
+                    With this option application will create separate subtitle files next to the videos. This option is
+                    the least convenient because after the merge you will have to add subtitle files manually when
+                    watching videos. But this option is safe because original files won't be modified in any way. And it
+                    also doesn't require almost any extra disk space.
                 </tooltipText>
             </MergeModeOption>
 
@@ -176,8 +167,14 @@
             </MergeModeCharacteristicTable>
         </GridPane>
 
-        <Label text="Mark merged subtitle streams as default" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
-        <CheckBox GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+        <LabelWithQuestionMark GridPane.rowIndex="6" GridPane.columnIndex="0">
+            <labelText>Mark merged subtitle streams as default</labelText>
+            <tooltipText>
+                Merged subtitles will be displayed by the video player by default automatically
+            </tooltipText>
+        </LabelWithQuestionMark>
+        <CheckBox fx:id="markMergedStreamAsDefaultCheckBox" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+
 
         <Label fx:id="resultLabel" GridPane.rowIndex="7" GridPane.columnIndex="0" GridPane.columnSpan="2">
             <GridPane.margin>

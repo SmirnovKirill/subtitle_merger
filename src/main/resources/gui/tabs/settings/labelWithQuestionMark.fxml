@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.util.Duration?>
+<fx:root xmlns:fx="http://javafx.com/fxml" type="javafx.scene.layout.HBox" alignment="CENTER_LEFT">
+    <Label fx:id="label"/>
+    <Region minWidth="10" HBox.hgrow="ALWAYS"/>
+    <Label alignment="CENTER">
+        <graphic>
+            <ImageView fitHeight="16" fitWidth="16">
+                <Image url="/gui/icons/question.png"/>
+            </ImageView>
+        </graphic>
+        <tooltip>
+            <Tooltip fx:id="tooltip" wrapText="true" prefWidth="300">
+                <showDelay><Duration fx:constant="ZERO"/></showDelay>
+                <showDuration><Duration fx:constant="INDEFINITE"/></showDuration>
+            </Tooltip>
+        </tooltip>
+    </Label>
+</fx:root>
