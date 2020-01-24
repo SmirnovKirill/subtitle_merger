@@ -1,6 +1,8 @@
 package kirill.subtitlemerger.gui.tabs.settings;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -70,8 +72,26 @@ public class SettingsTabController {
     @FXML
     private CheckBox markMergedStreamAsDefaultCheckBox;
 
+    private BooleanProperty markStreamCheckBoxVisible;
+
     @FXML
     private Label resultLabel;
+
+    public boolean isMarkStreamCheckBoxVisible() {
+        return markStreamCheckBoxVisible.get();
+    }
+
+    public BooleanProperty markStreamCheckBoxVisibleProperty() {
+        return markStreamCheckBoxVisible;
+    }
+
+    public void setMarkStreamCheckBoxVisible(boolean markStreamCheckBoxVisible) {
+        this.markStreamCheckBoxVisible.set(markStreamCheckBoxVisible);
+    }
+
+    public SettingsTabController() {
+        this.markStreamCheckBoxVisible = new SimpleBooleanProperty(false);
+    }
 
     public void initialize(Stage stage, GuiContext context) {
         this.stage = stage;
@@ -89,6 +109,7 @@ public class SettingsTabController {
         setSwapLanguagesButtonVisibility();
         setLowerSubtitlesInitialValue();
         setMergeModeInitialValue();
+        setMarkCheckBoxVisibility();
 
         markMergedStreamAsDefaultCheckBox.setSelected(settings.isMarkMergedStreamAsDefault());
     }
@@ -170,6 +191,13 @@ public class SettingsTabController {
         throw new IllegalStateException();
     }
 
+    private void setMarkCheckBoxVisibility() {
+        GuiSettings.MergeMode mergeMode = context.getSettings().getMergeMode();
+        setMarkStreamCheckBoxVisible(
+                mergeMode == GuiSettings.MergeMode.ORIGINAL_VIDEOS || mergeMode == GuiSettings.MergeMode.VIDEO_COPIES
+        );
+    }
+
     private void mergeModeChanged(ObservableValue<? extends Toggle> observable, Toggle oldValue, Toggle newValue) {
         RadioButton radioButton = (RadioButton) newValue;
 
@@ -190,6 +218,9 @@ public class SettingsTabController {
 
         try {
             context.getSettings().saveMergeMode(mergeMode.toString());
+            setMarkCheckBoxVisibility();
+
+            showSuccessMessage("merge mode has been saved successfully");
         } catch (GuiSettings.ConfigException e) {
             log.error("merge mode hasn't been saved: " + ExceptionUtils.getStackTrace(e));
 

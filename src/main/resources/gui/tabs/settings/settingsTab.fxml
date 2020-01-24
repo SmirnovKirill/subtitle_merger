@@ -158,14 +158,17 @@
             </MergeModeCharacteristicTable>
         </GridPane>
 
-        <LabelWithQuestionMark GridPane.rowIndex="6" GridPane.columnIndex="0">
+        <LabelWithQuestionMark
+                visible="${controller.markStreamCheckBoxVisible}" managed="${controller.markStreamCheckBoxVisible}"
+                               GridPane.rowIndex="6" GridPane.columnIndex="0">
             <labelText>Mark merged subtitle streams as default</labelText>
             <tooltipText>
                 Merged subtitles will be displayed by the video player by default automatically
             </tooltipText>
         </LabelWithQuestionMark>
-        <CheckBox fx:id="markMergedStreamAsDefaultCheckBox" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
-
+        <CheckBox fx:id="markMergedStreamAsDefaultCheckBox"
+                  visible="${controller.markStreamCheckBoxVisible}" managed="${controller.markStreamCheckBoxVisible}"
+                  GridPane.rowIndex="6" GridPane.columnIndex="1"/>
 
         <Label fx:id="resultLabel" GridPane.rowIndex="7" GridPane.columnIndex="0" GridPane.columnSpan="2">
             <GridPane.margin>
