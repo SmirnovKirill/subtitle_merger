@@ -55,9 +55,9 @@ public class GuiLauncher extends Application {
          * completely unknown to me. Sizes are changed because com.sun.glass.ui.Window::notifyResize is called. This
          * method is called from a native method com.sun.glass.ui.gtk.GtkApplication::_runLoop so I can't understand why
          * that happens. Anyway, I've discovered that if I set stage's width and height explicitly these original sizes
-         * will be restored after those weird changes.
+         * will be restored after these weird changes. And it reproduces only in Kubuntu for me, in Windows 10
+         * and Arch everything works fine.
          */
-        //todo check arch&windows
         stage.setWidth(stage.getWidth());
         stage.setHeight(stage.getHeight());
 
