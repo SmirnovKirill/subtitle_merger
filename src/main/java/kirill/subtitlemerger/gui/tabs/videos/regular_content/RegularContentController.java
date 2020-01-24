@@ -631,6 +631,8 @@ public class RegularContentController {
             return;
         }
 
+        guiContext.setWorkWithVideosInProgress(true);
+
         try {
             guiContext.getSettings().saveLastDirectoryWithVideos(files.get(0).getParent());
         } catch (GuiSettings.ConfigException e) {
@@ -685,6 +687,8 @@ public class RegularContentController {
             return;
         }
 
+        guiContext.setWorkWithVideosInProgress(true);
+
         try {
             guiContext.getSettings().saveLastDirectoryWithVideos(directory.getAbsolutePath());
         } catch (GuiSettings.ConfigException e) {
@@ -735,6 +739,7 @@ public class RegularContentController {
         tableWithFiles.setItems(FXCollections.emptyObservableList());
         tableWithFiles.setAllSelected(false);
         descriptionColumnWidthSet = false;
+        guiContext.setWorkWithVideosInProgress(false);
 
         choicePane.setVisible(true);
         resultPane.setVisible(false);

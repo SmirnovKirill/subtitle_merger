@@ -6,6 +6,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.Pane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
@@ -44,6 +45,12 @@ public class SettingsTabController {
     private GuiSettings settings;
 
     @FXML
+    private Pane unavailablePane;
+
+    @FXML
+    private Pane settingsPane;
+
+    @FXML
     private TextField ffprobeField;
 
     @FXML
@@ -72,7 +79,7 @@ public class SettingsTabController {
     @FXML
     private CheckBox markMergedStreamAsDefaultCheckBox;
 
-    private BooleanProperty markStreamCheckBoxVisible;
+    private BooleanProperty markStreamCheckBoxVisible = new SimpleBooleanProperty(false);
 
     @FXML
     private Label resultLabel;
@@ -89,10 +96,6 @@ public class SettingsTabController {
         this.markStreamCheckBoxVisible.set(markStreamCheckBoxVisible);
     }
 
-    public SettingsTabController() {
-        this.markStreamCheckBoxVisible = new SimpleBooleanProperty(false);
-    }
-
     public void initialize(Stage stage, GuiContext context) {
         this.stage = stage;
         this.context = context;
@@ -100,6 +103,7 @@ public class SettingsTabController {
 
         setInitialValues();
         mergeModeToggleGroup.selectedToggleProperty().addListener(this::mergeModeChanged);
+        context.workWithVideosInProgressProperty().addListener(this::workWithVideosProgressChanged);
     }
 
     private void setInitialValues() {
@@ -225,6 +229,20 @@ public class SettingsTabController {
             log.error("merge mode hasn't been saved: " + ExceptionUtils.getStackTrace(e));
 
             showErrorMessage("something bad has happened, merge mode hasn't been saved");
+        }
+    }
+
+    private void workWithVideosProgressChanged(
+            ObservableValue<? extends Boolean> observable,
+            Boolean oldValue,
+            Boolean newValue
+    ) {
+        if (newValue) {
+            settingsPane.setDisable(true);
+            unavailablePane.setVisible(true);
+        } else {
+            settingsPane.setDisable(false);
+            unavailablePane.setVisible(false);
         }
     }
 

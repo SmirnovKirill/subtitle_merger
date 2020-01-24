@@ -1,8 +1,11 @@
 package kirill.subtitlemerger.gui;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffprobe;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
@@ -17,6 +20,9 @@ public class GuiContext {
 
     @Setter
     private Ffmpeg ffmpeg;
+
+    @Getter(value = AccessLevel.NONE)
+    private BooleanProperty workWithVideosInProgress = new SimpleBooleanProperty(false);
 
     public GuiContext() {
         settings = new GuiSettings();
@@ -34,5 +40,17 @@ public class GuiContext {
                 log.error("failed to initialize ffmpeg");
             }
         }
+    }
+
+    public boolean isWorkWithVideosInProgress() {
+        return workWithVideosInProgress.get();
+    }
+
+    public BooleanProperty workWithVideosInProgressProperty() {
+        return workWithVideosInProgress;
+    }
+
+    public void setWorkWithVideosInProgress(boolean workWithVideosInProgress) {
+        this.workWithVideosInProgress.set(workWithVideosInProgress);
     }
 }
