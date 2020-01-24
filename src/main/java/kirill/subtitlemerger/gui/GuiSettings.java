@@ -40,6 +40,10 @@ class GuiSettings {
 
     private LanguageAlpha3Code lowerLanguage;
 
+    private MergeMode mergeMode;
+
+    private boolean markMergedStreamAsDefault;
+
     private File lastDirectoryWithVideos;
 
     private SortBy sortBy;
@@ -111,6 +115,22 @@ class GuiSettings {
         }
 
         try {
+            mergeMode = getValidatedMergeMode(
+                    preferences.get(SettingType.MERGE_MODE.getSettingCode(), "")
+            ).orElse(null);
+        } catch (ConfigException e) {
+            log.warn("incorrect merge mode in saved preferences: " + e.getMessage());
+        }
+
+        try {
+            markMergedStreamAsDefault = getValidatedBoolean(
+                    preferences.get(SettingType.MARK_MERGED_STREAM_AS_DEFAULT.getSettingCode(), "")
+            ).orElse(true);
+        } catch (ConfigException e) {
+            log.warn("incorrect flag for marking stream as default in saved preferences: " + e.getMessage());
+        }
+
+        try {
             lastDirectoryWithVideos = getValidatedDirectory(
                     preferences.get(SettingType.LAST_DIRECTORY_WITH_VIDEOS.getSettingCode(), "")
             ).orElse(null);
@@ -159,7 +179,7 @@ class GuiSettings {
         try {
             Ffprobe.validate(result);
         } catch (FfmpegException e) {
-            throw new ConfigException("file " + rawValue + " is not a valid path for ffprobe");
+            throw new ConfigException("file " + rawValue + " is not a valid path to ffprobe");
         }
 
         return Optional.of(result);
@@ -174,7 +194,7 @@ class GuiSettings {
         try {
             Ffmpeg.validate(result);
         } catch (FfmpegException e) {
-            throw new ConfigException("file " + rawValue + " is not a valid path for ffmpeg");
+            throw new ConfigException("file " + rawValue + " is not a valid path to ffmpeg");
         }
 
         return Optional.of(result);
@@ -197,6 +217,33 @@ class GuiSettings {
         return Optional.of(result);
     }
 
+    private static Optional<MergeMode> getValidatedMergeMode(String rawValue) throws ConfigException {
+        if (StringUtils.isBlank(rawValue)) {
+            return Optional.empty();
+        }
+
+        MergeMode result = EnumUtils.getEnum(MergeMode.class, rawValue);
+        if (result == null) {
+            throw new ConfigException("value " + rawValue + " is not a valid merge mode");
+        }
+
+        return Optional.of(result);
+    }
+
+    private static Optional<Boolean> getValidatedBoolean(String rawValue) throws ConfigException {
+        if (StringUtils.isBlank(rawValue)) {
+            return Optional.empty();
+        }
+
+        if ("true".equals(rawValue)) {
+            return Optional.of(true);
+        } else if ("false".equals(rawValue)) {
+            return Optional.of(false);
+        } else {
+            throw new ConfigException("value " + rawValue + " is not a valid boolean type");
+        }
+    }
+
     private static Optional<SortBy> getValidatedSortBy(String rawValue) throws ConfigException {
         if (StringUtils.isBlank(rawValue)) {
             return Optional.empty();
@@ -204,7 +251,7 @@ class GuiSettings {
 
         SortBy result = EnumUtils.getEnum(SortBy.class, rawValue);
         if (result == null) {
-            throw new ConfigException("value " + rawValue + " is not valid fot sorting");
+            throw new ConfigException("value " + rawValue + " is not a valid sort option");
         }
 
         return Optional.of(result);
@@ -240,6 +287,10 @@ class GuiSettings {
 
         if (lowerLanguage == null) {
             result.add(SettingType.LOWER_LANGUAGE);
+        }
+
+        if (mergeMode == null) {
+            result.add(SettingType.MERGE_MODE);
         }
 
         return FXCollections.observableSet(result);
@@ -319,6 +370,30 @@ class GuiSettings {
         missingSettings.remove(SettingType.LOWER_LANGUAGE);
     }
 
+    public void saveMergeMode(String rawValue) throws ConfigException {
+        MergeMode mergeMode = getValidatedMergeMode(rawValue).orElse(null);
+        if (mergeMode == null) {
+            throw new EmptyValueException();
+        }
+
+        this.mergeMode = mergeMode;
+        preferences.put(SettingType.MERGE_MODE.getSettingCode(), mergeMode.toString());
+        missingSettings.remove(SettingType.MERGE_MODE);
+    }
+
+    public void saveMarkMergedStreamAsDefault(String rawValue) throws ConfigException {
+        Boolean markMergedStreamAsDefault = getValidatedBoolean(rawValue).orElse(null);
+        if (markMergedStreamAsDefault == null) {
+            throw new EmptyValueException();
+        }
+
+        this.markMergedStreamAsDefault = markMergedStreamAsDefault;
+        preferences.put(
+                SettingType.MARK_MERGED_STREAM_AS_DEFAULT.getSettingCode(),
+                markMergedStreamAsDefault.toString()
+        );
+    }
+
     public void saveLastDirectoryWithVideos(String rawValue) throws ConfigException {
         File directory = getValidatedDirectory(rawValue).orElse(null);
         if (directory == null) {
@@ -361,6 +436,12 @@ class GuiSettings {
         }
     }
 
+    public enum MergeMode {
+        ORIGINAL_VIDEOS,
+        VIDEO_COPIES,
+        SEPARATE_SUBTITLE_FILES
+    }
+
     public enum SortBy {
         NAME,
         MODIFICATION_TIME,
@@ -380,6 +461,8 @@ class GuiSettings {
         FFMPEG_PATH("ffmpeg_path"),
         UPPER_LANGUAGE("upper_language"),
         LOWER_LANGUAGE("lower_language"),
+        MERGE_MODE("merge_mode"),
+        MARK_MERGED_STREAM_AS_DEFAULT("mark_merged_stream_as_default"),
         LAST_DIRECTORY_WITH_VIDEOS("last_directory_with_videos"),
         SORT_BY("sort_by"),
         SORT_DIRECTION("sort_direction");
