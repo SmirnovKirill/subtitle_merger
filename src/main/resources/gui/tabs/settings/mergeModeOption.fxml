@@ -10,7 +10,7 @@
 <?import javafx.util.Duration?>
 <fx:root xmlns:fx="http://javafx.com/fxml" type="javafx.scene.layout.HBox" alignment="CENTER_LEFT">
     <RadioButton fx:id="radioButton"/>
-    <Region HBox.hgrow="ALWAYS"/>
+    <Region minWidth="5" HBox.hgrow="ALWAYS"/>
     <Label>
         <graphic>
             <ImageView fitHeight="16" fitWidth="16">

@@ -1,9 +1,11 @@
 package kirill.subtitlemerger.gui.tabs.settings;
 
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.StringProperty;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import lombok.Getter;
@@ -27,27 +29,39 @@ public class MergeModeOption extends HBox {
         fxmlLoader.load();
     }
 
-    public StringProperty radioButtonTextProperty() {
+    public StringProperty textProperty() {
         return radioButton.textProperty();
     }
 
-    public void setRadioButtonText(String text) {
-        radioButtonTextProperty().set(text);
+    public void setText(String text) {
+        textProperty().set(text);
     }
 
-    public String getRadioButtonText() {
-        return radioButtonTextProperty().get();
+    public String getText() {
+        return textProperty().get();
     }
 
-    public StringProperty tooltipTextProperty() {
+    public ObjectProperty<ToggleGroup> toggleGroupProperty() {
+        return radioButton.toggleGroupProperty();
+    }
+
+    public void setToggleGroup(ToggleGroup toggleGroup) {
+        toggleGroupProperty().set(toggleGroup);
+    }
+
+    public ToggleGroup getToggleGroup() {
+        return toggleGroupProperty().get();
+    }
+
+    public StringProperty tooltipProperty() {
         return tooltip.textProperty();
     }
 
-    public void setTooltipText(String text) {
-        tooltipTextProperty().set(text);
+    public void setTooltip(String text) {
+        tooltipProperty().set(text);
     }
 
-    public String getTooltipText() {
-        return tooltipTextProperty().get();
+    public String getTooltip() {
+        return tooltipProperty().get();
     }
 }

@@ -1,6 +1,7 @@
 package kirill.subtitlemerger.gui.tabs.settings;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.FileChooser;
@@ -22,6 +23,12 @@ import java.util.Optional;
 
 @CommonsLog
 public class SettingsTabController {
+    public static final String MERGE_MODE_ORIGINAL_VIDEOS = "Original videos";
+
+    public static final String MERGE_MODE_VIDEO_COPIES = "Copies of the videos";
+
+    public static final String MERGE_MODE_SEPARATE_SUBTITLE_FILES = "Separate subtitle files";
+
     private static final String UPDATE_FFPROBE_BUTTON_TEXT = "update path to ffprobe";
 
     private static final String UPDATE_FFMPEG_BUTTON_TEXT = "update path to ffmpeg";
@@ -58,6 +65,9 @@ public class SettingsTabController {
     private Button swapLanguagesButton;
 
     @FXML
+    private ToggleGroup mergeModeToggleGroup;
+
+    @FXML
     private CheckBox markMergedStreamAsDefaultCheckBox;
 
     @FXML
@@ -69,12 +79,22 @@ public class SettingsTabController {
         this.settings = context.getSettings();
 
         setInitialValues();
-        setSwapLanguagesButtonVisibility();
+        mergeModeToggleGroup.selectedToggleProperty().addListener(this::mergeModeChanged);
     }
 
     private void setInitialValues() {
+        setFfprobeInitialValue();
+        setFfmpegInitialValue();
+        setUpperSubtitlesInitialValue();
+        setSwapLanguagesButtonVisibility();
+        setLowerSubtitlesInitialValue();
+        setMergeModeInitialValue();
+
+        markMergedStreamAsDefaultCheckBox.setSelected(settings.isMarkMergedStreamAsDefault());
+    }
+
+    private void setFfprobeInitialValue() {
         File ffprobeFile = settings.getFfprobeFile();
-        File ffmpegFile = settings.getFfmpegFile();
 
         if (ffprobeFile != null) {
             ffprobeField.setText(ffprobeFile.getAbsolutePath());
@@ -82,35 +102,99 @@ public class SettingsTabController {
         } else {
             ffprobeSetButton.setText("choose path to ffprobe");
         }
+    }
 
+    private void setFfmpegInitialValue() {
+        File ffmpegFile = settings.getFfmpegFile();
         if (ffmpegFile != null) {
             ffmpegField.setText(ffmpegFile.getAbsolutePath());
             ffmpegSetButton.setText(UPDATE_FFMPEG_BUTTON_TEXT);
         } else {
             ffmpegSetButton.setText("choose path to ffmpeg");
         }
+    }
 
+    private void setUpperSubtitlesInitialValue() {
         upperLanguageComboBox.getItems().setAll(LogicConstants.ALLOWED_LANGUAGE_CODES);
         upperLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
         LanguageAlpha3Code upperLanguage = settings.getUpperLanguage();
         if (upperLanguage != null) {
             upperLanguageComboBox.getSelectionModel().select(upperLanguage);
         }
-
-        lowerLanguageComboBox.getItems().setAll(LogicConstants.ALLOWED_LANGUAGE_CODES);
-        lowerLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
-        LanguageAlpha3Code lowerLanguage = settings.getLowerLanguage();
-        if (lowerLanguage != null) {
-            lowerLanguageComboBox.getSelectionModel().select(lowerLanguage);
-        }
-
-        markMergedStreamAsDefaultCheckBox.setSelected(settings.isMarkMergedStreamAsDefault());
     }
 
     private void setSwapLanguagesButtonVisibility() {
         boolean swapButtonDisable = settings.getUpperLanguage() == null || settings.getLowerLanguage() == null;
 
         swapLanguagesButton.setDisable(swapButtonDisable);
+    }
+
+    private void setLowerSubtitlesInitialValue() {
+        lowerLanguageComboBox.getItems().setAll(LogicConstants.ALLOWED_LANGUAGE_CODES);
+        lowerLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
+        LanguageAlpha3Code lowerLanguage = settings.getLowerLanguage();
+        if (lowerLanguage != null) {
+            lowerLanguageComboBox.getSelectionModel().select(lowerLanguage);
+        }
+    }
+
+    private void setMergeModeInitialValue() {
+        GuiSettings.MergeMode mergeMode = context.getSettings().getMergeMode();
+        if (mergeMode == null) {
+            return;
+        }
+
+        String value;
+        switch (mergeMode) {
+            case ORIGINAL_VIDEOS:
+                value = MERGE_MODE_ORIGINAL_VIDEOS;
+                break;
+            case VIDEO_COPIES:
+                value = MERGE_MODE_VIDEO_COPIES;
+                break;
+            case SEPARATE_SUBTITLE_FILES:
+                value = MERGE_MODE_SEPARATE_SUBTITLE_FILES;
+                break;
+            default:
+                throw new IllegalStateException();
+        }
+
+        for (Toggle toggle : mergeModeToggleGroup.getToggles()) {
+            RadioButton radioButton = (RadioButton) toggle;
+            if (value.equals(radioButton.getText())) {
+                toggle.setSelected(true);
+                return;
+            }
+        }
+
+        throw new IllegalStateException();
+    }
+
+    private void mergeModeChanged(ObservableValue<? extends Toggle> observable, Toggle oldValue, Toggle newValue) {
+        RadioButton radioButton = (RadioButton) newValue;
+
+        GuiSettings.MergeMode mergeMode;
+        switch (radioButton.getText()) {
+            case MERGE_MODE_ORIGINAL_VIDEOS:
+                mergeMode = GuiSettings.MergeMode.ORIGINAL_VIDEOS;
+                break;
+            case MERGE_MODE_VIDEO_COPIES:
+                mergeMode = GuiSettings.MergeMode.VIDEO_COPIES;
+                break;
+            case MERGE_MODE_SEPARATE_SUBTITLE_FILES:
+                mergeMode = GuiSettings.MergeMode.SEPARATE_SUBTITLE_FILES;
+                break;
+            default:
+                throw new IllegalStateException();
+        }
+
+        try {
+            context.getSettings().saveMergeMode(mergeMode.toString());
+        } catch (GuiSettings.ConfigException e) {
+            log.error("merge mode hasn't been saved: " + ExceptionUtils.getStackTrace(e));
+
+            showErrorMessage("something bad has happened, merge mode hasn't been saved");
+        }
     }
 
     @FXML
