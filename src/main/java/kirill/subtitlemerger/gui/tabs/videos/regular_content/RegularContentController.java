@@ -23,8 +23,7 @@ import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.lo
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStreamInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles;
-import kirill.subtitlemerger.logic.core.Merger;
-import kirill.subtitlemerger.logic.core.entities.Subtitles;
+import kirill.subtitlemerger.logic.work_with_files.SubtitleInjector;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStreamInfo;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
@@ -298,13 +297,12 @@ public class RegularContentController {
                 fileInfo.getSubtitleStreamsInfo()
         );
 
-        Subtitles mergedSubtitles = Merger.mergeSubtitles(upperSubtitles.getSubtitles(), lowerSubtitles.getSubtitles());
-        guiContext.getFfmpeg().injectSubtitlesToFile(
-                mergedSubtitles,
-                "merged",
-                upperSubtitles.getLanguage(),
-                fileInfo.getSubtitleStreamsInfo(),
-                fileInfo.getFile()
+        SubtitleInjector.mergeAndInjectSubtitlesToFile(
+                upperSubtitles.getSubtitles(),
+                lowerSubtitles.getSubtitles(),
+                guiContext.getSettings().isMarkMergedStreamAsDefault(),
+                fileInfo,
+                guiContext.getFfmpeg()
         );
     }
 

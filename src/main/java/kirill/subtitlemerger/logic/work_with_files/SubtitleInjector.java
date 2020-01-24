@@ -15,6 +15,7 @@ public class SubtitleInjector {
     public static void mergeAndInjectSubtitlesToFile(
             Subtitles upperSubtitles,
             Subtitles lowerSubtitles,
+            boolean makeDefault,
             FileInfo fileInfo,
             Ffmpeg ffmpeg
     ) throws FfmpegException {
@@ -27,6 +28,7 @@ public class SubtitleInjector {
                 result,
                 title,
                 mainLanguage,
+                makeDefault,
                 fileInfo.getSubtitleStreamsInfo(),
                 fileInfo.getFile()
         );

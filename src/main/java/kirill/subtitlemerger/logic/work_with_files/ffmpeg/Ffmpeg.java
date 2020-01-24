@@ -105,6 +105,7 @@ public class Ffmpeg {
             Subtitles subtitles,
             String title,
             LanguageAlpha3Code mainLanguage,
+            boolean makeDefault,
             List<SubtitleStreamInfo> subtitleStreamsInfo,
             File videoFile
     ) throws FfmpegException {
@@ -128,6 +129,7 @@ public class Ffmpeg {
                 List<String> arguments = getArgumentsInjectToFile(
                         title,
                         mainLanguage,
+                        makeDefault,
                         subtitleStreamsInfo,
                         videoFile,
                         outputTemp
@@ -161,6 +163,7 @@ public class Ffmpeg {
     private List<String> getArgumentsInjectToFile(
             String title,
             LanguageAlpha3Code mainLanguage,
+            boolean makeDefault,
             List<SubtitleStreamInfo> subtitleStreamsInfo,
             File videoFile,
             File outputTemp
@@ -195,12 +198,14 @@ public class Ffmpeg {
 
         result.addAll(Arrays.asList("-metadata:s:s:" + newStreamIndex, "title=" + title));
 
-        for (SubtitleStreamInfo subtitleStreamInfo : subtitleStreamsInfo) {
-            if (subtitleStreamInfo.isDefaultDisposition()) {
-                result.addAll(Arrays.asList("-disposition:" + subtitleStreamInfo.getId(), "0"));
+        if (makeDefault) {
+            for (SubtitleStreamInfo subtitleStreamInfo : subtitleStreamsInfo) {
+                if (subtitleStreamInfo.isDefaultDisposition()) {
+                    result.addAll(Arrays.asList("-disposition:" + subtitleStreamInfo.getId(), "0"));
+                }
             }
+            result.addAll(Arrays.asList("-disposition:s:" + newStreamIndex, "default"));
         }
-        result.addAll(Arrays.asList("-disposition:s:" + newStreamIndex, "default"));
 
         result.addAll(Arrays.asList("-map", "0"));
         result.addAll(Arrays.asList("-map", "1"));
