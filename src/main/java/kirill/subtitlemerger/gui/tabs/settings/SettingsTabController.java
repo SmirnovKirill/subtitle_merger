@@ -103,6 +103,7 @@ public class SettingsTabController {
 
         setInitialValues();
         mergeModeToggleGroup.selectedToggleProperty().addListener(this::mergeModeChanged);
+        markMergedStreamAsDefaultCheckBox.selectedProperty().addListener(this::markStreamAsDefaultChanged);
         context.workWithVideosInProgressProperty().addListener(this::workWithVideosProgressChanged);
     }
 
@@ -229,6 +230,26 @@ public class SettingsTabController {
             log.error("merge mode hasn't been saved: " + ExceptionUtils.getStackTrace(e));
 
             showErrorMessage("something bad has happened, merge mode hasn't been saved");
+        }
+    }
+
+    private void markStreamAsDefaultChanged(
+            ObservableValue<? extends Boolean> observable,
+            Boolean oldValue,
+            Boolean newValue
+    ) {
+        try {
+            context.getSettings().saveMarkMergedStreamAsDefault(newValue.toString());
+
+            if (newValue) {
+                showSuccessMessage("flag has been set successfully");
+            } else {
+                showSuccessMessage("flag has been unset successfully");
+            }
+        } catch (GuiSettings.ConfigException e) {
+            log.error("failed to save mark stream as default flag: " + ExceptionUtils.getStackTrace(e));
+
+            showErrorMessage("something bad has happened, flag value hasn't been saved");
         }
     }
 

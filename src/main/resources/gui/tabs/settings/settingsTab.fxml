@@ -20,13 +20,8 @@
         </ImageView>
     </graphic>
 
-    <StackPane>
-        <BorderPane fx:id="unavailablePane" visible="false">
-            <center>
-                <Label text="unavailable"/>
-            </center>
-        </BorderPane>
-        <GridPane fx:id="settingsPane" hgap="35" stylesheets="/gui/tabs/settings/settingsTab.css">
+    <StackPane stylesheets="/gui/tabs/settings/settingsTab.css">
+        <GridPane fx:id="settingsPane" hgap="35">
             <gridLinesVisible><GuiConstants fx:constant="DEBUG"/></gridLinesVisible>
 
             <padding>
@@ -182,5 +177,15 @@
                 </GridPane.margin>
             </Label>
         </GridPane>
+        <HBox fx:id="unavailablePane" visible="false" alignment="TOP_CENTER">
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
+
+            <Label textAlignment="CENTER" styleClass="unavailable-description" wrapText="true" maxWidth="700">
+                Settings tab is unavailable when you work with videos. Please press "back to selection" button on
+                the tab with videos if you want to change settings.
+            </Label>
+        </HBox>
     </StackPane>
 </Tab>
