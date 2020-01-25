@@ -171,11 +171,14 @@
                       visible="${controller.markStreamCheckBoxVisible}" managed="${controller.markStreamCheckBoxVisible}"
                       GridPane.rowIndex="6" GridPane.columnIndex="1"/>
 
-            <Label fx:id="resultLabel" GridPane.rowIndex="7" GridPane.columnIndex="0" GridPane.columnSpan="2">
+            <Region visible="${controller.markStreamCheckBoxVisible}" managed="${controller.markStreamCheckBoxVisible}"
+                    GridPane.rowIndex="7" GridPane.columnIndex="0" GridPane.columnSpan="2">
                 <GridPane.margin>
                     <Insets top="40" bottom="40"/>
                 </GridPane.margin>
-            </Label>
+            </Region>
+
+            <Label fx:id="resultLabel" GridPane.rowIndex="8" GridPane.columnIndex="0" GridPane.columnSpan="2"/>
         </GridPane>
         <HBox fx:id="unavailablePane" visible="false" alignment="TOP_CENTER">
             <padding>
