@@ -174,7 +174,7 @@
             <Region visible="${controller.markStreamCheckBoxVisible}" managed="${controller.markStreamCheckBoxVisible}"
                     GridPane.rowIndex="7" GridPane.columnIndex="0" GridPane.columnSpan="2">
                 <GridPane.margin>
-                    <Insets top="40" bottom="40"/>
+                    <Insets top="20" bottom="20"/>
                 </GridPane.margin>
             </Region>
 
