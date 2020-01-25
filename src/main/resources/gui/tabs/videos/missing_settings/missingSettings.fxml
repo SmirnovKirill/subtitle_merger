@@ -17,5 +17,5 @@
         <Label text="The following settings are missing:"/>
         <PaneWithMissingSettingLabels fx:id="paneWithMissingSettingLabels" spacing="10"/>
     </VBox>
-    <Hyperlink onAction="#goToSettingsLinkClicked" text="open settings tab"/>
+    <Hyperlink onAction="#goToSettingsLinkClicked" text="Open settings tab"/>
 </VBox>

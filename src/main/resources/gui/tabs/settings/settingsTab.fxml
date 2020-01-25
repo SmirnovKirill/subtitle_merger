@@ -105,10 +105,10 @@
                 <MergeModeOption toggleGroup="$mergeModeToggleGroup" GridPane.rowIndex="0" GridPane.columnIndex="0">
                     <text><SettingsTabController fx:constant="MERGE_MODE_ORIGINAL_VIDEOS"/></text>
                     <tooltip>
-                        With this option application will inject merged subtitles into the original video files. It is the
+                        With this option application will inject merged subtitles into original video files. It is the
                         most convenient option since everything will look as before except for the new merged subtitles in
                         the subtitle list. This approach requires extra disk space during the merge process (equal to the
-                        size of the largest video to process) because application will create temporary file first and then
+                        size of the largest video to process) because application will create a temporary file first and then
                         will overwrite the original video with this temporary one. Note that the original files will be
                         overwritten! And if something goes wrong during the merge you will lose your video files.
                     </tooltip>
@@ -116,7 +116,7 @@
                 <MergeModeOption toggleGroup="$mergeModeToggleGroup" GridPane.rowIndex="0" GridPane.columnIndex="1">
                     <text><SettingsTabController fx:constant="MERGE_MODE_VIDEO_COPIES"/></text>
                     <tooltip>
-                        With this option application will make copies of the original videos and inject merged subtitles
+                        With this option application will make copies of original videos and inject merged subtitles
                         into these copies. This option is still pretty convenient because all you have to do after the merge
                         is open the copy of the video and subtitles will be there. Also this option is safe because original
                         files won't be modified in any way. But you will end up with twice as much files as before, it's

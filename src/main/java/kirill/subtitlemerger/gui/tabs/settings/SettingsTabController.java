@@ -225,11 +225,11 @@ public class SettingsTabController {
             context.getSettings().saveMergeMode(mergeMode.toString());
             setMarkCheckBoxVisibility();
 
-            showSuccessMessage("merge mode has been saved successfully");
+            showSuccessMessage("Merge mode has been saved successfully");
         } catch (GuiSettings.ConfigException e) {
             log.error("merge mode hasn't been saved: " + ExceptionUtils.getStackTrace(e));
 
-            showErrorMessage("something bad has happened, merge mode hasn't been saved");
+            showErrorMessage("Something bad has happened, merge mode hasn't been saved");
         }
     }
 
@@ -242,14 +242,14 @@ public class SettingsTabController {
             context.getSettings().saveMarkMergedStreamAsDefault(newValue.toString());
 
             if (newValue) {
-                showSuccessMessage("flag has been set successfully");
+                showSuccessMessage("Flag has been set successfully");
             } else {
-                showSuccessMessage("flag has been unset successfully");
+                showSuccessMessage("Flag has been unset successfully");
             }
         } catch (GuiSettings.ConfigException e) {
             log.error("failed to save mark stream as default flag: " + ExceptionUtils.getStackTrace(e));
 
-            showErrorMessage("something bad has happened, flag value hasn't been saved");
+            showErrorMessage("Something bad has happened, flag value hasn't been saved");
         }
     }
 
@@ -276,7 +276,7 @@ public class SettingsTabController {
         }
 
         if (Objects.equals(ffprobeFile, settings.getFfprobeFile())) {
-            showSuccessMessage("path to ffprobe has stayed the same");
+            showSuccessMessage("Path to ffprobe has stayed the same");
             return;
         }
 
@@ -289,12 +289,12 @@ public class SettingsTabController {
             ffprobeSetButton.setText(UPDATE_FFPROBE_BUTTON_TEXT);
 
             if (hadValueBefore) {
-                showSuccessMessage("path to ffprobe has been updated successfully");
+                showSuccessMessage("Path to ffprobe has been updated successfully");
             } else {
-                showSuccessMessage("path to ffprobe has been saved successfully");
+                showSuccessMessage("Path to ffprobe has been saved successfully");
             }
         } catch (GuiSettings.ConfigException | FfmpegException e) {
-            showErrorMessage("incorrect path to ffprobe");
+            showErrorMessage("Incorrect path to ffprobe");
         }
     }
 
@@ -349,7 +349,7 @@ public class SettingsTabController {
         }
 
         if (Objects.equals(ffmpegFile, settings.getFfmpegFile())) {
-            showSuccessMessage("path to ffmpeg has stayed the same");
+            showSuccessMessage("Path to ffmpeg has stayed the same");
             return;
         }
 
@@ -362,12 +362,12 @@ public class SettingsTabController {
             ffmpegSetButton.setText(UPDATE_FFMPEG_BUTTON_TEXT);
 
             if (hadValueBefore) {
-                showSuccessMessage("path to ffmpeg has been updated successfully");
+                showSuccessMessage("Path to ffmpeg has been updated successfully");
             } else {
-                showSuccessMessage("path to ffmpeg has been saved successfully");
+                showSuccessMessage("Path to ffmpeg has been saved successfully");
             }
         } catch (GuiSettings.ConfigException | FfmpegException e) {
-            showErrorMessage("incorrect path to ffmpeg");
+            showErrorMessage("Incorrect path to ffmpeg");
         }
     }
 
@@ -399,7 +399,7 @@ public class SettingsTabController {
         }
 
         if (Objects.equals(value, settings.getLowerLanguage())) {
-            showErrorMessage("languages have to be different, please choose another one");
+            showErrorMessage("Languages have to be different, please choose another one");
             return;
         }
 
@@ -410,14 +410,14 @@ public class SettingsTabController {
             setSwapLanguagesButtonVisibility();
 
             if (hadValueBefore) {
-                showSuccessMessage("language for upper subtitles has been updated successfully");
+                showSuccessMessage("Language for upper subtitles has been updated successfully");
             } else {
-                showSuccessMessage("language for upper subtitles has been saved successfully");
+                showSuccessMessage("Language for upper subtitles has been saved successfully");
             }
         } catch (GuiSettings.ConfigException e) {
             log.error("language for upper subtitles has not been saved: " + ExceptionUtils.getStackTrace(e));
 
-            showErrorMessage("something bad has happened, language hasn't been saved");
+            showErrorMessage("Something bad has happened, language hasn't been saved");
         }
     }
 
@@ -433,11 +433,11 @@ public class SettingsTabController {
             settings.saveLowerLanguage(oldUpperLanguage.toString());
             lowerLanguageComboBox.getSelectionModel().select(oldUpperLanguage);
 
-            showSuccessMessage("languages have been swapped successfully");
+            showSuccessMessage("Languages have been swapped successfully");
         } catch (GuiSettings.ConfigException e) {
             log.error("languages haven't been swapped: " + ExceptionUtils.getStackTrace(e));
 
-            showErrorMessage("something bad has happened, languages haven't been swapped");
+            showErrorMessage("Something bad has happened, languages haven't been swapped");
         }
     }
 
@@ -450,7 +450,7 @@ public class SettingsTabController {
         }
 
         if (Objects.equals(value, settings.getUpperLanguage())) {
-            showErrorMessage("languages have to be different, please choose another one");
+            showErrorMessage("Languages have to be different, please choose another one");
             return;
         }
 
@@ -461,14 +461,14 @@ public class SettingsTabController {
             setSwapLanguagesButtonVisibility();
 
             if (hadValueBefore) {
-                showSuccessMessage("language for lower subtitles has been updated successfully");
+                showSuccessMessage("Language for lower subtitles has been updated successfully");
             } else {
-                showSuccessMessage("language for lower subtitles has been saved successfully");
+                showSuccessMessage("Language for lower subtitles has been saved successfully");
             }
         } catch (GuiSettings.ConfigException e) {
             log.error("language for lower subtitles has not been saved: " + ExceptionUtils.getStackTrace(e));
 
-            showErrorMessage("something bad has happened, language hasn't been saved");
+            showErrorMessage("Something bad has happened, language hasn't been saved");
         }
     }
 

@@ -184,7 +184,7 @@ public class SubtitleFilesTabController {
                 this.upperSubtitlesFileInfo = null;
 
                 showInputFileErrors(
-                        "you can't use the same file twice",
+                        "You can't use the same file twice",
                         null
                 );
             } else if (fileType == FileType.LOWER_SUBTITLES) {
@@ -192,7 +192,7 @@ public class SubtitleFilesTabController {
 
                 showInputFileErrors(
                         null,
-                        "you can't use the same file twice"
+                        "You can't use the same file twice"
                 );
             } else {
                 throw new IllegalStateException();
@@ -266,7 +266,7 @@ public class SubtitleFilesTabController {
     }
 
     private static String getErrorText(InputFileInfo fileInfo) {
-        StringBuilder result = new StringBuilder("file ")
+        StringBuilder result = new StringBuilder("File ")
                 .append(fileInfo.getFile().getAbsolutePath())
                 .append(" is incorrect: ");
 

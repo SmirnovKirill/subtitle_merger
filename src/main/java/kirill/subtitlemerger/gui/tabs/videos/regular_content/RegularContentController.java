@@ -332,9 +332,9 @@ public class RegularContentController {
     private void showResult(LoadSubtitlesTask task, boolean canceled) {
         if (task.getAllSubtitleCount() == 0) {
             if (tableWithFiles.getSelected() == 1) {
-                setResult("nothing to load for the selected file", null, null);
+                setResult("Nothing to load for the selected file", null, null);
             } else {
-                setResult("nothing to load for the selected files", null, null);
+                setResult("Nothing to load for the selected files", null, null);
             }
         } else if (task.getProcessedCount() == 0) {
             if (!canceled) {
@@ -342,24 +342,24 @@ public class RegularContentController {
                 throw new IllegalStateException();
             }
 
-            setResult(null, "haven't load anything because of the cancellation", null);
+            setResult(null, "Haven't load anything because of the cancellation", null);
         } else if (task.getLoadedSuccessfullyCount() == task.getAllSubtitleCount()) {
             if (task.getAllSubtitleCount() == 1) {
-                setResult("subtitle size has been loaded successfully", null, null);
+                setResult("Subtitle size has been loaded successfully", null, null);
             } else {
-                setResult("all " + task.getAllSubtitleCount() + " subtitle sizes have been loaded successfully", null, null);
+                setResult("All " + task.getAllSubtitleCount() + " subtitle sizes have been loaded successfully", null, null);
             }
         } else if (task.getLoadedBeforeCount() == task.getAllSubtitleCount()) {
             if (task.getAllSubtitleCount() == 1) {
-                setResult("subtitle size has already been loaded successfully", null, null);
+                setResult("Subtitle size has already been loaded successfully", null, null);
             } else {
-                setResult("all " + task.getAllSubtitleCount() + " subtitle sizes have already been loaded successfully", null, null);
+                setResult("All " + task.getAllSubtitleCount() + " subtitle sizes have already been loaded successfully", null, null);
             }
         } else if (task.getFailedToLoadCount() == task.getAllSubtitleCount()) {
             if (task.getAllSubtitleCount() == 1) {
-                setResult(null, null, "failed to load subtitle size");
+                setResult(null, null, "Failed to load subtitle size");
             } else {
-                setResult(null, null, "failed to load all " + task.getAllSubtitleCount() + " subtitle sizes");
+                setResult(null, null, "Failed to load all " + task.getAllSubtitleCount() + " subtitle sizes");
             }
         } else {
             String success = "";
