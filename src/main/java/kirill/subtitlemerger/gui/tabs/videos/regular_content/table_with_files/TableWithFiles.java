@@ -6,13 +6,15 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleLongProperty;
-import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import kirill.subtitlemerger.gui.GuiUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -131,32 +133,12 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
     }
 
     private <T> TableWithFilesCell<T> generateSubtitlesCell(TableColumn<GuiFileInfo, T> column) {
-        return new TableWithFilesCell<>(this::generateSubtitlesCellPane);
+        return new TableWithFilesCell<>(fileInfo -> new SubtitlesCell(fileInfo, allSizesLoader, singleSizeLoader));
     }
 
     private Pane generateSubtitlesCellPane(GuiFileInfo fileInfo) {
         GridPane result = new GridPane();
 
-        result.setPadding(new Insets(3, 3, 3, 5));
-
-        if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreamsInfo())) {
-            return result;
-        }
-
-        Pane hiddenPane = generateHiddenPane(fileInfo);
-
-        Hyperlink getAllSizes = new Hyperlink("get all sizes");
-        getAllSizes.setOnAction(event -> allSizesLoader.load(fileInfo));
-        getAllSizes.visibleProperty().bind(fileInfo.haveSubtitleSizesToLoadProperty());
-        getAllSizes.managedProperty().bind(fileInfo.haveSubtitleSizesToLoadProperty());
-
-        result.addRow(0, hiddenPane, getAllSizes, new Region());
-
-        GridPane.setColumnSpan(getAllSizes, 2);
-        GridPane.setHalignment(getAllSizes, HPos.CENTER);
-
-        GridPane.setMargin(hiddenPane, new Insets(0, 0, 10, 0));
-        GridPane.setMargin(getAllSizes, new Insets(0, 5, 10, 0));
         GridPane.setMargin(result.getChildren().get(2), new Insets(0, 0, 10, 0));
 
         int streamIndex = 0;
@@ -243,39 +225,6 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
         GridPane.setColumnSpan(button, 4);
         GridPane.setMargin(button, new Insets(5, 0, 0, 0));
-
-        return result;
-    }
-
-    private static Pane generateHiddenPane(GuiFileInfo fileInfo) {
-        HBox result = new HBox();
-
-        result.setAlignment(Pos.CENTER_LEFT);
-
-        StringBinding hiddenBinding = Bindings.createStringBinding(
-                () -> fileInfo.getSubtitleToHideCount() + " hidden ", fileInfo.subtitleToHideCountProperty()
-        );
-
-        Label hiddenLabel = new Label();
-        hiddenLabel.visibleProperty().bind(fileInfo.subtitleToHideCountProperty().greaterThan(0));
-        hiddenLabel.managedProperty().bind(fileInfo.subtitleToHideCountProperty().greaterThan(0));
-        hiddenLabel.textProperty().bind(
-                Bindings.when(fileInfo.someSubtitlesHiddenProperty())
-                        .then(hiddenBinding)
-                        .otherwise("")
-        );
-
-        Hyperlink showAllLink = new Hyperlink();
-        showAllLink.visibleProperty().bind(fileInfo.subtitleToHideCountProperty().greaterThan(0));
-        showAllLink.managedProperty().bind(fileInfo.subtitleToHideCountProperty().greaterThan(0));
-        showAllLink.textProperty().bind(
-                Bindings.when(fileInfo.someSubtitlesHiddenProperty())
-                        .then("show all")
-                        .otherwise("hide extra subtitles")
-        );
-        showAllLink.setOnAction(event -> fileInfo.setSomeSubtitlesHidden(!fileInfo.isSomeSubtitlesHidden()));
-
-        result.getChildren().addAll(hiddenLabel, showAllLink);
 
         return result;
     }

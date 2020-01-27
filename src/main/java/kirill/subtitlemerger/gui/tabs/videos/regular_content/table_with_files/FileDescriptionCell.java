@@ -5,11 +5,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import kirill.subtitlemerger.gui.GuiUtils;
-import lombok.extern.apachecommons.CommonsLog;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-@CommonsLog
 class FileDescriptionCell extends VBox {
     private static final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern("dd.MM.YYYY HH:mm");
 
