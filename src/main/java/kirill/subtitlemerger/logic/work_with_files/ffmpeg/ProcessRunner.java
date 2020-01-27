@@ -74,6 +74,7 @@ class ProcessRunner {
             closeQuietly(process.getInputStream());
             closeQuietly(process.getErrorStream());
             process.destroyForcibly();
+            log.debug("destroyForcibly has been called on a process");
 
             try {
                 result = task.get(1000, TimeUnit.MILLISECONDS);
@@ -90,6 +91,7 @@ class ProcessRunner {
             throw new ProcessException(ProcessException.Code.INTERRUPTED, result);
         } catch (ExecutionException e) {
             process.destroyForcibly();
+            log.debug("destroyForcibly has been called on a process");
 
             Throwable cause = e.getCause();
             if (cause instanceof ProcessException) {
@@ -117,6 +119,7 @@ class ProcessRunner {
             if (!process.waitFor(5000, TimeUnit.MILLISECONDS)) {
                 log.error("process has not been finished in 5 seconds, that's weird");
                 process.destroyForcibly();
+                log.debug("destroyForcibly has been called on a process");
                 throw new ProcessException(ProcessException.Code.PROCESS_KILLED, consoleOutput);
             }
         } catch (InterruptedException e) {
