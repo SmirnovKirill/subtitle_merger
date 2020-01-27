@@ -50,11 +50,11 @@ public class Ffmpeg {
             }
         } catch (ProcessException e) {
             if (e.getCode() == ProcessException.Code.INTERRUPTED) {
-                throw  new FfmpegException(FfmpegException.Code.INTERRUPTED, null);
+                throw  new FfmpegException(FfmpegException.Code.INTERRUPTED, e.getConsoleOutput());
             }
 
             log.warn("failed to check ffmpeg: " + e.getCode());
-            throw new FfmpegException(FfmpegException.Code.INCORRECT_FFMPEG_PATH, null);
+            throw new FfmpegException(FfmpegException.Code.INCORRECT_FFMPEG_PATH, e.getConsoleOutput());
         }
     }
 
@@ -83,7 +83,7 @@ public class Ffmpeg {
             log.debug("ffmpeg console output: " + consoleOutput);
         } catch (ProcessException e) {
             if (e.getCode() == ProcessException.Code.INTERRUPTED) {
-                throw  new FfmpegException(FfmpegException.Code.INTERRUPTED, null);
+                throw  new FfmpegException(FfmpegException.Code.INTERRUPTED, e.getConsoleOutput());
             }
 
             log.warn("failed to extract subtitles with ffmpeg: " + e.getCode());
@@ -140,11 +140,11 @@ public class Ffmpeg {
                 log.debug("ffmpeg console output: " + consoleOutput);
             } catch (ProcessException e) {
                 if (e.getCode() == ProcessException.Code.INTERRUPTED) {
-                    throw  new FfmpegException(FfmpegException.Code.INTERRUPTED, null);
+                    throw  new FfmpegException(FfmpegException.Code.INTERRUPTED, e.getConsoleOutput());
                 }
 
                 log.warn("failed to inject subtitles with ffmpeg: " + e.getCode());
-                throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, null);
+                throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, e.getConsoleOutput());
             }
 
             if (outputTemp.length() <= videoFile.length()) {

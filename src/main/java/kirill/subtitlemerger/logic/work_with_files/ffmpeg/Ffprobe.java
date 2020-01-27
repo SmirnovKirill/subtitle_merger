@@ -52,11 +52,11 @@ public class Ffprobe {
             }
         } catch (ProcessException e) {
             if (e.getCode() == ProcessException.Code.INTERRUPTED) {
-                throw  new FfmpegException(FfmpegException.Code.INTERRUPTED, null);
+                throw  new FfmpegException(FfmpegException.Code.INTERRUPTED, e.getConsoleOutput());
             }
 
             log.warn("failed to check ffprobe: " + e.getCode());
-            throw new FfmpegException(FfmpegException.Code.INCORRECT_FFPROBE_PATH, null);
+            throw new FfmpegException(FfmpegException.Code.INCORRECT_FFPROBE_PATH, e.getConsoleOutput());
         }
     }
 
@@ -79,11 +79,11 @@ public class Ffprobe {
             log.debug("ffprobe console output: " + consoleOutput);
         } catch (ProcessException e) {
             if (e.getCode() == ProcessException.Code.INTERRUPTED) {
-                throw  new FfmpegException(FfmpegException.Code.INTERRUPTED, null);
+                throw  new FfmpegException(FfmpegException.Code.INTERRUPTED, e.getConsoleOutput());
             }
 
             log.warn("failed to get file info with ffprobe: " + e.getCode());
-            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, null);
+            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, e.getConsoleOutput());
         }
 
         try {
