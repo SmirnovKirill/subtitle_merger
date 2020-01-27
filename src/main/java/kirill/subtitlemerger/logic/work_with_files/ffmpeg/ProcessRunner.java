@@ -2,14 +2,19 @@ package kirill.subtitlemerger.logic.work_with_files.ffmpeg;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.StringBuilderWriter;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @CommonsLog
 class ProcessRunner {
@@ -21,40 +26,132 @@ class ProcessRunner {
      * @throws ProcessException with different codes inside when errors happen
      */
     static String run(List<String> arguments) throws ProcessException {
+        Process process = startProcess(arguments);
+        String consoleOutput = readAllConsoleOutput(process);
+        waitForProcessTermination(process, consoleOutput);
+
+        if (process.exitValue() != 0) {
+            throw new ProcessException(ProcessException.Code.EXIT_VALUE_NOT_ZERO, consoleOutput);
+        }
+
+        if (consoleOutput == null) {
+            log.error("console output is null, that can't happen");
+            throw new IllegalStateException();
+        }
+
+        return consoleOutput;
+    }
+
+    private static Process startProcess(List<String> arguments) throws ProcessException {
         ProcessBuilder processBuilder = new ProcessBuilder(arguments);
         processBuilder.redirectErrorStream(true);
 
-        Process process;
         try {
-            process = processBuilder.start();
+            return processBuilder.start();
         } catch (IOException e) {
             throw new ProcessException(ProcessException.Code.FAILED_TO_START, null);
         }
+    }
 
-        String result = "";
-        try (OutputStream ignored1 = process.getOutputStream(); InputStream ignored2 = process.getErrorStream()){
-            try {
-                result = IOUtils.toString(process.getInputStream(), StandardCharsets.UTF_8);
-            } catch (IOException e) {
-                throw new ProcessException(ProcessException.Code.FAILED_TO_READ_OUTPUT, null);
-            }
+    private static String readAllConsoleOutput(Process process) throws ProcessException {
+        ReadAllConsoleOutputTask task = new ReadAllConsoleOutputTask(process);
 
-            if (!process.waitFor(10000, TimeUnit.MILLISECONDS)) {
-                process.destroy();
-                throw new ProcessException(ProcessException.Code.PROCESS_KILLED, result);
-            }
+        Thread thread = new Thread(task);
+        thread.setDaemon(true);
+        thread.start();
 
-            if (process.exitValue() != 0) {
-                throw new ProcessException(ProcessException.Code.EXIT_VALUE_NOT_ZERO, result);
-            }
-
+        String result = null;
+        try (
+                InputStream ignored1 = process.getInputStream();
+                InputStream ignored2 = process.getErrorStream();
+                OutputStream ignored3 = process.getOutputStream()
+        ) {
+            result = task.get();
             return result;
         } catch (InterruptedException e) {
+            log.debug("interrupted when waiting for the console output");
+
+            closeQuietly(process.getInputStream());
+            closeQuietly(process.getErrorStream());
+            process.destroyForcibly();
+
+            try {
+                result = task.get(1000, TimeUnit.MILLISECONDS);
+            } catch (TimeoutException timeoutException) {
+                log.error("failed to wait for the thread after closing the streams, something is wrong");
+            } catch (InterruptedException ignored) {
+                //We can ignore this exception because we already handle InterruptedException.
+            } catch (ExecutionException executionException) {
+                log.warn("failed to read console output: " + ExceptionUtils.getStackTrace(executionException));
+            }
+
             Thread.currentThread().interrupt();
-            throw new ProcessException(ProcessException.Code.INTERRUPTED, null);
+            log.debug("interruption has been handled successfully");
+            throw new ProcessException(ProcessException.Code.INTERRUPTED, result);
+        } catch (ExecutionException e) {
+            process.destroyForcibly();
+
+            Throwable cause = e.getCause();
+            if (cause instanceof ProcessException) {
+                throw (ProcessException) cause;
+            }
+
+            log.error("unknown execution exception: " + ExceptionUtils.getStackTrace(cause));
+            throw new ProcessException(ProcessException.Code.FAILED_TO_READ_OUTPUT, null);
         } catch (IOException e) {
-            log.warn("failed to close streams: " + ExceptionUtils.getStackTrace(e));
+            log.warn("failed to close the streams: " + ExceptionUtils.getStackTrace(e));
             return result;
+        }
+    }
+
+    private static void closeQuietly(InputStream inputStream) {
+        try {
+            inputStream.close();
+        } catch (IOException e) {
+            log.warn("failed to close stream: " + ExceptionUtils.getStackTrace(e));
+        }
+    }
+
+    private static void waitForProcessTermination(Process process, String consoleOutput) throws ProcessException {
+        try {
+            if (!process.waitFor(5000, TimeUnit.MILLISECONDS)) {
+                log.error("process has not been finished in 5 seconds, that's weird");
+                process.destroyForcibly();
+                throw new ProcessException(ProcessException.Code.PROCESS_KILLED, consoleOutput);
+            }
+        } catch (InterruptedException e) {
+            log.debug("interrupted when waiting for process termination");
+
+            Thread.currentThread().interrupt();
+
+            throw new ProcessException(ProcessException.Code.INTERRUPTED, consoleOutput);
+        }
+    }
+
+    private static class ReadAllConsoleOutputTask extends FutureTask<String> {
+        ReadAllConsoleOutputTask(Process process) {
+            super(() -> {
+                /*
+                 * Code below is basically copied from the IOUtils::toString. I decided to make my own implementation
+                 * instead of using the existing one because if some exception occurs I want to see what output was
+                 * generated before that exception for better diagnostics.
+                 */
+                StringBuilderWriter result = new StringBuilderWriter();
+
+                try {
+                    InputStreamReader in = new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8);
+                    char[] buffer = new char[1024 * 4];
+
+                    int n;
+                    while ((n = in.read(buffer)) != IOUtils.EOF) {
+                        result.write(buffer, 0, n);
+                    }
+
+                    return result.toString();
+                } catch (IOException e) {
+                    throw new ProcessException(ProcessException.Code.FAILED_TO_READ_OUTPUT, result.toString());
+                }
+            });
         }
     }
 }

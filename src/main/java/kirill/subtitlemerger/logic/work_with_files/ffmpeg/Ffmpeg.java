@@ -87,7 +87,7 @@ public class Ffmpeg {
             }
 
             log.warn("failed to extract subtitles with ffmpeg: " + e.getCode());
-            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, null);
+            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, e.getConsoleOutput());
         }
 
         try {
