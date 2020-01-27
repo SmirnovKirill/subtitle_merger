@@ -8,8 +8,13 @@ import lombok.AccessLevel;
 import lombok.Getter;
 
 @Getter
-public class GuiSubtitleStreamInfo {
-    private int id;
+public class GuiSubtitleStream {
+    /*
+     * The word "ffmpeg" there emphasizes the fact that it's not a regular index, but an index got from ffmpeg.
+     * For example the first subtitle stream may have index 2 because the first two indices are assigned to the video
+     * and audio streams.
+     */
+    private int ffmpegIndex;
 
     private String unavailabilityReason;
 
@@ -28,8 +33,8 @@ public class GuiSubtitleStreamInfo {
     @Getter(AccessLevel.NONE)
     private BooleanProperty selectedAsLower;
 
-    public GuiSubtitleStreamInfo(
-            int id,
+    public GuiSubtitleStream(
+            int ffmpegIndex,
             String unavailabilityReason,
             String language,
             String title,
@@ -38,7 +43,7 @@ public class GuiSubtitleStreamInfo {
             boolean selectedAsUpper,
             boolean selectedAsLower
     ) {
-        this.id = id;
+        this.ffmpegIndex = ffmpegIndex;
         this.unavailabilityReason = unavailabilityReason;
         this.language = language;
         this.title = title;

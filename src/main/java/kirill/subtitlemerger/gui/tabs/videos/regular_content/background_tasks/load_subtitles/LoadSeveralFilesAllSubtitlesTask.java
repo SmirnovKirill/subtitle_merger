@@ -3,7 +3,7 @@ package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.l
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
-import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStreamInfo;
+import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffmpeg;
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -49,8 +49,8 @@ public class LoadSeveralFilesAllSubtitlesTask extends LoadSubtitlesTask {
 
         for (GuiFileInfo guiFileToWorkWith : guiFilesToWorkWith) {
             FileInfo fileToWorkWith = RegularContentController.findMatchingFileInfo(guiFileToWorkWith, allFiles);
-            if (!CollectionUtils.isEmpty(fileToWorkWith.getSubtitleStreamsInfo())) {
-                for (SubtitleStreamInfo subtitleStream : fileToWorkWith.getSubtitleStreamsInfo()) {
+            if (!CollectionUtils.isEmpty(fileToWorkWith.getSubtitleStreams())) {
+                for (SubtitleStream subtitleStream : fileToWorkWith.getSubtitleStreams()) {
                     if (subtitleStream.getUnavailabilityReason() != null) {
                         continue;
                     }
@@ -68,8 +68,8 @@ public class LoadSeveralFilesAllSubtitlesTask extends LoadSubtitlesTask {
 
         for (GuiFileInfo guiFileToWorkWith : guiFilesToWorkWith) {
             FileInfo fileToWorkWith = RegularContentController.findMatchingFileInfo(guiFileToWorkWith, allFiles);
-            if (!CollectionUtils.isEmpty(fileToWorkWith.getSubtitleStreamsInfo())) {
-                for (SubtitleStreamInfo subtitleStream : fileToWorkWith.getSubtitleStreamsInfo()) {
+            if (!CollectionUtils.isEmpty(fileToWorkWith.getSubtitleStreams())) {
+                for (SubtitleStream subtitleStream : fileToWorkWith.getSubtitleStreams()) {
                     if (subtitleStream.getUnavailabilityReason() != null) {
                         continue;
                     }

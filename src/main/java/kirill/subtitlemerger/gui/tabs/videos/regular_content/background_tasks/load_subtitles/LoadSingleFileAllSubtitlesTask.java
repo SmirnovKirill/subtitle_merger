@@ -2,7 +2,7 @@ package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.l
 
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
-import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStreamInfo;
+import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffmpeg;
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -37,8 +37,8 @@ public class LoadSingleFileAllSubtitlesTask extends LoadSubtitlesTask {
     private static int getAllSubtitleCount(FileInfo fileInfo) {
         int result = 0;
 
-        if (!CollectionUtils.isEmpty(fileInfo.getSubtitleStreamsInfo())) {
-            for (SubtitleStreamInfo subtitleStream : fileInfo.getSubtitleStreamsInfo()) {
+        if (!CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
+            for (SubtitleStream subtitleStream : fileInfo.getSubtitleStreams()) {
                 if (subtitleStream.getUnavailabilityReason() != null) {
                     continue;
                 }
@@ -53,8 +53,8 @@ public class LoadSingleFileAllSubtitlesTask extends LoadSubtitlesTask {
     private static int getLoadedBeforeCount(FileInfo fileInfo) {
         int result = 0;
 
-        if (!CollectionUtils.isEmpty(fileInfo.getSubtitleStreamsInfo())) {
-            for (SubtitleStreamInfo subtitleStream : fileInfo.getSubtitleStreamsInfo()) {
+        if (!CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
+            for (SubtitleStream subtitleStream : fileInfo.getSubtitleStreams()) {
                 if (subtitleStream.getUnavailabilityReason() != null) {
                     continue;
                 }

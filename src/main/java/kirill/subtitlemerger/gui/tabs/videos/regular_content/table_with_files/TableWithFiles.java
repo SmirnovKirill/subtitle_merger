@@ -6,16 +6,16 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleLongProperty;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
+import javafx.scene.layout.*;
 import kirill.subtitlemerger.gui.GuiUtils;
+import lombok.AllArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -133,52 +133,72 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
     }
 
     private <T> TableWithFilesCell<T> generateSubtitlesCell(TableColumn<GuiFileInfo, T> column) {
-        return new TableWithFilesCell<>(fileInfo -> new SubtitlesCell(fileInfo, allSizesLoader, singleSizeLoader));
+        return new TableWithFilesCell<>(this::generateSubtitlesCellPane);
     }
 
     private Pane generateSubtitlesCellPane(GuiFileInfo fileInfo) {
         GridPane result = new GridPane();
 
+        result.setPadding(new Insets(3, 3, 3, 5));
+
+        if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
+            return result;
+        }
+
+        Pane hiddenPane = generateHiddenPane(fileInfo);
+
+        Hyperlink getAllSizes = new Hyperlink("get all sizes");
+        getAllSizes.setOnAction(event -> allSizesLoader.load(fileInfo));
+        getAllSizes.visibleProperty().bind(fileInfo.haveSubtitleSizesToLoadProperty());
+        getAllSizes.managedProperty().bind(fileInfo.haveSubtitleSizesToLoadProperty());
+
+        result.addRow(0, hiddenPane, getAllSizes, new Region());
+
+        GridPane.setColumnSpan(getAllSizes, 2);
+        GridPane.setHalignment(getAllSizes, HPos.CENTER);
+
+        GridPane.setMargin(hiddenPane, new Insets(0, 0, 10, 0));
+        GridPane.setMargin(getAllSizes, new Insets(0, 5, 10, 0));
         GridPane.setMargin(result.getChildren().get(2), new Insets(0, 0, 10, 0));
 
         int streamIndex = 0;
-        for (GuiSubtitleStreamInfo streamInfo : fileInfo.getSubtitleStreamsInfo()) {
+        for (GuiSubtitleStream stream : fileInfo.getSubtitleStreams()) {
             HBox titlePane = new HBox();
 
-            Label language = new Label(streamInfo.getLanguage().toUpperCase());
+            Label language = new Label(stream.getLanguage().toUpperCase());
             titlePane.getChildren().add(language);
 
-            if (!StringUtils.isBlank(streamInfo.getTitle())) {
-                titlePane.getChildren().add(new Label(" (" + streamInfo.getTitle() + ")"));
+            if (!StringUtils.isBlank(stream.getTitle())) {
+                titlePane.getChildren().add(new Label(" (" + stream.getTitle() + ")"));
             }
 
             Label sizeLabel = new Label();
 
             StringBinding unknownSizeBinding = Bindings.createStringBinding(
-                    () -> "Size: ? KB ", streamInfo.sizeProperty()
+                    () -> "Size: ? KB ", stream.sizeProperty()
             );
             StringBinding knownSizeBinding = Bindings.createStringBinding(
-                    () -> "Size: " + GuiUtils.getFileSizeTextual(streamInfo.getSize()), streamInfo.sizeProperty()
+                    () -> "Size: " + GuiUtils.getFileSizeTextual(stream.getSize()), stream.sizeProperty()
             );
 
             sizeLabel.textProperty().bind(
-                    Bindings.when(streamInfo.sizeProperty().isEqualTo(-1))
+                    Bindings.when(stream.sizeProperty().isEqualTo(-1))
                             .then(unknownSizeBinding)
                             .otherwise(knownSizeBinding)
             );
 
             Hyperlink getSizeLink = new Hyperlink("get size");
-            getSizeLink.setOnAction(event -> singleSizeLoader.load(fileInfo, streamInfo.getId()));
+            getSizeLink.setOnAction(event -> singleSizeLoader.load(fileInfo, stream.getFfmpegIndex()));
 
             HBox radios = new HBox();
             radios.setSpacing(10);
             radios.setAlignment(Pos.CENTER);
 
             RadioButton upper = new RadioButton("upper");
-            upper.selectedProperty().bindBidirectional(streamInfo.selectedAsUpperProperty());
+            upper.selectedProperty().bindBidirectional(stream.selectedAsUpperProperty());
 
             RadioButton lower = new RadioButton("lower");
-            lower.selectedProperty().bindBidirectional(streamInfo.selectedAsLowerProperty());
+            lower.selectedProperty().bindBidirectional(stream.selectedAsLowerProperty());
 
             radios.getChildren().addAll(upper, lower);
 
@@ -190,19 +210,19 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
             int bottomMargin = 2;
 
-            if (streamInfo.isExtra()) {
+            if (stream.isExtra()) {
                 titlePane.visibleProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()));
                 //todo refactor, ugly
                 titlePane.managedProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()));
                 sizeLabel.visibleProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()));
                 sizeLabel.managedProperty().bind(sizeLabel.visibleProperty());
-                getSizeLink.visibleProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()).and(streamInfo.sizeProperty().isEqualTo(-1)));
+                getSizeLink.visibleProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()).and(stream.sizeProperty().isEqualTo(-1)));
                 getSizeLink.managedProperty().bind(getSizeLink.visibleProperty());
                 radios.visibleProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()));
                 radios.managedProperty().bind(radios.visibleProperty());
             } else {
-                getSizeLink.visibleProperty().bind(streamInfo.sizeProperty().isEqualTo(-1));
-                getSizeLink.managedProperty().bind(streamInfo.sizeProperty().isEqualTo(-1));
+                getSizeLink.visibleProperty().bind(stream.sizeProperty().isEqualTo(-1));
+                getSizeLink.managedProperty().bind(stream.sizeProperty().isEqualTo(-1));
             }
 
             GridPane.setMargin(titlePane, new Insets(0, 0, bottomMargin, 0));
@@ -221,10 +241,43 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         imageView.setFitHeight(imageView.getFitWidth());
         button.setGraphic(imageView);
 
-        result.addRow(2 + fileInfo.getSubtitleStreamsInfo().size(), button);
+        result.addRow(2 + fileInfo.getSubtitleStreams().size(), button);
 
         GridPane.setColumnSpan(button, 4);
         GridPane.setMargin(button, new Insets(5, 0, 0, 0));
+
+        return result;
+    }
+
+    private static Pane generateHiddenPane(GuiFileInfo fileInfo) {
+        HBox result = new HBox();
+
+        result.setAlignment(Pos.CENTER_LEFT);
+
+        StringBinding hiddenBinding = Bindings.createStringBinding(
+                () -> fileInfo.getSubtitleToHideCount() + " hidden ", fileInfo.subtitleToHideCountProperty()
+        );
+
+        Label hiddenLabel = new Label();
+        hiddenLabel.visibleProperty().bind(fileInfo.subtitleToHideCountProperty().greaterThan(0));
+        hiddenLabel.managedProperty().bind(fileInfo.subtitleToHideCountProperty().greaterThan(0));
+        hiddenLabel.textProperty().bind(
+                Bindings.when(fileInfo.someSubtitlesHiddenProperty())
+                        .then(hiddenBinding)
+                        .otherwise("")
+        );
+
+        Hyperlink showAllLink = new Hyperlink();
+        showAllLink.visibleProperty().bind(fileInfo.subtitleToHideCountProperty().greaterThan(0));
+        showAllLink.managedProperty().bind(fileInfo.subtitleToHideCountProperty().greaterThan(0));
+        showAllLink.textProperty().bind(
+                Bindings.when(fileInfo.someSubtitlesHiddenProperty())
+                        .then("show all")
+                        .otherwise("hide extra subtitles")
+        );
+        showAllLink.setOnAction(event -> fileInfo.setSomeSubtitlesHidden(!fileInfo.isSomeSubtitlesHidden()));
+
+        result.getChildren().addAll(hiddenLabel, showAllLink);
 
         return result;
     }
@@ -252,6 +305,32 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
     @FunctionalInterface
     public interface SingleFileSubtitleSizeLoader {
-        void load(GuiFileInfo guiFileInfo, int subtitleId);
+        void load(GuiFileInfo guiFileInfo, int ffmpegIndex);
+    }
+
+    @AllArgsConstructor
+    public static class TableWithFilesCell<T> extends TableCell<GuiFileInfo, T> {
+        private CellNodeGenerator cellNodeGenerator;
+
+        @Override
+        protected void updateItem(T item, boolean empty) {
+            super.updateItem(item, empty);
+
+            GuiFileInfo fileInfo = getTableRow().getItem();
+
+            if (empty || fileInfo == null) {
+                setGraphic(null);
+                setText(null);
+                return;
+            }
+
+            setGraphic(cellNodeGenerator.generateNode(fileInfo));
+            setText(null);
+        }
+
+        @FunctionalInterface
+        interface CellNodeGenerator {
+            Node generateNode(GuiFileInfo fileInfo);
+        }
     }
 }

@@ -9,8 +9,13 @@ import java.util.List;
 
 @Getter
 public
-class SubtitleStreamInfo {
-    private int id;
+class SubtitleStream {
+    /*
+     * The word "ffmpeg" there emphasizes the fact that it's not a regular index, but an index got from ffmpeg.
+     * For example the first subtitle stream may have index 2 because the first two indices are assigned to the video
+     * and audio streams.
+     */
+    private int ffmpegIndex;
 
     private boolean merged;
 
@@ -32,8 +37,8 @@ class SubtitleStreamInfo {
 
     private Integer subtitleSize;
 
-    public SubtitleStreamInfo(
-            int id,
+    public SubtitleStream(
+            int ffmpegIndex,
             SubtitleCodec codec,
             UnavailabilityReason unavailabilityReason,
             LanguageAlpha3Code language,
@@ -41,7 +46,7 @@ class SubtitleStreamInfo {
             boolean defaultDisposition,
             Subtitles subtitles
     ) {
-        this.id = id;
+        this.ffmpegIndex = ffmpegIndex;
         this.merged = title != null && title.startsWith("Merged subtitles");
         this.codec = codec;
         this.unavailabilityReason = unavailabilityReason;
@@ -59,9 +64,9 @@ class SubtitleStreamInfo {
         this.subtitleSize = getSubtitleSize(subtitles);
     }
 
-    public static SubtitleStreamInfo getById(int id, List<SubtitleStreamInfo> allSubtitleStreams) {
+    public static SubtitleStream getByFfmpegIndex(int ffmpegIndex, List<SubtitleStream> allSubtitleStreams) {
         return allSubtitleStreams.stream()
-                .filter(stream -> stream.getId() == id)
+                .filter(stream -> stream.getFfmpegIndex() == ffmpegIndex)
                 .findFirst().orElseThrow(IllegalAccessError::new);
     }
 

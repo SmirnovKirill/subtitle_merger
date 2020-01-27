@@ -41,7 +41,7 @@ public class GuiFileInfo {
     @Getter(AccessLevel.NONE)
     private BooleanProperty someSubtitlesHidden;
 
-    private List<GuiSubtitleStreamInfo> subtitleStreamsInfo;
+    private List<GuiSubtitleStream> subtitleStreams;
 
     public GuiFileInfo(
             String pathToDisplay,
@@ -55,7 +55,7 @@ public class GuiFileInfo {
             boolean haveSubtitleSizesToLoad,
             int subtitleToHideCount,
             boolean someSubtitlesHidden,
-            List<GuiSubtitleStreamInfo> subtitleStreamsInfo
+            List<GuiSubtitleStream> subtitleStreams
     ) {
         this.pathToDisplay = pathToDisplay;
         this.fullPath = fullPath;
@@ -68,7 +68,7 @@ public class GuiFileInfo {
         this.haveSubtitleSizesToLoad = new SimpleBooleanProperty(haveSubtitleSizesToLoad);
         this.subtitleToHideCount = new SimpleIntegerProperty(subtitleToHideCount);
         this.someSubtitlesHidden = new SimpleBooleanProperty(someSubtitlesHidden);
-        this.subtitleStreamsInfo = subtitleStreamsInfo;
+        this.subtitleStreams = subtitleStreams;
     }
 
     public boolean isSelected() {

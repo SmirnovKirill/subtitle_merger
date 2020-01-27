@@ -4,10 +4,10 @@ import javafx.application.Platform;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStreamInfo;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.logic.core.Parser;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
-import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStreamInfo;
+import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import lombok.Getter;
@@ -46,24 +46,24 @@ public abstract class LoadSubtitlesTask extends BackgroundTask<Void> {
         this.ffmpeg = ffmpeg;
     }
 
-    protected void load(Integer subtitleId, List<GuiFileInfo> guiFilesInfo, List<FileInfo> filesInfo) {
-        if (subtitleId != null && guiFilesInfo.size() != 1) {
+    protected void load(Integer ffmpegIndex, List<GuiFileInfo> guiFilesInfo, List<FileInfo> filesInfo) {
+        if (ffmpegIndex != null && guiFilesInfo.size() != 1) {
             throw new IllegalArgumentException();
         }
 
         mainLoop: for (GuiFileInfo guiFileInfo : guiFilesInfo) {
             FileInfo fileInfo = RegularContentController.findMatchingFileInfo(guiFileInfo, filesInfo);
-            if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreamsInfo())) {
+            if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
                 continue;
             }
 
-            for (SubtitleStreamInfo subtitleStream : fileInfo.getSubtitleStreamsInfo()) {
+            for (SubtitleStream subtitleStream : fileInfo.getSubtitleStreams()) {
                 if (super.isCancelled()) {
                     cancelled = true;
                     break mainLoop;
                 }
 
-                if (subtitleId != null && subtitleId != subtitleStream.getId()) {
+                if (ffmpegIndex != null && ffmpegIndex != subtitleStream.getFfmpegIndex()) {
                     continue;
                 }
 
@@ -76,17 +76,17 @@ public abstract class LoadSubtitlesTask extends BackgroundTask<Void> {
                     continue;
                 }
 
-                try {
-                    updateMessage(
-                            getUpdateMessage(
-                                    processedCount,
-                                    allSubtitleCount,
-                                    subtitleStream,
-                                    fileInfo.getFile()
-                            )
-                    );
+                updateMessage(
+                        getUpdateMessage(
+                                processedCount,
+                                allSubtitleCount,
+                                subtitleStream,
+                                fileInfo.getFile()
+                        )
+                );
 
-                    String subtitleText = ffmpeg.getSubtitlesText(subtitleStream.getId(), fileInfo.getFile());
+                try {
+                    String subtitleText = ffmpeg.getSubtitlesText(subtitleStream.getFfmpegIndex(), fileInfo.getFile());
                     subtitleStream.setSubtitlesAndSize(
                             Parser.fromSubRipText(
                                     subtitleText,
@@ -95,15 +95,15 @@ public abstract class LoadSubtitlesTask extends BackgroundTask<Void> {
                             )
                     );
 
-                    GuiSubtitleStreamInfo guiSubtitleStreamInfo = RegularContentController.findMatchingGuiStreamInfo(
-                            subtitleStream.getId(),
-                            guiFileInfo.getSubtitleStreamsInfo()
+                    GuiSubtitleStream guiSubtitleStream = RegularContentController.findMatchingGuiStream(
+                            subtitleStream.getFfmpegIndex(),
+                            guiFileInfo.getSubtitleStreams()
                     );
 
                     /*
                      * Have to call this in the JavaFX thread because this change can lead to updates on the screen.
                      */
-                    Platform.runLater(() -> guiSubtitleStreamInfo.setSize(subtitleStream.getSubtitleSize()));
+                    Platform.runLater(() -> guiSubtitleStream.setSize(subtitleStream.getSubtitleSize()));
 
                     loadedSuccessfullyCount++;
                 } catch (FfmpegException e) {
@@ -129,7 +129,7 @@ public abstract class LoadSubtitlesTask extends BackgroundTask<Void> {
     private static String getUpdateMessage(
             int processedCount,
             int allSubtitleCount,
-            SubtitleStreamInfo subtitleStream,
+            SubtitleStream subtitleStream,
             File file
     ) {
         String language = subtitleStream.getLanguage() != null

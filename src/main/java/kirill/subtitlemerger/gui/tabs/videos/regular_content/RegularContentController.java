@@ -21,11 +21,11 @@ import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.lo
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.load_subtitles.LoadSingleSubtitleTask;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.load_subtitles.LoadSubtitlesTask;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStreamInfo;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.logic.work_with_files.SubtitleInjector;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
-import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStreamInfo;
+import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
@@ -281,20 +281,20 @@ public class RegularContentController {
         GuiFileInfo guiFileInfo = tableWithFiles.getItems().get(0);
         FileInfo fileInfo = findMatchingFileInfo(guiFileInfo, filesInfo);
 
-        GuiSubtitleStreamInfo guiUpperSubtitles = guiFileInfo.getSubtitleStreamsInfo().stream()
-                .filter(GuiSubtitleStreamInfo::isSelectedAsUpper)
+        GuiSubtitleStream guiUpperSubtitles = guiFileInfo.getSubtitleStreams().stream()
+                .filter(GuiSubtitleStream::isSelectedAsUpper)
                 .findFirst().orElseThrow(IllegalStateException::new);
-        SubtitleStreamInfo upperSubtitles = SubtitleStreamInfo.getById(
-                guiUpperSubtitles.getId(),
-                fileInfo.getSubtitleStreamsInfo()
+        SubtitleStream upperSubtitles = SubtitleStream.getByFfmpegIndex(
+                guiUpperSubtitles.getFfmpegIndex(),
+                fileInfo.getSubtitleStreams()
         );
 
-        GuiSubtitleStreamInfo guiLowerSubtitles = guiFileInfo.getSubtitleStreamsInfo().stream()
-                .filter(GuiSubtitleStreamInfo::isSelectedAsLower)
+        GuiSubtitleStream guiLowerSubtitles = guiFileInfo.getSubtitleStreams().stream()
+                .filter(GuiSubtitleStream::isSelectedAsLower)
                 .findFirst().orElseThrow(IllegalStateException::new);
-        SubtitleStreamInfo lowerSubtitles = SubtitleStreamInfo.getById(
-                guiLowerSubtitles.getId(),
-                fileInfo.getSubtitleStreamsInfo()
+        SubtitleStream lowerSubtitles = SubtitleStream.getByFfmpegIndex(
+                guiLowerSubtitles.getFfmpegIndex(),
+                fileInfo.getSubtitleStreams()
         );
 
         SubtitleInjector.mergeAndInjectSubtitlesToFile(
@@ -316,10 +316,10 @@ public class RegularContentController {
         );
     }
 
-    private void loadSingleFileSubtitleSize(GuiFileInfo guiFileInfo, int subtitleId) {
+    private void loadSingleFileSubtitleSize(GuiFileInfo guiFileInfo, int ffmpegIndex) {
         runLoadSubtitlesTask(
                 new LoadSingleSubtitleTask(
-                        subtitleId,
+                        ffmpegIndex,
                         findMatchingFileInfo(guiFileInfo, filesInfo),
                         guiFileInfo,
                         guiContext.getFfmpeg()
@@ -880,41 +880,41 @@ public class RegularContentController {
                 .findFirst().orElseThrow(IllegalStateException::new);
     }
 
-    public static GuiSubtitleStreamInfo findMatchingGuiStreamInfo(int id, List<GuiSubtitleStreamInfo> guiStreamsInfo) {
-        return guiStreamsInfo.stream()
-                .filter(stream -> stream.getId() == id)
+    public static GuiSubtitleStream findMatchingGuiStream(int ffmpegIndex, List<GuiSubtitleStream> guiStreams) {
+        return guiStreams.stream()
+                .filter(stream -> stream.getFfmpegIndex() == ffmpegIndex)
                 .findFirst().orElseThrow(IllegalStateException::new);
     }
 
     public static boolean haveSubtitlesToLoad(FileInfo fileInfo) {
-        if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreamsInfo())) {
+        if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
             return false;
         }
 
-        return fileInfo.getSubtitleStreamsInfo().stream()
-                .anyMatch(subtitleStreamInfo -> subtitleStreamInfo.getSubtitles() == null);
+        return fileInfo.getSubtitleStreams().stream()
+                .anyMatch(stream -> stream.getSubtitles() == null);
     }
 
-    public static boolean isExtra(SubtitleStreamInfo subtitleStream, GuiSettings guiSettings) {
+    public static boolean isExtra(SubtitleStream subtitleStream, GuiSettings guiSettings) {
         return subtitleStream.getLanguage() != guiSettings.getUpperLanguage()
                 && subtitleStream.getLanguage() != guiSettings.getLowerLanguage();
     }
 
     public static int getSubtitleCanBeHiddenCount(FileInfo fileInfo, GuiSettings guiSettings) {
-        if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreamsInfo())) {
+        if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
             return 0;
         }
 
-        boolean hasSubtitlesWithUpperLanguage = fileInfo.getSubtitleStreamsInfo().stream()
-                .filter(subtitleStreamInfo -> subtitleStreamInfo.getUnavailabilityReason() == null)
-                .anyMatch(subtitleStreamInfo -> subtitleStreamInfo.getLanguage() == guiSettings.getUpperLanguage());
-        boolean hasSubtitlesWithLowerLanguage = fileInfo.getSubtitleStreamsInfo().stream()
-                .filter(subtitleStreamInfo -> subtitleStreamInfo.getUnavailabilityReason() == null)
-                .anyMatch(subtitleStreamInfo -> subtitleStreamInfo.getLanguage() == guiSettings.getLowerLanguage());
-        int subtitlesWithOtherLanguage = (int) fileInfo.getSubtitleStreamsInfo().stream()
-                .filter(subtitleStreamInfo -> subtitleStreamInfo.getUnavailabilityReason() == null)
-                .filter(subtitleStreamInfo -> subtitleStreamInfo.getLanguage() != guiSettings.getUpperLanguage())
-                .filter(subtitleStreamInfo -> subtitleStreamInfo.getLanguage() != guiSettings.getLowerLanguage())
+        boolean hasSubtitlesWithUpperLanguage = fileInfo.getSubtitleStreams().stream()
+                .filter(stream -> stream.getUnavailabilityReason() == null)
+                .anyMatch(stream -> stream.getLanguage() == guiSettings.getUpperLanguage());
+        boolean hasSubtitlesWithLowerLanguage = fileInfo.getSubtitleStreams().stream()
+                .filter(stream -> stream.getUnavailabilityReason() == null)
+                .anyMatch(stream -> stream.getLanguage() == guiSettings.getLowerLanguage());
+        int subtitlesWithOtherLanguage = (int) fileInfo.getSubtitleStreams().stream()
+                .filter(stream -> stream.getUnavailabilityReason() == null)
+                .filter(stream -> stream.getLanguage() != guiSettings.getUpperLanguage())
+                .filter(stream -> stream.getLanguage() != guiSettings.getLowerLanguage())
                 .count();
 
         if (!hasSubtitlesWithUpperLanguage || !hasSubtitlesWithLowerLanguage) {

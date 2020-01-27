@@ -6,12 +6,11 @@ import javafx.scene.control.ProgressIndicator;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStreamInfo;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.logic.LogicConstants;
-import kirill.subtitlemerger.logic.core.Writer;
 import kirill.subtitlemerger.logic.work_with_files.FileInfoGetter;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
-import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStreamInfo;
+import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffprobe;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
@@ -156,9 +155,9 @@ public abstract class BackgroundTask<T> extends Task<T> {
     ) {
         String pathToDisplay = showFullFileName ? fileInfo.getFile().getAbsolutePath() : fileInfo.getFile().getName();
 
-        List<GuiSubtitleStreamInfo> subtitleStreamsInfo = new ArrayList<>();
-        if (!CollectionUtils.isEmpty(fileInfo.getSubtitleStreamsInfo())) {
-            subtitleStreamsInfo = fileInfo.getSubtitleStreamsInfo().stream()
+        List<GuiSubtitleStream> subtitleStreams = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
+            subtitleStreams = fileInfo.getSubtitleStreams().stream()
                     .map(subtitleStream -> from(subtitleStream, guiSettings))
                     .collect(Collectors.toList());
         }
@@ -175,17 +174,17 @@ public abstract class BackgroundTask<T> extends Task<T> {
                 RegularContentController.haveSubtitlesToLoad(fileInfo),
                 RegularContentController.getSubtitleCanBeHiddenCount(fileInfo, guiSettings),
                 RegularContentController.getSubtitleCanBeHiddenCount(fileInfo, guiSettings) != 0,
-                subtitleStreamsInfo
+                subtitleStreams
         );
 
-        for (GuiSubtitleStreamInfo stream : result.getSubtitleStreamsInfo()) {
+        for (GuiSubtitleStream stream : result.getSubtitleStreams()) {
             stream.selectedAsUpperProperty().addListener((observableValue, oldValue, newValue) -> {
                 if (!Boolean.TRUE.equals(newValue)) {
                     return;
                 }
 
-                for (GuiSubtitleStreamInfo currentStream : result.getSubtitleStreamsInfo()) {
-                    if (currentStream.getId() == stream.getId()) {
+                for (GuiSubtitleStream currentStream : result.getSubtitleStreams()) {
+                    if (currentStream.getFfmpegIndex() == stream.getFfmpegIndex()) {
                         currentStream.setSelectedAsLower(false);
                     } else {
                         currentStream.setSelectedAsUpper(false);
@@ -198,8 +197,8 @@ public abstract class BackgroundTask<T> extends Task<T> {
                     return;
                 }
 
-                for (GuiSubtitleStreamInfo currentStream : result.getSubtitleStreamsInfo()) {
-                    if (currentStream.getId() == stream.getId()) {
+                for (GuiSubtitleStream currentStream : result.getSubtitleStreams()) {
+                    if (currentStream.getFfmpegIndex() == stream.getFfmpegIndex()) {
                         currentStream.setSelectedAsUpper(false);
                     } else {
                         currentStream.setSelectedAsLower(false);
@@ -211,25 +210,25 @@ public abstract class BackgroundTask<T> extends Task<T> {
         return result;
     }
 
-    private static GuiSubtitleStreamInfo from(SubtitleStreamInfo subtitleStreamInfo, GuiSettings guiSettings) {
-        return new GuiSubtitleStreamInfo(
-                subtitleStreamInfo.getId(),
-                guiTextFrom(subtitleStreamInfo.getUnavailabilityReason()),
-                subtitleStreamInfo.getLanguage() != null ? subtitleStreamInfo.getLanguage().toString() : "unknown",
-                subtitleStreamInfo.getTitle(),
-                RegularContentController.isExtra(subtitleStreamInfo, guiSettings),
-                subtitleStreamInfo.getSubtitleSize() != null ? subtitleStreamInfo.getSubtitleSize() : -1,
+    private static GuiSubtitleStream from(SubtitleStream subtitleStream, GuiSettings guiSettings) {
+        return new GuiSubtitleStream(
+                subtitleStream.getFfmpegIndex(),
+                guiTextFrom(subtitleStream.getUnavailabilityReason()),
+                subtitleStream.getLanguage() != null ? subtitleStream.getLanguage().toString() : "unknown",
+                subtitleStream.getTitle(),
+                RegularContentController.isExtra(subtitleStream, guiSettings),
+                subtitleStream.getSubtitleSize() != null ? subtitleStream.getSubtitleSize() : -1,
                 false,
                 false
         );
     }
 
-    private static String guiTextFrom(SubtitleStreamInfo.UnavailabilityReason unavailabilityReason) {
+    private static String guiTextFrom(SubtitleStream.UnavailabilityReason unavailabilityReason) {
         if (unavailabilityReason == null) {
             return "";
         }
 
-        if (unavailabilityReason == SubtitleStreamInfo.UnavailabilityReason.NOT_ALLOWED_CODEC) {
+        if (unavailabilityReason == SubtitleStream.UnavailabilityReason.NOT_ALLOWED_CODEC) {
             return "subtitle has a not allowed type";
         }
 

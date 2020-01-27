@@ -3,7 +3,7 @@ package kirill.subtitlemerger.logic.work_with_files;
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleCodec;
-import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStreamInfo;
+import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.VideoFormat;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffprobe;
@@ -82,8 +82,8 @@ public class FileInfoGetter {
         return new FileInfo(file, null, videoFormat, getStreamsWithoutSubtitles(ffprobeInfo));
     }
 
-    private static List<SubtitleStreamInfo> getStreamsWithoutSubtitles(JsonFfprobeFileInfo ffprobeInfo) {
-        List<SubtitleStreamInfo> result = new ArrayList<>();
+    private static List<SubtitleStream> getStreamsWithoutSubtitles(JsonFfprobeFileInfo ffprobeInfo) {
+        List<SubtitleStream> result = new ArrayList<>();
 
         for (JsonStream stream : ffprobeInfo.getStreams()) {
             if (!"subtitle".equals(stream.getCodecType())) {
@@ -93,10 +93,10 @@ public class FileInfoGetter {
             SubtitleCodec codec = SubtitleCodec.from(stream.getCodecName()).orElse(null);
             if (codec == null) {
                 result.add(
-                        new SubtitleStreamInfo(
+                        new SubtitleStream(
                                 stream.getIndex(),
                                 null,
-                                SubtitleStreamInfo.UnavailabilityReason.NOT_ALLOWED_CODEC,
+                                SubtitleStream.UnavailabilityReason.NOT_ALLOWED_CODEC,
                                 getLanguage(stream).orElse(null),
                                 getTitle(stream).orElse(null),
                                 isDefaultDisposition(stream),
@@ -107,7 +107,7 @@ public class FileInfoGetter {
             }
 
             result.add(
-                    new SubtitleStreamInfo(
+                    new SubtitleStream(
                             stream.getIndex(),
                             codec,
                             null,

@@ -3,7 +3,7 @@ package kirill.subtitlemerger.logic.work_with_files.ffmpeg;
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.logic.core.Writer;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
-import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStreamInfo;
+import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStream;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -106,7 +106,7 @@ public class Ffmpeg {
             String title,
             LanguageAlpha3Code mainLanguage,
             boolean makeDefault,
-            List<SubtitleStreamInfo> subtitleStreamsInfo,
+            List<SubtitleStream> subtitleStreams,
             File videoFile
     ) throws FfmpegException {
         /*
@@ -130,7 +130,7 @@ public class Ffmpeg {
                         title,
                         mainLanguage,
                         makeDefault,
-                        subtitleStreamsInfo,
+                        subtitleStreams,
                         videoFile,
                         outputTemp
                 );
@@ -164,13 +164,13 @@ public class Ffmpeg {
             String title,
             LanguageAlpha3Code mainLanguage,
             boolean makeDefault,
-            List<SubtitleStreamInfo> subtitleStreamsInfo,
+            List<SubtitleStream> subtitleStreams,
             File videoFile,
             File outputTemp
     ) {
         List<String> result = new ArrayList<>();
 
-        int newStreamIndex = subtitleStreamsInfo.size();
+        int newStreamIndex = subtitleStreams.size();
 
         result.add(ffmpegFile.getAbsolutePath());
         result.add("-y");
@@ -199,9 +199,9 @@ public class Ffmpeg {
         result.addAll(Arrays.asList("-metadata:s:s:" + newStreamIndex, "title=" + title));
 
         if (makeDefault) {
-            for (SubtitleStreamInfo subtitleStreamInfo : subtitleStreamsInfo) {
-                if (subtitleStreamInfo.isDefaultDisposition()) {
-                    result.addAll(Arrays.asList("-disposition:" + subtitleStreamInfo.getId(), "0"));
+            for (SubtitleStream subtitleStream : subtitleStreams) {
+                if (subtitleStream.isDefaultDisposition()) {
+                    result.addAll(Arrays.asList("-disposition:" + subtitleStream.getFfmpegIndex(), "0"));
                 }
             }
             result.addAll(Arrays.asList("-disposition:s:" + newStreamIndex, "default"));
