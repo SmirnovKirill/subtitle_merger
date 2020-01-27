@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import kirill.subtitlemerger.gui.GuiConstants?>
+<fx:root xmlns:fx="http://javafx.com/fxml" type="javafx.scene.layout.VBox" spacing="10">
+    <padding>
+        <Insets top="3" right="5" bottom="3" left="3"/>
+    </padding>
+
+    <Label fx:id="pathLabel" styleClass="path-label"/>
+    <GridPane>
+        <gridLinesVisible><GuiConstants fx:constant="DEBUG"/></gridLinesVisible>
+
+        <Label text="size" GridPane.columnIndex="0" GridPane.rowIndex="0">
+            <GridPane.margin>
+                <Insets bottom="3"/>
+            </GridPane.margin>
+        </Label>
+        <Region GridPane.columnIndex="1" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS">
+            <GridPane.margin>
+                <Insets bottom="3"/>
+            </GridPane.margin>
+        </Region>
+        <Label fx:id="sizeLabel" GridPane.columnIndex="2" GridPane.rowIndex="0">
+            <GridPane.margin>
+                <Insets bottom="3"/>
+            </GridPane.margin>
+        </Label>
+
+        <Label text="last modified" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+        <Region GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS"/>
+        <Label fx:id="lastModifiedLabel" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
+    </GridPane>
+</fx:root>

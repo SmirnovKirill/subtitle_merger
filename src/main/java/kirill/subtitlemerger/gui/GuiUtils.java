@@ -1,14 +1,19 @@
 package kirill.subtitlemerger.gui;
 
 import javafx.concurrent.Task;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Tooltip;
 import javafx.util.Duration;
+import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.List;
 
+@CommonsLog
 public class GuiUtils {
     public static String getFileSizeTextual(long size) {
         List<String> sizes = Arrays.asList("B", "KB", "MB", "GB", "TB");
@@ -41,5 +46,14 @@ public class GuiUtils {
         result.setShowDuration(Duration.INDEFINITE);
 
         return result;
+    }
+
+    public static void loadWithUncheckedException(FXMLLoader loader) {
+        try {
+            loader.load();
+        } catch (IOException e) {
+            log.error("failed to parse fxml: " + ExceptionUtils.getStackTrace(e));
+            throw new IllegalStateException();
+        }
     }
 }

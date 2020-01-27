@@ -16,14 +16,10 @@ import javafx.scene.layout.*;
 import kirill.subtitlemerger.gui.GuiUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 
 import java.util.Collections;
 
 public class TableWithFiles extends TableView<GuiFileInfo> {
-    private static final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern("dd.MM.YYYY HH:mm");
-
     private static final String ROW_UNAVAILABLE_CLASS = "row-unavailable";
 
     private AllFileSubtitleSizesLoader allSizesLoader;
@@ -131,51 +127,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
     }
 
     private <T> TableWithFilesCell<T> generateFileDescriptionCell(TableColumn<GuiFileInfo, T> column) {
-        return new TableWithFilesCell<>(this::generateFileDescriptionCellPane);
-    }
-
-    private Pane generateFileDescriptionCellPane(GuiFileInfo fileInfo) {
-        VBox result = new VBox();
-
-        result.setPadding(new Insets(3, 5, 3, 3));
-        result.setSpacing(10);
-
-        Label pathLabel = new Label(fileInfo.getPathToDisplay());
-        pathLabel.getStyleClass().add("path-label");
-        if (!StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
-            pathLabel.setTooltip(GuiUtils.generateTooltip(fileInfo.getUnavailabilityReason()));
-        }
-
-        Pane paneWithSizeAndLastModifiedTime = generatePaneWithSizeAndLastModifiedTime(fileInfo);
-
-        result.getChildren().addAll(pathLabel, paneWithSizeAndLastModifiedTime);
-
-        return result;
-    }
-
-    private static Pane generatePaneWithSizeAndLastModifiedTime(GuiFileInfo fileInfo) {
-        GridPane result = new GridPane();
-
-        Label sizeTitle = new Label("size");
-
-        Label lastModifiedTitle = new Label("last modified");
-
-        Label size = new Label(GuiUtils.getFileSizeTextual(fileInfo.getSize()));
-
-        Label lastModified = new Label(FORMATTER.print(fileInfo.getLastModified()));
-
-        result.addRow(0, sizeTitle, new Region(), size);
-        result.addRow(1, lastModifiedTitle, new Region(), lastModified);
-
-        /* Regions in the middle. */
-        GridPane.setHgrow(result.getChildren().get(1), Priority.ALWAYS);
-        GridPane.setHgrow(result.getChildren().get(4), Priority.ALWAYS);
-
-        /* Labels of the first row. */
-        GridPane.setMargin(result.getChildren().get(0), new Insets(0, 0, 3, 0));
-        GridPane.setMargin(result.getChildren().get(2), new Insets(0, 0, 3, 0));
-
-        return result;
+        return new TableWithFilesCell<>(FileDescriptionCell::new);
     }
 
     private <T> TableWithFilesCell<T> generateSubtitlesCell(TableColumn<GuiFileInfo, T> column) {
