@@ -10,7 +10,7 @@
     </padding>
 
     <Label fx:id="pathLabel" styleClass="path-label"/>
-    <GridPane>
+    <GridPane hgap="29">
         <gridLinesVisible><GuiConstants fx:constant="DEBUG"/></gridLinesVisible>
 
         <Label text="size" GridPane.columnIndex="0" GridPane.rowIndex="0">
@@ -18,19 +18,13 @@
                 <Insets bottom="3"/>
             </GridPane.margin>
         </Label>
-        <Region GridPane.columnIndex="1" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS">
-            <GridPane.margin>
-                <Insets bottom="3"/>
-            </GridPane.margin>
-        </Region>
-        <Label fx:id="sizeLabel" GridPane.columnIndex="2" GridPane.rowIndex="0">
+        <Label fx:id="sizeLabel" GridPane.columnIndex="1" GridPane.rowIndex="0">
             <GridPane.margin>
                 <Insets bottom="3"/>
             </GridPane.margin>
         </Label>
 
         <Label text="last modified" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-        <Region GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS"/>
-        <Label fx:id="lastModifiedLabel" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
+        <Label fx:id="lastModifiedLabel" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
     </GridPane>
 </fx:root>

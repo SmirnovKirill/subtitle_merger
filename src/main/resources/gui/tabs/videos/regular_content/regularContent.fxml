@@ -100,7 +100,7 @@
                 <columns>
                     <TableColumn sortable="false" reorderable="false" minWidth="26" maxWidth="26" resizable="false">
                     </TableColumn>
-                    <TableColumn sortable="false" reorderable="false" minWidth="170">
+                    <TableColumn sortable="false" reorderable="false" minWidth="200">
                         <text>file</text>
                     </TableColumn>
                     <TableColumn sortable="false" reorderable="false" styleClass="last-column" minWidth="100">

@@ -133,8 +133,6 @@ public class RegularContentController {
 
     private BackgroundTask<?> currentCancellableTask;
 
-    private boolean descriptionColumnWidthSet;
-
     private File directory;
 
     private List<FileInfo> filesInfo;
@@ -457,22 +455,6 @@ public class RegularContentController {
         tableWithFiles.setItems(FXCollections.observableArrayList(guiFilesToShowInfo));
         tableWithFiles.setAllAvailableCount(allAvailableCount);
         tableWithFiles.setAllSelected(tableWithFiles.getSelected() == allAvailableCount);
-
-        if (!descriptionColumnWidthSet) {
-            /*
-             * JavaFX can't set initial column size when using CONSTRAINED_RESIZE_POLICY
-             * (https://bugs.openjdk.java.net/browse/JDK-8091269). So here is a workaround - after setting table's
-             * content resize the required column manually. I want the column with the file description to have 30% width
-             * here.
-             */
-            TableColumn<GuiFileInfo, ?> fileDescriptionColumn = tableWithFiles.getColumns().get(1);
-            double actualWidth = fileDescriptionColumn.getWidth();
-            /* Without rounding horizontal scroll may appear. */
-            double desiredWidth = Math.round(tableWithFiles.getWidth() * 0.3);
-            tableWithFiles.resizeColumn(fileDescriptionColumn, desiredWidth - actualWidth);
-
-            descriptionColumnWidthSet = true;
-        }
     }
 
     private void stopProgress() {
@@ -741,7 +723,6 @@ public class RegularContentController {
         tableWithFiles.setItems(FXCollections.emptyObservableList());
         tableWithFiles.setAllAvailableCount(0);
         tableWithFiles.setAllSelected(false);
-        descriptionColumnWidthSet = false;
         guiContext.setWorkWithVideosInProgress(false);
 
         choicePane.setVisible(true);

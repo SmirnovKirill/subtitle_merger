@@ -14,6 +14,7 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiUtils;
 import lombok.AllArgsConstructor;
 import lombok.Setter;
@@ -143,6 +144,8 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
     private Pane generateSubtitlesCellPane(GuiFileInfo fileInfo) {
         GridPane result = new GridPane();
 
+        result.setGridLinesVisible(GuiConstants.DEBUG);
+
         result.setPadding(new Insets(3, 3, 3, 5));
 
         if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
@@ -156,9 +159,11 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         getAllSizes.visibleProperty().bind(fileInfo.haveSubtitleSizesToLoadProperty());
         getAllSizes.managedProperty().bind(fileInfo.haveSubtitleSizesToLoadProperty());
 
-        result.addRow(0, hiddenPane, getAllSizes, new Region());
-
+        result.add(hiddenPane, 0, 0);
+        result.add(getAllSizes, 1, 0);
         GridPane.setColumnSpan(getAllSizes, 2);
+        result.add(new Region(), 3, 0);
+
         GridPane.setHalignment(getAllSizes, HPos.CENTER);
 
         GridPane.setMargin(hiddenPane, new Insets(0, 0, 10, 0));
