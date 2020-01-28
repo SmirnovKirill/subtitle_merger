@@ -6,7 +6,6 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleLongProperty;
-import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -146,7 +145,24 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
         result.setGridLinesVisible(GuiConstants.DEBUG);
 
+        result.setHgap(10);
         result.setPadding(new Insets(3, 3, 3, 5));
+
+        ColumnConstraints columnConstraints = new ColumnConstraints();
+        columnConstraints.setHgrow(Priority.ALWAYS);
+        result.getColumnConstraints().add(columnConstraints);
+
+        columnConstraints = new ColumnConstraints();
+        columnConstraints.setHgrow(Priority.NEVER);
+        result.getColumnConstraints().add(columnConstraints);
+
+        columnConstraints = new ColumnConstraints();
+        columnConstraints.setHgrow(Priority.NEVER);
+        result.getColumnConstraints().add(columnConstraints);
+
+        columnConstraints = new ColumnConstraints();
+        columnConstraints.setHgrow(Priority.NEVER);
+        result.getColumnConstraints().add(columnConstraints);
 
         if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
             return result;
@@ -154,20 +170,22 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
         Pane hiddenPane = generateHiddenPane(fileInfo);
 
+        HBox getAllSizesPane = new HBox();
+        getAllSizesPane.setAlignment(Pos.CENTER);
+
         Hyperlink getAllSizes = new Hyperlink("get all sizes");
         getAllSizes.setOnAction(event -> allSizesLoader.load(fileInfo));
         getAllSizes.visibleProperty().bind(fileInfo.haveSubtitleSizesToLoadProperty());
         getAllSizes.managedProperty().bind(fileInfo.haveSubtitleSizesToLoadProperty());
 
-        result.add(hiddenPane, 0, 0);
-        result.add(getAllSizes, 1, 0);
-        GridPane.setColumnSpan(getAllSizes, 2);
-        result.add(new Region(), 3, 0);
+        getAllSizesPane.getChildren().add(getAllSizes);
 
-        GridPane.setHalignment(getAllSizes, HPos.CENTER);
+        result.add(hiddenPane, 0, 0);
+        result.add(getAllSizesPane, 1, 0);
+        result.add(new Region(), 2, 0);
 
         GridPane.setMargin(hiddenPane, new Insets(0, 0, 10, 0));
-        GridPane.setMargin(getAllSizes, new Insets(0, 5, 10, 0));
+        GridPane.setMargin(getAllSizesPane, new Insets(0, 0, 10, 0));
         GridPane.setMargin(result.getChildren().get(2), new Insets(0, 0, 10, 0));
 
         int streamIndex = 0;
@@ -180,6 +198,9 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             if (!StringUtils.isBlank(stream.getTitle())) {
                 titlePane.getChildren().add(new Label(" (" + stream.getTitle() + ")"));
             }
+
+            HBox sizePane = new HBox();
+            sizePane.setSpacing(10);
 
             Label sizeLabel = new Label();
 
@@ -199,6 +220,8 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             Hyperlink getSizeLink = new Hyperlink("get size");
             getSizeLink.setOnAction(event -> singleSizeLoader.load(fileInfo, stream.getFfmpegIndex()));
 
+            sizePane.getChildren().addAll(sizeLabel, getSizeLink);
+
             HBox radios = new HBox();
             radios.setSpacing(10);
             radios.setAlignment(Pos.CENTER);
@@ -212,10 +235,8 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             radios.getChildren().addAll(upper, lower);
 
             result.add(titlePane, 0, 1 + streamIndex);
-            result.add(sizeLabel, 1, 1 + streamIndex);
-            result.add(getSizeLink, 2, 1 + streamIndex);
-            result.add(radios, 3, 1 + streamIndex);
-            GridPane.setHgrow(titlePane, Priority.ALWAYS);
+            result.add(sizePane, 1, 1 + streamIndex);
+            result.add(radios, 2, 1 + streamIndex);
 
             int bottomMargin = 2;
 
@@ -235,8 +256,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             }
 
             GridPane.setMargin(titlePane, new Insets(0, 0, bottomMargin, 0));
-            GridPane.setMargin(sizeLabel, new Insets(0, 0, bottomMargin, 0));
-            GridPane.setMargin(getSizeLink, new Insets(0, 5, bottomMargin, 0));
+            GridPane.setMargin(sizePane, new Insets(0, 0, bottomMargin, 0));
             GridPane.setMargin(radios, new Insets(0, 0, bottomMargin, 0));
 
             streamIndex++;

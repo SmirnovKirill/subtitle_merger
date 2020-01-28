@@ -103,7 +103,7 @@
                     <TableColumn sortable="false" reorderable="false" minWidth="200">
                         <text>file</text>
                     </TableColumn>
-                    <TableColumn sortable="false" reorderable="false" styleClass="last-column" minWidth="100">
+                    <TableColumn sortable="false" reorderable="false" styleClass="last-column" minWidth="350">
                         <text>subtitles</text>
                     </TableColumn>
                 </columns>
