@@ -450,11 +450,13 @@ public class RegularContentController {
             setActionButtonsVisibility();
         }
 
+        int allAvailableCount = (int) guiFilesToShowInfo.stream()
+                .filter(filesInfo -> StringUtils.isBlank(filesInfo.getUnavailabilityReason()))
+                .count();
+
         tableWithFiles.setItems(FXCollections.observableArrayList(guiFilesToShowInfo));
-        tableWithFiles.setAllSelected(
-                !CollectionUtils.isEmpty(tableWithFiles.getItems())
-                        && tableWithFiles.getSelected() == tableWithFiles.getItems().size()
-        );
+        tableWithFiles.setAllAvailableCount(allAvailableCount);
+        tableWithFiles.setAllSelected(tableWithFiles.getSelected() == allAvailableCount);
 
         if (!descriptionColumnWidthSet) {
             /*
@@ -737,6 +739,7 @@ public class RegularContentController {
         /* Just in case. See the huge comment in the hideUnavailableClicked() method. */
         tableWithFiles.setSelected(0);
         tableWithFiles.setItems(FXCollections.emptyObservableList());
+        tableWithFiles.setAllAvailableCount(0);
         tableWithFiles.setAllSelected(false);
         descriptionColumnWidthSet = false;
         guiContext.setWorkWithVideosInProgress(false);

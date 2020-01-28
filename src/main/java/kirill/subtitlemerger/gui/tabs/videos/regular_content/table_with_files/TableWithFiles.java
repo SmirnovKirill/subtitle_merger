@@ -16,6 +16,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import kirill.subtitlemerger.gui.GuiUtils;
 import lombok.AllArgsConstructor;
+import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -31,6 +32,9 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
     private BooleanProperty allSelected;
 
     private LongProperty selected;
+
+    @Setter
+    private int allAvailableCount;
 
     public TableWithFiles() {
         super();
@@ -83,7 +87,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         selectAllCheckBox.setOnAction(event -> {
             getItems().forEach(fileInfo -> fileInfo.setSelected(selectAllCheckBox.isSelected()));
             if (selectAllCheckBox.isSelected()) {
-                selected.setValue(getItems().size());
+                selected.setValue(allAvailableCount);
             } else {
                 selected.setValue(0);
             }
@@ -120,7 +124,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             } else {
                 selected.set(selected.getValue() - 1);
             }
-            allSelected.set(!CollectionUtils.isEmpty(getItems()) && selected.getValue() == getItems().size());
+            allSelected.set(selected.getValue() == allAvailableCount);
         });
 
         result.getChildren().add(checkBox);
