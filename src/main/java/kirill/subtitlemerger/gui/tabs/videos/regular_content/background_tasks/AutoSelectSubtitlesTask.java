@@ -17,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.File;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class AutoSelectSubtitlesTask extends CancellableBackgroundTask<Void> {
@@ -44,9 +45,10 @@ public class AutoSelectSubtitlesTask extends CancellableBackgroundTask<Void> {
             List<FileInfo> allFilesInfo,
             List<GuiFileInfo> displayedGuiFilesInfo,
             Ffmpeg ffmpeg,
-            GuiSettings guiSettings
+            GuiSettings guiSettings,
+            Consumer<CancellableBackgroundTask> onFinished
     ) {
-        super();
+        super(onFinished);
 
         this.allFilesInfo = allFilesInfo;
         this.displayedGuiFilesInfo = displayedGuiFilesInfo;
@@ -63,7 +65,7 @@ public class AutoSelectSubtitlesTask extends CancellableBackgroundTask<Void> {
 
         for (GuiFileInfo guiFileInfo : guiFilesInfoToWorkWith) {
             if (super.isCancelled()) {
-                setCancelFinished(true);
+                setFinished(true);
                 return null;
             }
 
@@ -114,7 +116,7 @@ public class AutoSelectSubtitlesTask extends CancellableBackgroundTask<Void> {
                 finishedSuccessfullyCount++;
             } catch (FfmpegException e) {
                 if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
-                    setCancelFinished(true);
+                    setFinished(true);
                     return null;
                 } else {
                     //todo save reason
@@ -128,6 +130,7 @@ public class AutoSelectSubtitlesTask extends CancellableBackgroundTask<Void> {
             processedCount++;
         }
 
+        setFinished(true);
         return null;
     }
 

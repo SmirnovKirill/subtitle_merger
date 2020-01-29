@@ -5,42 +5,40 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.control.ProgressIndicator;
 
+import java.util.function.Consumer;
+
 public abstract class CancellableBackgroundTask<T> extends BackgroundTask<T> {
-    private BooleanProperty cancelFinished;
+    private BooleanProperty finished;
 
-    private Runnable onCancelFinished;
-
-    public CancellableBackgroundTask() {
+    public CancellableBackgroundTask(Consumer<CancellableBackgroundTask> onFinished) {
         super();
+
+        setOnSucceeded(event -> onFinished.accept(this));
 
         setOnCancelled(e -> {
             updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
             updateMessage("waiting for the task to cancel");
         });
 
-        cancelFinished = new SimpleBooleanProperty(false);
-        cancelFinished.addListener((observable, oldValue, newValue) -> {
+        finished = new SimpleBooleanProperty(false);
+        finished.addListener((observable, oldValue, newValue) -> {
             if (Boolean.TRUE.equals(newValue)) {
-                if (onCancelFinished != null) {
-                    Platform.runLater(() -> onCancelFinished.run());
+                if (onFinished != null) {
+                    Platform.runLater(() -> onFinished.accept(this));
                 }
             }
         });
     }
 
-    public boolean getCancelFinished() {
-        return cancelFinished.get();
+    public boolean getFinished() {
+        return finished.get();
     }
 
-    public BooleanProperty cancelFinishedProperty() {
-        return cancelFinished;
+    public BooleanProperty finishedProperty() {
+        return finished;
     }
 
-    public void setCancelFinished(boolean cancelFinished) {
-        this.cancelFinished.set(cancelFinished);
-    }
-
-    public void setOnCancelFinished(Runnable onCancelFinished) {
-        this.onCancelFinished = onCancelFinished;
+    public void setFinished(boolean finished) {
+        this.finished.set(finished);
     }
 }

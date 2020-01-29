@@ -232,20 +232,14 @@ public class RegularContentController {
                 filesInfo,
                 tableWithFiles.getItems(),
                 guiContext.getFfmpeg(),
-                guiContext.getSettings()
+                guiContext.getSettings(),
+                () -> {
+                    //todo implement
+                    // showResult(task, false);
+                    stopProgress();
+                }
         );
         currentCancellableTask = task;
-
-        task.setOnSucceeded(e -> {
-           //todo implement
-            // showResult(task, false);
-            stopProgress();
-        });
-        task.setOnCancelFinished(() -> {
-            //todo implement
-           // showResult(task, true);
-            stopProgress();
-        });
 
         showProgress(task, true);
         GuiUtils.startTask(task);
@@ -254,21 +248,20 @@ public class RegularContentController {
     @FXML
     private void getAllSizesButtonClicked() {
         runLoadSubtitlesTask(
-                new LoadSeveralFilesAllSubtitlesTask(filesInfo, tableWithFiles.getItems(), guiContext.getFfmpeg())
+                new LoadSeveralFilesAllSubtitlesTask(
+                        filesInfo,
+                        tableWithFiles.getItems(),
+                        guiContext.getFfmpeg(),
+                        (task) -> {
+                            showResult(task);
+                            stopProgress();
+                        }
+                )
         );
     }
 
     private void runLoadSubtitlesTask(LoadSubtitlesTask task) {
         currentCancellableTask = task;
-
-        task.setOnSucceeded(e -> {
-            showResult(task, false);
-            stopProgress();
-        });
-        task.setOnCancelFinished(() -> {
-            showResult(task, true);
-            stopProgress();
-        });
 
         showProgress(task, true);
         GuiUtils.startTask(task);
@@ -309,7 +302,11 @@ public class RegularContentController {
                 new LoadSingleFileAllSubtitlesTask(
                         findMatchingFileInfo(guiFileInfo, filesInfo),
                         guiFileInfo,
-                        guiContext.getFfmpeg()
+                        guiContext.getFfmpeg(),
+                        (task) -> {
+                            showResult(task);
+                            stopProgress();
+                        }
                 )
         );
     }
@@ -320,14 +317,18 @@ public class RegularContentController {
                         ffmpegIndex,
                         findMatchingFileInfo(guiFileInfo, filesInfo),
                         guiFileInfo,
-                        guiContext.getFfmpeg()
+                        guiContext.getFfmpeg(),
+                        (task) -> {
+                            showResult(task);
+                            stopProgress();
+                        }
                 )
         );
     }
 
     //todo test
     //todo make reusable probably
-    private void showResult(LoadSubtitlesTask task, boolean canceled) {
+    private void showResult(LoadSubtitlesTask task) {
         if (task.getAllSubtitleCount() == 0) {
             if (tableWithFiles.getSelected() == 1) {
                 setResult("Nothing to load for the selected file", null, null);
@@ -335,11 +336,6 @@ public class RegularContentController {
                 setResult("Nothing to load for the selected files", null, null);
             }
         } else if (task.getProcessedCount() == 0) {
-            if (!canceled) {
-                log.error("that shouldn't happen");
-                throw new IllegalStateException();
-            }
-
             setResult(null, "Haven't load anything because of the cancellation", null);
         } else if (task.getLoadedSuccessfullyCount() == task.getAllSubtitleCount()) {
             if (task.getAllSubtitleCount() == 1) {
@@ -377,11 +373,6 @@ public class RegularContentController {
 
             String warn = "";
             if (task.getProcessedCount() != task.getAllSubtitleCount()) {
-                if (!canceled) {
-                    log.error("that shouldn't happen");
-                    throw new IllegalStateException();
-                }
-
                 warn += (task.getAllSubtitleCount() - task.getProcessedCount()) + "/" + task.getAllSubtitleCount();
                 warn += " cancelled";
             }
@@ -571,7 +562,7 @@ public class RegularContentController {
             return;
         }
 
-        currentCancellableTask.cancel();
+        currentCancellableTask.cancel(false);
     }
 
     public void show() {

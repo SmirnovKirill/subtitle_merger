@@ -16,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.util.List;
+import java.util.function.Consumer;
 
 public abstract class LoadSubtitlesTask extends CancellableBackgroundTask<Void> {
     private Ffmpeg ffmpeg;
@@ -36,9 +37,10 @@ public abstract class LoadSubtitlesTask extends CancellableBackgroundTask<Void> 
     protected int failedToLoadCount;
 
     LoadSubtitlesTask(
-            Ffmpeg ffmpeg
+            Ffmpeg ffmpeg,
+            Consumer<CancellableBackgroundTask> onFinished
     ) {
-        super();
+        super(onFinished);
 
         this.ffmpeg = ffmpeg;
     }
@@ -56,7 +58,7 @@ public abstract class LoadSubtitlesTask extends CancellableBackgroundTask<Void> 
 
             for (SubtitleStream subtitleStream : fileInfo.getSubtitleStreams()) {
                 if (super.isCancelled()) {
-                    setCancelFinished(true);
+                    setFinished(true);
                     return;
                 }
 
@@ -105,7 +107,7 @@ public abstract class LoadSubtitlesTask extends CancellableBackgroundTask<Void> 
                     loadedSuccessfullyCount++;
                 } catch (FfmpegException e) {
                     if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
-                        setCancelFinished(true);
+                        setFinished(true);
                         return;
                     } else {
                         //todo save reason
@@ -121,6 +123,8 @@ public abstract class LoadSubtitlesTask extends CancellableBackgroundTask<Void> 
 
             guiFileInfo.setHaveSubtitleSizesToLoad(RegularContentController.haveSubtitlesToLoad(fileInfo));
         }
+
+        setFinished(true);
     }
 
     private static String getUpdateMessage(
