@@ -145,7 +145,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
         result.setGridLinesVisible(GuiConstants.DEBUG);
 
-        result.setHgap(10);
+        result.setHgap(15);
         result.setPadding(new Insets(3, 3, 3, 5));
 
         ColumnConstraints columnConstraints = new ColumnConstraints();
@@ -191,6 +191,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         int streamIndex = 0;
         for (GuiSubtitleStream stream : fileInfo.getSubtitleStreams()) {
             HBox titlePane = new HBox();
+            titlePane.setAlignment(Pos.CENTER_LEFT);
 
             Label language = new Label(stream.getLanguage().toUpperCase());
             titlePane.getChildren().add(language);
@@ -200,7 +201,13 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             }
 
             HBox sizePane = new HBox();
-            sizePane.setSpacing(10);
+            sizePane.setAlignment(Pos.CENTER);
+            sizePane.setSpacing(5);
+
+            Image errorImage = new Image("/gui/icons/error.png");
+            ImageView errorImageView = new ImageView(errorImage);
+            errorImageView.setFitWidth(12);
+            errorImageView.setFitHeight(errorImageView.getFitWidth());
 
             Label sizeLabel = new Label();
 
@@ -220,10 +227,10 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             Hyperlink getSizeLink = new Hyperlink("get size");
             getSizeLink.setOnAction(event -> singleSizeLoader.load(fileInfo, stream.getFfmpegIndex()));
 
-            sizePane.getChildren().addAll(sizeLabel, getSizeLink);
+            sizePane.getChildren().addAll(sizeLabel, getSizeLink, errorImageView);
 
             HBox radios = new HBox();
-            radios.setSpacing(10);
+            radios.setSpacing(5);
             radios.setAlignment(Pos.CENTER);
 
             RadioButton upper = new RadioButton("upper");
@@ -270,7 +277,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         imageView.setFitHeight(imageView.getFitWidth());
         button.setGraphic(imageView);
 
-        result.addRow(result.getRowCount(), button);
+        result.addRow(1 + fileInfo.getSubtitleStreams().size(), button);
 
         GridPane.setColumnSpan(button, 3);
         GridPane.setMargin(button, new Insets(5, 0, 0, 0));
