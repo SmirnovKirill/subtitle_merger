@@ -16,7 +16,7 @@ public abstract class CancellableBackgroundTask<T> extends Task<T> {
     @Setter
     private Runnable onFinished;
 
-    public CancellableBackgroundTask() {
+    public CancellableBackgroundTask(BooleanProperty cancelTaskPaneVisible) {
         super();
 
         setOnSucceeded(event -> {
@@ -28,6 +28,7 @@ public abstract class CancellableBackgroundTask<T> extends Task<T> {
         setOnFailed(this::taskFailed);
 
         setOnCancelled(e -> {
+            Platform.runLater(() -> cancelTaskPaneVisible.set(false));
             updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
             updateMessage("waiting for the task to cancel");
         });

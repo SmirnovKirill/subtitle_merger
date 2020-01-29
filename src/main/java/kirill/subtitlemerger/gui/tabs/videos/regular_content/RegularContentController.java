@@ -3,6 +3,8 @@ package kirill.subtitlemerger.gui.tabs.videos.regular_content;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
@@ -121,11 +123,7 @@ public class RegularContentController {
     @FXML
     private Button removeSelectedButton;
 
-    @FXML
-    private Pane cancelTaskPane;
-
-    @FXML
-    private Hyperlink cancelTaskLink;
+    private BooleanProperty cancelTaskPaneVisible = new SimpleBooleanProperty(false);
 
     private ToggleGroup sortByGroup;
 
@@ -138,6 +136,18 @@ public class RegularContentController {
     private List<FileInfo> filesInfo;
 
     private List<GuiFileInfo> allGuiFilesInfo;
+
+    public boolean getCancelTaskPaneVisible() {
+        return cancelTaskPaneVisible.get();
+    }
+
+    public BooleanProperty cancelTaskPaneVisibleProperty() {
+        return cancelTaskPaneVisible;
+    }
+
+    public void setCancelTaskPaneVisible(boolean cancelTaskPaneVisible) {
+        this.cancelTaskPaneVisible.set(cancelTaskPaneVisible);
+    }
 
     public void initialize(Stage stage, GuiContext guiContext) {
         this.stage = stage;
@@ -164,7 +174,6 @@ public class RegularContentController {
         this.removeSelectedButton.disableProperty().bind(
                 Bindings.isEmpty(tableWithFiles.getSelectionModel().getSelectedIndices())
         );
-        this.cancelTaskLink.setOnAction(this::cancelTaskClicked);
     }
 
     private static void saveDefaultSortSettingsIfNotSet(GuiSettings settings) {
@@ -232,7 +241,8 @@ public class RegularContentController {
                 filesInfo,
                 tableWithFiles.getItems(),
                 guiContext.getFfmpeg(),
-                guiContext.getSettings()
+                guiContext.getSettings(),
+                cancelTaskPaneVisible
         );
         task.setOnFinished(() -> {
             //todo implement
@@ -252,7 +262,8 @@ public class RegularContentController {
                 new LoadSeveralFilesAllSubtitlesTask(
                         filesInfo,
                         tableWithFiles.getItems(),
-                        guiContext.getFfmpeg()
+                        guiContext.getFfmpeg(),
+                        cancelTaskPaneVisible
                 )
         );
     }
@@ -304,7 +315,8 @@ public class RegularContentController {
                 new LoadSingleFileAllSubtitlesTask(
                         findMatchingFileInfo(guiFileInfo, filesInfo),
                         guiFileInfo,
-                        guiContext.getFfmpeg()
+                        guiContext.getFfmpeg(),
+                        cancelTaskPaneVisible
                 )
         );
     }
@@ -315,7 +327,8 @@ public class RegularContentController {
                         ffmpegIndex,
                         findMatchingFileInfo(guiFileInfo, filesInfo),
                         guiFileInfo,
-                        guiContext.getFfmpeg()
+                        guiContext.getFfmpeg(),
+                        cancelTaskPaneVisible
                 )
         );
     }
@@ -448,7 +461,7 @@ public class RegularContentController {
     }
 
     private void showProgress(Task<?> task, boolean canCancel) {
-        cancelTaskPane.setVisible(canCancel);
+        setCancelTaskPaneVisible(canCancel);
         choicePane.setVisible(false);
         progressPane.setVisible(true);
         resultPane.setVisible(true);
@@ -550,7 +563,8 @@ public class RegularContentController {
         return result;
     }
 
-    private void cancelTaskClicked(ActionEvent event) {
+    @FXML
+    private void cancelTaskClicked() {
         if (currentCancellableTask == null) {
             log.error("task is null, that shouldn't happen");
             return;

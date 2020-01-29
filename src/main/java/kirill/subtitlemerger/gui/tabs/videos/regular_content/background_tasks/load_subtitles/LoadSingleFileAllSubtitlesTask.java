@@ -1,5 +1,6 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.load_subtitles;
 
+import javafx.beans.property.BooleanProperty;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStream;
@@ -16,9 +17,10 @@ public class LoadSingleFileAllSubtitlesTask extends LoadSubtitlesTask {
     public LoadSingleFileAllSubtitlesTask(
             FileInfo fileInfo,
             GuiFileInfo guiFileInfo,
-            Ffmpeg ffmpeg
+            Ffmpeg ffmpeg,
+            BooleanProperty cancelTaskPaneVisible
     ) {
-        super(ffmpeg);
+        super(ffmpeg, cancelTaskPaneVisible);
 
         this.fileInfo = fileInfo;
         this.guiFileInfo = guiFileInfo;

@@ -1,6 +1,7 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
@@ -44,9 +45,10 @@ public class AutoSelectSubtitlesTask extends CancellableBackgroundTask<Void> {
             List<FileInfo> allFilesInfo,
             List<GuiFileInfo> displayedGuiFilesInfo,
             Ffmpeg ffmpeg,
-            GuiSettings guiSettings
+            GuiSettings guiSettings,
+            BooleanProperty cancelTaskPaneVisible
     ) {
-        super();
+        super(cancelTaskPaneVisible);
 
         this.allFilesInfo = allFilesInfo;
         this.displayedGuiFilesInfo = displayedGuiFilesInfo;

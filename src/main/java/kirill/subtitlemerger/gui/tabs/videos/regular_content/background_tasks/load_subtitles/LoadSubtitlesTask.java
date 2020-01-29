@@ -1,6 +1,7 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.load_subtitles;
 
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.CancellableBackgroundTask;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
@@ -35,8 +36,8 @@ public abstract class LoadSubtitlesTask extends CancellableBackgroundTask<Void> 
     @Getter
     protected int failedToLoadCount;
 
-    LoadSubtitlesTask(Ffmpeg ffmpeg) {
-        super();
+    LoadSubtitlesTask(Ffmpeg ffmpeg, BooleanProperty cancelTaskPaneVisible) {
+        super(cancelTaskPaneVisible);
 
         this.ffmpeg = ffmpeg;
     }
