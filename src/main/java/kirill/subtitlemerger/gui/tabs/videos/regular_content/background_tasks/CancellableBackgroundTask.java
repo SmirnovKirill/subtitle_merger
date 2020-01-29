@@ -3,17 +3,29 @@ package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.concurrent.Task;
+import javafx.event.Event;
 import javafx.scene.control.ProgressIndicator;
+import lombok.Setter;
+import lombok.extern.apachecommons.CommonsLog;
 
-import java.util.function.Consumer;
-
-public abstract class CancellableBackgroundTask<T> extends BackgroundTask<T> {
+@CommonsLog
+public abstract class CancellableBackgroundTask<T> extends Task<T> {
     private BooleanProperty finished;
 
-    public CancellableBackgroundTask(Consumer<CancellableBackgroundTask> onFinished) {
+    @Setter
+    private Runnable onFinished;
+
+    public CancellableBackgroundTask() {
         super();
 
-        setOnSucceeded(event -> onFinished.accept(this));
+        setOnSucceeded(event -> {
+            if (onFinished != null) {
+                onFinished.run();
+            }
+        });
+
+        setOnFailed(this::taskFailed);
 
         setOnCancelled(e -> {
             updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
@@ -24,10 +36,15 @@ public abstract class CancellableBackgroundTask<T> extends BackgroundTask<T> {
         finished.addListener((observable, oldValue, newValue) -> {
             if (Boolean.TRUE.equals(newValue)) {
                 if (onFinished != null) {
-                    Platform.runLater(() -> onFinished.accept(this));
+                    Platform.runLater(() -> onFinished.run());
                 }
             }
         });
+    }
+
+    private void taskFailed(Event e) {
+        log.error("task has failed, shouldn't happen");
+        throw new IllegalStateException();
     }
 
     public boolean getFinished() {

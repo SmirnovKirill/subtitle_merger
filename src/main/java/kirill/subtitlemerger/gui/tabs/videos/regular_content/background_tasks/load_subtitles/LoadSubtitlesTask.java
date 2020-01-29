@@ -16,7 +16,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.util.List;
-import java.util.function.Consumer;
 
 public abstract class LoadSubtitlesTask extends CancellableBackgroundTask<Void> {
     private Ffmpeg ffmpeg;
@@ -36,11 +35,8 @@ public abstract class LoadSubtitlesTask extends CancellableBackgroundTask<Void> 
     @Getter
     protected int failedToLoadCount;
 
-    LoadSubtitlesTask(
-            Ffmpeg ffmpeg,
-            Consumer<CancellableBackgroundTask> onFinished
-    ) {
-        super(onFinished);
+    LoadSubtitlesTask(Ffmpeg ffmpeg) {
+        super();
 
         this.ffmpeg = ffmpeg;
     }

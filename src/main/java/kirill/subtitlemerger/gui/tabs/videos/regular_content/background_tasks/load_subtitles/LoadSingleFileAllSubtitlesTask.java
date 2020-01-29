@@ -1,6 +1,5 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.load_subtitles;
 
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.CancellableBackgroundTask;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStream;
@@ -8,7 +7,6 @@ import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffmpeg;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.Collections;
-import java.util.function.Consumer;
 
 public class LoadSingleFileAllSubtitlesTask extends LoadSubtitlesTask {
     private FileInfo fileInfo;
@@ -18,10 +16,9 @@ public class LoadSingleFileAllSubtitlesTask extends LoadSubtitlesTask {
     public LoadSingleFileAllSubtitlesTask(
             FileInfo fileInfo,
             GuiFileInfo guiFileInfo,
-            Ffmpeg ffmpeg,
-            Consumer<CancellableBackgroundTask> onFinished
+            Ffmpeg ffmpeg
     ) {
-        super(ffmpeg, onFinished);
+        super(ffmpeg);
 
         this.fileInfo = fileInfo;
         this.guiFileInfo = guiFileInfo;

@@ -17,7 +17,6 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.File;
 import java.util.Comparator;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class AutoSelectSubtitlesTask extends CancellableBackgroundTask<Void> {
@@ -45,10 +44,9 @@ public class AutoSelectSubtitlesTask extends CancellableBackgroundTask<Void> {
             List<FileInfo> allFilesInfo,
             List<GuiFileInfo> displayedGuiFilesInfo,
             Ffmpeg ffmpeg,
-            GuiSettings guiSettings,
-            Consumer<CancellableBackgroundTask> onFinished
+            GuiSettings guiSettings
     ) {
-        super(onFinished);
+        super();
 
         this.allFilesInfo = allFilesInfo;
         this.displayedGuiFilesInfo = displayedGuiFilesInfo;

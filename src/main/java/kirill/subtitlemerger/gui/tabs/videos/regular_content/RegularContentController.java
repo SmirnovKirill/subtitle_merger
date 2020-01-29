@@ -232,13 +232,14 @@ public class RegularContentController {
                 filesInfo,
                 tableWithFiles.getItems(),
                 guiContext.getFfmpeg(),
-                guiContext.getSettings(),
-                () -> {
-                    //todo implement
-                    // showResult(task, false);
-                    stopProgress();
-                }
+                guiContext.getSettings()
         );
+        task.setOnFinished(() -> {
+            //todo implement
+            // showResult(task, false);
+            stopProgress();
+        });
+
         currentCancellableTask = task;
 
         showProgress(task, true);
@@ -251,16 +252,17 @@ public class RegularContentController {
                 new LoadSeveralFilesAllSubtitlesTask(
                         filesInfo,
                         tableWithFiles.getItems(),
-                        guiContext.getFfmpeg(),
-                        (task) -> {
-                            showResult(task);
-                            stopProgress();
-                        }
+                        guiContext.getFfmpeg()
                 )
         );
     }
 
     private void runLoadSubtitlesTask(LoadSubtitlesTask task) {
+        task.setOnFinished(() -> {
+            showResult(task);
+            stopProgress();
+        });
+
         currentCancellableTask = task;
 
         showProgress(task, true);
@@ -302,11 +304,7 @@ public class RegularContentController {
                 new LoadSingleFileAllSubtitlesTask(
                         findMatchingFileInfo(guiFileInfo, filesInfo),
                         guiFileInfo,
-                        guiContext.getFfmpeg(),
-                        (task) -> {
-                            showResult(task);
-                            stopProgress();
-                        }
+                        guiContext.getFfmpeg()
                 )
         );
     }
@@ -317,11 +315,7 @@ public class RegularContentController {
                         ffmpegIndex,
                         findMatchingFileInfo(guiFileInfo, filesInfo),
                         guiFileInfo,
-                        guiContext.getFfmpeg(),
-                        (task) -> {
-                            showResult(task);
-                            stopProgress();
-                        }
+                        guiContext.getFfmpeg()
                 )
         );
     }
@@ -562,7 +556,7 @@ public class RegularContentController {
             return;
         }
 
-        currentCancellableTask.cancel(false);
+        currentCancellableTask.cancel();
     }
 
     public void show() {

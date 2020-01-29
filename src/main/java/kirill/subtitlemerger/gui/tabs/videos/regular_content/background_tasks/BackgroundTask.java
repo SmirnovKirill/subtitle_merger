@@ -24,22 +24,18 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @CommonsLog
-public abstract class BackgroundTask<T> extends Task<T> {
-    public BackgroundTask() {
-        setFailedCancelledCallbacks();
+abstract class BackgroundTask<T> extends Task<T> {
+    BackgroundTask() {
+        setOnFailed(this::taskFailed);
+        setOnCancelled(this::taskCancelled);
     }
 
-    private void setFailedCancelledCallbacks() {
-        setOnFailed(BackgroundTask::taskFailed);
-        setOnCancelled(BackgroundTask::taskCancelled);
-    }
-
-    private static void taskFailed(Event e) {
+    private void taskFailed(Event e) {
         log.error("task has failed, shouldn't happen");
         throw new IllegalStateException();
     }
 
-    private static void taskCancelled(Event e) {
+    private void taskCancelled(Event e) {
         log.error("task has been cancelled, shouldn't happen");
         throw new IllegalStateException();
     }
