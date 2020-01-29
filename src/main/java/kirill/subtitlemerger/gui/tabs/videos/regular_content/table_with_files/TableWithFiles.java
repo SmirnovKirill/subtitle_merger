@@ -246,13 +246,13 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
                 titlePane.managedProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()));
                 sizeLabel.visibleProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()));
                 sizeLabel.managedProperty().bind(sizeLabel.visibleProperty());
-                getSizeLink.visibleProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()).and(stream.sizeProperty().isEqualTo(-1)));
-                getSizeLink.managedProperty().bind(getSizeLink.visibleProperty());
+                sizePane.visibleProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()).and(stream.sizeProperty().isEqualTo(-1)));
+                sizePane.managedProperty().bind(sizePane.visibleProperty());
                 radios.visibleProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()));
                 radios.managedProperty().bind(radios.visibleProperty());
             } else {
-                getSizeLink.visibleProperty().bind(stream.sizeProperty().isEqualTo(-1));
-                getSizeLink.managedProperty().bind(stream.sizeProperty().isEqualTo(-1));
+                sizePane.visibleProperty().bind(stream.sizeProperty().isEqualTo(-1));
+                sizePane.managedProperty().bind(stream.sizeProperty().isEqualTo(-1));
             }
 
             GridPane.setMargin(titlePane, new Insets(0, 0, bottomMargin, 0));
@@ -270,9 +270,9 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         imageView.setFitHeight(imageView.getFitWidth());
         button.setGraphic(imageView);
 
-        result.addRow(2 + fileInfo.getSubtitleStreams().size(), button);
+        result.addRow(result.getRowCount(), button);
 
-        GridPane.setColumnSpan(button, 4);
+        GridPane.setColumnSpan(button, 3);
         GridPane.setMargin(button, new Insets(5, 0, 0, 0));
 
         return result;
