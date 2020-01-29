@@ -20,10 +20,16 @@ import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.stream.IntStream;
 
 public class TableWithFiles extends TableView<GuiFileInfo> {
     private static final String ROW_UNAVAILABLE_CLASS = "row-unavailable";
+
+    private static final String ROW_ERROR_PARTIAL_BORDER_CLASS = "row-error-partial-border";
+
+    private static final String ROW_ERROR_FULL_BORDER_CLASS = "row-error-full-border";
 
     private AllFileSubtitleSizesLoader allSizesLoader;
 
@@ -58,11 +64,25 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
                     return;
                 }
 
-                if (StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
-                    getStyleClass().removeAll(Collections.singleton(ROW_UNAVAILABLE_CLASS));
-                } else {
-                    if (!getStyleClass().contains(ROW_UNAVAILABLE_CLASS)) {
-                        getStyleClass().add(ROW_UNAVAILABLE_CLASS);
+                getStyleClass().removeAll(
+                        Arrays.asList(
+                                ROW_UNAVAILABLE_CLASS,
+                                ROW_ERROR_PARTIAL_BORDER_CLASS,
+                                ROW_ERROR_FULL_BORDER_CLASS
+                        )
+                );
+
+                if (!StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
+                    getStyleClass().add(ROW_UNAVAILABLE_CLASS);
+                } else if (fileInfo.getErrorBorder()) {
+                    String currentFilePath =  fileInfo.getPathToDisplay();
+                    int index = IntStream.range(0, getItems().size())
+                            .filter(i -> Objects.equals(getItems().get(i).getPathToDisplay(), currentFilePath))
+                            .findFirst().orElseThrow(IllegalStateException::new);
+                    if (index > 0 && getItems().get(index - 1).getErrorBorder()) {
+                        getStyleClass().add(ROW_ERROR_PARTIAL_BORDER_CLASS);
+                    } else {
+                        getStyleClass().add(ROW_ERROR_FULL_BORDER_CLASS);
                     }
                 }
             }

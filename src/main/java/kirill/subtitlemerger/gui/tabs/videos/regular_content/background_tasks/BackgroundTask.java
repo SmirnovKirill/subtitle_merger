@@ -161,7 +161,7 @@ abstract class BackgroundTask<T> extends Task<T> {
         GuiFileInfo result = new GuiFileInfo(
                 pathToDisplay,
                 fileInfo.getFile().getAbsolutePath(),
-                true,
+                false,
                 selected,
                 fileInfo.getLastModified(),
                 LocalDateTime.now(),
