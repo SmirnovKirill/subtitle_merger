@@ -1,5 +1,5 @@
 .button-error {
-    -fx-border-color: red;
+    -fx-text-fill: #e2574c;
     -fx-border-width: 2px;
 }
 
@@ -12,7 +12,7 @@
 }
 
 .label-error {
-    -fx-text-fill: red;
+    -fx-text-fill: #e2574c;
 }
 
 .hyperlink,

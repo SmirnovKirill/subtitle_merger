@@ -17,6 +17,9 @@ public class GuiFileInfo {
     private String fullPath;
 
     @Getter(AccessLevel.NONE)
+    private BooleanProperty errorFrame;
+
+    @Getter(AccessLevel.NONE)
     private BooleanProperty selected;
 
     private LocalDateTime lastModified;
@@ -46,6 +49,7 @@ public class GuiFileInfo {
     public GuiFileInfo(
             String pathToDisplay,
             String fullPath,
+            boolean errorFrame,
             boolean selected,
             LocalDateTime lastModified,
             LocalDateTime added,
@@ -59,6 +63,7 @@ public class GuiFileInfo {
     ) {
         this.pathToDisplay = pathToDisplay;
         this.fullPath = fullPath;
+        this.errorFrame = new SimpleBooleanProperty(errorFrame);
         this.selected = new SimpleBooleanProperty(selected);
         this.lastModified = lastModified;
         this.added = added;
@@ -69,6 +74,18 @@ public class GuiFileInfo {
         this.subtitleToHideCount = new SimpleIntegerProperty(subtitleToHideCount);
         this.someSubtitlesHidden = new SimpleBooleanProperty(someSubtitlesHidden);
         this.subtitleStreams = subtitleStreams;
+    }
+
+    public boolean isErrorFrame() {
+        return errorFrame.get();
+    }
+
+    public BooleanProperty errorFrameProperty() {
+        return errorFrame;
+    }
+
+    public void setErrorFrame(boolean errorFrame) {
+        this.errorFrame.set(errorFrame);
     }
 
     public boolean isSelected() {
