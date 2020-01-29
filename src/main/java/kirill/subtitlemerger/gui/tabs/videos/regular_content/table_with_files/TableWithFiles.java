@@ -21,8 +21,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
-import java.util.Objects;
-import java.util.stream.IntStream;
 
 public class TableWithFiles extends TableView<GuiFileInfo> {
     private static final String ROW_UNAVAILABLE_CLASS = "row-unavailable";
@@ -75,11 +73,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
                 if (!StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
                     getStyleClass().add(ROW_UNAVAILABLE_CLASS);
                 } else if (fileInfo.getErrorBorder()) {
-                    String currentFilePath =  fileInfo.getPathToDisplay();
-                    int index = IntStream.range(0, getItems().size())
-                            .filter(i -> Objects.equals(getItems().get(i).getPathToDisplay(), currentFilePath))
-                            .findFirst().orElseThrow(IllegalStateException::new);
-                    if (index > 0 && getItems().get(index - 1).getErrorBorder()) {
+                    if (getIndex() > 0 && getItems().get(getIndex() - 1).getErrorBorder()) {
                         getStyleClass().add(ROW_ERROR_PARTIAL_BORDER_CLASS);
                     } else {
                         getStyleClass().add(ROW_ERROR_FULL_BORDER_CLASS);
@@ -221,7 +215,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             }
 
             HBox sizePane = new HBox();
-            sizePane.setAlignment(Pos.CENTER);
+            sizePane.setAlignment(Pos.CENTER_LEFT);
             sizePane.setSpacing(5);
 
             Image errorImage = new Image("/gui/icons/error.png");
@@ -273,14 +267,14 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
                 titlePane.managedProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()));
                 sizeLabel.visibleProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()));
                 sizeLabel.managedProperty().bind(sizeLabel.visibleProperty());
-                sizePane.visibleProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()).and(stream.sizeProperty().isEqualTo(-1)));
+                sizePane.visibleProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()));
                 sizePane.managedProperty().bind(sizePane.visibleProperty());
                 radios.visibleProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()));
                 radios.managedProperty().bind(radios.visibleProperty());
-            } else {
-                sizePane.visibleProperty().bind(stream.sizeProperty().isEqualTo(-1));
-                sizePane.managedProperty().bind(stream.sizeProperty().isEqualTo(-1));
             }
+
+            getSizeLink.visibleProperty().bind(stream.sizeProperty().isEqualTo(-1));
+            getSizeLink.managedProperty().bind(stream.sizeProperty().isEqualTo(-1));
 
             GridPane.setMargin(titlePane, new Insets(0, 0, bottomMargin, 0));
             GridPane.setMargin(sizePane, new Insets(0, 0, bottomMargin, 0));
