@@ -19,7 +19,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class AutoSelectSubtitlesTask extends BackgroundTask<Void> {
+public class AutoSelectSubtitlesTask extends CancellableBackgroundTask<Void> {
     private List<FileInfo> allFilesInfo;
 
     private List<GuiFileInfo> displayedGuiFilesInfo;
@@ -27,9 +27,6 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<Void> {
     private Ffmpeg ffmpeg;
 
     private GuiSettings guiSettings;
-
-    @Getter
-    private boolean cancelled;
 
     @Getter
     private int allFileCount;
@@ -66,8 +63,8 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<Void> {
 
         for (GuiFileInfo guiFileInfo : guiFilesInfoToWorkWith) {
             if (super.isCancelled()) {
-                cancelled = true;
-                break;
+                setCancelFinished(true);
+                return null;
             }
 
             FileInfo fileInfo = RegularContentController.findMatchingFileInfo(guiFileInfo, allFilesInfo);
@@ -117,8 +114,8 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<Void> {
                 finishedSuccessfullyCount++;
             } catch (FfmpegException e) {
                 if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
-                    cancelled = true;
-                    break;
+                    setCancelFinished(true);
+                    return null;
                 } else {
                     //todo save reason
                     failedCount++;

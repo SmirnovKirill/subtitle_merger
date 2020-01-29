@@ -2,7 +2,7 @@ package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.l
 
 import javafx.application.Platform;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.BackgroundTask;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.CancellableBackgroundTask;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.logic.core.Parser;
@@ -17,11 +17,8 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.File;
 import java.util.List;
 
-public abstract class LoadSubtitlesTask extends BackgroundTask<Void> {
+public abstract class LoadSubtitlesTask extends CancellableBackgroundTask<Void> {
     private Ffmpeg ffmpeg;
-
-    @Getter
-    protected boolean cancelled;
 
     @Getter
     protected int allSubtitleCount;
@@ -51,7 +48,7 @@ public abstract class LoadSubtitlesTask extends BackgroundTask<Void> {
             throw new IllegalArgumentException();
         }
 
-        mainLoop: for (GuiFileInfo guiFileInfo : guiFilesInfo) {
+        for (GuiFileInfo guiFileInfo : guiFilesInfo) {
             FileInfo fileInfo = RegularContentController.findMatchingFileInfo(guiFileInfo, filesInfo);
             if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
                 continue;
@@ -59,8 +56,8 @@ public abstract class LoadSubtitlesTask extends BackgroundTask<Void> {
 
             for (SubtitleStream subtitleStream : fileInfo.getSubtitleStreams()) {
                 if (super.isCancelled()) {
-                    cancelled = true;
-                    break mainLoop;
+                    setCancelFinished(true);
+                    return;
                 }
 
                 if (ffmpegIndex != null && ffmpegIndex != subtitleStream.getFfmpegIndex()) {
@@ -108,8 +105,8 @@ public abstract class LoadSubtitlesTask extends BackgroundTask<Void> {
                     loadedSuccessfullyCount++;
                 } catch (FfmpegException e) {
                     if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
-                        cancelled = true;
-                        break mainLoop;
+                        setCancelFinished(true);
+                        return;
                     } else {
                         //todo save reason
                         failedToLoadCount++;

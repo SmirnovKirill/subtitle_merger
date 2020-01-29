@@ -131,7 +131,7 @@ public class RegularContentController {
 
     private ToggleGroup sortDirectionGroup;
 
-    private BackgroundTask<?> currentCancellableTask;
+    private CancellableBackgroundTask<?> currentCancellableTask;
 
     private File directory;
 
@@ -228,7 +228,7 @@ public class RegularContentController {
 
     @FXML
     private void autoSelectButtonClicked() {
-        BackgroundTask<?> task = new AutoSelectSubtitlesTask(
+        CancellableBackgroundTask<?> task = new AutoSelectSubtitlesTask(
                 filesInfo,
                 tableWithFiles.getItems(),
                 guiContext.getFfmpeg(),
@@ -241,7 +241,7 @@ public class RegularContentController {
             // showResult(task, false);
             stopProgress();
         });
-        task.setOnCancelled(e -> {
+        task.setOnCancelFinished(() -> {
             //todo implement
            // showResult(task, true);
             stopProgress();
@@ -265,7 +265,7 @@ public class RegularContentController {
             showResult(task, false);
             stopProgress();
         });
-        task.setOnCancelled(e -> {
+        task.setOnCancelFinished(() -> {
             showResult(task, true);
             stopProgress();
         });
