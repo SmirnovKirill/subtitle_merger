@@ -81,6 +81,11 @@ public abstract class LoadSubtitlesTask extends CancellableBackgroundTask<Void> 
                         )
                 );
 
+                GuiSubtitleStream guiSubtitleStream = RegularContentController.findMatchingGuiStream(
+                        subtitleStream.getFfmpegIndex(),
+                        guiFileInfo.getSubtitleStreams()
+                );
+
                 try {
                     String subtitleText = ffmpeg.getSubtitlesText(subtitleStream.getFfmpegIndex(), fileInfo.getFile());
                     subtitleStream.setSubtitlesAndSize(
@@ -91,15 +96,13 @@ public abstract class LoadSubtitlesTask extends CancellableBackgroundTask<Void> 
                             )
                     );
 
-                    GuiSubtitleStream guiSubtitleStream = RegularContentController.findMatchingGuiStream(
-                            subtitleStream.getFfmpegIndex(),
-                            guiFileInfo.getSubtitleStreams()
-                    );
-
                     /*
                      * Have to call this in the JavaFX thread because this change can lead to updates on the screen.
                      */
-                    Platform.runLater(() -> guiSubtitleStream.setSize(subtitleStream.getSubtitleSize()));
+                    Platform.runLater(() -> {
+                        guiSubtitleStream.setSize(subtitleStream.getSubtitleSize());
+                        guiSubtitleStream.setFailedToLoadReason(null);
+                    });
 
                     loadedSuccessfullyCount++;
                 } catch (FfmpegException e) {
@@ -107,11 +110,18 @@ public abstract class LoadSubtitlesTask extends CancellableBackgroundTask<Void> 
                         setFinished(true);
                         return;
                     } else {
-                        //todo save reason
+                        Platform.runLater(() -> {
+                            guiSubtitleStream.setFailedToLoadReason(guiTextFrom(e));
+                            guiFileInfo.setErrorBorder(true);
+                        });
                         failedToLoadCount++;
                     }
                 } catch (Parser.IncorrectFormatException e) {
-                    //todo save reason
+                    Platform.runLater(() -> {
+                        guiSubtitleStream.setFailedToLoadReason("subtitles seem to have incorrect format");
+                        guiFileInfo.setErrorBorder(true);
+                    });
+
                     failedToLoadCount++;
                 }
 
@@ -142,5 +152,13 @@ public abstract class LoadSubtitlesTask extends CancellableBackgroundTask<Void> 
                 + language
                 + (StringUtils.isBlank(subtitleStream.getTitle()) ? "" : " " + subtitleStream.getTitle())
                 + " in " + file.getName();
+    }
+
+    private static String guiTextFrom(FfmpegException e) {
+        if (e.getCode() == FfmpegException.Code.GENERAL_ERROR) {
+            return "ffmpeg returned an error";
+        }
+
+        throw new IllegalStateException();
     }
 }

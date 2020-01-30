@@ -218,14 +218,19 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             sizePane.setAlignment(Pos.CENTER_LEFT);
             sizePane.setSpacing(5);
 
+            Label errorImageLabel = new Label();
+            errorImageLabel.setAlignment(Pos.CENTER);
+
             Image errorImage = new Image("/gui/icons/error.png");
             ImageView errorImageView = new ImageView(errorImage);
             errorImageView.setFitWidth(12);
             errorImageView.setFitHeight(errorImageView.getFitWidth());
-            errorImageView.visibleProperty().bind(Bindings.isNotEmpty(stream.failedToLoadReasonProperty()));
-            errorImageView.managedProperty().bind(Bindings.isNotEmpty(stream.failedToLoadReasonProperty()));
-            Tooltip tooltip = GuiUtils.generateTooltip(stream.failedToLoadReasonProperty());
-            Tooltip.install(errorImageView, tooltip);
+            errorImageLabel.setGraphic(errorImageView);
+
+            errorImageLabel.setTooltip(GuiUtils.generateTooltip(stream.failedToLoadReasonProperty()));
+
+            errorImageLabel.visibleProperty().bind(Bindings.isNotEmpty(stream.failedToLoadReasonProperty()));
+            errorImageLabel.managedProperty().bind(Bindings.isNotEmpty(stream.failedToLoadReasonProperty()));
 
             Label sizeLabel = new Label();
 
@@ -245,7 +250,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             Hyperlink getSizeLink = new Hyperlink("get size");
             getSizeLink.setOnAction(event -> singleSizeLoader.load(fileInfo, stream.getFfmpegIndex()));
 
-            sizePane.getChildren().addAll(sizeLabel, getSizeLink, errorImageView);
+            sizePane.getChildren().addAll(sizeLabel, getSizeLink, errorImageLabel);
 
             HBox radios = new HBox();
             radios.setSpacing(5);
