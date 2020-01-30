@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @CommonsLog
-abstract class BackgroundTask<T> extends Task<T> {
+public abstract class BackgroundTask<T> extends Task<T> {
     BackgroundTask() {
         setOnFailed(this::taskFailed);
         setOnCancelled(this::taskCancelled);
@@ -211,6 +211,7 @@ abstract class BackgroundTask<T> extends Task<T> {
         return new GuiSubtitleStream(
                 subtitleStream.getFfmpegIndex(),
                 guiTextFrom(subtitleStream.getUnavailabilityReason()),
+                null,
                 subtitleStream.getLanguage() != null ? subtitleStream.getLanguage().toString() : "unknown",
                 subtitleStream.getTitle(),
                 RegularContentController.isExtra(subtitleStream, guiSettings),
@@ -252,6 +253,15 @@ abstract class BackgroundTask<T> extends Task<T> {
                 return "video has a format that is not allowed";
             default:
                 throw new IllegalStateException();
+        }
+    }
+
+    public static void clearState(List<GuiFileInfo> filesInfo, BackgroundTask<?> task) {
+        task.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
+        task.updateMessage("clearing state...");
+
+        for (GuiFileInfo fileInfo : filesInfo) {
+            fileInfo.setErrorBorder(false);
         }
     }
 }

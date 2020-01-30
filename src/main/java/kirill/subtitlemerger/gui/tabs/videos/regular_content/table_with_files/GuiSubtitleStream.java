@@ -1,9 +1,6 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files;
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 
@@ -17,6 +14,9 @@ public class GuiSubtitleStream {
     private int ffmpegIndex;
 
     private String unavailabilityReason;
+
+    @Getter(AccessLevel.NONE)
+    private StringProperty failedToLoadReason;
 
     private String language;
 
@@ -36,6 +36,7 @@ public class GuiSubtitleStream {
     public GuiSubtitleStream(
             int ffmpegIndex,
             String unavailabilityReason,
+            String failedToLoadReason,
             String language,
             String title,
             boolean extra,
@@ -45,12 +46,25 @@ public class GuiSubtitleStream {
     ) {
         this.ffmpegIndex = ffmpegIndex;
         this.unavailabilityReason = unavailabilityReason;
+        this.failedToLoadReason = new SimpleStringProperty(failedToLoadReason);
         this.language = language;
         this.title = title;
         this.extra = extra;
         this.size = new SimpleIntegerProperty(size);
         this.selectedAsUpper = new SimpleBooleanProperty(selectedAsUpper);
         this.selectedAsLower = new SimpleBooleanProperty(selectedAsLower);
+    }
+
+    public String getFailedToLoadReason() {
+        return failedToLoadReason.get();
+    }
+
+    public StringProperty failedToLoadReasonProperty() {
+        return failedToLoadReason;
+    }
+
+    public void setFailedToLoadReason(String failedToLoadReason) {
+        this.failedToLoadReason.set(failedToLoadReason);
     }
 
     public int getSize() {

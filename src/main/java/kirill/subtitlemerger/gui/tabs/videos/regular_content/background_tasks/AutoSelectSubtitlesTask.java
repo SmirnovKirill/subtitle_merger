@@ -58,6 +58,8 @@ public class AutoSelectSubtitlesTask extends CancellableBackgroundTask<Void> {
 
     @Override
     protected Void call() {
+        BackgroundTask.clearState(displayedGuiFilesInfo, this);
+
         updateMessage("getting list of files to work with...");
         List<GuiFileInfo> guiFilesInfoToWorkWith = getGuiFilesInfoToWorkWith(displayedGuiFilesInfo);
 

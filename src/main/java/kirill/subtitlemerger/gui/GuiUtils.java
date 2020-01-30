@@ -1,5 +1,6 @@
 package kirill.subtitlemerger.gui;
 
+import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Task;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Tooltip;
@@ -42,10 +43,23 @@ public class GuiUtils {
     public static Tooltip generateTooltip(String text) {
         Tooltip result = new Tooltip(text);
 
-        result.setShowDelay(Duration.ZERO);
-        result.setShowDuration(Duration.INDEFINITE);
+        setTooltipProperties(result);
 
         return result;
+    }
+
+    public static Tooltip generateTooltip(ObservableValue<? extends String> observableValue) {
+        Tooltip result = new Tooltip();
+
+        result.textProperty().bind(observableValue);
+        setTooltipProperties(result);
+
+        return result;
+    }
+
+    private static void setTooltipProperties(Tooltip tooltip) {
+        tooltip.setShowDelay(Duration.ZERO);
+        tooltip.setShowDuration(Duration.INDEFINITE);
     }
 
     public static void loadWithUncheckedException(FXMLLoader loader) {

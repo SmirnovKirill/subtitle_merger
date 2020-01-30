@@ -2,6 +2,7 @@ package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.l
 
 import javafx.beans.property.BooleanProperty;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStream;
@@ -30,6 +31,8 @@ public class LoadSeveralFilesAllSubtitlesTask extends LoadSubtitlesTask {
 
     @Override
     protected Void call() {
+        BackgroundTask.clearState(displayedGuiFilesInfo, this);
+
         updateMessage("getting list of files to work with...");
         List<GuiFileInfo> guiFilesInfoToWorkWith = getGuiFilesInfoToWorkWith(displayedGuiFilesInfo);
 

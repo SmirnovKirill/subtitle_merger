@@ -3,14 +3,13 @@ package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.concurrent.Task;
 import javafx.event.Event;
 import javafx.scene.control.ProgressIndicator;
 import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 
 @CommonsLog
-public abstract class CancellableBackgroundTask<T> extends Task<T> {
+public abstract class CancellableBackgroundTask<T> extends BackgroundTask<T> {
     private BooleanProperty finished;
 
     @Setter

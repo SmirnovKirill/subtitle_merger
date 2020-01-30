@@ -222,6 +222,10 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             ImageView errorImageView = new ImageView(errorImage);
             errorImageView.setFitWidth(12);
             errorImageView.setFitHeight(errorImageView.getFitWidth());
+            errorImageView.visibleProperty().bind(Bindings.isNotEmpty(stream.failedToLoadReasonProperty()));
+            errorImageView.managedProperty().bind(Bindings.isNotEmpty(stream.failedToLoadReasonProperty()));
+            Tooltip tooltip = GuiUtils.generateTooltip(stream.failedToLoadReasonProperty());
+            Tooltip.install(errorImageView, tooltip);
 
             Label sizeLabel = new Label();
 

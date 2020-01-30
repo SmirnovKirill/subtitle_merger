@@ -314,6 +314,7 @@ public class RegularContentController {
                 new LoadSingleFileAllSubtitlesTask(
                         findMatchingFileInfo(guiFileInfo, filesInfo),
                         guiFileInfo,
+                        tableWithFiles.getItems(),
                         guiContext.getFfmpeg(),
                         cancelTaskPaneVisible
                 )
@@ -326,6 +327,7 @@ public class RegularContentController {
                         ffmpegIndex,
                         findMatchingFileInfo(guiFileInfo, filesInfo),
                         guiFileInfo,
+                        tableWithFiles.getItems(),
                         guiContext.getFfmpeg(),
                         cancelTaskPaneVisible
                 )
