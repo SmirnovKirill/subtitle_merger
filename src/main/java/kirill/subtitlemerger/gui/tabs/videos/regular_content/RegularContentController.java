@@ -306,8 +306,8 @@ public class RegularContentController {
 
             String error = "";
             if (task.getFailedCount() != 0) {
-                error += "failed to auto-select " + task.getFailedCount() + "/" + task.getAllFileCount();
-                error += " subtitles";
+                error += task.getFailedCount() + "/" + task.getAllFileCount();
+                error += " failed";
             }
 
             setResult(success, warn, error);
