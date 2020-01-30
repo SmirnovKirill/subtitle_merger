@@ -85,47 +85,20 @@ class GuiSettings {
             log.warn("incorrect merged subtitles last directory in saved preferences: " + e.getMessage());
         }
 
-
-        String ffprobePath = preferences.get(SettingType.FFPROBE_PATH.getSettingCode(), "");
-        if (StringUtils.isBlank(ffprobePath)) {
-            File packedFfprobeFile = getPackedFfprobeFile().orElse(null);
-            if (packedFfprobeFile != null) {
-                try {
-                    ffprobeFile = getValidatedFfprobeFile(packedFfprobeFile.getAbsolutePath())
-                            .orElseThrow(IllegalStateException::new);
-                    saveFfprobeFile(ffprobeFile.getAbsolutePath());
-                } catch (ConfigException e) {
-                    ffprobeFile = null;
-                    log.warn("failed to validate and save packed ffprobe: " + e.getMessage());
-                }
-            }
-        } else {
-            try {
-                ffprobeFile = getValidatedFfprobeFile(ffprobePath).orElseThrow(IllegalStateException::new);
-            } catch (ConfigException e) {
-                log.warn("incorrect ffprobe path in saved preferences: " + e.getMessage());
-            }
+        try {
+            ffprobeFile = getValidatedFfprobeFile(
+                    preferences.get(SettingType.FFPROBE_PATH.getSettingCode(), "")
+            ).orElse(null);
+        } catch (ConfigException e) {
+            log.warn("incorrect ffprobe path in saved preferences: " + e.getMessage());
         }
 
-        String ffmpegPath = preferences.get(SettingType.FFMPEG_PATH.getSettingCode(), "");
-        if (StringUtils.isBlank(ffmpegPath)) {
-            File packedFfmpegFile = getPackedFfmpegFile().orElse(null);
-            if (packedFfmpegFile != null) {
-                try {
-                    ffmpegFile = getValidatedFfmpegFile(packedFfmpegFile.getAbsolutePath())
-                            .orElseThrow(IllegalStateException::new);
-                    saveFfmpegFile(ffmpegFile.getAbsolutePath());
-                } catch (ConfigException e) {
-                    ffmpegFile = null;
-                    log.warn("failed to validate and save packed ffmpeg: " + e.getMessage());
-                }
-            }
-        } else {
-            try {
-                ffmpegFile = getValidatedFfmpegFile(ffmpegPath).orElseThrow(IllegalStateException::new);
-            } catch (ConfigException e) {
-                log.warn("incorrect ffmpeg path in saved preferences: " + e.getMessage());
-            }
+        try {
+            ffmpegFile = getValidatedFfmpegFile(
+                    preferences.get(SettingType.FFMPEG_PATH.getSettingCode(), "")
+            ).orElse(null);
+        } catch (ConfigException e) {
+            log.warn("incorrect ffmpeg path in saved preferences: " + e.getMessage());
         }
 
         try {
@@ -185,6 +158,9 @@ class GuiSettings {
         }
 
         missingSettings = generateMissingSettings();
+        if (ffprobeFile == null || ffmpegFile == null) {
+            setFfprobeFfmpegIfTheyArePacked();
+        }
     }
 
     private static Optional<File> getValidatedDirectory(String rawValue) throws ConfigException {
@@ -200,47 +176,6 @@ class GuiSettings {
         return Optional.of(result);
     }
 
-    private static Optional<File> getPackedFfprobeFile() {
-        File folderWithJar = getFolderWithJar().orElse(null);
-        if (folderWithJar == null) {
-            return Optional.empty();
-        }
-
-        File result;
-        if (SystemUtils.IS_OS_LINUX) {
-            result = new File(folderWithJar, "ffmpeg/ffprobe");
-        } else if (SystemUtils.IS_OS_WINDOWS) {
-            result = new File(folderWithJar, "ffmpeg/ffprobe.exe");
-        } else {
-            return Optional.empty();
-        }
-
-        if (!result.exists()) {
-            return Optional.empty();
-        }
-
-        return Optional.of(result);
-    }
-
-    private static Optional<File> getFolderWithJar() {
-        File result;
-        try {
-             result = new File(
-                    GuiSettings.class.getProtectionDomain().getCodeSource().getLocation().toURI()
-            ).getParentFile();
-        } catch (URISyntaxException e) {
-            log.error("failed to get jar location: " + ExceptionUtils.getStackTrace(e));
-            return Optional.empty();
-        }
-
-        if (result == null) {
-            log.error("folder with jar is null, that's so weird");
-            return Optional.empty();
-        }
-
-        return Optional.of(result);
-    }
-
     private static Optional<File> getValidatedFfprobeFile(String rawValue) throws ConfigException {
         if (StringUtils.isBlank(rawValue)) {
             return Optional.empty();
@@ -251,28 +186,6 @@ class GuiSettings {
             Ffprobe.validate(result);
         } catch (FfmpegException e) {
             throw new ConfigException("file " + rawValue + " is not a valid path to ffprobe");
-        }
-
-        return Optional.of(result);
-    }
-
-    private static Optional<File> getPackedFfmpegFile() {
-        File folderWithJar = getFolderWithJar().orElse(null);
-        if (folderWithJar == null) {
-            return Optional.empty();
-        }
-
-        File result;
-        if (SystemUtils.IS_OS_LINUX) {
-            result = new File(folderWithJar, "ffmpeg/ffmpeg");
-        } else if (SystemUtils.IS_OS_WINDOWS) {
-            result = new File(folderWithJar, "ffmpeg/ffmpeg.exe");
-        } else {
-            return Optional.empty();
-        }
-
-        if (!result.exists()) {
-            return Optional.empty();
         }
 
         return Optional.of(result);
@@ -387,6 +300,99 @@ class GuiSettings {
         }
 
         return FXCollections.observableSet(result);
+    }
+
+    private void setFfprobeFfmpegIfTheyArePacked() {
+        if (ffprobeFile == null) {
+            File packedFfprobeFile = getPackedFfprobeFile().orElse(null);
+            if (packedFfprobeFile != null) {
+                try {
+                    ffprobeFile = getValidatedFfprobeFile(packedFfprobeFile.getAbsolutePath())
+                            .orElseThrow(IllegalStateException::new);
+                    saveFfprobeFile(ffprobeFile.getAbsolutePath());
+                } catch (ConfigException e) {
+                    ffprobeFile = null;
+                    log.warn("failed to validate and save packed ffprobe: " + e.getMessage());
+                }
+            }
+        }
+
+        if (ffmpegFile == null) {
+            File packedFfmpegFile = getPackedFfmpegFile().orElse(null);
+            if (packedFfmpegFile != null) {
+                try {
+                    ffmpegFile = getValidatedFfmpegFile(packedFfmpegFile.getAbsolutePath())
+                            .orElseThrow(IllegalStateException::new);
+                    saveFfmpegFile(ffmpegFile.getAbsolutePath());
+                } catch (ConfigException e) {
+                    ffmpegFile = null;
+                    log.warn("failed to validate and save packed ffmpeg: " + e.getMessage());
+                }
+            }
+        }
+    }
+
+    private static Optional<File> getPackedFfprobeFile() {
+        File folderWithJar = getFolderWithJar().orElse(null);
+        if (folderWithJar == null) {
+            return Optional.empty();
+        }
+
+        File result;
+        if (SystemUtils.IS_OS_LINUX) {
+            result = new File(folderWithJar, "ffmpeg/ffprobe");
+        } else if (SystemUtils.IS_OS_WINDOWS) {
+            result = new File(folderWithJar, "ffmpeg/ffprobe.exe");
+        } else {
+            return Optional.empty();
+        }
+
+        if (!result.exists()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(result);
+    }
+
+    private static Optional<File> getFolderWithJar() {
+        File result;
+        try {
+            result = new File(
+                    GuiSettings.class.getProtectionDomain().getCodeSource().getLocation().toURI()
+            ).getParentFile();
+        } catch (URISyntaxException e) {
+            log.error("failed to get jar location: " + ExceptionUtils.getStackTrace(e));
+            return Optional.empty();
+        }
+
+        if (result == null) {
+            log.error("folder with jar is null, that's so weird");
+            return Optional.empty();
+        }
+
+        return Optional.of(result);
+    }
+
+    private static Optional<File> getPackedFfmpegFile() {
+        File folderWithJar = getFolderWithJar().orElse(null);
+        if (folderWithJar == null) {
+            return Optional.empty();
+        }
+
+        File result;
+        if (SystemUtils.IS_OS_LINUX) {
+            result = new File(folderWithJar, "ffmpeg/ffmpeg");
+        } else if (SystemUtils.IS_OS_WINDOWS) {
+            result = new File(folderWithJar, "ffmpeg/ffmpeg.exe");
+        } else {
+            return Optional.empty();
+        }
+
+        if (!result.exists()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(result);
     }
 
     public void saveUpperSubtitlesLastDirectory(String rawValue) throws ConfigException {
