@@ -43,7 +43,6 @@ public class LoadSingleSubtitleTask extends LoadSubtitlesTask {
                 .filter(stream -> stream.getFfmpegIndex() == ffmpegIndex)
                 .findFirst().orElseThrow(IllegalStateException::new);
         allSubtitleCount = 1;
-        loadedBeforeCount = subtitleStream.getSubtitles() != null ? 1 : 0;
 
         load(ffmpegIndex, Collections.singletonList(guiFileInfo), Collections.singletonList(fileInfo));
 

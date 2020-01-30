@@ -37,7 +37,6 @@ public class LoadSingleFileAllSubtitlesTask extends LoadSubtitlesTask {
         BackgroundTask.clearState(displayedGuiFilesInfo, this);
 
         allSubtitleCount = getAllSubtitleCount(fileInfo);
-        loadedBeforeCount = getLoadedBeforeCount(fileInfo);
 
         load(null, Collections.singletonList(guiFileInfo), Collections.singletonList(fileInfo));
 
@@ -50,26 +49,6 @@ public class LoadSingleFileAllSubtitlesTask extends LoadSubtitlesTask {
         if (!CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
             for (SubtitleStream subtitleStream : fileInfo.getSubtitleStreams()) {
                 if (subtitleStream.getUnavailabilityReason() != null) {
-                    continue;
-                }
-
-                result++;
-            }
-        }
-
-        return result;
-    }
-
-    private static int getLoadedBeforeCount(FileInfo fileInfo) {
-        int result = 0;
-
-        if (!CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
-            for (SubtitleStream subtitleStream : fileInfo.getSubtitleStreams()) {
-                if (subtitleStream.getUnavailabilityReason() != null) {
-                    continue;
-                }
-
-                if (subtitleStream.getSubtitles() == null) {
                     continue;
                 }
 

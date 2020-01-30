@@ -4,6 +4,7 @@ import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.load_subtitles.LoadSubtitlesTask;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.logic.core.Parser;
@@ -31,6 +32,9 @@ public class AutoSelectSubtitlesTask extends CancellableBackgroundTask<Void> {
 
     @Getter
     private int allFileCount;
+
+    @Getter
+    private int notEnoughStreamsCount;
 
     @Getter
     private int processedCount;
@@ -73,6 +77,7 @@ public class AutoSelectSubtitlesTask extends CancellableBackgroundTask<Void> {
 
             FileInfo fileInfo = RegularContentController.findMatchingFileInfo(guiFileInfo, allFilesInfo);
             if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
+                notEnoughStreamsCount++;
                 processedCount++;
                 continue;
             }
@@ -80,6 +85,7 @@ public class AutoSelectSubtitlesTask extends CancellableBackgroundTask<Void> {
             List<SubtitleStream> matchingUpperSubtitles = getMatchingUpperSubtitles(fileInfo, guiSettings);
             List<SubtitleStream> matchingLowerSubtitles = getMatchingLowerSubtitles(fileInfo, guiSettings);
             if (CollectionUtils.isEmpty(matchingUpperSubtitles) || CollectionUtils.isEmpty(matchingLowerSubtitles)) {
+                notEnoughStreamsCount++;
                 processedCount++;
                 continue;
             }
@@ -88,6 +94,7 @@ public class AutoSelectSubtitlesTask extends CancellableBackgroundTask<Void> {
                 if (matchingUpperSubtitles.size() != 1) {
                     loadSizesForGroupIfNecessary(
                             fileInfo.getFile(),
+                            guiFileInfo,
                             matchingUpperSubtitles,
                             guiFileInfo.getSubtitleStreams()
                     );
@@ -102,6 +109,7 @@ public class AutoSelectSubtitlesTask extends CancellableBackgroundTask<Void> {
                 if (matchingLowerSubtitles.size() != 1) {
                     loadSizesForGroupIfNecessary(
                             fileInfo.getFile(),
+                            guiFileInfo,
                             matchingLowerSubtitles,
                             guiFileInfo.getSubtitleStreams()
                     );
@@ -121,11 +129,9 @@ public class AutoSelectSubtitlesTask extends CancellableBackgroundTask<Void> {
                     setFinished(true);
                     return null;
                 } else {
-                    //todo save reason
                     failedCount++;
                 }
             } catch (Parser.IncorrectFormatException e) {
-                //todo save reason
                 failedCount++;
             }
 
@@ -156,9 +162,10 @@ public class AutoSelectSubtitlesTask extends CancellableBackgroundTask<Void> {
 
     private void loadSizesForGroupIfNecessary(
             File file,
+            GuiFileInfo guiFileInfo,
             List<SubtitleStream> subtitleStreams,
             List<GuiSubtitleStream> guiSubtitleStreams
-    ) throws Parser.IncorrectFormatException, FfmpegException {
+    ) throws FfmpegException, Parser.IncorrectFormatException {
         for (SubtitleStream subtitleStream : subtitleStreams) {
             updateMessage(
                     getUpdateMessage(
@@ -173,24 +180,43 @@ public class AutoSelectSubtitlesTask extends CancellableBackgroundTask<Void> {
                 continue;
             }
 
-            String subtitleText = ffmpeg.getSubtitlesText(subtitleStream.getFfmpegIndex(), file);
-            subtitleStream.setSubtitlesAndSize(
-                    Parser.fromSubRipText(
-                            subtitleText,
-                            subtitleStream.getTitle(),
-                            subtitleStream.getLanguage()
-                    )
-            );
-
             GuiSubtitleStream guiSubtitleStream = RegularContentController.findMatchingGuiStream(
                     subtitleStream.getFfmpegIndex(),
                     guiSubtitleStreams
             );
 
-            /*
-             * Have to call this in the JavaFX thread because this change can lead to updates on the screen.
-             */
-            Platform.runLater(() -> guiSubtitleStream.setSize(subtitleStream.getSubtitleSize()));
+            try {
+
+                String subtitleText = ffmpeg.getSubtitlesText(subtitleStream.getFfmpegIndex(), file);
+                subtitleStream.setSubtitlesAndSize(
+                        Parser.fromSubRipText(
+                                subtitleText,
+                                subtitleStream.getTitle(),
+                                subtitleStream.getLanguage()
+                        )
+                );
+
+                /*
+                 * Have to call this in the JavaFX thread because this change can lead to updates on the screen.
+                 */
+                Platform.runLater(() -> guiSubtitleStream.setSize(subtitleStream.getSubtitleSize()));
+            } catch (FfmpegException e) {
+                if (e.getCode() != FfmpegException.Code.INTERRUPTED) {
+                    Platform.runLater(() -> {
+                        guiSubtitleStream.setFailedToLoadReason(LoadSubtitlesTask.guiTextFrom(e));
+                        guiFileInfo.setErrorBorder(true);
+                    });
+                }
+
+                throw e;
+            } catch (Parser.IncorrectFormatException e) {
+                Platform.runLater(() -> {
+                    guiSubtitleStream.setFailedToLoadReason("subtitles seem to have incorrect format");
+                    guiFileInfo.setErrorBorder(true);
+                });
+
+                throw e;
+            }
         }
     }
 

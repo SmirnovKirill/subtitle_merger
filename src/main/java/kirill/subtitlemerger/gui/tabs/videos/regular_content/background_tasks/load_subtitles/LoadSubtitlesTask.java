@@ -68,6 +68,7 @@ public abstract class LoadSubtitlesTask extends CancellableBackgroundTask<Void> 
                 }
 
                 if (subtitleStream.getSubtitles() != null) {
+                    loadedBeforeCount++;
                     processedCount++;
                     continue;
                 }
@@ -134,7 +135,7 @@ public abstract class LoadSubtitlesTask extends CancellableBackgroundTask<Void> 
         setFinished(true);
     }
 
-    private static String getUpdateMessage(
+    static String getUpdateMessage(
             int processedCount,
             int allSubtitleCount,
             SubtitleStream subtitleStream,
@@ -154,7 +155,7 @@ public abstract class LoadSubtitlesTask extends CancellableBackgroundTask<Void> 
                 + " in " + file.getName();
     }
 
-    private static String guiTextFrom(FfmpegException e) {
+    public static String guiTextFrom(FfmpegException e) {
         if (e.getCode() == FfmpegException.Code.GENERAL_ERROR) {
             return "ffmpeg returned an error";
         }

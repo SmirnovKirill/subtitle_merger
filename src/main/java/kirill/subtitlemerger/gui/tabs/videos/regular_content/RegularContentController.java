@@ -236,7 +236,7 @@ public class RegularContentController {
 
     @FXML
     private void autoSelectButtonClicked() {
-        CancellableBackgroundTask<?> task = new AutoSelectSubtitlesTask(
+        AutoSelectSubtitlesTask task = new AutoSelectSubtitlesTask(
                 filesInfo,
                 tableWithFiles.getItems(),
                 guiContext.getFfmpeg(),
@@ -244,8 +244,13 @@ public class RegularContentController {
                 cancelTaskPaneVisible
         );
         task.setOnFinished(() -> {
-            //todo implement
-            // showResult(task, false);
+            /*
+             * We need to refresh the table manually because otherwise there is no way to dynamically draw the red
+             * error border.
+             */
+            tableWithFiles.refresh();
+
+            showResult(task);
             stopProgress();
         });
 
@@ -253,6 +258,60 @@ public class RegularContentController {
 
         showProgress(task, true);
         GuiUtils.startTask(task);
+    }
+
+    //todo refactor somehow
+    private void showResult(AutoSelectSubtitlesTask task) {
+        if (task.getProcessedCount() == 0) {
+            setResult(null, "Haven't done anything because of the cancellation", null);
+        } else if (task.getFinishedSuccessfullyCount() == task.getAllFileCount()) {
+            if (task.getAllFileCount() == 1) {
+                setResult("Subtitles have been successfully auto-selected for the file", null, null);
+            } else {
+                setResult("Subtitles have been successfully auto-selected for all " + task.getAllFileCount() + " files", null, null);
+            }
+        } else if (task.getNotEnoughStreamsCount() == task.getAllFileCount()) {
+            if (task.getAllFileCount() == 1) {
+                setResult(null, "Auto-selection is not possible for the file", null);
+            } else {
+                setResult(null, "Auto-selection is not possible for all " + task.getAllFileCount() + " files", null);
+            }
+        } else if (task.getFailedCount() == task.getAllFileCount()) {
+            if (task.getAllFileCount() == 1) {
+                setResult(null, null, "Failed to perform auto-selection for the file");
+            } else {
+                setResult(null, null, "Failed to perform auto-selection for all " + task.getAllFileCount() + " files");
+            }
+        } else {
+            String success = "";
+            if (task.getFinishedSuccessfullyCount() != 0) {
+                success += task.getFinishedSuccessfullyCount() + "/" + task.getAllFileCount();
+                success += " auto-selected successfully";
+            }
+
+            String warn = "";
+            if (task.getProcessedCount() != task.getAllFileCount()) {
+                warn += (task.getAllFileCount() - task.getProcessedCount()) + "/" + task.getAllFileCount();
+                warn += " cancelled";
+            }
+
+            if (task.getNotEnoughStreamsCount() != 0) {
+                if (!StringUtils.isBlank(warn)) {
+                    warn += ", ";
+                }
+
+                warn += "auto-selection is not possible for ";
+                warn += task.getNotEnoughStreamsCount() + "/" + task.getAllFileCount();
+            }
+
+            String error = "";
+            if (task.getFailedCount() != 0) {
+                error += "failed to auto-select " + task.getFailedCount() + "/" + task.getAllFileCount();
+                error += " subtitles";
+            }
+
+            setResult(success, warn, error);
+        }
     }
 
     @FXML
@@ -269,6 +328,12 @@ public class RegularContentController {
 
     private void runLoadSubtitlesTask(LoadSubtitlesTask task) {
         task.setOnFinished(() -> {
+            /*
+             * We need to refresh the table manually because otherwise there is no way to dynamically draw the red
+             * error border.
+             */
+            tableWithFiles.refresh();
+
             showResult(task);
             stopProgress();
         });
@@ -277,6 +342,61 @@ public class RegularContentController {
 
         showProgress(task, true);
         GuiUtils.startTask(task);
+    }
+
+    private void showResult(LoadSubtitlesTask task) {
+        if (task.getAllSubtitleCount() == 0) {
+            setResult("No subtitles to load", null, null);
+        } else if (task.getProcessedCount() == 0) {
+            setResult(null, "Haven't load anything because of the cancellation", null);
+        } else if (task.getLoadedSuccessfullyCount() == task.getAllSubtitleCount()) {
+            if (task.getAllSubtitleCount() == 1) {
+                setResult("Subtitle size has been loaded successfully", null, null);
+            } else {
+                setResult("All " + task.getAllSubtitleCount() + " subtitle sizes have been loaded successfully", null, null);
+            }
+        } else if (task.getLoadedBeforeCount() == task.getAllSubtitleCount()) {
+            if (task.getAllSubtitleCount() == 1) {
+                setResult("Subtitle size has already been loaded successfully", null, null);
+            } else {
+                setResult("All " + task.getAllSubtitleCount() + " subtitle sizes have already been loaded successfully", null, null);
+            }
+        } else if (task.getFailedToLoadCount() == task.getAllSubtitleCount()) {
+            if (task.getAllSubtitleCount() == 1) {
+                setResult(null, null, "Failed to load subtitle size");
+            } else {
+                setResult(null, null, "Failed to load all " + task.getAllSubtitleCount() + " subtitle sizes");
+            }
+        } else {
+            String success = "";
+            if (task.getLoadedSuccessfullyCount() != 0) {
+                success += task.getLoadedSuccessfullyCount() + "/" + task.getAllSubtitleCount();
+                success += " loaded successfully";
+            }
+
+            if (task.getLoadedBeforeCount() != 0) {
+                if (!StringUtils.isBlank(success)) {
+                    success += ", ";
+                }
+
+                success += task.getLoadedBeforeCount() + "/" + task.getAllSubtitleCount();
+                success += " loaded before";
+            }
+
+            String warn = "";
+            if (task.getProcessedCount() != task.getAllSubtitleCount()) {
+                warn += (task.getAllSubtitleCount() - task.getProcessedCount()) + "/" + task.getAllSubtitleCount();
+                warn += " cancelled";
+            }
+
+            String error = "";
+            if (task.getFailedToLoadCount() != 0) {
+                error += "failed to load " + task.getFailedToLoadCount() + "/" + task.getAllSubtitleCount();
+                error += " subtitles";
+            }
+
+            setResult(success, warn, error);
+        }
     }
 
     @FXML
@@ -332,67 +452,6 @@ public class RegularContentController {
                         cancelTaskPaneVisible
                 )
         );
-    }
-
-    //todo test
-    //todo make reusable probably
-    private void showResult(LoadSubtitlesTask task) {
-        if (task.getAllSubtitleCount() == 0) {
-            if (tableWithFiles.getSelected() == 1) {
-                setResult("Nothing to load for the selected file", null, null);
-            } else {
-                setResult("Nothing to load for the selected files", null, null);
-            }
-        } else if (task.getProcessedCount() == 0) {
-            setResult(null, "Haven't load anything because of the cancellation", null);
-        } else if (task.getLoadedSuccessfullyCount() == task.getAllSubtitleCount()) {
-            if (task.getAllSubtitleCount() == 1) {
-                setResult("Subtitle size has been loaded successfully", null, null);
-            } else {
-                setResult("All " + task.getAllSubtitleCount() + " subtitle sizes have been loaded successfully", null, null);
-            }
-        } else if (task.getLoadedBeforeCount() == task.getAllSubtitleCount()) {
-            if (task.getAllSubtitleCount() == 1) {
-                setResult("Subtitle size has already been loaded successfully", null, null);
-            } else {
-                setResult("All " + task.getAllSubtitleCount() + " subtitle sizes have already been loaded successfully", null, null);
-            }
-        } else if (task.getFailedToLoadCount() == task.getAllSubtitleCount()) {
-            if (task.getAllSubtitleCount() == 1) {
-                setResult(null, null, "Failed to load subtitle size");
-            } else {
-                setResult(null, null, "Failed to load all " + task.getAllSubtitleCount() + " subtitle sizes");
-            }
-        } else {
-            String success = "";
-            if (task.getLoadedSuccessfullyCount() != 0) {
-                success += task.getLoadedSuccessfullyCount() + "/" + task.getAllSubtitleCount();
-                success += " loaded successfully";
-            }
-
-            if (task.getLoadedBeforeCount() != 0) {
-                if (!StringUtils.isBlank(success)) {
-                    success += ", ";
-                }
-
-                success += task.getLoadedBeforeCount() + "/" + task.getAllSubtitleCount();
-                success += " loaded before";
-            }
-
-            String warn = "";
-            if (task.getProcessedCount() != task.getAllSubtitleCount()) {
-                warn += (task.getAllSubtitleCount() - task.getProcessedCount()) + "/" + task.getAllSubtitleCount();
-                warn += " cancelled";
-            }
-
-            String error = "";
-            if (task.getFailedToLoadCount() != 0) {
-                error += "failed to load " + task.getFailedToLoadCount() + "/" + task.getAllSubtitleCount();
-                error += " subtitles";
-            }
-
-            setResult(success, warn, error);
-        }
     }
 
     private void sortByChanged(Observable observable) {

@@ -38,7 +38,6 @@ public class LoadSeveralFilesAllSubtitlesTask extends LoadSubtitlesTask {
 
         updateMessage("calculating number of subtitles to load...");
         allSubtitleCount = getAllSubtitleCount(guiFilesInfoToWorkWith, allFilesInfo);
-        loadedBeforeCount = getLoadedBeforeCount(guiFilesInfoToWorkWith, allFilesInfo);
 
         load(null, guiFilesInfoToWorkWith, allFilesInfo);
 
@@ -57,29 +56,6 @@ public class LoadSeveralFilesAllSubtitlesTask extends LoadSubtitlesTask {
             if (!CollectionUtils.isEmpty(fileToWorkWith.getSubtitleStreams())) {
                 for (SubtitleStream subtitleStream : fileToWorkWith.getSubtitleStreams()) {
                     if (subtitleStream.getUnavailabilityReason() != null) {
-                        continue;
-                    }
-
-                    result++;
-                }
-            }
-        }
-
-        return result;
-    }
-
-    private static int getLoadedBeforeCount(List<GuiFileInfo> guiFilesToWorkWith, List<FileInfo> allFiles) {
-        int result = 0;
-
-        for (GuiFileInfo guiFileToWorkWith : guiFilesToWorkWith) {
-            FileInfo fileToWorkWith = RegularContentController.findMatchingFileInfo(guiFileToWorkWith, allFiles);
-            if (!CollectionUtils.isEmpty(fileToWorkWith.getSubtitleStreams())) {
-                for (SubtitleStream subtitleStream : fileToWorkWith.getSubtitleStreams()) {
-                    if (subtitleStream.getUnavailabilityReason() != null) {
-                        continue;
-                    }
-
-                    if (subtitleStream.getSubtitles() == null) {
                         continue;
                     }
 
