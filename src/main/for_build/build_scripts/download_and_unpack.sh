@@ -52,6 +52,8 @@ if [[ $BUILD_LINUX_64 == "y" ]]; then
     DOWNLOAD_FFMPEG="$(need_to_download "$PROJECT_BASE_DIR/build_parts/downloads/ffmpeg/linux_64")"
     if [[ $DOWNLOAD_FFMPEG == "y" ]]; then
       download_and_unpack "$PROJECT_BASE_DIR/build_parts/downloads/ffmpeg/linux_64" "$FFMPEG_LINUX_64_DOWNLOAD_URL"
+      rm "$PROJECT_BASE_DIR/build_parts/downloads/ffmpeg/linux_64/manpages" -rf
+      rm "$PROJECT_BASE_DIR/build_parts/downloads/ffmpeg/linux_64/model" -rf
     else
       echo "ffmpeg for linux x64 has already been downloaded"
     fi
@@ -79,6 +81,9 @@ if [[ $BUILD_WIN_64 == "y" ]]; then
     DOWNLOAD_FFMPEG="$(need_to_download "$PROJECT_BASE_DIR/build_parts/downloads/ffmpeg/win_64")"
     if [[ $DOWNLOAD_FFMPEG == "y" ]]; then
       download_and_unpack "$PROJECT_BASE_DIR/build_parts/downloads/ffmpeg/win_64" "$FFMPEG_WIN_64_DOWNLOAD_URL"
+      rm "$PROJECT_BASE_DIR/build_parts/downloads/ffmpeg/win_64/doc" -rf
+      rm "$PROJECT_BASE_DIR/build_parts/downloads/ffmpeg/win_64/presets" -rf
+      rm "$PROJECT_BASE_DIR/build_parts/downloads/ffmpeg/win_64/bin/ffplay.exe"
     else
       echo "ffmpeg for windows x64 has already been downloaded"
     fi

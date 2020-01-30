@@ -174,7 +174,7 @@
                 <version>3.1.1</version>
                 <executions>
                     <execution>
-                        <id>zip_linux_64</id>
+                        <id>zip_linux_64_no_ffmpeg</id>
                         <phase>package</phase>
                         <goals>
                             <goal>single</goal>
@@ -182,13 +182,15 @@
                         <configuration>
                             <appendAssemblyId>false</appendAssemblyId>
                             <descriptors>
-                                <descriptor>src/main/for_build/assembly_plugin_descriptors/zip_linux_64.xml</descriptor>
+                                <descriptor>
+                                    src/main/for_build/assembly_plugin_descriptors/zip_linux_64_no_ffmpeg.xml
+                                </descriptor>
                             </descriptors>
-                            <finalName>${project.artifactId}_${project.version}_build_linux_64</finalName>
+                            <finalName>${project.artifactId}_${project.version}_build_linux_64_no_ffmpeg</finalName>
                         </configuration>
                     </execution>
                     <execution>
-                        <id>zip_win_64</id>
+                        <id>zip_linux_64_with_ffmpeg</id>
                         <phase>package</phase>
                         <goals>
                             <goal>single</goal>
@@ -196,9 +198,43 @@
                         <configuration>
                             <appendAssemblyId>false</appendAssemblyId>
                             <descriptors>
-                                <descriptor>src/main/for_build/assembly_plugin_descriptors/zip_win_64.xml</descriptor>
+                                <descriptor>
+                                    src/main/for_build/assembly_plugin_descriptors/zip_linux_64_with_ffmpeg.xml
+                                </descriptor>
                             </descriptors>
-                            <finalName>${project.artifactId}_${project.version}_build_win_64</finalName>
+                            <finalName>${project.artifactId}_${project.version}_build_linux_64_with_ffmpeg</finalName>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>zip_win_64_no_ffmpeg</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <descriptors>
+                                <descriptor>
+                                    src/main/for_build/assembly_plugin_descriptors/zip_win_64_no_ffmpeg.xml
+                                </descriptor>
+                            </descriptors>
+                            <finalName>${project.artifactId}_${project.version}_build_win_64_no_ffmpeg</finalName>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>zip_win_64_with_ffmpeg</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <descriptors>
+                                <descriptor>
+                                    src/main/for_build/assembly_plugin_descriptors/zip_win_64_with_ffmpeg.xml
+                                </descriptor>
+                            </descriptors>
+                            <finalName>${project.artifactId}_${project.version}_build_win_64_with_ffmpeg</finalName>
                         </configuration>
                     </execution>
                 </executions>
