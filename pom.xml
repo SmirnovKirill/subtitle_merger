@@ -181,6 +181,7 @@
                         </goals>
                         <configuration>
                             <appendAssemblyId>false</appendAssemblyId>
+                            <tarLongFileMode>posix</tarLongFileMode>
                             <descriptors>
                                 <descriptor>
                                     src/main/for_build/assembly_plugin_descriptors/zip_linux_64_no_ffmpeg.xml
@@ -197,6 +198,7 @@
                         </goals>
                         <configuration>
                             <appendAssemblyId>false</appendAssemblyId>
+                            <tarLongFileMode>posix</tarLongFileMode>
                             <descriptors>
                                 <descriptor>
                                     src/main/for_build/assembly_plugin_descriptors/zip_linux_64_with_ffmpeg.xml
@@ -213,6 +215,7 @@
                         </goals>
                         <configuration>
                             <appendAssemblyId>false</appendAssemblyId>
+                            <tarLongFileMode>posix</tarLongFileMode>
                             <descriptors>
                                 <descriptor>
                                     src/main/for_build/assembly_plugin_descriptors/zip_win_64_no_ffmpeg.xml
@@ -229,6 +232,7 @@
                         </goals>
                         <configuration>
                             <appendAssemblyId>false</appendAssemblyId>
+                            <tarLongFileMode>posix</tarLongFileMode>
                             <descriptors>
                                 <descriptor>
                                     src/main/for_build/assembly_plugin_descriptors/zip_win_64_with_ffmpeg.xml
