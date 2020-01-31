@@ -8,6 +8,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import org.joda.time.LocalDateTime;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Getter
@@ -46,6 +47,8 @@ public class GuiFileInfo {
 
     private List<GuiSubtitleStream> subtitleStreams;
 
+    private List<GuiExternalSubtitleFile> externalSubtitleFiles;
+
     public GuiFileInfo(
             String pathToDisplay,
             String fullPath,
@@ -74,6 +77,10 @@ public class GuiFileInfo {
         this.subtitleToHideCount = new SimpleIntegerProperty(subtitleToHideCount);
         this.someSubtitlesHidden = new SimpleBooleanProperty(someSubtitlesHidden);
         this.subtitleStreams = subtitleStreams;
+        this.externalSubtitleFiles = Arrays.asList(
+                new GuiExternalSubtitleFile(),
+                new GuiExternalSubtitleFile()
+        );
     }
 
     public boolean getErrorBorder() {

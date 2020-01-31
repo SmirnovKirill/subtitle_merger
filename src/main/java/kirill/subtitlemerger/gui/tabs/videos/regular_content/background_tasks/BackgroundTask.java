@@ -5,6 +5,7 @@ import javafx.event.Event;
 import javafx.scene.control.ProgressIndicator;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiExternalSubtitleFile;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.logic.LogicConstants;
@@ -21,6 +22,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @CommonsLog
@@ -174,6 +176,7 @@ public abstract class BackgroundTask<T> extends Task<T> {
                 subtitleStreams
         );
 
+        //todo refactor ugly
         for (GuiSubtitleStream stream : result.getSubtitleStreams()) {
             stream.selectedAsUpperProperty().addListener((observableValue, oldValue, newValue) -> {
                 if (!Boolean.TRUE.equals(newValue)) {
@@ -187,6 +190,9 @@ public abstract class BackgroundTask<T> extends Task<T> {
                         currentStream.setSelectedAsUpper(false);
                     }
                 }
+                for (GuiExternalSubtitleFile externalSubtitleFile : result.getExternalSubtitleFiles()) {
+                    externalSubtitleFile.setSelectedAsUpper(false);
+                }
             });
 
             stream.selectedAsLowerProperty().addListener((observableValue, oldValue, newValue) -> {
@@ -199,6 +205,47 @@ public abstract class BackgroundTask<T> extends Task<T> {
                         currentStream.setSelectedAsUpper(false);
                     } else {
                         currentStream.setSelectedAsLower(false);
+                    }
+                }
+                for (GuiExternalSubtitleFile externalSubtitleFile : result.getExternalSubtitleFiles()) {
+                    externalSubtitleFile.setSelectedAsLower(false);
+                }
+            });
+        }
+
+        for (GuiExternalSubtitleFile externalSubtitleFile : result.getExternalSubtitleFiles()) {
+            externalSubtitleFile.selectedAsUpperProperty().addListener((observableValue, oldValue, newValue) -> {
+                if (!Boolean.TRUE.equals(newValue)) {
+                    return;
+                }
+
+                for (GuiSubtitleStream currentStream : result.getSubtitleStreams()) {
+                    currentStream.setSelectedAsUpper(false);
+                }
+
+                for (GuiExternalSubtitleFile currentSubtitleFile : result.getExternalSubtitleFiles()) {
+                    if (Objects.equals(currentSubtitleFile.getFileName(), externalSubtitleFile.getFileName())) {
+                        currentSubtitleFile.setSelectedAsLower(false);
+                    } else {
+                        currentSubtitleFile.setSelectedAsUpper(false);
+                    }
+                }
+            });
+
+            externalSubtitleFile.selectedAsLowerProperty().addListener((observableValue, oldValue, newValue) -> {
+                if (!Boolean.TRUE.equals(newValue)) {
+                    return;
+                }
+
+                for (GuiSubtitleStream currentStream : result.getSubtitleStreams()) {
+                    currentStream.setSelectedAsLower(false);
+                }
+
+                for (GuiExternalSubtitleFile currentSubtitleFile : result.getExternalSubtitleFiles()) {
+                    if (Objects.equals(currentSubtitleFile.getFileName(), externalSubtitleFile.getFileName())) {
+                        currentSubtitleFile.setSelectedAsUpper(false);
+                    } else {
+                        currentSubtitleFile.setSelectedAsLower(false);
                     }
                 }
             });
