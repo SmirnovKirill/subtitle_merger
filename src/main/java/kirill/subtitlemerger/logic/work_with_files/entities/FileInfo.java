@@ -5,6 +5,7 @@ import lombok.Getter;
 import org.joda.time.LocalDateTime;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 @AllArgsConstructor
@@ -27,6 +28,8 @@ class FileInfo {
 
     private List<SubtitleStream> subtitleStreams;
 
+    private List<ExternalSubtitleFile> externalSubtitleFiles;
+
     public FileInfo(
             File file,
             UnavailabilityReason unavailabilityReason,
@@ -39,6 +42,7 @@ class FileInfo {
         this.unavailabilityReason = unavailabilityReason;
         this.videoContainer = videoContainer;
         this.subtitleStreams = subtitleStreams;
+        this.externalSubtitleFiles = new ArrayList<>();
     }
 
     @AllArgsConstructor

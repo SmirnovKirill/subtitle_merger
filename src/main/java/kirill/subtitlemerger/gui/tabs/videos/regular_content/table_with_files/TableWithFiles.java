@@ -14,28 +14,15 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
-import javafx.stage.FileChooser;
-import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiConstants;
-import kirill.subtitlemerger.gui.GuiContext;
-import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.GuiUtils;
-import kirill.subtitlemerger.gui.tabs.subtitle_files.SubtitleFilesTabController;
-import kirill.subtitlemerger.logic.core.Parser;
-import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import lombok.AllArgsConstructor;
 import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Optional;
 
 @CommonsLog
 public class TableWithFiles extends TableView<GuiFileInfo> {
@@ -49,16 +36,16 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
     private SingleFileSubtitleSizeLoader singleSizeLoader;
 
+    private AddExternalSubtitleFileHandler addExternalSubtitleFileHandler;
+
+    private RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler;
+
     private BooleanProperty allSelected;
 
     private LongProperty selected;
 
     @Setter
     private int allAvailableCount;
-
-    private Stage stage;
-
-    private GuiContext context;
 
     public TableWithFiles() {
         super();
@@ -111,13 +98,13 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
     public void initialize(
             AllFileSubtitleSizesLoader allSizesLoader,
             SingleFileSubtitleSizeLoader singleSizeLoader,
-            Stage stage,
-            GuiContext context
+            AddExternalSubtitleFileHandler addExternalSubtitleFileHandler,
+            RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler
     ) {
         this.allSizesLoader = allSizesLoader;
         this.singleSizeLoader = singleSizeLoader;
-        this.stage = stage;
-        this.context = context;
+        this.addExternalSubtitleFileHandler = addExternalSubtitleFileHandler;
+        this.removeExternalSubtitleFileHandler = removeExternalSubtitleFileHandler;
 
         TableColumn<GuiFileInfo, ?> selectedColumn = getColumns().get(0);
         CheckBox selectAllCheckBox = new CheckBox();
@@ -338,11 +325,11 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             imageView.setFitHeight(imageView.getFitWidth());
             removeButton.setGraphic(imageView);
 
+            //todo remove awful
+            int index = externalSubtitleFileIndex;
+
             removeButton.setOnAction(event -> {
-                externalSubtitleFile.setFileName(null);
-                externalSubtitleFile.setSize(-1);
-                externalSubtitleFile.setSelectedAsUpper(false);
-                externalSubtitleFile.setSelectedAsLower(false);
+                removeExternalSubtitleFileHandler.buttonClicked(index, fileInfo);
             });
 
             fileNameAndRemove.getChildren().addAll(fileName, new Region(), removeButton);
@@ -397,7 +384,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         imageView.setFitWidth(8);
         imageView.setFitHeight(imageView.getFitWidth());
         button.setGraphic(imageView);
-        button.setOnAction((event -> addFileButtonClicked(fileInfo)));
+        button.setOnAction((event -> addExternalSubtitleFileHandler.buttonClicked(fileInfo)));
 
         result.addRow(
                 1 + fileInfo.getExternalSubtitleFiles().size() + fileInfo.getSubtitleStreams().size(),
@@ -457,70 +444,6 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         return result;
     }
 
-    private void addFileButtonClicked(GuiFileInfo fileInfo) {
-        File file = getFile(fileInfo, stage, context.getSettings()).orElse(null);
-        if (file == null) {
-            return;
-        }
-
-        fileInfo.setError(null);
-        fileInfo.setErrorBorder(false);
-        try {
-            context.getSettings().saveLastDirectoryWithExternalSubtitles(file.getParent());
-        } catch (GuiSettings.ConfigException e) {
-            log.error(
-                    "failed to save last directory , file " + file.getAbsolutePath() + ": "
-                            + ExceptionUtils.getStackTrace(e)
-            );
-        }
-
-        if (isDuplicate(file)) {
-            fileInfo.setError("This file is already added");
-            fileInfo.setErrorBorder(true);
-        } else {
-            if (file.length() / 1024 / 1024 > GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES) {
-                return Optional.of(new SubtitleFilesTabController.InputFileInfo(file, null, SubtitleFilesTabController.IncorrectInputFileReason.FILE_IS_TOO_BIG));
-            }
-
-            try {
-                Subtitles subtitles = Parser.fromSubRipText(
-                        FileUtils.readFileToString(file, StandardCharsets.UTF_8),
-                        "external",
-                        null
-                );
-
-                return Optional.of(new SubtitleFilesTabController.InputFileInfo(file, subtitles, null));
-            } catch (IOException e) {
-                return Optional.of(new SubtitleFilesTabController.InputFileInfo(file, null, SubtitleFilesTabController.IncorrectInputFileReason.CAN_NOT_READ_FILE));
-            } catch (Parser.IncorrectFormatException e) {
-                return Optional.of(
-                        new SubtitleFilesTabController.InputFileInfo(file, null, SubtitleFilesTabController.IncorrectInputFileReason.INCORRECT_SUBTITLE_FORMAT)
-                );
-            }
-        }
-    }
-
-    private static Optional<File> getFile(GuiFileInfo fileInfo, Stage stage, GuiSettings settings) {
-        FileChooser fileChooser = new FileChooser();
-
-        fileChooser.setTitle("Please choose the file with the subtitles");
-
-        File initialDirectory = settings.getLastDirectoryWithExternalSubtitles();
-        if (initialDirectory == null) {
-            File directoryWithFile = new File(fileInfo.getFullPath()).getParentFile();
-            if (directoryWithFile != null && directoryWithFile.exists()) {
-                initialDirectory = directoryWithFile;
-            }
-        }
-
-        fileChooser.setInitialDirectory(initialDirectory);
-        fileChooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("subrip files (*.srt)", "*.srt")
-        );
-
-       return Optional.ofNullable(fileChooser.showOpenDialog(stage));
-    }
-
     public void setAllSelected(boolean allSelected) {
         this.allSelected.set(allSelected);
     }
@@ -545,6 +468,16 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
     @FunctionalInterface
     public interface SingleFileSubtitleSizeLoader {
         void load(GuiFileInfo guiFileInfo, int ffmpegIndex);
+    }
+
+    @FunctionalInterface
+    public interface AddExternalSubtitleFileHandler {
+        void buttonClicked(GuiFileInfo guiFileInfo);
+    }
+
+    @FunctionalInterface
+    public interface RemoveExternalSubtitleFileHandler {
+        void buttonClicked(int index, GuiFileInfo guiFileInfo);
     }
 
     @AllArgsConstructor

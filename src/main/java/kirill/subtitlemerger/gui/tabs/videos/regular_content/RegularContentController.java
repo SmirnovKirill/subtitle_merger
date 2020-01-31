@@ -13,6 +13,7 @@ import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.GuiUtils;
@@ -21,19 +22,26 @@ import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.lo
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.load_subtitles.LoadSingleFileAllSubtitlesTask;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.load_subtitles.LoadSingleSubtitleTask;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.load_subtitles.LoadSubtitlesTask;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiExternalSubtitleFile;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles;
+import kirill.subtitlemerger.logic.core.Parser;
+import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.work_with_files.SubtitleInjector;
+import kirill.subtitlemerger.logic.work_with_files.entities.ExternalSubtitleFile;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -54,7 +62,7 @@ public class RegularContentController {
 
     private Stage stage;
 
-    private GuiContext guiContext;
+    private GuiContext context;
 
     @FXML
     private Pane pane;
@@ -150,7 +158,7 @@ public class RegularContentController {
 
     public void initialize(Stage stage, GuiContext guiContext) {
         this.stage = stage;
-        this.guiContext = guiContext;
+        this.context = guiContext;
         saveDefaultSortSettingsIfNotSet(guiContext.getSettings());
         bindSelectedForMergeText();
         this.sortByGroup = new ToggleGroup();
@@ -158,8 +166,8 @@ public class RegularContentController {
         this.tableWithFiles.initialize(
                 this::loadAllFileSubtitleSizes,
                 this::loadSingleFileSubtitleSize,
-                stage,
-                guiContext
+                this::addExternalSubtitleFileClicked,
+                this::removeExternalSubtitleFileClicked
         );
         this.tableWithFiles.setContextMenu(
                 generateContextMenu(
@@ -241,8 +249,8 @@ public class RegularContentController {
         AutoSelectSubtitlesTask task = new AutoSelectSubtitlesTask(
                 filesInfo,
                 tableWithFiles.getItems(),
-                guiContext.getFfmpeg(),
-                guiContext.getSettings(),
+                context.getFfmpeg(),
+                context.getSettings(),
                 cancelTaskPaneVisible
         );
         task.setOnFinished(() -> {
@@ -322,7 +330,7 @@ public class RegularContentController {
                 new LoadSeveralFilesAllSubtitlesTask(
                         filesInfo,
                         tableWithFiles.getItems(),
-                        guiContext.getFfmpeg(),
+                        context.getFfmpeg(),
                         cancelTaskPaneVisible
                 )
         );
@@ -425,9 +433,9 @@ public class RegularContentController {
         SubtitleInjector.mergeAndInjectSubtitlesToFile(
                 upperSubtitles.getSubtitles(),
                 lowerSubtitles.getSubtitles(),
-                guiContext.getSettings().isMarkMergedStreamAsDefault(),
+                context.getSettings().isMarkMergedStreamAsDefault(),
                 fileInfo,
-                guiContext.getFfmpeg()
+                context.getFfmpeg()
         );
     }
 
@@ -437,7 +445,7 @@ public class RegularContentController {
                         findMatchingFileInfo(guiFileInfo, filesInfo),
                         guiFileInfo,
                         tableWithFiles.getItems(),
-                        guiContext.getFfmpeg(),
+                        context.getFfmpeg(),
                         cancelTaskPaneVisible
                 )
         );
@@ -450,10 +458,123 @@ public class RegularContentController {
                         findMatchingFileInfo(guiFileInfo, filesInfo),
                         guiFileInfo,
                         tableWithFiles.getItems(),
-                        guiContext.getFfmpeg(),
+                        context.getFfmpeg(),
                         cancelTaskPaneVisible
                 )
         );
+    }
+
+    private void addExternalSubtitleFileClicked(GuiFileInfo guiFileInfo) {
+        File file = getFile(guiFileInfo, stage, context.getSettings()).orElse(null);
+        if (file == null) {
+            return;
+        }
+
+        try {
+            context.getSettings().saveLastDirectoryWithExternalSubtitles(file.getParent());
+        } catch (GuiSettings.ConfigException e) {
+            log.error(
+                    "failed to save last directory , file " + file.getAbsolutePath() + ": "
+                            + ExceptionUtils.getStackTrace(e)
+            );
+        }
+
+        FileInfo fileInfo = findMatchingFileInfo(guiFileInfo, filesInfo);
+
+        if (isDuplicate(file, fileInfo)) {
+            guiFileInfo.setError("This file is already added");
+            guiFileInfo.setErrorBorder(true);
+            tableWithFiles.refresh();
+            return;
+        }
+
+        if (file.length() / 1024 / 1024 > GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES) {
+            guiFileInfo.setError("File is too big (>" + GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)");
+            guiFileInfo.setErrorBorder(true);
+            tableWithFiles.refresh();
+            return;
+        }
+
+        try {
+            Subtitles subtitles = Parser.fromSubRipText(
+                    FileUtils.readFileToString(file, StandardCharsets.UTF_8),
+                    "external",
+                    null
+            );
+
+            guiFileInfo.setError(null);
+            guiFileInfo.setErrorBorder(false);
+
+            GuiExternalSubtitleFile guiExternalSubtitleFile;
+            if (fileInfo.getExternalSubtitleFiles().size() == 0) {
+                guiExternalSubtitleFile = guiFileInfo.getExternalSubtitleFiles().get(0);
+            } else if (fileInfo.getExternalSubtitleFiles().size() == 1) {
+                guiExternalSubtitleFile = guiFileInfo.getExternalSubtitleFiles().get(1);
+            } else {
+                throw new IllegalStateException();
+            }
+
+            int subtitleSize = SubtitleStream.calculateSubtitleSize(subtitles);
+
+            guiExternalSubtitleFile.setFileName(file.getName());
+            guiExternalSubtitleFile.setSize(subtitleSize);
+
+            fileInfo.getExternalSubtitleFiles().add(new ExternalSubtitleFile(file, subtitles, subtitleSize));
+        } catch (IOException e) {
+            guiFileInfo.setError("Can't read the file");
+            guiFileInfo.setErrorBorder(true);
+        } catch (Parser.IncorrectFormatException e) {
+            guiFileInfo.setError("Incorrect subtitle format");
+            guiFileInfo.setErrorBorder(true);
+        }
+
+        tableWithFiles.refresh();
+    }
+
+    private static Optional<File> getFile(GuiFileInfo fileInfo, Stage stage, GuiSettings settings) {
+        FileChooser fileChooser = new FileChooser();
+
+        fileChooser.setTitle("Please choose the file with the subtitles");
+
+        File initialDirectory = settings.getLastDirectoryWithExternalSubtitles();
+        if (initialDirectory == null) {
+            File directoryWithFile = new File(fileInfo.getFullPath()).getParentFile();
+            if (directoryWithFile != null && directoryWithFile.exists()) {
+                initialDirectory = directoryWithFile;
+            }
+        }
+
+        fileChooser.setInitialDirectory(initialDirectory);
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("subrip files (*.srt)", "*.srt")
+        );
+
+        return Optional.ofNullable(fileChooser.showOpenDialog(stage));
+    }
+
+    private boolean isDuplicate(File file, FileInfo fileInfo) {
+        for (ExternalSubtitleFile externalSubtitleFile : fileInfo.getExternalSubtitleFiles()) {
+            if (Objects.equals(file, externalSubtitleFile.getFile())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void removeExternalSubtitleFileClicked(int index, GuiFileInfo guiFileInfo) {
+        FileInfo fileInfo = findMatchingFileInfo(guiFileInfo, filesInfo);
+        fileInfo.getExternalSubtitleFiles().remove(index);
+
+        guiFileInfo.setError(null);
+        guiFileInfo.setErrorBorder(false);
+
+        guiFileInfo.getExternalSubtitleFiles().get(index).setFileName(null);
+        guiFileInfo.getExternalSubtitleFiles().get(index).setSize(-1);
+        guiFileInfo.getExternalSubtitleFiles().get(index).setSelectedAsUpper(false);
+        guiFileInfo.getExternalSubtitleFiles().get(index).setSelectedAsLower(false);
+
+        tableWithFiles.refresh();
     }
 
     private void sortByChanged(Observable observable) {
@@ -464,13 +585,13 @@ public class RegularContentController {
         try {
             switch (radioMenuItem.getText()) {
                 case SORT_BY_NAME_TEXT:
-                    guiContext.getSettings().saveSortBy(GuiSettings.SortBy.NAME.toString());
+                    context.getSettings().saveSortBy(GuiSettings.SortBy.NAME.toString());
                     break;
                 case SORT_BY_MODIFICATION_TIME_TEXT:
-                    guiContext.getSettings().saveSortBy(GuiSettings.SortBy.MODIFICATION_TIME.toString());
+                    context.getSettings().saveSortBy(GuiSettings.SortBy.MODIFICATION_TIME.toString());
                     break;
                 case SORT_BY_SIZE_TEXT:
-                    guiContext.getSettings().saveSortBy(GuiSettings.SortBy.SIZE.toString());
+                    context.getSettings().saveSortBy(GuiSettings.SortBy.SIZE.toString());
                     break;
                 default:
                     throw new IllegalStateException();
@@ -482,8 +603,8 @@ public class RegularContentController {
         SortOrShowHideUnavailableTask task = new SortOrShowHideUnavailableTask(
                 allGuiFilesInfo,
                 hideUnavailableCheckbox.isSelected(),
-                guiContext.getSettings().getSortBy(),
-                guiContext.getSettings().getSortDirection()
+                context.getSettings().getSortBy(),
+                context.getSettings().getSortDirection()
         );
 
         task.setOnSucceeded(e -> {
@@ -541,10 +662,10 @@ public class RegularContentController {
         try {
             switch (radioMenuItem.getText()) {
                 case SORT_ASCENDING_TEXT:
-                    guiContext.getSettings().saveSortDirection(GuiSettings.SortDirection.ASCENDING.toString());
+                    context.getSettings().saveSortDirection(GuiSettings.SortDirection.ASCENDING.toString());
                     break;
                 case SORT_DESCENDING_TEXT:
-                    guiContext.getSettings().saveSortDirection(GuiSettings.SortDirection.DESCENDING.toString());
+                    context.getSettings().saveSortDirection(GuiSettings.SortDirection.DESCENDING.toString());
                     break;
                 default:
                     throw new IllegalStateException();
@@ -556,8 +677,8 @@ public class RegularContentController {
         SortOrShowHideUnavailableTask task = new SortOrShowHideUnavailableTask(
                 allGuiFilesInfo,
                 hideUnavailableCheckbox.isSelected(),
-                guiContext.getSettings().getSortBy(),
-                guiContext.getSettings().getSortDirection()
+                context.getSettings().getSortBy(),
+                context.getSettings().getSortDirection()
         );
 
         task.setOnSucceeded(e -> {
@@ -671,15 +792,15 @@ public class RegularContentController {
     private void separateFilesButtonClicked() {
         clearResult();
 
-        List<File> files = getFiles(stage, guiContext.getSettings());
+        List<File> files = getFiles(stage, context.getSettings());
         if (CollectionUtils.isEmpty(files)) {
             return;
         }
 
-        guiContext.setWorkWithVideosInProgress(true);
+        context.setWorkWithVideosInProgress(true);
 
         try {
-            guiContext.getSettings().saveLastDirectoryWithVideos(files.get(0).getParent());
+            context.getSettings().saveLastDirectoryWithVideos(files.get(0).getParent());
         } catch (GuiSettings.ConfigException e) {
             log.error("failed to save last directory with videos, shouldn't happen: " + getStackTrace(e));
         }
@@ -688,9 +809,9 @@ public class RegularContentController {
 
         LoadSeparateFilesTask task = new LoadSeparateFilesTask(
                 files,
-                guiContext.getSettings().getSortBy(),
-                guiContext.getSettings().getSortDirection(),
-                guiContext
+                context.getSettings().getSortBy(),
+                context.getSettings().getSortDirection(),
+                context
         );
 
         task.setOnSucceeded(e -> {
@@ -727,15 +848,15 @@ public class RegularContentController {
     private void directoryButtonClicked() {
         clearResult();
 
-        File directory = getDirectory(stage, guiContext.getSettings()).orElse(null);
+        File directory = getDirectory(stage, context.getSettings()).orElse(null);
         if (directory == null) {
             return;
         }
 
-        guiContext.setWorkWithVideosInProgress(true);
+        context.setWorkWithVideosInProgress(true);
 
         try {
-            guiContext.getSettings().saveLastDirectoryWithVideos(directory.getAbsolutePath());
+            context.getSettings().saveLastDirectoryWithVideos(directory.getAbsolutePath());
         } catch (GuiSettings.ConfigException e) {
             log.error("failed to save last directory with videos, that shouldn't happen: " + getStackTrace(e));
         }
@@ -744,9 +865,9 @@ public class RegularContentController {
 
         LoadDirectoryFilesTask task = new LoadDirectoryFilesTask(
                 this.directory,
-                guiContext.getSettings().getSortBy(),
-                guiContext.getSettings().getSortDirection(),
-                guiContext
+                context.getSettings().getSortBy(),
+                context.getSettings().getSortDirection(),
+                context
         );
 
         task.setOnSucceeded(e -> {
@@ -784,7 +905,7 @@ public class RegularContentController {
         tableWithFiles.setItems(FXCollections.emptyObservableList());
         tableWithFiles.setAllAvailableCount(0);
         tableWithFiles.setAllSelected(false);
-        guiContext.setWorkWithVideosInProgress(false);
+        context.setWorkWithVideosInProgress(false);
 
         choicePane.setVisible(true);
         resultPane.setVisible(false);
@@ -796,9 +917,9 @@ public class RegularContentController {
 
         LoadDirectoryFilesTask task = new LoadDirectoryFilesTask(
                 this.directory,
-                guiContext.getSettings().getSortBy(),
-                guiContext.getSettings().getSortDirection(),
-                guiContext
+                context.getSettings().getSortBy(),
+                context.getSettings().getSortDirection(),
+                context
         );
 
         task.setOnSucceeded(e -> {
@@ -824,8 +945,8 @@ public class RegularContentController {
         SortOrShowHideUnavailableTask task = new SortOrShowHideUnavailableTask(
                 allGuiFilesInfo,
                 hideUnavailableCheckbox.isSelected(),
-                guiContext.getSettings().getSortBy(),
-                guiContext.getSettings().getSortDirection()
+                context.getSettings().getSortBy(),
+                context.getSettings().getSortDirection()
         );
 
         task.setOnSucceeded(e -> {
@@ -880,13 +1001,13 @@ public class RegularContentController {
     private void addButtonClicked() {
         clearResult();
 
-        List<File> filesToAdd = getFiles(stage, guiContext.getSettings());
+        List<File> filesToAdd = getFiles(stage, context.getSettings());
         if (CollectionUtils.isEmpty(filesToAdd)) {
             return;
         }
 
         try {
-            guiContext.getSettings().saveLastDirectoryWithVideos(filesToAdd.get(0).getParent());
+            context.getSettings().saveLastDirectoryWithVideos(filesToAdd.get(0).getParent());
         } catch (GuiSettings.ConfigException e) {
             log.error("failed to save last directory with videos, that shouldn't happen: " + getStackTrace(e));
         }
@@ -896,9 +1017,9 @@ public class RegularContentController {
                 filesToAdd,
                 allGuiFilesInfo,
                 hideUnavailableCheckbox.isSelected(),
-                guiContext.getSettings().getSortBy(),
-                guiContext.getSettings().getSortDirection(),
-                guiContext
+                context.getSettings().getSortBy(),
+                context.getSettings().getSortDirection(),
+                context
         );
 
         task.setOnSucceeded(e -> {
