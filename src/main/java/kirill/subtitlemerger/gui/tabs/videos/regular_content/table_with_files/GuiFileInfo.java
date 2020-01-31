@@ -1,9 +1,6 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files;
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import org.joda.time.LocalDateTime;
@@ -34,7 +31,8 @@ public class GuiFileInfo {
 
     private String unavailabilityReason;
 
-    private String error;
+    @Getter(AccessLevel.NONE)
+    private StringProperty error;
 
     @Getter(AccessLevel.NONE)
     private BooleanProperty haveSubtitleSizesToLoad;
@@ -72,7 +70,7 @@ public class GuiFileInfo {
         this.added = added;
         this.size = size;
         this.unavailabilityReason = unavailabilityReason;
-        this.error = error;
+        this.error = new SimpleStringProperty(error);
         this.haveSubtitleSizesToLoad = new SimpleBooleanProperty(haveSubtitleSizesToLoad);
         this.subtitleToHideCount = new SimpleIntegerProperty(subtitleToHideCount);
         this.someSubtitlesHidden = new SimpleBooleanProperty(someSubtitlesHidden);
@@ -93,6 +91,18 @@ public class GuiFileInfo {
 
     public void setErrorBorder(boolean errorBorder) {
         this.errorBorder.set(errorBorder);
+    }
+
+    public String getError() {
+        return error.get();
+    }
+
+    public StringProperty errorProperty() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error.set(error);
     }
 
     public boolean isSelected() {

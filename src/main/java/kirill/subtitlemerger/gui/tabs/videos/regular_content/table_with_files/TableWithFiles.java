@@ -389,6 +389,20 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         GridPane.setColumnSpan(button, 3);
         GridPane.setMargin(button, new Insets(5, 0, 0, 0));
 
+        Label errorLabel = new Label();
+        errorLabel.getStyleClass().add("label-error");
+        errorLabel.textProperty().bind(fileInfo.errorProperty());
+        errorLabel.visibleProperty().bind(Bindings.isNotEmpty(fileInfo.errorProperty()));
+        errorLabel.managedProperty().bind(Bindings.isNotEmpty(fileInfo.errorProperty()));
+
+        result.addRow(
+                2 + fileInfo.getExternalSubtitleFiles().size() + fileInfo.getSubtitleStreams().size(),
+                errorLabel
+        );
+
+        GridPane.setColumnSpan(button, 3);
+        GridPane.setMargin(errorLabel, new Insets(10, 0, 0, 0));
+
         return result;
     }
 
