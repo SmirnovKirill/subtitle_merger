@@ -166,6 +166,16 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
     }
 
     private Pane generateSubtitlesCellPane(GuiFileInfo fileInfo) {
+        if (!StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
+            HBox result = new HBox();
+            result.setAlignment(Pos.CENTER_LEFT);
+
+            Label reason = new Label(StringUtils.capitalize(fileInfo.getUnavailabilityReason()));
+            result.getChildren().add(reason);
+
+            return result;
+        }
+
         GridPane result = new GridPane();
 
         result.setGridLinesVisible(GuiConstants.DEBUG);
