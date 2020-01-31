@@ -1,6 +1,7 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files;
 
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.LongProperty;
@@ -21,6 +22,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
+import java.util.Random;
 
 public class TableWithFiles extends TableView<GuiFileInfo> {
     private static final String ROW_UNAVAILABLE_CLASS = "row-unavailable";
@@ -167,15 +169,15 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         result.getColumnConstraints().add(columnConstraints);
 
         columnConstraints = new ColumnConstraints();
-        columnConstraints.setHgrow(Priority.NEVER);
+        columnConstraints.setMinWidth(Region.USE_PREF_SIZE);
         result.getColumnConstraints().add(columnConstraints);
 
         columnConstraints = new ColumnConstraints();
-        columnConstraints.setHgrow(Priority.NEVER);
+        columnConstraints.setMinWidth(Region.USE_PREF_SIZE);
         result.getColumnConstraints().add(columnConstraints);
 
         columnConstraints = new ColumnConstraints();
-        columnConstraints.setHgrow(Priority.NEVER);
+        columnConstraints.setMinWidth(Region.USE_PREF_SIZE);
         result.getColumnConstraints().add(columnConstraints);
 
         if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
@@ -306,7 +308,23 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
                     externalSubtitleFile.sizeProperty()
             );
 
-            fileNameAndRemove.getChildren().addAll(fileName, new Region());
+            Button removeButton = new Button();
+            removeButton.getStyleClass().add("image-button");
+            Image image = new Image("/gui/icons/remove.png");
+            ImageView imageView = new ImageView(image);
+            imageView.setFitWidth(8);
+            imageView.setFitHeight(imageView.getFitWidth());
+            removeButton.setGraphic(imageView);
+
+            removeButton.setOnAction(event -> {
+                externalSubtitleFile.setFileName(null);
+                externalSubtitleFile.setSize(-1);
+                externalSubtitleFile.setSelectedAsUpper(false);
+                externalSubtitleFile.setSelectedAsLower(false);
+            });
+
+            fileNameAndRemove.getChildren().addAll(fileName, new Region(), removeButton);
+            HBox.setHgrow(fileNameAndRemove.getChildren().get(1), Priority.ALWAYS);
 
             Label sizeLabel = new Label();
             sizeLabel.textProperty().bind(sizeBinding);
@@ -345,16 +363,22 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             externalSubtitleFileIndex++;
         }
 
+        BooleanBinding allExternalFilesSelected = Bindings.isNotEmpty(fileInfo.getExternalSubtitleFiles().get(0).fileNameProperty())
+                .and(Bindings.isNotEmpty(fileInfo.getExternalSubtitleFiles().get(1).fileNameProperty()));
+
         Button button = new Button("Add subtitle file");
         button.getStyleClass().add("add-subtitle-file");
+        button.visibleProperty().bind(Bindings.not(allExternalFilesSelected));
+        button.managedProperty().bind(Bindings.not(allExternalFilesSelected));
         Image image = new Image("/gui/icons/add.png");
         ImageView imageView = new ImageView(image);
         imageView.setFitWidth(8);
         imageView.setFitHeight(imageView.getFitWidth());
         button.setGraphic(imageView);
         button.setOnAction((event -> {
-            fileInfo.getExternalSubtitleFiles().get(0).setFileName("sub.srt");
-            fileInfo.getExternalSubtitleFiles().get(0).setSize(38482);
+            int i = Math.abs(new Random().nextInt()) % 2;
+            fileInfo.getExternalSubtitleFiles().get(i).setFileName(i + "sub.srt");
+            fileInfo.getExternalSubtitleFiles().get(i).setSize(38482);
         }));
 
         result.addRow(
