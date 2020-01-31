@@ -157,7 +157,9 @@ public class RegularContentController {
         this.sortDirectionGroup = new ToggleGroup();
         this.tableWithFiles.initialize(
                 this::loadAllFileSubtitleSizes,
-                this::loadSingleFileSubtitleSize
+                this::loadSingleFileSubtitleSize,
+                stage,
+                guiContext
         );
         this.tableWithFiles.setContextMenu(
                 generateContextMenu(

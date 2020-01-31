@@ -53,6 +53,8 @@ class GuiSettings {
 
     private SortDirection sortDirection;
 
+    private File lastDirectoryWithExternalSubtitles;
+
     /**
      * Settings required for merging in videos.
      */
@@ -155,6 +157,14 @@ class GuiSettings {
             ).orElse(null);
         } catch (ConfigException e) {
             log.warn("incorrect sort direction in saved preferences: " + e.getMessage());
+        }
+
+        try {
+            lastDirectoryWithExternalSubtitles = getValidatedDirectory(
+                    preferences.get(SettingType.LAST_DIRECTORY_WITH_EXTERNAL_SUBTITLES.getSettingCode(), "")
+            ).orElse(null);
+        } catch (ConfigException e) {
+            log.warn("incorrect last directory with external subtitles in saved preferences: " + e.getMessage());
         }
 
         missingSettings = generateMissingSettings();
@@ -523,6 +533,19 @@ class GuiSettings {
         preferences.put(SettingType.SORT_DIRECTION.getSettingCode(), sortDirection.toString());
     }
 
+    public void saveLastDirectoryWithExternalSubtitles(String rawValue) throws ConfigException {
+        File directory = getValidatedDirectory(rawValue).orElse(null);
+        if (directory == null) {
+            throw new EmptyValueException();
+        }
+
+        this.lastDirectoryWithExternalSubtitles = directory;
+        preferences.put(
+                SettingType.LAST_DIRECTORY_WITH_EXTERNAL_SUBTITLES.getSettingCode(),
+                directory.getAbsolutePath()
+        );
+    }
+
     public static class ConfigException extends Exception {
         ConfigException(String message) {
             super(message);
@@ -564,7 +587,8 @@ class GuiSettings {
         MARK_MERGED_STREAM_AS_DEFAULT("mark_merged_stream_as_default"),
         LAST_DIRECTORY_WITH_VIDEOS("last_directory_with_videos"),
         SORT_BY("sort_by"),
-        SORT_DIRECTION("sort_direction");
+        SORT_DIRECTION("sort_direction"),
+        LAST_DIRECTORY_WITH_EXTERNAL_SUBTITLES("last_directory_with_external_subtitles");
 
         @Getter
         private String settingCode;
