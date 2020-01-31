@@ -13,7 +13,6 @@
 
 .label-error {
     -fx-text-fill: #e2574c;
-    -fx-font-weight: bold;
 }
 
 .hyperlink,
