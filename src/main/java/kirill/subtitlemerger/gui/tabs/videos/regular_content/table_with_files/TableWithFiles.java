@@ -203,13 +203,14 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             return result;
         }
 
-        BooleanBinding allExternalFilesSelected = Bindings.isNotEmpty(fileInfo.getExternalSubtitleFiles().get(0).fileNameProperty())
-                .and(Bindings.isNotEmpty(fileInfo.getExternalSubtitleFiles().get(1).fileNameProperty()));
-
         Button button = new Button("Add subtitle file");
         button.getStyleClass().add("add-subtitle-file");
-        button.visibleProperty().bind(Bindings.not(allExternalFilesSelected));
-        button.managedProperty().bind(Bindings.not(allExternalFilesSelected));
+
+        BooleanBinding canAddMoreFiles = Bindings.isEmpty(fileInfo.getExternalSubtitleFiles().get(0).fileNameProperty())
+                .or(Bindings.isEmpty(fileInfo.getExternalSubtitleFiles().get(1).fileNameProperty()));
+
+        button.visibleProperty().bind(canAddMoreFiles);
+        button.managedProperty().bind(canAddMoreFiles);
         Image image = new Image("/gui/icons/add.png");
         ImageView imageView = new ImageView(image);
         imageView.setFitWidth(8);
@@ -283,16 +284,19 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             GridPane.setMargin(sizeLabel, new Insets(0, 0, bottomMargin, 0));
             GridPane.setMargin(radios, new Insets(0, 0, bottomMargin, 0));
 
-            //todo refactor, ugly
-            fileNameAndRemove.visibleProperty().bind(Bindings.isNotEmpty(externalSubtitleFile.fileNameProperty()));
-            fileNameAndRemove.managedProperty().bind(Bindings.isNotEmpty(externalSubtitleFile.fileNameProperty()));
-            sizeLabel.visibleProperty().bind(Bindings.isNotEmpty(externalSubtitleFile.fileNameProperty()));
-            sizeLabel.managedProperty().bind(Bindings.isNotEmpty(externalSubtitleFile.fileNameProperty()));
-            radios.visibleProperty().bind(Bindings.isNotEmpty(externalSubtitleFile.fileNameProperty()));
-            radios.managedProperty().bind(Bindings.isNotEmpty(externalSubtitleFile.fileNameProperty()));
+            BooleanBinding externalFileUsed = Bindings.isNotEmpty(externalSubtitleFile.fileNameProperty());
+
+            fileNameAndRemove.visibleProperty().bind(externalFileUsed);
+            fileNameAndRemove.managedProperty().bind(externalFileUsed);
+            sizeLabel.visibleProperty().bind(externalFileUsed);
+            sizeLabel.managedProperty().bind(externalFileUsed);
+            radios.visibleProperty().bind(externalFileUsed);
+            radios.managedProperty().bind(externalFileUsed);
 
             externalSubtitleFileIndex++;
         }
+
+        BooleanBinding showExtra = Bindings.not(fileInfo.someSubtitlesHiddenProperty());
 
         int streamIndex = 0;
         for (GuiSubtitleStream stream : fileInfo.getSubtitleStreams()) {
@@ -321,8 +325,10 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
             errorImageLabel.setTooltip(GuiUtils.generateTooltip(stream.failedToLoadReasonProperty()));
 
-            errorImageLabel.visibleProperty().bind(Bindings.isNotEmpty(stream.failedToLoadReasonProperty()));
-            errorImageLabel.managedProperty().bind(Bindings.isNotEmpty(stream.failedToLoadReasonProperty()));
+            BooleanBinding failedToLoad = Bindings.isNotEmpty(stream.failedToLoadReasonProperty());
+
+            errorImageLabel.visibleProperty().bind(failedToLoad);
+            errorImageLabel.managedProperty().bind(failedToLoad);
 
             Label sizeLabel = new Label();
 
@@ -363,19 +369,20 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             int bottomMargin = 2;
 
             if (stream.isExtra()) {
-                titlePane.visibleProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()));
-                //todo refactor, ugly
-                titlePane.managedProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()));
-                sizeLabel.visibleProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()));
-                sizeLabel.managedProperty().bind(sizeLabel.visibleProperty());
-                sizePane.visibleProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()));
-                sizePane.managedProperty().bind(sizePane.visibleProperty());
-                radios.visibleProperty().bind(Bindings.not(fileInfo.someSubtitlesHiddenProperty()));
-                radios.managedProperty().bind(radios.visibleProperty());
+                titlePane.visibleProperty().bind(showExtra);
+                titlePane.managedProperty().bind(showExtra);
+                sizeLabel.visibleProperty().bind(showExtra);
+                sizeLabel.managedProperty().bind(showExtra);
+                sizePane.visibleProperty().bind(showExtra);
+                sizePane.managedProperty().bind(showExtra);
+                radios.visibleProperty().bind(showExtra);
+                radios.managedProperty().bind(showExtra);
             }
 
-            getSizeLink.visibleProperty().bind(stream.sizeProperty().isEqualTo(-1));
-            getSizeLink.managedProperty().bind(stream.sizeProperty().isEqualTo(-1));
+            BooleanBinding sizeUnknown = stream.sizeProperty().isEqualTo(-1);
+
+            getSizeLink.visibleProperty().bind(sizeUnknown);
+            getSizeLink.managedProperty().bind(sizeUnknown);
 
             GridPane.setMargin(titlePane, new Insets(0, 0, bottomMargin, 0));
             GridPane.setMargin(sizePane, new Insets(0, 0, bottomMargin, 0));
@@ -391,6 +398,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
         Hyperlink getAllSizes = new Hyperlink("get all sizes");
         getAllSizes.setOnAction(event -> allSizesLoader.load(fileInfo));
+
         getAllSizes.visibleProperty().bind(fileInfo.haveSubtitleSizesToLoadProperty());
         getAllSizes.managedProperty().bind(fileInfo.haveSubtitleSizesToLoadProperty());
 
@@ -407,8 +415,11 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         Label errorLabel = new Label();
         errorLabel.getStyleClass().add("label-error");
         errorLabel.textProperty().bind(fileInfo.errorProperty());
-        errorLabel.visibleProperty().bind(Bindings.isNotEmpty(fileInfo.errorProperty()));
-        errorLabel.managedProperty().bind(Bindings.isNotEmpty(fileInfo.errorProperty()));
+
+        BooleanBinding hasErrors = Bindings.isNotEmpty(fileInfo.errorProperty());
+
+        errorLabel.visibleProperty().bind(hasErrors);
+        errorLabel.managedProperty().bind(hasErrors);
 
         result.addRow(
                 2 + fileInfo.getExternalSubtitleFiles().size() + fileInfo.getSubtitleStreams().size(),
