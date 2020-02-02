@@ -282,9 +282,9 @@ public class RegularContentController {
             }
         } else if (task.getNotEnoughStreamsCount() == task.getAllFileCount()) {
             if (task.getAllFileCount() == 1) {
-                setResult(null, "Auto-selection is not possible for the file", null);
+                setResult(null, "Auto-selection is not possible (no proper subtitles to choose from) for the file", null);
             } else {
-                setResult(null, "Auto-selection is not possible for all " + task.getAllFileCount() + " files", null);
+                setResult(null, "Auto-selection is not possible (no proper subtitles to choose from) for all " + task.getAllFileCount() + " files", null);
             }
         } else if (task.getFailedCount() == task.getAllFileCount()) {
             if (task.getAllFileCount() == 1) {
@@ -507,9 +507,9 @@ public class RegularContentController {
 
             GuiExternalSubtitleFile guiExternalSubtitleFile;
             if (fileInfo.getExternalSubtitleFiles().size() == 0) {
-                guiExternalSubtitleFile = guiFileInfo.getExternalSubtitleFiles().get(0);
-            } else if (fileInfo.getExternalSubtitleFiles().size() == 1) {
                 guiExternalSubtitleFile = guiFileInfo.getExternalSubtitleFiles().get(1);
+            } else if (fileInfo.getExternalSubtitleFiles().size() == 1) {
+                guiExternalSubtitleFile = guiFileInfo.getExternalSubtitleFiles().get(0);
             } else {
                 throw new IllegalStateException();
             }
@@ -524,7 +524,7 @@ public class RegularContentController {
             guiFileInfo.setError("Can't read the file");
             guiFileInfo.setErrorBorder(true);
         } catch (Parser.IncorrectFormatException e) {
-            guiFileInfo.setError("Incorrect subtitle format");
+            guiFileInfo.setError("Can't add the file because it has incorrect format");
             guiFileInfo.setErrorBorder(true);
         }
 
@@ -564,7 +564,7 @@ public class RegularContentController {
 
     private void removeExternalSubtitleFileClicked(int index, GuiFileInfo guiFileInfo) {
         FileInfo fileInfo = findMatchingFileInfo(guiFileInfo, filesInfo);
-        fileInfo.getExternalSubtitleFiles().remove(index);
+        fileInfo.getExternalSubtitleFiles().remove(1 - index);
 
         guiFileInfo.setError(null);
         guiFileInfo.setErrorBorder(false);
