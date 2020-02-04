@@ -254,12 +254,6 @@ public class RegularContentController {
                 cancelTaskPaneVisible
         );
         task.setOnFinished(() -> {
-            /*
-             * We need to refresh the table manually because otherwise there is no way to dynamically draw the red
-             * error border.
-             */
-            tableWithFiles.refresh();
-
             showResult(task);
             stopProgress();
         });
@@ -338,12 +332,6 @@ public class RegularContentController {
 
     private void runLoadSubtitlesTask(LoadSubtitlesTask task) {
         task.setOnFinished(() -> {
-            /*
-             * We need to refresh the table manually because otherwise there is no way to dynamically draw the red
-             * error border.
-             */
-            tableWithFiles.refresh();
-
             showResult(task);
             stopProgress();
         });
@@ -484,14 +472,12 @@ public class RegularContentController {
         if (isDuplicate(file, fileInfo)) {
             guiFileInfo.setError("This file is already added");
             guiFileInfo.setErrorBorder(true);
-            tableWithFiles.refresh();
             return;
         }
 
         if (file.length() / 1024 / 1024 > GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES) {
             guiFileInfo.setError("File is too big (>" + GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)");
             guiFileInfo.setErrorBorder(true);
-            tableWithFiles.refresh();
             return;
         }
 
@@ -527,8 +513,6 @@ public class RegularContentController {
             guiFileInfo.setError("Can't add the file because it has incorrect format");
             guiFileInfo.setErrorBorder(true);
         }
-
-        tableWithFiles.refresh();
     }
 
     private static Optional<File> getFile(GuiFileInfo fileInfo, Stage stage, GuiSettings settings) {
@@ -573,12 +557,10 @@ public class RegularContentController {
         guiFileInfo.getExternalSubtitleFiles().get(index).setSize(-1);
         guiFileInfo.getExternalSubtitleFiles().get(index).setSelectedAsUpper(false);
         guiFileInfo.getExternalSubtitleFiles().get(index).setSelectedAsLower(false);
-
-        tableWithFiles.refresh();
     }
 
     private void sortByChanged(Observable observable) {
-        clearResult();
+        clearGeneralResult();
 
         RadioMenuItem radioMenuItem = (RadioMenuItem) sortByGroup.getSelectedToggle();
 
@@ -616,7 +598,7 @@ public class RegularContentController {
         GuiUtils.startTask(task);
     }
 
-    private void clearResult() {
+    private void clearGeneralResult() {
         resultLabelSuccess.setText("");
         resultLabelWarn.setText("");
         resultLabelError.setText("");
@@ -655,7 +637,7 @@ public class RegularContentController {
     }
 
     private void sortDirectionChanged(Observable observable) {
-        clearResult();
+        clearGeneralResult();
 
         RadioMenuItem radioMenuItem = (RadioMenuItem) sortDirectionGroup.getSelectedToggle();
 
@@ -790,7 +772,7 @@ public class RegularContentController {
 
     @FXML
     private void separateFilesButtonClicked() {
-        clearResult();
+        clearGeneralResult();
 
         List<File> files = getFiles(stage, context.getSettings());
         if (CollectionUtils.isEmpty(files)) {
@@ -846,7 +828,7 @@ public class RegularContentController {
 
     @FXML
     private void directoryButtonClicked() {
-        clearResult();
+        clearGeneralResult();
 
         File directory = getDirectory(stage, context.getSettings()).orElse(null);
         if (directory == null) {
@@ -913,7 +895,7 @@ public class RegularContentController {
 
     @FXML
     private void refreshButtonClicked() {
-        clearResult();
+        clearGeneralResult();
 
         LoadDirectoryFilesTask task = new LoadDirectoryFilesTask(
                 this.directory,
@@ -940,7 +922,7 @@ public class RegularContentController {
 
     @FXML
     private void hideUnavailableClicked() {
-        clearResult();
+        clearGeneralResult();
 
         SortOrShowHideUnavailableTask task = new SortOrShowHideUnavailableTask(
                 allGuiFilesInfo,
@@ -971,7 +953,7 @@ public class RegularContentController {
 
     @FXML
     private void removeButtonClicked() {
-        clearResult();
+        clearGeneralResult();
 
         List<Integer> indices = tableWithFiles.getSelectionModel().getSelectedIndices();
         if (CollectionUtils.isEmpty(indices)) {
@@ -990,6 +972,14 @@ public class RegularContentController {
             allGuiFilesInfo = task.getValue().getAllGuiFilesInfo();
             updateTableContent(task.getValue().getGuiFilesToShowInfo());
 
+            if (task.getValue().getRemovedCount() == 0) {
+                throw new IllegalStateException();
+            } else if (task.getValue().getRemovedCount() == 1) {
+                setResult("File has been removed from the list successfully", null, null);
+            } else {
+                setResult(task.getValue().getRemovedCount() + " files have been removed from the list successfully", null, null);
+            }
+
             stopProgress();
         });
 
@@ -999,7 +989,7 @@ public class RegularContentController {
 
     @FXML
     private void addButtonClicked() {
-        clearResult();
+        clearGeneralResult();
 
         List<File> filesToAdd = getFiles(stage, context.getSettings());
         if (CollectionUtils.isEmpty(filesToAdd)) {
@@ -1026,6 +1016,18 @@ public class RegularContentController {
             filesInfo = task.getValue().getFilesInfo();
             allGuiFilesInfo = task.getValue().getAllGuiFilesInfo();
             updateTableContent(task.getValue().getGuiFilesToShowInfo());
+
+            if (task.getValue().getAddedCount() == 0) {
+                if (filesToAdd.size() == 1) {
+                    setResult("File has been added already", null, null);
+                } else {
+                    setResult("All files have been added already", null, null);
+                }
+            } else if (task.getValue().getAddedCount() == 1) {
+                setResult("File has been added successfully", null, null);
+            } else {
+                setResult(task.getValue().getAddedCount() + " files have been added successfully", null, null);
+            }
 
             stopProgress();
         });

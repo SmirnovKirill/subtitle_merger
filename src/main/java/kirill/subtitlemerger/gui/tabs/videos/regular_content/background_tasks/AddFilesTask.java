@@ -68,7 +68,7 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
                 this
         );
 
-        return new Result(filesInfo, allGuiFilesInfo, guiFilesToShowInfo);
+        return new Result(filesToAddInfo.size(), filesInfo, allGuiFilesInfo, guiFilesToShowInfo);
     }
 
     private static void removeAlreadyAdded(List<FileInfo> filesToAddInfo, List<FileInfo> allFilesInfo) {
@@ -88,6 +88,8 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
     @AllArgsConstructor
     @Getter
     public static class Result {
+        private int addedCount;
+
         private List<FileInfo> filesInfo;
 
         private List<GuiFileInfo> allGuiFilesInfo;

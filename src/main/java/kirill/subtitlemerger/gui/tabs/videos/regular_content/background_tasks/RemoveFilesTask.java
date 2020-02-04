@@ -21,13 +21,13 @@ public class RemoveFilesTask extends BackgroundTask<RemoveFilesTask.Result> {
     public RemoveFilesTask(
             List<FileInfo> filesInfo,
             List<GuiFileInfo> allGuiFilesInfo,
-            List<GuiFileInfo> guiFilesToShowInfo,
+            List<GuiFileInfo> currentGuiFilesToShowInfo,
             List<Integer> selectedIndices
     ) {
         super();
         this.filesInfo = filesInfo;
         this.allGuiFilesInfo = allGuiFilesInfo;
-        this.guiFilesToShowInfo = guiFilesToShowInfo;
+        this.guiFilesToShowInfo = new ArrayList<>(currentGuiFilesToShowInfo);
         this.selectedIndices = selectedIndices;
     }
 
@@ -41,16 +41,20 @@ public class RemoveFilesTask extends BackgroundTask<RemoveFilesTask.Result> {
             selectedPaths.add(guiFilesToShowInfo.get(index).getFullPath());
         }
 
+        int originalSize = filesInfo.size();
+
         filesInfo.removeIf(fileInfo -> selectedPaths.contains(fileInfo.getFile().getAbsolutePath()));
         allGuiFilesInfo.removeIf(fileInfo -> selectedPaths.contains(fileInfo.getFullPath()));
         guiFilesToShowInfo.removeIf(fileInfo -> selectedPaths.contains(fileInfo.getFullPath()));
 
-        return new Result(filesInfo, allGuiFilesInfo, guiFilesToShowInfo);
+        return new Result(originalSize - filesInfo.size(), filesInfo, allGuiFilesInfo, guiFilesToShowInfo);
     }
 
     @AllArgsConstructor
     @Getter
     public static class Result {
+        private int removedCount;
+
         private List<FileInfo> filesInfo;
 
         private List<GuiFileInfo> allGuiFilesInfo;
