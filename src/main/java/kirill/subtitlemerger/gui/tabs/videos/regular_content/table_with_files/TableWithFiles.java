@@ -22,15 +22,9 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Arrays;
-
 @CommonsLog
 public class TableWithFiles extends TableView<GuiFileInfo> {
     private static final String ROW_UNAVAILABLE_CLASS = "row-unavailable";
-
-    private static final String ROW_ERROR_PARTIAL_BORDER_CLASS = "row-error-partial-border";
-
-    private static final String ROW_ERROR_FULL_BORDER_CLASS = "row-error-full-border";
 
     private AllFileSubtitleSizesLoader allSizesLoader;
 
@@ -69,22 +63,9 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
                     return;
                 }
 
-                getStyleClass().removeAll(
-                        Arrays.asList(
-                                ROW_UNAVAILABLE_CLASS,
-                                ROW_ERROR_PARTIAL_BORDER_CLASS,
-                                ROW_ERROR_FULL_BORDER_CLASS
-                        )
-                );
-
+                getStyleClass().remove(ROW_UNAVAILABLE_CLASS);
                 if (!StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
                     getStyleClass().add(ROW_UNAVAILABLE_CLASS);
-                } else if (fileInfo.getErrorBorder()) {
-                    if (getIndex() > 0 && getItems().get(getIndex() - 1).getErrorBorder()) {
-                        getStyleClass().add(ROW_ERROR_PARTIAL_BORDER_CLASS);
-                    } else {
-                        getStyleClass().add(ROW_ERROR_FULL_BORDER_CLASS);
-                    }
                 }
             }
         };
@@ -323,30 +304,26 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             errorImageView.setFitHeight(errorImageView.getFitWidth());
             errorImageLabel.setGraphic(errorImageView);
 
-            errorImageLabel.setTooltip(GuiUtils.generateTooltip(stream.failedToLoadReasonProperty()));
+            errorImageLabel.setTooltip(GuiUtils.generateTooltip(stream.getFailedToLoadReason()));
 
-            BooleanBinding failedToLoad = Bindings.isNotEmpty(stream.failedToLoadReasonProperty());
-
-            errorImageLabel.visibleProperty().bind(failedToLoad);
-            errorImageLabel.managedProperty().bind(failedToLoad);
+            if (!StringUtils.isBlank(stream.getFailedToLoadReason())) {
+                errorImageLabel.setVisible(false);
+                errorImageLabel.setManaged(false);
+            }
 
             Label sizeLabel = new Label();
-
-            StringBinding unknownSizeBinding = Bindings.createStringBinding(
-                    () -> "Size: ? KB ", stream.sizeProperty()
-            );
-            StringBinding knownSizeBinding = Bindings.createStringBinding(
-                    () -> "Size: " + GuiUtils.getFileSizeTextual(stream.getSize()), stream.sizeProperty()
-            );
-
-            sizeLabel.textProperty().bind(
-                    Bindings.when(stream.sizeProperty().isEqualTo(-1))
-                            .then(unknownSizeBinding)
-                            .otherwise(knownSizeBinding)
-            );
+            if (stream.getSize() == null) {
+                sizeLabel.setText("Size: ? KB ");
+            } else {
+                sizeLabel.setText("Size: " + GuiUtils.getFileSizeTextual(stream.getSize()));
+            }
 
             Hyperlink getSizeLink = new Hyperlink("get size");
             getSizeLink.setOnAction(event -> singleSizeLoader.load(fileInfo, stream.getFfmpegIndex()));
+            if (stream.getSize() != null) {
+                getSizeLink.setVisible(false);
+                getSizeLink.setManaged(false);
+            }
 
             sizePane.getChildren().addAll(sizeLabel, getSizeLink, errorImageLabel);
 
@@ -378,11 +355,6 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
                 radios.visibleProperty().bind(showExtra);
                 radios.managedProperty().bind(showExtra);
             }
-
-            BooleanBinding sizeUnknown = stream.sizeProperty().isEqualTo(-1);
-
-            getSizeLink.visibleProperty().bind(sizeUnknown);
-            getSizeLink.managedProperty().bind(sizeUnknown);
 
             GridPane.setMargin(titlePane, new Insets(0, 0, bottomMargin, 0));
             GridPane.setMargin(sizePane, new Insets(0, 0, bottomMargin, 0));

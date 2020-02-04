@@ -48,16 +48,6 @@
     -fx-opacity: 0.4;
 }
 
-.row-error-partial-border {
-    -fx-background-color: #e2574c, -fx-background;
-    -fx-background-insets: 0, 0 1 1 1;
-}
-
-.row-error-full-border {
-    -fx-background-color: #e2574c, -fx-background;
-    -fx-background-insets: 0, 1;
-}
-
 .table-view .table-row-cell .path-label {
     -fx-font-size: 1.0em;
 }

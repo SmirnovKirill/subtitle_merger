@@ -1,8 +1,10 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files;
 
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 public class GuiSubtitleStream {
@@ -15,8 +17,8 @@ public class GuiSubtitleStream {
 
     private String unavailabilityReason;
 
-    @Getter(AccessLevel.NONE)
-    private StringProperty failedToLoadReason;
+    @Setter
+    private String failedToLoadReason;
 
     private String language;
 
@@ -24,8 +26,8 @@ public class GuiSubtitleStream {
 
     private boolean extra;
 
-    @Getter(AccessLevel.NONE)
-    private IntegerProperty size;
+    @Setter
+    private Integer size;
 
     @Getter(AccessLevel.NONE)
     private BooleanProperty selectedAsUpper;
@@ -40,43 +42,19 @@ public class GuiSubtitleStream {
             String language,
             String title,
             boolean extra,
-            int size,
+            Integer size,
             boolean selectedAsUpper,
             boolean selectedAsLower
     ) {
         this.ffmpegIndex = ffmpegIndex;
         this.unavailabilityReason = unavailabilityReason;
-        this.failedToLoadReason = new SimpleStringProperty(failedToLoadReason);
+        this.failedToLoadReason = failedToLoadReason;
         this.language = language;
         this.title = title;
         this.extra = extra;
-        this.size = new SimpleIntegerProperty(size);
+        this.size = size;
         this.selectedAsUpper = new SimpleBooleanProperty(selectedAsUpper);
         this.selectedAsLower = new SimpleBooleanProperty(selectedAsLower);
-    }
-
-    public String getFailedToLoadReason() {
-        return failedToLoadReason.get();
-    }
-
-    public StringProperty failedToLoadReasonProperty() {
-        return failedToLoadReason;
-    }
-
-    public void setFailedToLoadReason(String failedToLoadReason) {
-        this.failedToLoadReason.set(failedToLoadReason);
-    }
-
-    public int getSize() {
-        return size.get();
-    }
-
-    public IntegerProperty sizeProperty() {
-        return size;
-    }
-
-    public void setSize(int size) {
-        this.size.set(size);
     }
 
     public boolean isSelectedAsUpper() {

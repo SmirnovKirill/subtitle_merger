@@ -262,7 +262,7 @@ public abstract class BackgroundTask<T> extends Task<T> {
                 subtitleStream.getLanguage() != null ? subtitleStream.getLanguage().toString() : "unknown",
                 subtitleStream.getTitle(),
                 RegularContentController.isExtra(subtitleStream, guiSettings),
-                subtitleStream.getSubtitleSize() != null ? subtitleStream.getSubtitleSize() : -1,
+                subtitleStream.getSubtitleSize(),
                 false,
                 false
         );
