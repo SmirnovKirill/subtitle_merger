@@ -1021,12 +1021,19 @@ public class RegularContentController {
                 if (filesToAdd.size() == 1) {
                     setResult("File has been added already", null, null);
                 } else {
-                    setResult("All files have been added already", null, null);
+                    setResult("All " + filesToAdd.size() + " files have been added already", null, null);
                 }
-            } else if (task.getValue().getAddedCount() == 1) {
-                setResult("File has been added successfully", null, null);
+            } else if (task.getValue().getAddedCount() == filesToAdd.size()) {
+                if (task.getValue().getAddedCount() == 1) {
+                    setResult("File has been added successfully", null, null);
+                } else {
+                    setResult("All " + task.getValue().getAddedCount() + " files have been added successfully", null, null);
+                }
             } else {
-                setResult(task.getValue().getAddedCount() + " files have been added successfully", null, null);
+                String message = task.getValue().getAddedCount() + "/" + filesToAdd.size() + " successfully added, "
+                        + (filesToAdd.size() - task.getValue().getAddedCount()) + "/" + filesToAdd.size() + " added before";
+
+                setResult(message, null, null);
             }
 
             stopProgress();

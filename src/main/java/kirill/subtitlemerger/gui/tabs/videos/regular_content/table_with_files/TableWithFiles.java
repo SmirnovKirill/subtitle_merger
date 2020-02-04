@@ -306,7 +306,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
             errorImageLabel.setTooltip(GuiUtils.generateTooltip(stream.getFailedToLoadReason()));
 
-            if (!StringUtils.isBlank(stream.getFailedToLoadReason())) {
+            if (StringUtils.isBlank(stream.getFailedToLoadReason())) {
                 errorImageLabel.setVisible(false);
                 errorImageLabel.setManaged(false);
             }
