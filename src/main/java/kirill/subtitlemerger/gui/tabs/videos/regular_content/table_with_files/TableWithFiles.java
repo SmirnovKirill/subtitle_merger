@@ -3,8 +3,10 @@ package kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.LongProperty;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.FilePanes;
+import lombok.AllArgsConstructor;
 import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
@@ -72,63 +74,44 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         subtitlesColumn.setCellFactory(this::generateSubtitlesCell);
     }
 
-    private <T> TableCell<GuiFileInfo, T> generateSelectedCell(TableColumn<GuiFileInfo, T> column) {
-        return new TableCell<>() {
-            @Override
-            protected void updateItem(T item, boolean empty) {
-                super.updateItem(item, empty);
-
-                GuiFileInfo fileInfo = getTableRow().getItem();
-
-                if (empty || fileInfo == null) {
-                    setGraphic(null);
-                    setText(null);
-                    return;
-                }
-
-                setGraphic(filePanes.get(fileInfo.getFullPath()).getSelectPane());
-                setText(null);
-            }
-        };
+    private <T> TableWithFilesCell<T> generateSelectedCell(TableColumn<GuiFileInfo, T> column) {
+        return new TableWithFilesCell<>(FilePanes::getSelectPane, filePanes);
     }
 
-    private <T> TableCell<GuiFileInfo, T> generateFileDescriptionCell(TableColumn<GuiFileInfo, T> column) {
-        return new TableCell<>() {
-            @Override
-            protected void updateItem(T item, boolean empty) {
-                super.updateItem(item, empty);
-
-                GuiFileInfo fileInfo = getTableRow().getItem();
-
-                if (empty || fileInfo == null) {
-                    setGraphic(null);
-                    setText(null);
-                    return;
-                }
-
-                setGraphic(filePanes.get(fileInfo.getFullPath()).getFileDescriptionPane());
-                setText(null);
-            }
-        };
+    private <T> TableWithFilesCell<T> generateFileDescriptionCell(TableColumn<GuiFileInfo, T> column) {
+        return new TableWithFilesCell<>(FilePanes::getFileDescriptionPane, filePanes);
     }
 
-    private <T> TableCell<GuiFileInfo, T> generateSubtitlesCell(TableColumn<GuiFileInfo, T> column) {
-        return new TableCell<>() {
-            @Override
-            protected void updateItem(T item, boolean empty) {
-                super.updateItem(item, empty);
+    private <T> TableWithFilesCell<T> generateSubtitlesCell(TableColumn<GuiFileInfo, T> column) {
+        return new TableWithFilesCell<>(FilePanes::getSubtitlePane, filePanes);
+    }
 
-                GuiFileInfo fileInfo = getTableRow().getItem();
 
-                if (empty || fileInfo == null) {
-                    setGraphic(null);
-                    setText(null);
-                    return;
-                }
+    @AllArgsConstructor
+    public static class TableWithFilesCell<T> extends TableCell<GuiFileInfo, T> {
+        private CellNodeGenerator cellNodeGenerator;
 
-                setGraphic(filePanes.get(fileInfo.getFullPath()).getSubtitlePane());
+        private Map<String, FilePanes> filePanes;
+
+        @Override
+        protected void updateItem(T item, boolean empty) {
+            super.updateItem(item, empty);
+
+            GuiFileInfo fileInfo = getTableRow().getItem();
+
+            if (empty || fileInfo == null) {
+                setGraphic(null);
                 setText(null);
+                return;
             }
-        };
+
+            setGraphic(cellNodeGenerator.generateNode(filePanes.get(fileInfo.getFullPath())));
+            setText(null);
+        }
+
+        @FunctionalInterface
+        interface CellNodeGenerator {
+            Node generateNode(FilePanes filePanes);
+        }
     }
 }
