@@ -163,12 +163,7 @@ public class RegularContentController {
         bindSelectedForMergeText();
         this.sortByGroup = new ToggleGroup();
         this.sortDirectionGroup = new ToggleGroup();
-        this.tableWithFiles.initialize(
-                this::loadAllFileSubtitleSizes,
-                this::loadSingleFileSubtitleSize,
-                this::addExternalSubtitleFileClicked,
-                this::removeExternalSubtitleFileClicked
-        );
+        this.tableWithFiles.initialize();
         this.tableWithFiles.setContextMenu(
                 generateContextMenu(
                         this.sortByGroup,
@@ -793,6 +788,10 @@ public class RegularContentController {
                 files,
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
+                this::loadAllFileSubtitleSizes,
+                this::loadSingleFileSubtitleSize,
+                this::addExternalSubtitleFileClicked,
+                this::removeExternalSubtitleFileClicked,
                 context
         );
 
@@ -849,6 +848,10 @@ public class RegularContentController {
                 this.directory,
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
+                this::loadAllFileSubtitleSizes,
+                this::loadSingleFileSubtitleSize,
+                this::addExternalSubtitleFileClicked,
+                this::removeExternalSubtitleFileClicked,
                 context
         );
 
@@ -901,6 +904,10 @@ public class RegularContentController {
                 this.directory,
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
+                this::loadAllFileSubtitleSizes,
+                this::loadSingleFileSubtitleSize,
+                this::addExternalSubtitleFileClicked,
+                this::removeExternalSubtitleFileClicked,
                 context
         );
 
@@ -1009,6 +1016,10 @@ public class RegularContentController {
                 hideUnavailableCheckbox.isSelected(),
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
+                this::loadAllFileSubtitleSizes,
+                this::loadSingleFileSubtitleSize,
+                this::addExternalSubtitleFileClicked,
+                this::removeExternalSubtitleFileClicked,
                 context
         );
 

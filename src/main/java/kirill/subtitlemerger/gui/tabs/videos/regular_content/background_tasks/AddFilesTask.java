@@ -3,6 +3,7 @@ package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,6 +26,14 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
 
     private GuiSettings.SortDirection sortDirection;
 
+    private TableWithFiles.AllFileSubtitleSizesLoader allSizesLoader;
+
+    private TableWithFiles.SingleFileSubtitleSizeLoader singleSizeLoader;
+
+    private TableWithFiles.AddExternalSubtitleFileHandler addExternalSubtitleFileHandler;
+
+    private TableWithFiles.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler;
+
     private GuiContext guiContext;
 
     public AddFilesTask(
@@ -34,6 +43,10 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
             boolean hideUnavailable,
             GuiSettings.SortBy sortBy,
             GuiSettings.SortDirection sortDirection,
+            TableWithFiles.AllFileSubtitleSizesLoader allSizesLoader,
+            TableWithFiles.SingleFileSubtitleSizeLoader singleSizeLoader,
+            TableWithFiles.AddExternalSubtitleFileHandler addExternalSubtitleFileHandler,
+            TableWithFiles.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler,
             GuiContext guiContext
     ) {
         super();
@@ -43,6 +56,10 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
         this.hideUnavailable = hideUnavailable;
         this.sortBy = sortBy;
         this.sortDirection = sortDirection;
+        this.allSizesLoader = allSizesLoader;
+        this.singleSizeLoader = singleSizeLoader;
+        this.addExternalSubtitleFileHandler = addExternalSubtitleFileHandler;
+        this.removeExternalSubtitleFileHandler = removeExternalSubtitleFileHandler;
         this.guiContext = guiContext;
     }
 
@@ -55,6 +72,10 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
                 true,
                 true,
                 this,
+                allSizesLoader,
+                singleSizeLoader,
+                addExternalSubtitleFileHandler,
+                removeExternalSubtitleFileHandler,
                 guiContext.getSettings()
         );
         filesInfo.addAll(filesToAddInfo);

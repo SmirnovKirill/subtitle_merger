@@ -8,6 +8,7 @@ import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentContr
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiExternalSubtitleFile;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.work_with_files.FileInfoGetter;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
@@ -126,6 +127,10 @@ public abstract class BackgroundTask<T> extends Task<T> {
             boolean showFullFileName,
             boolean selectByDefault,
             BackgroundTask<?> task,
+            TableWithFiles.AllFileSubtitleSizesLoader allSizesLoader,
+            TableWithFiles.SingleFileSubtitleSizeLoader singleSizeLoader,
+            TableWithFiles.AddExternalSubtitleFileHandler addExternalSubtitleFileHandler,
+            TableWithFiles.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler,
             GuiSettings guiSettings
     ) {
         List<GuiFileInfo> result = new ArrayList<>();
@@ -136,7 +141,18 @@ public abstract class BackgroundTask<T> extends Task<T> {
         for (FileInfo fileInfo : filesInfo) {
             task.updateMessage("creating object for " + fileInfo.getFile().getName() + "...");
 
-            result.add(from(fileInfo, showFullFileName, selectByDefault, guiSettings));
+            result.add(
+                    from(
+                            fileInfo,
+                            showFullFileName,
+                            selectByDefault,
+                            allSizesLoader,
+                            singleSizeLoader,
+                            addExternalSubtitleFileHandler,
+                            removeExternalSubtitleFileHandler,
+                            guiSettings
+                    )
+            );
 
             task.updateProgress(i + 1, filesInfo.size());
             i++;
@@ -149,6 +165,10 @@ public abstract class BackgroundTask<T> extends Task<T> {
             FileInfo fileInfo,
             boolean showFullFileName,
             boolean selected,
+            TableWithFiles.AllFileSubtitleSizesLoader allSizesLoader,
+            TableWithFiles.SingleFileSubtitleSizeLoader singleSizeLoader,
+            TableWithFiles.AddExternalSubtitleFileHandler addExternalSubtitleFileHandler,
+            TableWithFiles.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler,
             GuiSettings guiSettings
     ) {
         String pathToDisplay = showFullFileName ? fileInfo.getFile().getAbsolutePath() : fileInfo.getFile().getName();
@@ -173,7 +193,11 @@ public abstract class BackgroundTask<T> extends Task<T> {
                 RegularContentController.haveSubtitlesToLoad(fileInfo),
                 RegularContentController.getSubtitleCanBeHiddenCount(fileInfo, guiSettings),
                 RegularContentController.getSubtitleCanBeHiddenCount(fileInfo, guiSettings) != 0,
-                subtitleStreams
+                subtitleStreams,
+                allSizesLoader,
+                singleSizeLoader,
+                addExternalSubtitleFileHandler,
+                removeExternalSubtitleFileHandler
         );
 
         //todo refactor ugly

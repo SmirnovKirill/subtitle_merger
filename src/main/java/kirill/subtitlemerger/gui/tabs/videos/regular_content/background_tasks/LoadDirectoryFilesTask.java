@@ -4,6 +4,7 @@ import javafx.scene.control.ProgressIndicator;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,18 +23,34 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
 
     private GuiSettings.SortDirection sortDirection;
 
+    private TableWithFiles.AllFileSubtitleSizesLoader allSizesLoader;
+
+    private TableWithFiles.SingleFileSubtitleSizeLoader singleSizeLoader;
+
+    private TableWithFiles.AddExternalSubtitleFileHandler addExternalSubtitleFileHandler;
+
+    private TableWithFiles.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler;
+
     private GuiContext guiContext;
 
     public LoadDirectoryFilesTask(
             File directory,
             GuiSettings.SortBy sortBy,
             GuiSettings.SortDirection sortDirection,
+            TableWithFiles.AllFileSubtitleSizesLoader allSizesLoader,
+            TableWithFiles.SingleFileSubtitleSizeLoader singleSizeLoader,
+            TableWithFiles.AddExternalSubtitleFileHandler addExternalSubtitleFileHandler,
+            TableWithFiles.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler,
             GuiContext guiContext
     ) {
         super();
         this.directory = directory;
         this.sortBy = sortBy;
         this.sortDirection = sortDirection;
+        this.allSizesLoader = allSizesLoader;
+        this.singleSizeLoader = singleSizeLoader;
+        this.addExternalSubtitleFileHandler = addExternalSubtitleFileHandler;
+        this.removeExternalSubtitleFileHandler = removeExternalSubtitleFileHandler;
         this.guiContext = guiContext;
     }
 
@@ -46,6 +63,10 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
                 false,
                 false,
                 this,
+                allSizesLoader,
+                singleSizeLoader,
+                addExternalSubtitleFileHandler,
+                removeExternalSubtitleFileHandler,
                 guiContext.getSettings()
         );
 
