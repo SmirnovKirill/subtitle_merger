@@ -2,9 +2,7 @@ package kirill.subtitlemerger.gui.tabs.videos.regular_content;
 
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
-import javafx.beans.binding.StringBinding;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -43,6 +41,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -144,6 +143,14 @@ public class RegularContentController {
 
     private List<GuiFileInfo> allGuiFilesInfo;
 
+    private Map<String, FilePanes> filePanes;
+
+    private BooleanProperty allSelected;
+
+    private LongProperty selected;
+
+    private IntegerProperty allAvailableCount;
+
     public boolean getCancelTaskPaneVisible() {
         return cancelTaskPaneVisible.get();
     }
@@ -160,10 +167,12 @@ public class RegularContentController {
         this.stage = stage;
         this.context = guiContext;
         saveDefaultSortSettingsIfNotSet(guiContext.getSettings());
-        bindSelectedForMergeText();
         this.sortByGroup = new ToggleGroup();
         this.sortDirectionGroup = new ToggleGroup();
-        this.tableWithFiles.initialize();
+        this.allSelected = new SimpleBooleanProperty(false);
+        this.selected = new SimpleLongProperty(0);
+        this.allAvailableCount = new SimpleIntegerProperty(0);
+        this.tableWithFiles.initialize(allSelected, selected, allAvailableCount);
         this.tableWithFiles.setContextMenu(
                 generateContextMenu(
                         this.sortByGroup,
@@ -171,7 +180,7 @@ public class RegularContentController {
                         guiContext.getSettings()
                 )
         );
-        this.tableWithFiles.selectedProperty().addListener(this::selectedCountChangeListener);
+        this.selectedProperty().addListener(this::selectedCountChangeListener);
 
         this.sortByGroup.selectedToggleProperty().addListener(this::sortByChanged);
         this.sortDirectionGroup.selectedToggleProperty().addListener(this::sortDirectionChanged);
@@ -194,29 +203,19 @@ public class RegularContentController {
         }
     }
 
-    private void bindSelectedForMergeText() {
-        String suffix = "selected for merge";
-
-        StringBinding oneItemBinding = Bindings.createStringBinding(
-                () -> "1 video " + suffix, tableWithFiles.selectedProperty()
-        );
-        StringBinding zeroOrMultipleItemsBinding = Bindings.createStringBinding(
-                () -> tableWithFiles.getSelected() + " videos " + suffix, tableWithFiles.selectedProperty()
-        );
-
-        selectedForMergeLabel.textProperty().bind(
-                Bindings.when(tableWithFiles.selectedProperty().isEqualTo(1))
-                        .then(oneItemBinding)
-                        .otherwise(zeroOrMultipleItemsBinding)
-        );
-    }
-
     private void selectedCountChangeListener(Observable observable) {
         setActionButtonsVisibility();
+
+        String suffix = "selected for merge";
+        if (getSelected() == 1) {
+            selectedForMergeLabel.setText("1 video " + suffix);
+        } else {
+            selectedForMergeLabel.setText(getSelected() + " videos " + suffix);
+        }
     }
 
     private void setActionButtonsVisibility() {
-        if (tableWithFiles.getSelected() == 0) {
+        if (getSelected() == 0) {
             String tooltipText = "no videos are selected for merge";
 
             autoSelectButton.setDisable(true);
@@ -422,138 +421,6 @@ public class RegularContentController {
         );
     }
 
-    private void loadAllFileSubtitleSizes(GuiFileInfo guiFileInfo) {
-        runLoadSubtitlesTask(
-                new LoadSingleFileAllSubtitlesTask(
-                        findMatchingFileInfo(guiFileInfo, filesInfo),
-                        guiFileInfo,
-                        tableWithFiles.getItems(),
-                        context.getFfmpeg(),
-                        cancelTaskPaneVisible
-                )
-        );
-    }
-
-    private void loadSingleFileSubtitleSize(GuiFileInfo guiFileInfo, int ffmpegIndex) {
-        runLoadSubtitlesTask(
-                new LoadSingleSubtitleTask(
-                        ffmpegIndex,
-                        findMatchingFileInfo(guiFileInfo, filesInfo),
-                        guiFileInfo,
-                        tableWithFiles.getItems(),
-                        context.getFfmpeg(),
-                        cancelTaskPaneVisible
-                )
-        );
-    }
-
-    private void addExternalSubtitleFileClicked(GuiFileInfo guiFileInfo) {
-        File file = getFile(guiFileInfo, stage, context.getSettings()).orElse(null);
-        if (file == null) {
-            return;
-        }
-
-        try {
-            context.getSettings().saveLastDirectoryWithExternalSubtitles(file.getParent());
-        } catch (GuiSettings.ConfigException e) {
-            log.error(
-                    "failed to save last directory , file " + file.getAbsolutePath() + ": "
-                            + ExceptionUtils.getStackTrace(e)
-            );
-        }
-
-        FileInfo fileInfo = findMatchingFileInfo(guiFileInfo, filesInfo);
-
-        if (isDuplicate(file, fileInfo)) {
-            guiFileInfo.setError("This file is already added");
-            guiFileInfo.setErrorBorder(true);
-            return;
-        }
-
-        if (file.length() / 1024 / 1024 > GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES) {
-            guiFileInfo.setError("File is too big (>" + GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)");
-            guiFileInfo.setErrorBorder(true);
-            return;
-        }
-
-        try {
-            Subtitles subtitles = Parser.fromSubRipText(
-                    FileUtils.readFileToString(file, StandardCharsets.UTF_8),
-                    "external",
-                    null
-            );
-
-            guiFileInfo.setError(null);
-            guiFileInfo.setErrorBorder(false);
-
-            GuiExternalSubtitleFile guiExternalSubtitleFile;
-            if (fileInfo.getExternalSubtitleFiles().size() == 0) {
-                guiExternalSubtitleFile = guiFileInfo.getExternalSubtitleFiles().get(1);
-            } else if (fileInfo.getExternalSubtitleFiles().size() == 1) {
-                guiExternalSubtitleFile = guiFileInfo.getExternalSubtitleFiles().get(0);
-            } else {
-                throw new IllegalStateException();
-            }
-
-            int subtitleSize = SubtitleStream.calculateSubtitleSize(subtitles);
-
-            guiExternalSubtitleFile.setFileName(file.getName());
-            guiExternalSubtitleFile.setSize(subtitleSize);
-
-            fileInfo.getExternalSubtitleFiles().add(new ExternalSubtitleFile(file, subtitles, subtitleSize));
-        } catch (IOException e) {
-            guiFileInfo.setError("Can't read the file");
-            guiFileInfo.setErrorBorder(true);
-        } catch (Parser.IncorrectFormatException e) {
-            guiFileInfo.setError("Can't add the file because it has incorrect format");
-            guiFileInfo.setErrorBorder(true);
-        }
-    }
-
-    private static Optional<File> getFile(GuiFileInfo fileInfo, Stage stage, GuiSettings settings) {
-        FileChooser fileChooser = new FileChooser();
-
-        fileChooser.setTitle("Please choose the file with the subtitles");
-
-        File initialDirectory = settings.getLastDirectoryWithExternalSubtitles();
-        if (initialDirectory == null) {
-            File directoryWithFile = new File(fileInfo.getFullPath()).getParentFile();
-            if (directoryWithFile != null && directoryWithFile.exists()) {
-                initialDirectory = directoryWithFile;
-            }
-        }
-
-        fileChooser.setInitialDirectory(initialDirectory);
-        fileChooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("subrip files (*.srt)", "*.srt")
-        );
-
-        return Optional.ofNullable(fileChooser.showOpenDialog(stage));
-    }
-
-    private boolean isDuplicate(File file, FileInfo fileInfo) {
-        for (ExternalSubtitleFile externalSubtitleFile : fileInfo.getExternalSubtitleFiles()) {
-            if (Objects.equals(file, externalSubtitleFile.getFile())) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private void removeExternalSubtitleFileClicked(int index, GuiFileInfo guiFileInfo) {
-        FileInfo fileInfo = findMatchingFileInfo(guiFileInfo, filesInfo);
-        fileInfo.getExternalSubtitleFiles().remove(1 - index);
-
-        guiFileInfo.setError(null);
-        guiFileInfo.setErrorBorder(false);
-
-        guiFileInfo.getExternalSubtitleFiles().get(index).setFileName(null);
-        guiFileInfo.getExternalSubtitleFiles().get(index).setSize(-1);
-        guiFileInfo.getExternalSubtitleFiles().get(index).setSelectedAsUpper(false);
-        guiFileInfo.getExternalSubtitleFiles().get(index).setSelectedAsLower(false);
-    }
-
     private void sortByChanged(Observable observable) {
         clearGeneralResult();
 
@@ -585,7 +452,7 @@ public class RegularContentController {
         );
 
         task.setOnSucceeded(e -> {
-            updateTableContent(task.getValue());
+            updateTableContent(task.getValue(), filePanes);
             stopProgress();
         });
 
@@ -599,20 +466,22 @@ public class RegularContentController {
         resultLabelError.setText("");
     }
 
-    private void updateTableContent(List<GuiFileInfo> guiFilesToShowInfo) {
-        long oldSelected = tableWithFiles.getSelected();
-        tableWithFiles.setSelected(guiFilesToShowInfo.stream().filter(GuiFileInfo::isSelected).count());
-        if (oldSelected == tableWithFiles.getSelected()) {
+    private void updateTableContent(List<GuiFileInfo> guiFilesToShowInfo, Map<String, FilePanes> filePanes) {
+        long oldSelected = getSelected();
+        setSelected(guiFilesToShowInfo.stream().filter(GuiFileInfo::isSelected).count());
+        if (oldSelected == getSelected()) {
             setActionButtonsVisibility();
         }
 
-        int allAvailableCount = (int) guiFilesToShowInfo.stream()
-                .filter(filesInfo -> StringUtils.isBlank(filesInfo.getUnavailabilityReason()))
-                .count();
+        allAvailableCount.setValue(
+                (int) guiFilesToShowInfo.stream()
+                        .filter(filesInfo -> StringUtils.isBlank(filesInfo.getUnavailabilityReason()))
+                        .count()
+        );
 
+        tableWithFiles.setFilePanes(filePanes);
         tableWithFiles.setItems(FXCollections.observableArrayList(guiFilesToShowInfo));
-        tableWithFiles.setAllAvailableCount(allAvailableCount);
-        tableWithFiles.setAllSelected(tableWithFiles.getSelected() == allAvailableCount);
+        setAllSelected(getSelected() == allAvailableCount.get());
     }
 
     private void stopProgress() {
@@ -659,7 +528,7 @@ public class RegularContentController {
         );
 
         task.setOnSucceeded(e -> {
-            updateTableContent(task.getValue());
+            updateTableContent(task.getValue(), filePanes);
             stopProgress();
         });
 
@@ -788,17 +657,21 @@ public class RegularContentController {
                 files,
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
+                context,
+                selected,
+                allSelected,
+                allAvailableCount,
                 this::loadAllFileSubtitleSizes,
                 this::loadSingleFileSubtitleSize,
                 this::addExternalSubtitleFileClicked,
-                this::removeExternalSubtitleFileClicked,
-                context
+                this::removeExternalSubtitleFileClicked
         );
 
         task.setOnSucceeded(e -> {
             filesInfo = task.getValue().getFilesInfo();
             allGuiFilesInfo = task.getValue().getAllGuiFilesInfo();
-            updateTableContent(task.getValue().getGuiFilesToShowInfo());
+            filePanes = task.getValue().getFilePanes();
+            updateTableContent(task.getValue().getGuiFilesToShowInfo(), task.getValue().getFilePanes());
             hideUnavailableCheckbox.setSelected(task.getValue().isHideUnavailable());
 
             chosenDirectoryPane.setVisible(false);
@@ -848,17 +721,21 @@ public class RegularContentController {
                 this.directory,
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
+                context,
+                selected,
+                allSelected,
+                allAvailableCount,
                 this::loadAllFileSubtitleSizes,
                 this::loadSingleFileSubtitleSize,
                 this::addExternalSubtitleFileClicked,
-                this::removeExternalSubtitleFileClicked,
-                context
+                this::removeExternalSubtitleFileClicked
         );
 
         task.setOnSucceeded(e -> {
             filesInfo = task.getValue().getFilesInfo();
             allGuiFilesInfo = task.getValue().getAllGuiFilesInfo();
-            updateTableContent(task.getValue().getGuiFilesToShowInfo());
+            filePanes = task.getValue().getFilePanes();
+            updateTableContent(task.getValue().getGuiFilesToShowInfo(), task.getValue().getFilePanes());
             hideUnavailableCheckbox.setSelected(task.getValue().isHideUnavailable());
             chosenDirectoryField.setText(directory.getAbsolutePath());
 
@@ -886,10 +763,10 @@ public class RegularContentController {
     @FXML
     private void backToSelectionClicked() {
         /* Just in case. See the huge comment in the hideUnavailableClicked() method. */
-        tableWithFiles.setSelected(0);
+        setSelected(0);
         tableWithFiles.setItems(FXCollections.emptyObservableList());
-        tableWithFiles.setAllAvailableCount(0);
-        tableWithFiles.setAllSelected(false);
+        allAvailableCount.setValue(0);
+        setAllSelected(false);
         context.setWorkWithVideosInProgress(false);
 
         choicePane.setVisible(true);
@@ -904,17 +781,21 @@ public class RegularContentController {
                 this.directory,
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
+                context,
+                selected,
+                allSelected,
+                allAvailableCount,
                 this::loadAllFileSubtitleSizes,
                 this::loadSingleFileSubtitleSize,
                 this::addExternalSubtitleFileClicked,
-                this::removeExternalSubtitleFileClicked,
-                context
+                this::removeExternalSubtitleFileClicked
         );
 
         task.setOnSucceeded(e -> {
             filesInfo = task.getValue().getFilesInfo();
             allGuiFilesInfo = task.getValue().getAllGuiFilesInfo();
-            updateTableContent(task.getValue().getGuiFilesToShowInfo());
+            filePanes = task.getValue().getFilePanes();
+            updateTableContent(task.getValue().getGuiFilesToShowInfo(), task.getValue().getFilePanes());
             hideUnavailableCheckbox.setSelected(task.getValue().isHideUnavailable());
 
             /* See the huge comment in the hideUnavailableClicked() method. */
@@ -939,7 +820,7 @@ public class RegularContentController {
         );
 
         task.setOnSucceeded(e -> {
-            updateTableContent(task.getValue());
+            updateTableContent(task.getValue(), filePanes);
 
             /*
              * There is a strange bug with TableView - when the list is shrunk in size (because for example
@@ -971,13 +852,15 @@ public class RegularContentController {
                 filesInfo,
                 allGuiFilesInfo,
                 tableWithFiles.getItems(),
+                filePanes,
                 indices
         );
 
         task.setOnSucceeded(e -> {
             filesInfo = task.getValue().getFilesInfo();
             allGuiFilesInfo = task.getValue().getAllGuiFilesInfo();
-            updateTableContent(task.getValue().getGuiFilesToShowInfo());
+            filePanes = task.getValue().getFilePanes();
+            updateTableContent(task.getValue().getGuiFilesToShowInfo(), task.getValue().getFilePanes());
 
             if (task.getValue().getRemovedCount() == 0) {
                 throw new IllegalStateException();
@@ -1016,17 +899,21 @@ public class RegularContentController {
                 hideUnavailableCheckbox.isSelected(),
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
+                context,
+                selected,
+                allSelected,
+                allAvailableCount,
                 this::loadAllFileSubtitleSizes,
                 this::loadSingleFileSubtitleSize,
                 this::addExternalSubtitleFileClicked,
-                this::removeExternalSubtitleFileClicked,
-                context
+                this::removeExternalSubtitleFileClicked
         );
 
         task.setOnSucceeded(e -> {
             filesInfo = task.getValue().getFilesInfo();
             allGuiFilesInfo = task.getValue().getAllGuiFilesInfo();
-            updateTableContent(task.getValue().getGuiFilesToShowInfo());
+            filePanes = task.getValue().getFilePanes();
+            updateTableContent(task.getValue().getGuiFilesToShowInfo(), task.getValue().getFilePanes());
 
             if (task.getValue().getAddedCount() == 0) {
                 if (filesToAdd.size() == 1) {
@@ -1108,5 +995,161 @@ public class RegularContentController {
         }
 
         return subtitlesWithOtherLanguage;
+    }
+
+    private void addExternalSubtitleFileClicked(GuiFileInfo guiFileInfo) {
+        File file = getFile(guiFileInfo, stage, context.getSettings()).orElse(null);
+        if (file == null) {
+            return;
+        }
+
+        try {
+            context.getSettings().saveLastDirectoryWithExternalSubtitles(file.getParent());
+        } catch (GuiSettings.ConfigException e) {
+            log.error(
+                    "failed to save last directory , file " + file.getAbsolutePath() + ": "
+                            + ExceptionUtils.getStackTrace(e)
+            );
+        }
+
+        FileInfo fileInfo = findMatchingFileInfo(guiFileInfo, filesInfo);
+
+        if (isDuplicate(file, fileInfo)) {
+            guiFileInfo.setError("This file is already added");
+            guiFileInfo.setErrorBorder(true);
+            return;
+        }
+
+        if (file.length() / 1024 / 1024 > GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES) {
+            guiFileInfo.setError("File is too big (>" + GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)");
+            guiFileInfo.setErrorBorder(true);
+            return;
+        }
+
+        try {
+            Subtitles subtitles = Parser.fromSubRipText(
+                    FileUtils.readFileToString(file, StandardCharsets.UTF_8),
+                    "external",
+                    null
+            );
+
+            guiFileInfo.setError(null);
+            guiFileInfo.setErrorBorder(false);
+
+            GuiExternalSubtitleFile guiExternalSubtitleFile;
+            if (fileInfo.getExternalSubtitleFiles().size() == 0) {
+                guiExternalSubtitleFile = guiFileInfo.getExternalSubtitleFiles().get(1);
+            } else if (fileInfo.getExternalSubtitleFiles().size() == 1) {
+                guiExternalSubtitleFile = guiFileInfo.getExternalSubtitleFiles().get(0);
+            } else {
+                throw new IllegalStateException();
+            }
+
+            int subtitleSize = SubtitleStream.calculateSubtitleSize(subtitles);
+
+            guiExternalSubtitleFile.setFileName(file.getName());
+            guiExternalSubtitleFile.setSize(subtitleSize);
+
+            fileInfo.getExternalSubtitleFiles().add(new ExternalSubtitleFile(file, subtitles, subtitleSize));
+        } catch (IOException e) {
+            guiFileInfo.setError("Can't read the file");
+            guiFileInfo.setErrorBorder(true);
+        } catch (Parser.IncorrectFormatException e) {
+            guiFileInfo.setError("Can't add the file because it has incorrect format");
+            guiFileInfo.setErrorBorder(true);
+        }
+    }
+
+    private Optional<File> getFile(GuiFileInfo fileInfo, Stage stage, GuiSettings settings) {
+        FileChooser fileChooser = new FileChooser();
+
+        fileChooser.setTitle("Please choose the file with the subtitles");
+
+        File initialDirectory = settings.getLastDirectoryWithExternalSubtitles();
+        if (initialDirectory == null) {
+            File directoryWithFile = new File(fileInfo.getFullPath()).getParentFile();
+            if (directoryWithFile != null && directoryWithFile.exists()) {
+                initialDirectory = directoryWithFile;
+            }
+        }
+
+        fileChooser.setInitialDirectory(initialDirectory);
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("subrip files (*.srt)", "*.srt")
+        );
+
+        return Optional.ofNullable(fileChooser.showOpenDialog(stage));
+    }
+
+    private boolean isDuplicate(File file, FileInfo fileInfo) {
+        for (ExternalSubtitleFile externalSubtitleFile : fileInfo.getExternalSubtitleFiles()) {
+            if (Objects.equals(file, externalSubtitleFile.getFile())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void removeExternalSubtitleFileClicked(int index, GuiFileInfo guiFileInfo) {
+        FileInfo fileInfo = findMatchingFileInfo(guiFileInfo, filesInfo);
+        fileInfo.getExternalSubtitleFiles().remove(1 - index);
+
+        guiFileInfo.setError(null);
+        guiFileInfo.setErrorBorder(false);
+
+        guiFileInfo.getExternalSubtitleFiles().get(index).setFileName(null);
+        guiFileInfo.getExternalSubtitleFiles().get(index).setSize(-1);
+        guiFileInfo.getExternalSubtitleFiles().get(index).setSelectedAsUpper(false);
+        guiFileInfo.getExternalSubtitleFiles().get(index).setSelectedAsLower(false);
+    }
+
+    private void loadAllFileSubtitleSizes(GuiFileInfo guiFileInfo) {
+        runLoadSubtitlesTask(
+                new LoadSingleFileAllSubtitlesTask(
+                        findMatchingFileInfo(guiFileInfo, filesInfo),
+                        guiFileInfo,
+                        tableWithFiles.getItems(),
+                        context.getFfmpeg(),
+                        cancelTaskPaneVisible
+                )
+        );
+    }
+
+    private void loadSingleFileSubtitleSize(GuiFileInfo guiFileInfo, int ffmpegIndex) {
+        runLoadSubtitlesTask(
+                new LoadSingleSubtitleTask(
+                        ffmpegIndex,
+                        findMatchingFileInfo(guiFileInfo, filesInfo),
+                        guiFileInfo,
+                        tableWithFiles.getItems(),
+                        context.getFfmpeg(),
+                        cancelTaskPaneVisible
+                )
+        );
+    }
+
+    public boolean isAllSelected() {
+        return allSelected.get();
+    }
+
+    public BooleanProperty allSelectedProperty() {
+        return allSelected;
+    }
+
+    public void setAllSelected(boolean allSelected) {
+        this.allSelected.set(allSelected);
+    }
+
+    public long getSelected() {
+        return selected.get();
+    }
+
+    public LongProperty selectedProperty() {
+        return selected;
+    }
+
+    public void setSelected(long selected) {
+        this.selected.set(selected);
     }
 }

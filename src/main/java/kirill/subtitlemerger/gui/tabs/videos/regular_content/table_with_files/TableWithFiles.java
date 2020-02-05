@@ -1,32 +1,25 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files;
 
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.LongProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleLongProperty;
-import javafx.scene.Node;
 import javafx.scene.control.*;
-import lombok.AllArgsConstructor;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.FilePanes;
 import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
+
+import java.util.Map;
 
 @CommonsLog
 public class TableWithFiles extends TableView<GuiFileInfo> {
     private static final String ROW_UNAVAILABLE_CLASS = "row-unavailable";
 
-    private BooleanProperty allSelected;
-
-    private LongProperty selected;
-
     @Setter
-    private int allAvailableCount;
+    private Map<String, FilePanes> filePanes;
 
     public TableWithFiles() {
         super();
-
-        this.allSelected = new SimpleBooleanProperty(false);
-        this.selected = new SimpleLongProperty(0);
 
         getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         setPlaceholder(new Label("there are no files to display"));
@@ -57,15 +50,14 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
      * in the constructor columns aren't initialized yet.
      */
     //todo move everything to the constructor
-    public void initialize() {
-
+    public void initialize(BooleanProperty allSelected, LongProperty selected, IntegerProperty allAvailableCount) {
         TableColumn<GuiFileInfo, ?> selectedColumn = getColumns().get(0);
         CheckBox selectAllCheckBox = new CheckBox();
         selectAllCheckBox.selectedProperty().bindBidirectional(allSelected);
         selectAllCheckBox.setOnAction(event -> {
             getItems().forEach(fileInfo -> fileInfo.setSelected(selectAllCheckBox.isSelected()));
             if (selectAllCheckBox.isSelected()) {
-                selected.setValue(allAvailableCount);
+                selected.setValue(allAvailableCount.getValue());
             } else {
                 selected.setValue(0);
             }
@@ -80,78 +72,63 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         subtitlesColumn.setCellFactory(this::generateSubtitlesCell);
     }
 
-    private <T> TableWithFilesCell<T> generateSelectedCell(TableColumn<GuiFileInfo, T> column) {
-        return new TableWithFilesCell<>(GuiFileInfo::getSelectPane);
-    }
+    private <T> TableCell<GuiFileInfo, T> generateSelectedCell(TableColumn<GuiFileInfo, T> column) {
+        return new TableCell<>() {
+            @Override
+            protected void updateItem(T item, boolean empty) {
+                super.updateItem(item, empty);
 
-    private <T> TableWithFilesCell<T> generateFileDescriptionCell(TableColumn<GuiFileInfo, T> column) {
-        return new TableWithFilesCell<>(GuiFileInfo::getFileDescriptionPane);
-    }
+                GuiFileInfo fileInfo = getTableRow().getItem();
 
-    private <T> TableWithFilesCell<T> generateSubtitlesCell(TableColumn<GuiFileInfo, T> column) {
-        return new TableWithFilesCell<>(GuiFileInfo::getSubtitlePane);
-    }
+                if (empty || fileInfo == null) {
+                    setGraphic(null);
+                    setText(null);
+                    return;
+                }
 
-
-    public void setAllSelected(boolean allSelected) {
-        this.allSelected.set(allSelected);
-    }
-
-    public long getSelected() {
-        return selected.get();
-    }
-
-    public LongProperty selectedProperty() {
-        return selected;
-    }
-
-    public void setSelected(long selected) {
-        this.selected.set(selected);
-    }
-
-    @FunctionalInterface
-    public interface AllFileSubtitleSizesLoader {
-        void load(GuiFileInfo guiFileInfo);
-    }
-
-    @FunctionalInterface
-    public interface SingleFileSubtitleSizeLoader {
-        void load(GuiFileInfo guiFileInfo, int ffmpegIndex);
-    }
-
-    @FunctionalInterface
-    public interface AddExternalSubtitleFileHandler {
-        void buttonClicked(GuiFileInfo guiFileInfo);
-    }
-
-    @FunctionalInterface
-    public interface RemoveExternalSubtitleFileHandler {
-        void buttonClicked(int index, GuiFileInfo guiFileInfo);
-    }
-
-    @AllArgsConstructor
-    public static class TableWithFilesCell<T> extends TableCell<GuiFileInfo, T> {
-        private CellNodeGenerator cellNodeGenerator;
-
-        @Override
-        protected void updateItem(T item, boolean empty) {
-            super.updateItem(item, empty);
-
-            GuiFileInfo fileInfo = getTableRow().getItem();
-
-            if (empty || fileInfo == null) {
-                setGraphic(null);
+                setGraphic(filePanes.get(fileInfo.getFullPath()).getSelectPane());
                 setText(null);
-                return;
             }
+        };
+    }
 
-            setGraphic(cellNodeGenerator.generateNode(fileInfo));
-            setText(null);
-        }
+    private <T> TableCell<GuiFileInfo, T> generateFileDescriptionCell(TableColumn<GuiFileInfo, T> column) {
+        return new TableCell<>() {
+            @Override
+            protected void updateItem(T item, boolean empty) {
+                super.updateItem(item, empty);
 
-        @FunctionalInterface
-        interface CellNodeGenerator {
-            Node generateNode(GuiFileInfo fileInfo);
-        }
+                GuiFileInfo fileInfo = getTableRow().getItem();
+
+                if (empty || fileInfo == null) {
+                    setGraphic(null);
+                    setText(null);
+                    return;
+                }
+
+                setGraphic(filePanes.get(fileInfo.getFullPath()).getFileDescriptionPane());
+                setText(null);
+            }
+        };
+    }
+
+    private <T> TableCell<GuiFileInfo, T> generateSubtitlesCell(TableColumn<GuiFileInfo, T> column) {
+        return new TableCell<>() {
+            @Override
+            protected void updateItem(T item, boolean empty) {
+                super.updateItem(item, empty);
+
+                GuiFileInfo fileInfo = getTableRow().getItem();
+
+                if (empty || fileInfo == null) {
+                    setGraphic(null);
+                    setText(null);
+                    return;
+                }
+
+                setGraphic(filePanes.get(fileInfo.getFullPath()).getSubtitlePane());
+                setText(null);
+            }
+        };
     }
 }

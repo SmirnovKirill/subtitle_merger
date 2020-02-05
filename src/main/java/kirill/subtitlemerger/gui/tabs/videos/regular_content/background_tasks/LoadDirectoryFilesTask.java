@@ -1,10 +1,13 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.LongProperty;
 import javafx.scene.control.ProgressIndicator;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.FilePanes;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,6 +17,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @CommonsLog
 public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTask.Result> {
@@ -23,35 +27,47 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
 
     private GuiSettings.SortDirection sortDirection;
 
-    private TableWithFiles.AllFileSubtitleSizesLoader allSizesLoader;
-
-    private TableWithFiles.SingleFileSubtitleSizeLoader singleSizeLoader;
-
-    private TableWithFiles.AddExternalSubtitleFileHandler addExternalSubtitleFileHandler;
-
-    private TableWithFiles.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler;
-
     private GuiContext guiContext;
+
+    private LongProperty selected;
+
+    private BooleanProperty allSelected;
+
+    private IntegerProperty allAvailableCount;
+
+    private FilePanes.AllFileSubtitleSizesLoader allFileSubtitleSizesLoader;
+
+    private FilePanes.SingleFileSubtitleSizeLoader singleFileSubtitleSizeLoader;
+
+    private FilePanes.AddExternalSubtitleFileHandler addExternalSubtitleFileHandler;
+
+    private FilePanes.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler;
 
     public LoadDirectoryFilesTask(
             File directory,
             GuiSettings.SortBy sortBy,
             GuiSettings.SortDirection sortDirection,
-            TableWithFiles.AllFileSubtitleSizesLoader allSizesLoader,
-            TableWithFiles.SingleFileSubtitleSizeLoader singleSizeLoader,
-            TableWithFiles.AddExternalSubtitleFileHandler addExternalSubtitleFileHandler,
-            TableWithFiles.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler,
-            GuiContext guiContext
+            GuiContext guiContext,
+            LongProperty selected,
+            BooleanProperty allSelected,
+            IntegerProperty allAvailableCount,
+            FilePanes.AllFileSubtitleSizesLoader allFileSubtitleSizesLoader,
+            FilePanes.SingleFileSubtitleSizeLoader singleFileSubtitleSizeLoader,
+            FilePanes.AddExternalSubtitleFileHandler addExternalSubtitleFileHandler,
+            FilePanes.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler
     ) {
         super();
         this.directory = directory;
         this.sortBy = sortBy;
         this.sortDirection = sortDirection;
-        this.allSizesLoader = allSizesLoader;
-        this.singleSizeLoader = singleSizeLoader;
+        this.guiContext = guiContext;
+        this.selected = selected;
+        this.allSelected = allSelected;
+        this.allAvailableCount = allAvailableCount;
+        this.allFileSubtitleSizesLoader = allFileSubtitleSizesLoader;
+        this.singleFileSubtitleSizeLoader = singleFileSubtitleSizeLoader;
         this.addExternalSubtitleFileHandler = addExternalSubtitleFileHandler;
         this.removeExternalSubtitleFileHandler = removeExternalSubtitleFileHandler;
-        this.guiContext = guiContext;
     }
 
     @Override
@@ -63,11 +79,18 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
                 false,
                 false,
                 this,
-                allSizesLoader,
-                singleSizeLoader,
+                guiContext.getSettings()
+        );
+        Map<String, FilePanes> filePanes = generateFilesPanes(
+                allGuiFilesInfo,
+                selected,
+                allSelected,
+                allAvailableCount,
+                allFileSubtitleSizesLoader,
+                singleFileSubtitleSizeLoader,
                 addExternalSubtitleFileHandler,
                 removeExternalSubtitleFileHandler,
-                guiContext.getSettings()
+                this
         );
 
         boolean hideUnavailable = shouldHideUnavailable(filesInfo, this);
@@ -79,7 +102,7 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
                 this
         );
 
-        return new Result(filesInfo, allGuiFilesInfo, guiFilesToShowInfo, hideUnavailable);
+        return new Result(filesInfo, allGuiFilesInfo, guiFilesToShowInfo, hideUnavailable, filePanes);
     }
 
     private static List<File> getDirectoryFiles(File directory, LoadDirectoryFilesTask task) {
@@ -106,5 +129,7 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
         private List<GuiFileInfo> guiFilesToShowInfo;
 
         private boolean hideUnavailable;
+
+        private Map<String, FilePanes> filePanes;
     }
 }

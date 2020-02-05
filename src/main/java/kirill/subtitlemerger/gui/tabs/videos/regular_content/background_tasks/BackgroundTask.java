@@ -1,9 +1,13 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.LongProperty;
 import javafx.concurrent.Task;
 import javafx.event.Event;
 import javafx.scene.control.ProgressIndicator;
 import kirill.subtitlemerger.gui.GuiSettings;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.FilePanes;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiExternalSubtitleFile;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
@@ -20,10 +24,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.joda.time.LocalDateTime;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @CommonsLog
@@ -127,10 +128,6 @@ public abstract class BackgroundTask<T> extends Task<T> {
             boolean showFullFileName,
             boolean selectByDefault,
             BackgroundTask<?> task,
-            TableWithFiles.AllFileSubtitleSizesLoader allSizesLoader,
-            TableWithFiles.SingleFileSubtitleSizeLoader singleSizeLoader,
-            TableWithFiles.AddExternalSubtitleFileHandler addExternalSubtitleFileHandler,
-            TableWithFiles.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler,
             GuiSettings guiSettings
     ) {
         List<GuiFileInfo> result = new ArrayList<>();
@@ -146,10 +143,6 @@ public abstract class BackgroundTask<T> extends Task<T> {
                             fileInfo,
                             showFullFileName,
                             selectByDefault,
-                            allSizesLoader,
-                            singleSizeLoader,
-                            addExternalSubtitleFileHandler,
-                            removeExternalSubtitleFileHandler,
                             guiSettings
                     )
             );
@@ -165,10 +158,6 @@ public abstract class BackgroundTask<T> extends Task<T> {
             FileInfo fileInfo,
             boolean showFullFileName,
             boolean selected,
-            TableWithFiles.AllFileSubtitleSizesLoader allSizesLoader,
-            TableWithFiles.SingleFileSubtitleSizeLoader singleSizeLoader,
-            TableWithFiles.AddExternalSubtitleFileHandler addExternalSubtitleFileHandler,
-            TableWithFiles.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler,
             GuiSettings guiSettings
     ) {
         String pathToDisplay = showFullFileName ? fileInfo.getFile().getAbsolutePath() : fileInfo.getFile().getName();
@@ -193,11 +182,7 @@ public abstract class BackgroundTask<T> extends Task<T> {
                 RegularContentController.haveSubtitlesToLoad(fileInfo),
                 RegularContentController.getSubtitleCanBeHiddenCount(fileInfo, guiSettings),
                 RegularContentController.getSubtitleCanBeHiddenCount(fileInfo, guiSettings) != 0,
-                subtitleStreams,
-                allSizesLoader,
-                singleSizeLoader,
-                addExternalSubtitleFileHandler,
-                removeExternalSubtitleFileHandler
+                subtitleStreams
         );
 
         //todo refactor ugly
@@ -334,5 +319,45 @@ public abstract class BackgroundTask<T> extends Task<T> {
         for (GuiFileInfo fileInfo : filesInfo) {
             fileInfo.setErrorBorder(false);
         }
+    }
+
+    public static Map<String, FilePanes> generateFilesPanes(
+            List<GuiFileInfo> filesInfo,
+            LongProperty selected,
+            BooleanProperty allSelected,
+            IntegerProperty allAvailableCount,
+            FilePanes.AllFileSubtitleSizesLoader allFileSubtitleSizesLoader,
+            FilePanes.SingleFileSubtitleSizeLoader singleFileSubtitleSizeLoader,
+            FilePanes.AddExternalSubtitleFileHandler addExternalSubtitleFileHandler,
+            FilePanes.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler,
+            BackgroundTask<?> task
+    ) {
+        Map<String, FilePanes> result = new HashMap<>();
+
+        task.updateProgress(0, filesInfo.size());
+
+        int i = 0;
+        for (GuiFileInfo fileInfo : filesInfo) {
+            task.updateMessage("creating gui objects for " + fileInfo.getPathToDisplay() + "...");
+
+            result.put(
+                    fileInfo.getFullPath(),
+                    new FilePanes(
+                            fileInfo,
+                            selected,
+                            allSelected,
+                            allAvailableCount,
+                            allFileSubtitleSizesLoader,
+                            singleFileSubtitleSizeLoader,
+                            addExternalSubtitleFileHandler,
+                            removeExternalSubtitleFileHandler
+                    )
+            );
+
+            task.updateProgress(i + 1, filesInfo.size());
+            i++;
+        }
+
+        return result;
     }
 }
