@@ -91,7 +91,7 @@ public abstract class BackgroundTask<T> extends Task<T> {
 
         int i = 0;
         for (File file : files) {
-            task.updateMessage("processing " + file.getName() + "...");
+            task.updateMessage("getting file info " + file.getName() + "...");
 
             if (!file.isDirectory() && file.exists()) {
                 result.add(
