@@ -54,9 +54,10 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
             FilePanes.AllFileSubtitleSizesLoader allFileSubtitleSizesLoader,
             FilePanes.SingleFileSubtitleSizeLoader singleFileSubtitleSizeLoader,
             FilePanes.AddExternalSubtitleFileHandler addExternalSubtitleFileHandler,
-            FilePanes.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler
+            FilePanes.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler,
+            BooleanProperty cancelTaskPaneVisible
     ) {
-        super();
+        super(cancelTaskPaneVisible);
         this.directory = directory;
         this.sortBy = sortBy;
         this.sortDirection = sortDirection;

@@ -22,7 +22,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class AutoSelectSubtitlesTask extends CancellableBackgroundTask<Void> {
+public class AutoSelectSubtitlesTask extends BackgroundTask<Void> {
     private List<FileInfo> allFilesInfo;
 
     private List<GuiFileInfo> displayedGuiFilesInfo;

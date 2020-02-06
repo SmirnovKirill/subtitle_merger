@@ -1,5 +1,6 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.scene.control.ProgressIndicator;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.FilePanes;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
@@ -27,9 +28,10 @@ public class RemoveFilesTask extends BackgroundTask<RemoveFilesTask.Result> {
             List<GuiFileInfo> allGuiFilesInfo,
             List<GuiFileInfo> currentGuiFilesToShowInfo,
             Map<String, FilePanes> filePanes,
-            List<Integer> selectedIndices
+            List<Integer> selectedIndices,
+            BooleanProperty cancelTaskPaneVisible
     ) {
-        super();
+        super(cancelTaskPaneVisible);
         this.filesInfo = filesInfo;
         this.allGuiFilesInfo = allGuiFilesInfo;
         this.guiFilesToShowInfo = new ArrayList<>(currentGuiFilesToShowInfo);

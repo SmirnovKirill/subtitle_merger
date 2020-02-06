@@ -60,9 +60,10 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
             FilePanes.AllFileSubtitleSizesLoader allFileSubtitleSizesLoader,
             FilePanes.SingleFileSubtitleSizeLoader singleFileSubtitleSizeLoader,
             FilePanes.AddExternalSubtitleFileHandler addExternalSubtitleFileHandler,
-            FilePanes.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler
+            FilePanes.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler,
+            BooleanProperty cancelTaskPaneVisible
     ) {
-        super();
+        super(cancelTaskPaneVisible);
         this.filesInfo = filesInfo;
         this.filesToAdd = filesToAdd;
         this.allGuiFilesInfo = allGuiFilesInfo;

@@ -1,8 +1,10 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
+import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.LongProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.concurrent.Task;
 import javafx.event.Event;
 import javafx.scene.control.ProgressIndicator;
@@ -17,6 +19,7 @@ import kirill.subtitlemerger.logic.work_with_files.FileInfoGetter;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffprobe;
+import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -27,9 +30,40 @@ import java.util.stream.Collectors;
 
 @CommonsLog
 public abstract class BackgroundTask<T> extends Task<T> {
-    BackgroundTask() {
+    private BooleanProperty finished;
+
+    @Setter
+    private Runnable onFinished;
+
+    public BackgroundTask(BooleanProperty cancelTaskPaneVisible) {
+        super();
+
+        setOnSucceeded(event -> {
+            if (onFinished != null) {
+                onFinished.run();
+            }
+        });
+
         setOnFailed(this::taskFailed);
-        setOnCancelled(this::taskCancelled);
+
+        setOnCancelled(e -> {
+            if (!cancelTaskPaneVisible.get()) {
+                throw new IllegalStateException();
+            }
+
+            Platform.runLater(() -> cancelTaskPaneVisible.set(false));
+            updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
+            updateMessage("waiting for the task to cancel");
+        });
+
+        finished = new SimpleBooleanProperty(false);
+        finished.addListener((observable, oldValue, newValue) -> {
+            if (Boolean.TRUE.equals(newValue)) {
+                if (onFinished != null) {
+                    Platform.runLater(() -> onFinished.run());
+                }
+            }
+        });
     }
 
     private void taskFailed(Event e) {
@@ -37,9 +71,16 @@ public abstract class BackgroundTask<T> extends Task<T> {
         throw new IllegalStateException();
     }
 
-    private void taskCancelled(Event e) {
-        log.error("task has been cancelled, shouldn't happen");
-        throw new IllegalStateException();
+    public boolean getFinished() {
+        return finished.get();
+    }
+
+    public BooleanProperty finishedProperty() {
+        return finished;
+    }
+
+    public void setFinished(boolean finished) {
+        this.finished.set(finished);
     }
 
     static List<GuiFileInfo> getFilesInfoToShow(

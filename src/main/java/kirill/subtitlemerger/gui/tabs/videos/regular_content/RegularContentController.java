@@ -135,7 +135,7 @@ public class RegularContentController {
 
     private ToggleGroup sortDirectionGroup;
 
-    private CancellableBackgroundTask<?> currentCancellableTask;
+    private BackgroundTask<?> currentTask;
 
     private File directory;
 
@@ -252,7 +252,7 @@ public class RegularContentController {
             stopProgress();
         });
 
-        currentCancellableTask = task;
+        currentTask = task;
 
         showProgress(task, true);
         GuiUtils.startTask(task);
@@ -330,7 +330,7 @@ public class RegularContentController {
             stopProgress();
         });
 
-        currentCancellableTask = task;
+        currentTask = task;
 
         showProgress(task, true);
         GuiUtils.startTask(task);
@@ -448,7 +448,8 @@ public class RegularContentController {
                 allGuiFilesInfo,
                 hideUnavailableCheckbox.isSelected(),
                 context.getSettings().getSortBy(),
-                context.getSettings().getSortDirection()
+                context.getSettings().getSortDirection(),
+                cancelTaskPaneVisible
         );
 
         task.setOnSucceeded(e -> {
@@ -524,7 +525,8 @@ public class RegularContentController {
                 allGuiFilesInfo,
                 hideUnavailableCheckbox.isSelected(),
                 context.getSettings().getSortBy(),
-                context.getSettings().getSortDirection()
+                context.getSettings().getSortDirection(),
+                cancelTaskPaneVisible
         );
 
         task.setOnSucceeded(e -> {
@@ -594,12 +596,12 @@ public class RegularContentController {
 
     @FXML
     private void cancelTaskClicked() {
-        if (currentCancellableTask == null) {
+        if (currentTask == null) {
             log.error("task is null, that shouldn't happen");
             return;
         }
 
-        currentCancellableTask.cancel();
+        currentTask.cancel();
     }
 
     public void show() {
@@ -664,7 +666,8 @@ public class RegularContentController {
                 this::loadAllFileSubtitleSizes,
                 this::loadSingleFileSubtitleSize,
                 this::addExternalSubtitleFileClicked,
-                this::removeExternalSubtitleFileClicked
+                this::removeExternalSubtitleFileClicked,
+                cancelTaskPaneVisible
         );
 
         task.setOnSucceeded(e -> {
@@ -728,7 +731,8 @@ public class RegularContentController {
                 this::loadAllFileSubtitleSizes,
                 this::loadSingleFileSubtitleSize,
                 this::addExternalSubtitleFileClicked,
-                this::removeExternalSubtitleFileClicked
+                this::removeExternalSubtitleFileClicked,
+                cancelTaskPaneVisible
         );
 
         task.setOnSucceeded(e -> {
@@ -788,7 +792,8 @@ public class RegularContentController {
                 this::loadAllFileSubtitleSizes,
                 this::loadSingleFileSubtitleSize,
                 this::addExternalSubtitleFileClicked,
-                this::removeExternalSubtitleFileClicked
+                this::removeExternalSubtitleFileClicked,
+                cancelTaskPaneVisible
         );
 
         task.setOnSucceeded(e -> {
@@ -816,7 +821,8 @@ public class RegularContentController {
                 allGuiFilesInfo,
                 hideUnavailableCheckbox.isSelected(),
                 context.getSettings().getSortBy(),
-                context.getSettings().getSortDirection()
+                context.getSettings().getSortDirection(),
+                cancelTaskPaneVisible
         );
 
         task.setOnSucceeded(e -> {
@@ -853,7 +859,8 @@ public class RegularContentController {
                 allGuiFilesInfo,
                 tableWithFiles.getItems(),
                 filePanes,
-                indices
+                indices,
+                cancelTaskPaneVisible
         );
 
         task.setOnSucceeded(e -> {
@@ -906,7 +913,8 @@ public class RegularContentController {
                 this::loadAllFileSubtitleSizes,
                 this::loadSingleFileSubtitleSize,
                 this::addExternalSubtitleFileClicked,
-                this::removeExternalSubtitleFileClicked
+                this::removeExternalSubtitleFileClicked,
+                cancelTaskPaneVisible
         );
 
         task.setOnSucceeded(e -> {

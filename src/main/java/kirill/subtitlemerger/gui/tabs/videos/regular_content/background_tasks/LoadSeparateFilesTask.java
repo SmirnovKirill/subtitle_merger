@@ -49,9 +49,10 @@ public class LoadSeparateFilesTask extends BackgroundTask<LoadSeparateFilesTask.
             FilePanes.AllFileSubtitleSizesLoader allFileSubtitleSizesLoader,
             FilePanes.SingleFileSubtitleSizeLoader singleFileSubtitleSizeLoader,
             FilePanes.AddExternalSubtitleFileHandler addExternalSubtitleFileHandler,
-            FilePanes.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler
+            FilePanes.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler,
+            BooleanProperty cancelTaskPaneVisible
     ) {
-        super();
+        super(cancelTaskPaneVisible);
         this.files = files;
         this.sortBy = sortBy;
         this.sortDirection = sortDirection;
