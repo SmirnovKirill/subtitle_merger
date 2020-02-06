@@ -22,11 +22,6 @@ public class GuiFileInfo {
 
     private LocalDateTime lastModified;
 
-    /*
-     * Time when file was added to the table. Helps to keep the order when files are added after initial selection.
-     */
-    private LocalDateTime added;
-
     private long size;
 
     private String unavailabilityReason;
@@ -53,7 +48,6 @@ public class GuiFileInfo {
             boolean errorBorder,
             boolean selected,
             LocalDateTime lastModified,
-            LocalDateTime added,
             long size,
             String unavailabilityReason,
             String error,
@@ -68,7 +62,6 @@ public class GuiFileInfo {
         this.errorBorder = new SimpleBooleanProperty(errorBorder);
         this.selected = new SimpleBooleanProperty(selected);
         this.lastModified = lastModified;
-        this.added = added;
         this.size = size;
         this.unavailabilityReason = unavailabilityReason;
         this.error = new SimpleStringProperty(error);

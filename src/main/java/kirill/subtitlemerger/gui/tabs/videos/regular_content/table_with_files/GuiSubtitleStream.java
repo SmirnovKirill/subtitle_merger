@@ -1,15 +1,16 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files;
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 public class GuiSubtitleStream {
+    public static final int SIZE_NOT_SET = -1;
+
     /*
-     * The word "ffmpeg" there emphasizes the fact that it's not a regular index, but an index got from ffmpeg.
+     * The word "ffmpeg" here emphasizes the fact that it's not a regular index, but an index got from ffmpeg.
      * For example the first subtitle stream may have index 2 because the first two indices are assigned to the video
      * and audio streams.
      */
@@ -17,8 +18,8 @@ public class GuiSubtitleStream {
 
     private String unavailabilityReason;
 
-    @Setter
-    private String failedToLoadReason;
+    @Getter(AccessLevel.NONE)
+    private StringProperty failedToLoadReason;
 
     private String language;
 
@@ -26,8 +27,8 @@ public class GuiSubtitleStream {
 
     private boolean extra;
 
-    @Setter
-    private Integer size;
+    @Getter(AccessLevel.NONE)
+    private IntegerProperty size;
 
     @Getter(AccessLevel.NONE)
     private BooleanProperty selectedAsUpper;
@@ -48,11 +49,11 @@ public class GuiSubtitleStream {
     ) {
         this.ffmpegIndex = ffmpegIndex;
         this.unavailabilityReason = unavailabilityReason;
-        this.failedToLoadReason = failedToLoadReason;
+        this.failedToLoadReason = new SimpleStringProperty(failedToLoadReason);
         this.language = language;
         this.title = title;
         this.extra = extra;
-        this.size = size;
+        this.size = new SimpleIntegerProperty(size != null ? size : SIZE_NOT_SET);
         this.selectedAsUpper = new SimpleBooleanProperty(selectedAsUpper);
         this.selectedAsLower = new SimpleBooleanProperty(selectedAsLower);
     }
@@ -79,5 +80,25 @@ public class GuiSubtitleStream {
 
     public void setSelectedAsLower(boolean selectedAsLower) {
         this.selectedAsLower.set(selectedAsLower);
+    }
+
+    public String getUnavailabilityReason() {
+        return unavailabilityReason;
+    }
+
+    public void setUnavailabilityReason(String unavailabilityReason) {
+        this.unavailabilityReason = unavailabilityReason;
+    }
+
+    public String getFailedToLoadReason() {
+        return failedToLoadReason.get();
+    }
+
+    public StringProperty failedToLoadReasonProperty() {
+        return failedToLoadReason;
+    }
+
+    public void setFailedToLoadReason(String failedToLoadReason) {
+        this.failedToLoadReason.set(failedToLoadReason);
     }
 }

@@ -12,7 +12,6 @@ import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentContr
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiExternalSubtitleFile;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.work_with_files.FileInfoGetter;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
@@ -21,7 +20,6 @@ import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffprobe;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.joda.time.LocalDateTime;
 
 import java.io.File;
 import java.util.*;
@@ -175,7 +173,6 @@ public abstract class BackgroundTask<T> extends Task<T> {
                 false,
                 selected,
                 fileInfo.getLastModified(),
-                LocalDateTime.now(),
                 fileInfo.getSize(),
                 guiTextFrom(fileInfo.getUnavailabilityReason()),
                 "",
