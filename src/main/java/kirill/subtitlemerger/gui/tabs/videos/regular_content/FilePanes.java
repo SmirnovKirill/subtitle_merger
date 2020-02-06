@@ -301,18 +301,24 @@ public class FilePanes {
             }
 
             Label sizeLabel = new Label();
-            if (stream.getSize() == null) {
-                sizeLabel.setText("Size: ? KB ");
-            } else {
-                sizeLabel.setText("Size: " + GuiUtils.getFileSizeTextual(stream.getSize()));
-            }
+
+            StringBinding unknownSizeBinding = Bindings.createStringBinding(
+                    () -> "Size: ? KB ", stream.sizeProperty()
+            );
+            StringBinding knownSizeBinding = Bindings.createStringBinding(
+                    () -> "Size: " + GuiUtils.getFileSizeTextual(stream.getSize()), stream.sizeProperty()
+            );
+
+            sizeLabel.textProperty().bind(
+                    Bindings.when(stream.sizeProperty().isEqualTo(GuiSubtitleStream.UNKNOWN_SIZE))
+                            .then(unknownSizeBinding)
+                            .otherwise(knownSizeBinding)
+            );
 
             Hyperlink getSizeLink = new Hyperlink("get size");
             getSizeLink.setOnAction(event -> singleFileSubtitleSizeLoader.load(fileInfo, stream.getFfmpegIndex()));
-            if (stream.getSize() != null) {
-                getSizeLink.setVisible(false);
-                getSizeLink.setManaged(false);
-            }
+            getSizeLink.visibleProperty().bind(stream.sizeProperty().isEqualTo(GuiSubtitleStream.UNKNOWN_SIZE));
+            getSizeLink.managedProperty().bind(stream.sizeProperty().isEqualTo(GuiSubtitleStream.UNKNOWN_SIZE));
 
             sizePane.getChildren().addAll(sizeLabel, getSizeLink, errorImageLabel);
 

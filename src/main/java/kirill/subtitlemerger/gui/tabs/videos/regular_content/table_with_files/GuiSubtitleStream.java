@@ -3,11 +3,10 @@ package kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files;
 import javafx.beans.property.*;
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
 public class GuiSubtitleStream {
-    public static final int SIZE_NOT_SET = -1;
+    public static final int UNKNOWN_SIZE = -1;
 
     /*
      * The word "ffmpeg" here emphasizes the fact that it's not a regular index, but an index got from ffmpeg.
@@ -53,7 +52,7 @@ public class GuiSubtitleStream {
         this.language = language;
         this.title = title;
         this.extra = extra;
-        this.size = new SimpleIntegerProperty(size != null ? size : SIZE_NOT_SET);
+        this.size = new SimpleIntegerProperty(size != null ? size : UNKNOWN_SIZE);
         this.selectedAsUpper = new SimpleBooleanProperty(selectedAsUpper);
         this.selectedAsLower = new SimpleBooleanProperty(selectedAsLower);
     }
@@ -100,5 +99,17 @@ public class GuiSubtitleStream {
 
     public void setFailedToLoadReason(String failedToLoadReason) {
         this.failedToLoadReason.set(failedToLoadReason);
+    }
+
+    public int getSize() {
+        return size.get();
+    }
+
+    public IntegerProperty sizeProperty() {
+        return size;
+    }
+
+    public void setSize(int size) {
+        this.size.set(size);
     }
 }
