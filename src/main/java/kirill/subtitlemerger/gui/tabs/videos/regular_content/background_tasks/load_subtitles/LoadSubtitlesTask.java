@@ -113,14 +113,12 @@ public abstract class LoadSubtitlesTask extends CancellableBackgroundTask<Void> 
                     } else {
                         Platform.runLater(() -> {
                             guiSubtitleStream.setFailedToLoadReason(guiTextFrom(e));
-                            guiFileInfo.setErrorBorder(true);
                         });
                         failedToLoadCount++;
                     }
                 } catch (Parser.IncorrectFormatException e) {
                     Platform.runLater(() -> {
                         guiSubtitleStream.setFailedToLoadReason("subtitles seem to have incorrect format");
-                        guiFileInfo.setErrorBorder(true);
                     });
 
                     failedToLoadCount++;

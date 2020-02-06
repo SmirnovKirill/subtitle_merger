@@ -170,7 +170,6 @@ public abstract class BackgroundTask<T> extends Task<T> {
         GuiFileInfo result = new GuiFileInfo(
                 pathToDisplay,
                 fileInfo.getFile().getAbsolutePath(),
-                false,
                 selected,
                 fileInfo.getLastModified(),
                 fileInfo.getSize(),
@@ -312,10 +311,6 @@ public abstract class BackgroundTask<T> extends Task<T> {
     public static void clearState(List<GuiFileInfo> filesInfo, BackgroundTask<?> task) {
         task.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
         task.updateMessage("clearing state...");
-
-        for (GuiFileInfo fileInfo : filesInfo) {
-            fileInfo.setErrorBorder(false);
-        }
     }
 
     public static Map<String, FilePanes> generateFilesPanes(

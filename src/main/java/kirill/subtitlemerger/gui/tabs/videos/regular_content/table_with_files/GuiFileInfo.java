@@ -15,9 +15,6 @@ public class GuiFileInfo {
     private String fullPath;
 
     @Getter(AccessLevel.NONE)
-    private BooleanProperty errorBorder;
-
-    @Getter(AccessLevel.NONE)
     private BooleanProperty selected;
 
     private LocalDateTime lastModified;
@@ -45,7 +42,6 @@ public class GuiFileInfo {
     public GuiFileInfo(
             String pathToDisplay,
             String fullPath,
-            boolean errorBorder,
             boolean selected,
             LocalDateTime lastModified,
             long size,
@@ -59,7 +55,6 @@ public class GuiFileInfo {
     ) {
         this.pathToDisplay = pathToDisplay;
         this.fullPath = fullPath;
-        this.errorBorder = new SimpleBooleanProperty(errorBorder);
         this.selected = new SimpleBooleanProperty(selected);
         this.lastModified = lastModified;
         this.size = size;
@@ -73,18 +68,6 @@ public class GuiFileInfo {
                 new GuiExternalSubtitleFile(),
                 new GuiExternalSubtitleFile()
         );
-    }
-
-    public boolean getErrorBorder() {
-        return errorBorder.get();
-    }
-
-    public BooleanProperty errorBorderProperty() {
-        return errorBorder;
-    }
-
-    public void setErrorBorder(boolean errorBorder) {
-        this.errorBorder.set(errorBorder);
     }
 
     public String getError() {

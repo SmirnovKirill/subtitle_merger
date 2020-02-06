@@ -998,6 +998,9 @@ public class RegularContentController {
     }
 
     private void addExternalSubtitleFileClicked(GuiFileInfo guiFileInfo) {
+        clearGeneralResult();
+        guiFileInfo.setError(null);
+
         File file = getFile(guiFileInfo, stage, context.getSettings()).orElse(null);
         if (file == null) {
             return;
@@ -1016,13 +1019,11 @@ public class RegularContentController {
 
         if (isDuplicate(file, fileInfo)) {
             guiFileInfo.setError("This file is already added");
-            guiFileInfo.setErrorBorder(true);
             return;
         }
 
         if (file.length() / 1024 / 1024 > GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES) {
             guiFileInfo.setError("File is too big (>" + GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)");
-            guiFileInfo.setErrorBorder(true);
             return;
         }
 
@@ -1034,7 +1035,6 @@ public class RegularContentController {
             );
 
             guiFileInfo.setError(null);
-            guiFileInfo.setErrorBorder(false);
 
             GuiExternalSubtitleFile guiExternalSubtitleFile;
             if (fileInfo.getExternalSubtitleFiles().size() == 0) {
@@ -1053,10 +1053,8 @@ public class RegularContentController {
             fileInfo.getExternalSubtitleFiles().add(new ExternalSubtitleFile(file, subtitles, subtitleSize));
         } catch (IOException e) {
             guiFileInfo.setError("Can't read the file");
-            guiFileInfo.setErrorBorder(true);
         } catch (Parser.IncorrectFormatException e) {
             guiFileInfo.setError("Can't add the file because it has incorrect format");
-            guiFileInfo.setErrorBorder(true);
         }
     }
 
@@ -1092,16 +1090,18 @@ public class RegularContentController {
     }
 
     private void removeExternalSubtitleFileClicked(int index, GuiFileInfo guiFileInfo) {
+        clearGeneralResult();
+        guiFileInfo.setError(null);
+
         FileInfo fileInfo = findMatchingFileInfo(guiFileInfo, filesInfo);
         fileInfo.getExternalSubtitleFiles().remove(1 - index);
-
-        guiFileInfo.setError(null);
-        guiFileInfo.setErrorBorder(false);
 
         guiFileInfo.getExternalSubtitleFiles().get(index).setFileName(null);
         guiFileInfo.getExternalSubtitleFiles().get(index).setSize(-1);
         guiFileInfo.getExternalSubtitleFiles().get(index).setSelectedAsUpper(false);
         guiFileInfo.getExternalSubtitleFiles().get(index).setSelectedAsLower(false);
+
+        setResult("Subtitle file has been removed successfully;", null, null);
     }
 
     private void loadAllFileSubtitleSizes(GuiFileInfo guiFileInfo) {

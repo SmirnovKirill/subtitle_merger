@@ -216,13 +216,11 @@ public class AutoSelectSubtitlesTask extends CancellableBackgroundTask<Void> {
                 result = false;
                 Platform.runLater(() -> {
                     guiSubtitleStream.setFailedToLoadReason(LoadSubtitlesTask.guiTextFrom(e));
-                    guiFileInfo.setErrorBorder(true);
                 });
             } catch (Parser.IncorrectFormatException e) {
                 result = false;
                 Platform.runLater(() -> {
                     guiSubtitleStream.setFailedToLoadReason("subtitles seem to have incorrect format");
-                    guiFileInfo.setErrorBorder(true);
                 });
             }
         }
