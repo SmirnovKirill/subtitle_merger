@@ -63,77 +63,82 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<Void> {
 
     @Override
     protected Void call() {
-        BackgroundTask.clearState(displayedGuiFilesInfo, this);
+        BackgroundTask.clearMessages(displayedGuiFilesInfo, this);
 
         updateMessage("getting list of files to work with...");
         List<GuiFileInfo> guiFilesInfoToWorkWith = getGuiFilesInfoToWorkWith(displayedGuiFilesInfo);
 
         allFileCount = guiFilesInfoToWorkWith.size();
 
-        for (GuiFileInfo guiFileInfo : guiFilesInfoToWorkWith) {
-            if (super.isCancelled()) {
-                setFinished(true);
-                return null;
-            }
+        cancelTaskPaneVisible.setValue(true);
+        try {
+            for (GuiFileInfo guiFileInfo : guiFilesInfoToWorkWith) {
+                if (super.isCancelled()) {
+                    setFinished(true);
+                    return null;
+                }
 
-            FileInfo fileInfo = RegularContentController.findMatchingFileInfo(guiFileInfo, allFilesInfo);
-            if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
-                notEnoughStreamsCount++;
-                processedCount++;
-                continue;
-            }
-
-            List<SubtitleStream> matchingUpperSubtitles = getMatchingUpperSubtitles(fileInfo, guiSettings);
-            List<SubtitleStream> matchingLowerSubtitles = getMatchingLowerSubtitles(fileInfo, guiSettings);
-            if (CollectionUtils.isEmpty(matchingUpperSubtitles) || CollectionUtils.isEmpty(matchingLowerSubtitles)) {
-                notEnoughStreamsCount++;
-                processedCount++;
-                continue;
-            }
-
-            try {
-                boolean loadedSuccessfully = loadSizesIfNecessary(
-                        fileInfo.getFile(),
-                        guiFileInfo,
-                        matchingUpperSubtitles,
-                        matchingLowerSubtitles,
-                        guiFileInfo.getSubtitleStreams()
-                );
-                if (!loadedSuccessfully) {
-                    failedCount++;
+                FileInfo fileInfo = RegularContentController.findMatchingFileInfo(guiFileInfo, allFilesInfo);
+                if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
+                    notEnoughStreamsCount++;
                     processedCount++;
                     continue;
                 }
 
-                if (matchingUpperSubtitles.size() > 1) {
-                    matchingUpperSubtitles.sort(Comparator.comparing(SubtitleStream::getSubtitleSize).reversed());
+                List<SubtitleStream> matchingUpperSubtitles = getMatchingUpperSubtitles(fileInfo, guiSettings);
+                List<SubtitleStream> matchingLowerSubtitles = getMatchingLowerSubtitles(fileInfo, guiSettings);
+                if (CollectionUtils.isEmpty(matchingUpperSubtitles) || CollectionUtils.isEmpty(matchingLowerSubtitles)) {
+                    notEnoughStreamsCount++;
+                    processedCount++;
+                    continue;
                 }
-                if (matchingLowerSubtitles.size() > 1) {
-                    matchingLowerSubtitles.sort(Comparator.comparing(SubtitleStream::getSubtitleSize).reversed());
-                }
 
-                RegularContentController.findMatchingGuiStream(
-                        matchingUpperSubtitles.get(0).getFfmpegIndex(),
-                        guiFileInfo.getSubtitleStreams()
-                ).setSelectedAsUpper(true);
+                try {
+                    boolean loadedSuccessfully = loadSizesIfNecessary(
+                            fileInfo.getFile(),
+                            guiFileInfo,
+                            matchingUpperSubtitles,
+                            matchingLowerSubtitles,
+                            guiFileInfo.getSubtitleStreams()
+                    );
+                    if (!loadedSuccessfully) {
+                        failedCount++;
+                        processedCount++;
+                        continue;
+                    }
 
-                RegularContentController.findMatchingGuiStream(
-                        matchingLowerSubtitles.get(0).getFfmpegIndex(),
-                        guiFileInfo.getSubtitleStreams()
-                ).setSelectedAsLower(true);
+                    if (matchingUpperSubtitles.size() > 1) {
+                        matchingUpperSubtitles.sort(Comparator.comparing(SubtitleStream::getSubtitleSize).reversed());
+                    }
+                    if (matchingLowerSubtitles.size() > 1) {
+                        matchingLowerSubtitles.sort(Comparator.comparing(SubtitleStream::getSubtitleSize).reversed());
+                    }
 
-                guiFileInfo.setHaveSubtitleSizesToLoad(RegularContentController.haveSubtitlesToLoad(fileInfo));
+                    RegularContentController.findMatchingGuiStream(
+                            matchingUpperSubtitles.get(0).getFfmpegIndex(),
+                            guiFileInfo.getSubtitleStreams()
+                    ).setSelectedAsUpper(true);
 
-                finishedSuccessfullyCount++;
-                processedCount++;
-            } catch (FfmpegException e) {
-                if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
-                    setFinished(true);
-                    return null;
-                } else {
-                    throw new IllegalStateException();
+                    RegularContentController.findMatchingGuiStream(
+                            matchingLowerSubtitles.get(0).getFfmpegIndex(),
+                            guiFileInfo.getSubtitleStreams()
+                    ).setSelectedAsLower(true);
+
+                    guiFileInfo.setHaveSubtitleSizesToLoad(RegularContentController.haveSubtitlesToLoad(fileInfo));
+
+                    finishedSuccessfullyCount++;
+                    processedCount++;
+                } catch (FfmpegException e) {
+                    if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
+                        setFinished(true);
+                        return null;
+                    } else {
+                        throw new IllegalStateException();
+                    }
                 }
             }
+        } finally {
+            cancelTaskPaneVisible.setValue(false);
         }
 
         setFinished(true);

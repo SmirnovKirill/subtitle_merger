@@ -129,6 +129,7 @@ public class RegularContentController {
     @FXML
     private Button removeSelectedButton;
 
+    //todo message property probably
     private BooleanProperty cancelTaskPaneVisible = new SimpleBooleanProperty(false);
 
     private ToggleGroup sortByGroup;
@@ -260,7 +261,7 @@ public class RegularContentController {
 
         currentTask = task;
 
-        showProgress(task, true);
+        showProgress(task);
         GuiUtils.startTask(task);
     }
 
@@ -341,7 +342,7 @@ public class RegularContentController {
 
         currentTask = task;
 
-        showProgress(task, true);
+        showProgress(task);
         GuiUtils.startTask(task);
     }
 
@@ -466,7 +467,7 @@ public class RegularContentController {
             stopProgress();
         });
 
-        showProgress(task, false);
+        showProgress(task);
         GuiUtils.startTask(task);
     }
 
@@ -508,8 +509,7 @@ public class RegularContentController {
         resultPane.setDisable(false);
     }
 
-    private void showProgress(Task<?> task, boolean canCancel) {
-        setCancelTaskPaneVisible(canCancel);
+    private void showProgress(Task<?> task) {
         choicePane.setVisible(false);
         progressPane.setVisible(true);
         resultPane.setVisible(true);
@@ -552,7 +552,7 @@ public class RegularContentController {
             stopProgress();
         });
 
-        showProgress(task, false);
+        showProgress(task);
         GuiUtils.startTask(task);
     }
 
@@ -701,7 +701,7 @@ public class RegularContentController {
             stopProgress();
         });
 
-        showProgress(task, false);
+        showProgress(task);
         GuiUtils.startTask(task);
     }
 
@@ -765,7 +765,7 @@ public class RegularContentController {
             stopProgress();
         });
 
-        showProgress(task, false);
+        showProgress(task);
         GuiUtils.startTask(task);
     }
 
@@ -826,7 +826,7 @@ public class RegularContentController {
             stopProgress();
         });
 
-        showProgress(task, false);
+        showProgress(task);
         GuiUtils.startTask(task);
     }
 
@@ -858,7 +858,7 @@ public class RegularContentController {
             stopProgress();
         });
 
-        showProgress(task, false);
+        showProgress(task);
         GuiUtils.startTask(task);
     }
 
@@ -897,7 +897,7 @@ public class RegularContentController {
             stopProgress();
         });
 
-        showProgress(task, false);
+        showProgress(task);
         GuiUtils.startTask(task);
     }
 
@@ -962,7 +962,7 @@ public class RegularContentController {
             stopProgress();
         });
 
-        showProgress(task, false);
+        showProgress(task);
         GuiUtils.startTask(task);
     }
 
@@ -1142,7 +1142,6 @@ public class RegularContentController {
                 new LoadSingleFileAllSubtitlesTask(
                         findMatchingFileInfo(guiFileInfo, filesInfo),
                         guiFileInfo,
-                        tableWithFiles.getItems(),
                         context.getFfmpeg(),
                         cancelTaskPaneVisible
                 )
@@ -1160,7 +1159,6 @@ public class RegularContentController {
                         ffmpegIndex,
                         findMatchingFileInfo(guiFileInfo, filesInfo),
                         guiFileInfo,
-                        tableWithFiles.getItems(),
                         context.getFfmpeg(),
                         cancelTaskPaneVisible
                 )

@@ -31,7 +31,7 @@ public class LoadSeveralFilesAllSubtitlesTask extends LoadSubtitlesTask {
 
     @Override
     protected Void call() {
-        BackgroundTask.clearState(displayedGuiFilesInfo, this);
+        BackgroundTask.clearMessages(displayedGuiFilesInfo, this);
 
         updateMessage("getting list of files to work with...");
         List<GuiFileInfo> guiFilesInfoToWorkWith = getGuiFilesInfoToWorkWith(displayedGuiFilesInfo);

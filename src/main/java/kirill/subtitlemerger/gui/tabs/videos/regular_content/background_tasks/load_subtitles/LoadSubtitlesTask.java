@@ -43,94 +43,100 @@ public abstract class LoadSubtitlesTask extends BackgroundTask<Void> {
     }
 
     protected void load(Integer ffmpegIndex, List<GuiFileInfo> guiFilesInfo, List<FileInfo> filesInfo) {
-        if (ffmpegIndex != null && guiFilesInfo.size() != 1) {
-            throw new IllegalArgumentException();
-        }
+        cancelTaskPaneVisible.setValue(true);
 
-        for (GuiFileInfo guiFileInfo : guiFilesInfo) {
-            FileInfo fileInfo = RegularContentController.findMatchingFileInfo(guiFileInfo, filesInfo);
-            if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
-                continue;
+        try {
+            if (ffmpegIndex != null && guiFilesInfo.size() != 1) {
+                throw new IllegalArgumentException();
             }
 
-            for (SubtitleStream subtitleStream : fileInfo.getSubtitleStreams()) {
-                if (super.isCancelled()) {
-                    setFinished(true);
-                    return;
-                }
-
-                if (ffmpegIndex != null && ffmpegIndex != subtitleStream.getFfmpegIndex()) {
+            for (GuiFileInfo guiFileInfo : guiFilesInfo) {
+                FileInfo fileInfo = RegularContentController.findMatchingFileInfo(guiFileInfo, filesInfo);
+                if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
                     continue;
                 }
 
-                if (subtitleStream.getUnavailabilityReason() != null) {
-                    continue;
-                }
+                for (SubtitleStream subtitleStream : fileInfo.getSubtitleStreams()) {
+                    if (super.isCancelled()) {
+                        setFinished(true);
+                        return;
+                    }
 
-                if (subtitleStream.getSubtitles() != null) {
-                    loadedBeforeCount++;
-                    processedCount++;
-                    continue;
-                }
+                    if (ffmpegIndex != null && ffmpegIndex != subtitleStream.getFfmpegIndex()) {
+                        continue;
+                    }
 
-                updateMessage(
-                        getUpdateMessage(
-                                processedCount,
-                                allSubtitleCount,
-                                subtitleStream,
-                                fileInfo.getFile()
-                        )
-                );
+                    if (subtitleStream.getUnavailabilityReason() != null) {
+                        continue;
+                    }
 
-                GuiSubtitleStream guiSubtitleStream = RegularContentController.findMatchingGuiStream(
-                        subtitleStream.getFfmpegIndex(),
-                        guiFileInfo.getSubtitleStreams()
-                );
+                    if (subtitleStream.getSubtitles() != null) {
+                        loadedBeforeCount++;
+                        processedCount++;
+                        continue;
+                    }
 
-                try {
-                    String subtitleText = ffmpeg.getSubtitlesText(subtitleStream.getFfmpegIndex(), fileInfo.getFile());
-                    subtitleStream.setSubtitlesAndSize(
-                            Parser.fromSubRipText(
-                                    subtitleText,
-                                    subtitleStream.getTitle(),
-                                    subtitleStream.getLanguage()
+                    updateMessage(
+                            getUpdateMessage(
+                                    processedCount,
+                                    allSubtitleCount,
+                                    subtitleStream,
+                                    fileInfo.getFile()
                             )
                     );
 
-                    /*
-                     * Have to call this in the JavaFX thread because this change can lead to updates on the screen.
-                     */
-                    Platform.runLater(() -> {
-                        guiSubtitleStream.setSize(subtitleStream.getSubtitleSize());
-                        guiSubtitleStream.setFailedToLoadReason(null);
-                    });
+                    GuiSubtitleStream guiSubtitleStream = RegularContentController.findMatchingGuiStream(
+                            subtitleStream.getFfmpegIndex(),
+                            guiFileInfo.getSubtitleStreams()
+                    );
 
-                    loadedSuccessfullyCount++;
-                } catch (FfmpegException e) {
-                    if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
-                        setFinished(true);
-                        return;
-                    } else {
+                    try {
+                        String subtitleText = ffmpeg.getSubtitlesText(subtitleStream.getFfmpegIndex(), fileInfo.getFile());
+                        subtitleStream.setSubtitlesAndSize(
+                                Parser.fromSubRipText(
+                                        subtitleText,
+                                        subtitleStream.getTitle(),
+                                        subtitleStream.getLanguage()
+                                )
+                        );
+
+                        /*
+                         * Have to call this in the JavaFX thread because this change can lead to updates on the screen.
+                         */
                         Platform.runLater(() -> {
-                            guiSubtitleStream.setFailedToLoadReason(guiTextFrom(e));
+                            guiSubtitleStream.setSize(subtitleStream.getSubtitleSize());
+                            guiSubtitleStream.setFailedToLoadReason(null);
                         });
+
+                        loadedSuccessfullyCount++;
+                    } catch (FfmpegException e) {
+                        if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
+                            setFinished(true);
+                            return;
+                        } else {
+                            Platform.runLater(() -> {
+                                guiSubtitleStream.setFailedToLoadReason(guiTextFrom(e));
+                            });
+                            failedToLoadCount++;
+                        }
+                    } catch (Parser.IncorrectFormatException e) {
+                        Platform.runLater(() -> {
+                            guiSubtitleStream.setFailedToLoadReason("subtitles seem to have incorrect format");
+                        });
+
                         failedToLoadCount++;
                     }
-                } catch (Parser.IncorrectFormatException e) {
-                    Platform.runLater(() -> {
-                        guiSubtitleStream.setFailedToLoadReason("subtitles seem to have incorrect format");
-                    });
 
-                    failedToLoadCount++;
+                    processedCount++;
                 }
 
-                processedCount++;
+                guiFileInfo.setHaveSubtitleSizesToLoad(RegularContentController.haveSubtitlesToLoad(fileInfo));
             }
 
-            guiFileInfo.setHaveSubtitleSizesToLoad(RegularContentController.haveSubtitlesToLoad(fileInfo));
+            setFinished(true);
+        } finally {
+            cancelTaskPaneVisible.setValue(false);
         }
-
-        setFinished(true);
     }
 
     static String getUpdateMessage(

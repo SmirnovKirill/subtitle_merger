@@ -30,13 +30,18 @@ import java.util.stream.Collectors;
 
 @CommonsLog
 public abstract class BackgroundTask<T> extends Task<T> {
+    protected BooleanProperty cancelTaskPaneVisible;
+
     private BooleanProperty finished;
 
     @Setter
     private Runnable onFinished;
 
+    //todo refactor set- methods
     public BackgroundTask(BooleanProperty cancelTaskPaneVisible) {
         super();
+
+        this.cancelTaskPaneVisible = cancelTaskPaneVisible;
 
         setOnSucceeded(event -> {
             if (onFinished != null) {
@@ -348,9 +353,20 @@ public abstract class BackgroundTask<T> extends Task<T> {
         }
     }
 
-    public static void clearState(List<GuiFileInfo> filesInfo, BackgroundTask<?> task) {
-        task.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
+    public static void clearMessages(List<GuiFileInfo> filesInfo, BackgroundTask<?> task) {
+        task.updateProgress(0, filesInfo.size());
         task.updateMessage("clearing state...");
+
+        int i = 0;
+        for (GuiFileInfo fileInfo : filesInfo) {
+            Platform.runLater(() -> {
+                fileInfo.setSuccessMessage(null);
+                fileInfo.setErrorMessage(null);
+            });
+
+            task.updateProgress(i + 1, filesInfo.size());
+            i++;
+        }
     }
 
     public static Map<String, FilePanes> generateFilesPanes(
