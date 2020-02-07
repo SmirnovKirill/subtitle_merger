@@ -379,22 +379,31 @@ public class FilePanes {
         GridPane.setMargin(getAllSizesPane, new Insets(0, 0, 0, 0));
         GridPane.setMargin(result.getChildren().get(result.getChildren().size() - 1), new Insets(0, 0, 0, 0));
 
-        Label errorLabel = new Label();
-        errorLabel.getStyleClass().add("label-error");
-        errorLabel.textProperty().bind(fileInfo.errorProperty());
+        StackPane statusPane = new StackPane();
 
-        BooleanBinding hasErrors = Bindings.isNotEmpty(fileInfo.errorProperty());
+        Label errorMessageLabel = new Label();
+        errorMessageLabel.textProperty().bind(fileInfo.errorMessageProperty());
+        errorMessageLabel.getStyleClass().add("label-error");
+        BooleanBinding showErrorMessage = Bindings.isNotEmpty(fileInfo.errorMessageProperty());
+        errorMessageLabel.visibleProperty().bind(showErrorMessage);
+        errorMessageLabel.managedProperty().bind(showErrorMessage);
 
-        errorLabel.visibleProperty().bind(hasErrors);
-        errorLabel.managedProperty().bind(hasErrors);
+        Label successMessageLabel = new Label();
+        successMessageLabel.textProperty().bind(fileInfo.successMessageProperty());
+        successMessageLabel.getStyleClass().add("label-success");
+        BooleanBinding showSuccessMessage = Bindings.isNotEmpty(fileInfo.successMessageProperty());
+        successMessageLabel.visibleProperty().bind(showSuccessMessage);
+        successMessageLabel.managedProperty().bind(showSuccessMessage);
+
+        statusPane.getChildren().addAll(errorMessageLabel, successMessageLabel);
 
         result.addRow(
                 2 + fileInfo.getExternalSubtitleFiles().size() + fileInfo.getSubtitleStreams().size(),
-                errorLabel
+                statusPane
         );
 
-        GridPane.setColumnSpan(errorLabel, 3);
-        GridPane.setMargin(errorLabel, new Insets(10, 0, 0, 0));
+        GridPane.setColumnSpan(statusPane, 3);
+        GridPane.setMargin(statusPane, new Insets(10, 0, 0, 0));
 
         return result;
     }

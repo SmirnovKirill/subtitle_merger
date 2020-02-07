@@ -215,7 +215,6 @@ public abstract class BackgroundTask<T> extends Task<T> {
                 fileInfo.getLastModified(),
                 fileInfo.getSize(),
                 guiTextFrom(fileInfo.getUnavailabilityReason()),
-                "",
                 RegularContentController.haveSubtitlesToLoad(fileInfo),
                 RegularContentController.getSubtitleCanBeHiddenCount(fileInfo, guiSettings),
                 RegularContentController.getSubtitleCanBeHiddenCount(fileInfo, guiSettings) != 0,

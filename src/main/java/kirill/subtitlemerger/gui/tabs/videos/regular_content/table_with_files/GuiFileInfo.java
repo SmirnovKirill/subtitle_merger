@@ -24,7 +24,10 @@ public class GuiFileInfo {
     private String unavailabilityReason;
 
     @Getter(AccessLevel.NONE)
-    private StringProperty error;
+    private StringProperty errorMessage;
+
+    @Getter(AccessLevel.NONE)
+    private StringProperty successMessage;
 
     @Getter(AccessLevel.NONE)
     private BooleanProperty haveSubtitleSizesToLoad;
@@ -46,7 +49,6 @@ public class GuiFileInfo {
             LocalDateTime lastModified,
             long size,
             String unavailabilityReason,
-            String error,
             boolean haveSubtitleSizesToLoad,
             int subtitleToHideCount,
             boolean someSubtitlesHidden,
@@ -59,7 +61,8 @@ public class GuiFileInfo {
         this.lastModified = lastModified;
         this.size = size;
         this.unavailabilityReason = unavailabilityReason;
-        this.error = new SimpleStringProperty(error);
+        this.errorMessage = new SimpleStringProperty();
+        this.successMessage = new SimpleStringProperty();
         this.haveSubtitleSizesToLoad = new SimpleBooleanProperty(haveSubtitleSizesToLoad);
         this.subtitleToHideCount = new SimpleIntegerProperty(subtitleToHideCount);
         this.someSubtitlesHidden = new SimpleBooleanProperty(someSubtitlesHidden);
@@ -70,16 +73,28 @@ public class GuiFileInfo {
         );
     }
 
-    public String getError() {
-        return error.get();
+    public String getErrorMessage() {
+        return errorMessage.get();
     }
 
-    public StringProperty errorProperty() {
-        return error;
+    public StringProperty errorMessageProperty() {
+        return errorMessage;
     }
 
-    public void setError(String error) {
-        this.error.set(error);
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage.set(errorMessage);
+    }
+
+    public String getSuccessMessage() {
+        return successMessage.get();
+    }
+
+    public StringProperty successMessageProperty() {
+        return successMessage;
+    }
+
+    public void setSuccessMessage(String successMessage) {
+        this.successMessage.set(successMessage);
     }
 
     public boolean isSelected() {

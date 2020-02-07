@@ -151,6 +151,9 @@ public class RegularContentController {
 
     private IntegerProperty allAvailableCount;
 
+    //todo comment
+    private GuiFileInfo lastProcessedFileInfo;
+
     public boolean getCancelTaskPaneVisible() {
         return cancelTaskPaneVisible.get();
     }
@@ -240,6 +243,9 @@ public class RegularContentController {
 
     @FXML
     private void autoSelectButtonClicked() {
+        clearGeneralResult();
+        lastProcessedFileInfo = null;
+
         AutoSelectSubtitlesTask task = new AutoSelectSubtitlesTask(
                 filesInfo,
                 tableWithFiles.getItems(),
@@ -314,6 +320,9 @@ public class RegularContentController {
 
     @FXML
     private void getAllSizesButtonClicked() {
+        clearGeneralResult();
+        lastProcessedFileInfo = null;
+
         runLoadSubtitlesTask(
                 new LoadSeveralFilesAllSubtitlesTask(
                         filesInfo,
@@ -422,7 +431,7 @@ public class RegularContentController {
     }
 
     private void sortByChanged(Observable observable) {
-        clearGeneralResult();
+        clearGeneralAndLastProcessedResult();
 
         RadioMenuItem radioMenuItem = (RadioMenuItem) sortByGroup.getSelectedToggle();
 
@@ -467,6 +476,15 @@ public class RegularContentController {
         resultLabelError.setText("");
     }
 
+    private void clearGeneralAndLastProcessedResult() {
+        clearGeneralResult();
+
+        if (lastProcessedFileInfo != null) {
+            lastProcessedFileInfo.setErrorMessage(null);
+            lastProcessedFileInfo.setSuccessMessage(null);
+        }
+    }
+
     private void updateTableContent(List<GuiFileInfo> guiFilesToShowInfo, Map<String, FilePanes> filePanes) {
         long oldSelected = getSelected();
         setSelected(guiFilesToShowInfo.stream().filter(GuiFileInfo::isSelected).count());
@@ -502,7 +520,7 @@ public class RegularContentController {
     }
 
     private void sortDirectionChanged(Observable observable) {
-        clearGeneralResult();
+        clearGeneralAndLastProcessedResult();
 
         RadioMenuItem radioMenuItem = (RadioMenuItem) sortDirectionGroup.getSelectedToggle();
 
@@ -638,8 +656,6 @@ public class RegularContentController {
 
     @FXML
     private void separateFilesButtonClicked() {
-        clearGeneralResult();
-
         List<File> files = getFiles(stage, context.getSettings());
         if (CollectionUtils.isEmpty(files)) {
             return;
@@ -703,8 +719,6 @@ public class RegularContentController {
 
     @FXML
     private void directoryButtonClicked() {
-        clearGeneralResult();
-
         File directory = getDirectory(stage, context.getSettings()).orElse(null);
         if (directory == null) {
             return;
@@ -769,6 +783,8 @@ public class RegularContentController {
         /* Just in case. See the huge comment in the hideUnavailableClicked() method. */
         setSelected(0);
         tableWithFiles.setItems(FXCollections.emptyObservableList());
+        clearGeneralAndLastProcessedResult();
+        lastProcessedFileInfo = null;
         allAvailableCount.setValue(0);
         setAllSelected(false);
         context.setWorkWithVideosInProgress(false);
@@ -779,6 +795,7 @@ public class RegularContentController {
 
     @FXML
     private void refreshButtonClicked() {
+        lastProcessedFileInfo = null;
         clearGeneralResult();
 
         LoadDirectoryFilesTask task = new LoadDirectoryFilesTask(
@@ -815,7 +832,7 @@ public class RegularContentController {
 
     @FXML
     private void hideUnavailableClicked() {
-        clearGeneralResult();
+        clearGeneralAndLastProcessedResult();
 
         SortOrShowHideUnavailableTask task = new SortOrShowHideUnavailableTask(
                 allGuiFilesInfo,
@@ -847,7 +864,7 @@ public class RegularContentController {
 
     @FXML
     private void removeButtonClicked() {
-        clearGeneralResult();
+        clearGeneralAndLastProcessedResult();
 
         List<Integer> indices = tableWithFiles.getSelectionModel().getSelectedIndices();
         if (CollectionUtils.isEmpty(indices)) {
@@ -886,7 +903,7 @@ public class RegularContentController {
 
     @FXML
     private void addButtonClicked() {
-        clearGeneralResult();
+        clearGeneralAndLastProcessedResult();
 
         List<File> filesToAdd = getFiles(stage, context.getSettings());
         if (CollectionUtils.isEmpty(filesToAdd)) {
@@ -1006,8 +1023,10 @@ public class RegularContentController {
     }
 
     private void addExternalSubtitleFileClicked(GuiFileInfo guiFileInfo) {
-        clearGeneralResult();
-        guiFileInfo.setError(null);
+        clearGeneralAndLastProcessedResult();
+        guiFileInfo.setErrorMessage(null);
+        guiFileInfo.setSuccessMessage(null);
+        lastProcessedFileInfo = guiFileInfo;
 
         File file = getFile(guiFileInfo, stage, context.getSettings()).orElse(null);
         if (file == null) {
@@ -1026,12 +1045,12 @@ public class RegularContentController {
         FileInfo fileInfo = findMatchingFileInfo(guiFileInfo, filesInfo);
 
         if (isDuplicate(file, fileInfo)) {
-            guiFileInfo.setError("This file is already added");
+            guiFileInfo.setErrorMessage("This file is already added");
             return;
         }
 
         if (file.length() / 1024 / 1024 > GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES) {
-            guiFileInfo.setError("File is too big (>" + GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)");
+            guiFileInfo.setErrorMessage("File is too big (>" + GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)");
             return;
         }
 
@@ -1041,8 +1060,6 @@ public class RegularContentController {
                     "external",
                     null
             );
-
-            guiFileInfo.setError(null);
 
             GuiExternalSubtitleFile guiExternalSubtitleFile;
             if (fileInfo.getExternalSubtitleFiles().size() == 0) {
@@ -1059,10 +1076,11 @@ public class RegularContentController {
             guiExternalSubtitleFile.setSize(subtitleSize);
 
             fileInfo.getExternalSubtitleFiles().add(new ExternalSubtitleFile(file, subtitles, subtitleSize));
+            guiFileInfo.setSuccessMessage("Subtitle file has been added to the list successfully");
         } catch (IOException e) {
-            guiFileInfo.setError("Can't read the file");
+            guiFileInfo.setErrorMessage("Can't read the file");
         } catch (Parser.IncorrectFormatException e) {
-            guiFileInfo.setError("Can't add the file because it has incorrect format");
+            guiFileInfo.setErrorMessage("Can't add the file because it has incorrect format");
         }
     }
 
@@ -1098,8 +1116,10 @@ public class RegularContentController {
     }
 
     private void removeExternalSubtitleFileClicked(int index, GuiFileInfo guiFileInfo) {
-        clearGeneralResult();
-        guiFileInfo.setError(null);
+        clearGeneralAndLastProcessedResult();
+        guiFileInfo.setErrorMessage(null);
+        guiFileInfo.setSuccessMessage(null);
+        lastProcessedFileInfo = guiFileInfo;
 
         FileInfo fileInfo = findMatchingFileInfo(guiFileInfo, filesInfo);
         fileInfo.getExternalSubtitleFiles().remove(1 - index);
@@ -1109,10 +1129,15 @@ public class RegularContentController {
         guiFileInfo.getExternalSubtitleFiles().get(index).setSelectedAsUpper(false);
         guiFileInfo.getExternalSubtitleFiles().get(index).setSelectedAsLower(false);
 
-        setResult("Subtitle file has been removed successfully;", null, null);
+        guiFileInfo.setSuccessMessage("Subtitle file has been removed from the list successfully");
     }
 
     private void loadAllFileSubtitleSizes(GuiFileInfo guiFileInfo) {
+        clearGeneralAndLastProcessedResult();
+        guiFileInfo.setErrorMessage(null);
+        guiFileInfo.setSuccessMessage(null);
+        lastProcessedFileInfo = guiFileInfo;
+
         runLoadSubtitlesTask(
                 new LoadSingleFileAllSubtitlesTask(
                         findMatchingFileInfo(guiFileInfo, filesInfo),
@@ -1125,6 +1150,11 @@ public class RegularContentController {
     }
 
     private void loadSingleFileSubtitleSize(GuiFileInfo guiFileInfo, int ffmpegIndex) {
+        clearGeneralAndLastProcessedResult();
+        guiFileInfo.setErrorMessage(null);
+        guiFileInfo.setSuccessMessage(null);
+        lastProcessedFileInfo = guiFileInfo;
+
         runLoadSubtitlesTask(
                 new LoadSingleSubtitleTask(
                         ffmpegIndex,
