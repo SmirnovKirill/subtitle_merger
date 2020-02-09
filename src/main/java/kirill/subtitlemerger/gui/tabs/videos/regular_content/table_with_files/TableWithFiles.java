@@ -7,21 +7,24 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.FilePanes;
 import lombok.AllArgsConstructor;
-import lombok.Setter;
+import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @CommonsLog
 public class TableWithFiles extends TableView<GuiFileInfo> {
     private static final String ROW_UNAVAILABLE_CLASS = "row-unavailable";
 
-    @Setter
-    private Map<String, FilePanes> filePanes;
+    @Getter
+    private final Map<String, FilePanes> filePanes;
 
     public TableWithFiles() {
         super();
+
+        this.filePanes = new HashMap<>();
 
         getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         setPlaceholder(new Label("there are no files to display"));
@@ -35,11 +38,12 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             protected void updateItem(GuiFileInfo fileInfo, boolean empty){
                 super.updateItem(fileInfo, empty);
 
+                getStyleClass().remove(ROW_UNAVAILABLE_CLASS);
+
                 if (fileInfo == null) {
                     return;
                 }
 
-                getStyleClass().remove(ROW_UNAVAILABLE_CLASS);
                 if (!StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
                     getStyleClass().add(ROW_UNAVAILABLE_CLASS);
                 }

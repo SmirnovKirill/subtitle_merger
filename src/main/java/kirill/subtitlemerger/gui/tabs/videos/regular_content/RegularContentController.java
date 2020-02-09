@@ -40,10 +40,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
@@ -488,7 +485,8 @@ public class RegularContentController {
                         .count()
         );
 
-        tableWithFiles.setFilePanes(filePanes);
+        tableWithFiles.getFilePanes().clear();
+        tableWithFiles.getFilePanes().putAll(filePanes);
         tableWithFiles.setItems(FXCollections.observableArrayList(guiFilesToShowInfo));
         setAllSelected(getSelected() == allAvailableCount.get());
     }
@@ -769,6 +767,7 @@ public class RegularContentController {
         /* Just in case. See the huge comment in the hideUnavailableClicked() method. */
         setSelected(0);
         tableWithFiles.setItems(FXCollections.emptyObservableList());
+        tableWithFiles.getFilePanes().clear();
         clearGeneralResult();
         lastProcessedFileInfo = null;
         allAvailableCount.setValue(0);
