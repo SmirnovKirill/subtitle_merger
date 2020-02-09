@@ -656,6 +656,8 @@ public class RegularContentController {
 
     @FXML
     private void separateFilesButtonClicked() {
+        //todo check if > 10000
+
         List<File> files = getFiles(stage, context.getSettings());
         if (CollectionUtils.isEmpty(files)) {
             return;
@@ -719,6 +721,8 @@ public class RegularContentController {
 
     @FXML
     private void directoryButtonClicked() {
+        //todo check if > 10000
+
         File directory = getDirectory(stage, context.getSettings()).orElse(null);
         if (directory == null) {
             return;
@@ -795,6 +799,8 @@ public class RegularContentController {
 
     @FXML
     private void refreshButtonClicked() {
+        //todo check if > 10000
+
         lastProcessedFileInfo = null;
         clearGeneralResult();
 
