@@ -5,6 +5,7 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.LongProperty;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
+import kirill.subtitlemerger.gui.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.FilePanes;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
@@ -14,6 +15,7 @@ import lombok.Getter;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class LoadSeparateFilesTask extends BackgroundTask<LoadSeparateFilesTask.Result> {
     private List<File> files;
@@ -38,6 +40,8 @@ public class LoadSeparateFilesTask extends BackgroundTask<LoadSeparateFilesTask.
 
     private FilePanes.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler;
 
+    private Consumer<Result> onFinish;
+
     public LoadSeparateFilesTask(
             List<File> files,
             GuiSettings.SortBy sortBy,
@@ -50,9 +54,8 @@ public class LoadSeparateFilesTask extends BackgroundTask<LoadSeparateFilesTask.
             FilePanes.SingleFileSubtitleSizeLoader singleFileSubtitleSizeLoader,
             FilePanes.AddExternalSubtitleFileHandler addExternalSubtitleFileHandler,
             FilePanes.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler,
-            BooleanProperty cancelTaskPaneVisible
+            Consumer<Result> onFinish
     ) {
-        super(cancelTaskPaneVisible);
         this.files = files;
         this.sortBy = sortBy;
         this.sortDirection = sortDirection;
@@ -64,19 +67,20 @@ public class LoadSeparateFilesTask extends BackgroundTask<LoadSeparateFilesTask.
         this.singleFileSubtitleSizeLoader = singleFileSubtitleSizeLoader;
         this.addExternalSubtitleFileHandler = addExternalSubtitleFileHandler;
         this.removeExternalSubtitleFileHandler = removeExternalSubtitleFileHandler;
+        this.onFinish = onFinish;
     }
 
     @Override
-    protected Result call() {
-        List<FileInfo> filesInfo = getFilesInfo(files, guiContext.getFfprobe(), this);
-        List<GuiFileInfo> allGuiFilesInfo = convert(
+    protected Result run() {
+        List<FileInfo> filesInfo = LoadDirectoryFilesTask.getFilesInfo(files, guiContext.getFfprobe(), this);
+        List<GuiFileInfo> allGuiFilesInfo = LoadDirectoryFilesTask.convert(
                 filesInfo,
                 true,
                 true,
                 this,
                 guiContext.getSettings()
         );
-        Map<String, FilePanes> filePanes = generateFilesPanes(
+        Map<String, FilePanes> filePanes = LoadDirectoryFilesTask.generateFilesPanes(
                 allGuiFilesInfo,
                 selected,
                 allSelected,
@@ -88,8 +92,8 @@ public class LoadSeparateFilesTask extends BackgroundTask<LoadSeparateFilesTask.
                 this
         );
 
-        boolean hideUnavailable = shouldHideUnavailable(filesInfo, this);
-        List<GuiFileInfo> guiFilesToShowInfo = getFilesInfoToShow(
+        boolean hideUnavailable = LoadDirectoryFilesTask.shouldHideUnavailable(filesInfo, this);
+        List<GuiFileInfo> guiFilesToShowInfo = LoadDirectoryFilesTask.getFilesInfoToShow(
                 allGuiFilesInfo,
                 hideUnavailable,
                 sortBy,
@@ -98,6 +102,11 @@ public class LoadSeparateFilesTask extends BackgroundTask<LoadSeparateFilesTask.
         );
 
         return new Result(filesInfo, allGuiFilesInfo, guiFilesToShowInfo, hideUnavailable, filePanes);
+    }
+
+    @Override
+    protected void onFinish(Result result) {
+        onFinish.accept(result);
     }
 
     @AllArgsConstructor

@@ -1,8 +1,6 @@
-package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.load_subtitles;
+package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
-import javafx.beans.property.BooleanProperty;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStream;
@@ -10,38 +8,36 @@ import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffmpeg;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public class LoadSeveralFilesAllSubtitlesTask extends LoadSubtitlesTask {
+public class LoadFilesAllSubtitlesTask extends LoadSubtitlesTask {
     private List<FileInfo> allFilesInfo;
 
     private List<GuiFileInfo> displayedGuiFilesInfo;
 
-    public LoadSeveralFilesAllSubtitlesTask(
+    public LoadFilesAllSubtitlesTask(
             List<FileInfo> allFilesInfo,
             List<GuiFileInfo> displayedGuiFilesInfo,
             Ffmpeg ffmpeg,
-            BooleanProperty cancelTaskPaneVisible
+            Consumer<Result> onFinish
     ) {
-        super(ffmpeg, cancelTaskPaneVisible);
+        super(ffmpeg, onFinish);
 
         this.allFilesInfo = allFilesInfo;
         this.displayedGuiFilesInfo = displayedGuiFilesInfo;
     }
 
     @Override
-    protected Void call() {
-        BackgroundTask.clearMessages(displayedGuiFilesInfo, this);
+    protected Result run() {
+        LoadDirectoryFilesTask.clearMessages(displayedGuiFilesInfo, this);
 
         updateMessage("getting list of files to work with...");
         List<GuiFileInfo> guiFilesInfoToWorkWith = getGuiFilesInfoToWorkWith(displayedGuiFilesInfo);
 
         updateMessage("calculating number of subtitles to load...");
-        allSubtitleCount = getAllSubtitleCount(guiFilesInfoToWorkWith, allFilesInfo);
 
-        load(null, guiFilesInfoToWorkWith, allFilesInfo);
-
-        return null;
+        return load(getAllSubtitleCount(guiFilesInfoToWorkWith, allFilesInfo), guiFilesInfoToWorkWith, allFilesInfo);
     }
 
     private static List<GuiFileInfo> getGuiFilesInfoToWorkWith(List<GuiFileInfo> displayedGuiFilesInfo) {

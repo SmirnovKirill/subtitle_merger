@@ -1,7 +1,7 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
-import javafx.beans.property.BooleanProperty;
 import javafx.scene.control.ProgressIndicator;
+import kirill.subtitlemerger.gui.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.FilePanes;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
@@ -11,6 +11,7 @@ import lombok.Getter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class RemoveFilesTask extends BackgroundTask<RemoveFilesTask.Result> {
     private List<FileInfo> filesInfo;
@@ -23,24 +24,26 @@ public class RemoveFilesTask extends BackgroundTask<RemoveFilesTask.Result> {
 
     private List<Integer> selectedIndices;
 
+    private Consumer<Result> onFinish;
+
     public RemoveFilesTask(
             List<FileInfo> filesInfo,
             List<GuiFileInfo> allGuiFilesInfo,
             List<GuiFileInfo> currentGuiFilesToShowInfo,
             Map<String, FilePanes> filePanes,
             List<Integer> selectedIndices,
-            BooleanProperty cancelTaskPaneVisible
+            Consumer<Result> onFinish
     ) {
-        super(cancelTaskPaneVisible);
         this.filesInfo = filesInfo;
         this.allGuiFilesInfo = allGuiFilesInfo;
         this.guiFilesToShowInfo = new ArrayList<>(currentGuiFilesToShowInfo);
         this.filePanes = filePanes;
         this.selectedIndices = selectedIndices;
+        this.onFinish = onFinish;
     }
 
     @Override
-    protected Result call() {
+    protected Result run() {
         updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
         updateMessage("removing files...");
 
@@ -57,6 +60,11 @@ public class RemoveFilesTask extends BackgroundTask<RemoveFilesTask.Result> {
         filePanes.entrySet().removeIf(entry -> selectedPaths.contains(entry.getKey()));
 
         return new Result(originalSize - filesInfo.size(), filesInfo, allGuiFilesInfo, guiFilesToShowInfo, filePanes);
+    }
+
+    @Override
+    protected void onFinish(Result result) {
+        onFinish.accept(result);
     }
 
     @AllArgsConstructor

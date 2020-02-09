@@ -1,10 +1,11 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
-import javafx.beans.property.BooleanProperty;
 import kirill.subtitlemerger.gui.GuiSettings;
+import kirill.subtitlemerger.gui.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 public class SortOrShowHideUnavailableTask extends BackgroundTask<List<GuiFileInfo>> {
     private List<GuiFileInfo> allGuiFilesInfo;
@@ -15,28 +16,35 @@ public class SortOrShowHideUnavailableTask extends BackgroundTask<List<GuiFileIn
 
     private GuiSettings.SortDirection sortDirection;
 
+    private Consumer<List<GuiFileInfo>> onFinish;
+
     public SortOrShowHideUnavailableTask(
             List<GuiFileInfo> allGuiFilesInfo,
             boolean hideUnavailable,
             GuiSettings.SortBy sortBy,
             GuiSettings.SortDirection sortDirection,
-            BooleanProperty cancelTaskPaneVisible
+            Consumer<List<GuiFileInfo>> onFinish
     ) {
-        super(cancelTaskPaneVisible);
         this.allGuiFilesInfo = allGuiFilesInfo;
         this.hideUnavailable = hideUnavailable;
         this.sortBy = sortBy;
         this.sortDirection = sortDirection;
+        this.onFinish = onFinish;
     }
 
     @Override
-    protected List<GuiFileInfo> call() {
-        return getFilesInfoToShow(
+    protected List<GuiFileInfo> run() {
+        return LoadDirectoryFilesTask.getFilesInfoToShow(
                 allGuiFilesInfo,
                 hideUnavailable,
                 sortBy,
                 sortDirection,
                 this
         );
+    }
+
+    @Override
+    protected void onFinish(List<GuiFileInfo> result) {
+        onFinish.accept(result);
     }
 }

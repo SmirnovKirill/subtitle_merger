@@ -4,7 +4,6 @@ import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
-import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
@@ -15,11 +14,12 @@ import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.GuiUtils;
+import kirill.subtitlemerger.gui.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.*;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.load_subtitles.LoadSeveralFilesAllSubtitlesTask;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.load_subtitles.LoadSingleFileAllSubtitlesTask;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.load_subtitles.LoadSingleSubtitleTask;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.load_subtitles.LoadSubtitlesTask;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.LoadFilesAllSubtitlesTask;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.LoadSingleFileAllSubtitlesTask;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.LoadSingleSubtitleTask;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.LoadSubtitlesTask;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiExternalSubtitleFile;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
@@ -252,66 +252,69 @@ public class RegularContentController {
                 tableWithFiles.getItems(),
                 context.getFfmpeg(),
                 context.getSettings(),
-                cancelTaskPaneVisible
+                result -> {
+                    showResult(result);
+                    stopProgress();
+                }
         );
-        task.setOnFinished(() -> {
-            showResult(task);
-            stopProgress();
-        });
 
+        startBackgroundTask(task);
+    }
+
+    private void startBackgroundTask(BackgroundTask<?> task) {
         currentTask = task;
-
         showProgress(task);
-        GuiUtils.startTask(task);
+        cancelTaskPaneVisible.bind(task.cancellationPossibleProperty());
+        task.start();
     }
 
     //todo refactor somehow
-    private void showResult(AutoSelectSubtitlesTask task) {
-        if (task.getProcessedCount() == 0) {
+    private void showResult(AutoSelectSubtitlesTask.Result result) {
+        if (result.getProcessedCount() == 0) {
             setResult(null, "Haven't done anything because of the cancellation", null);
-        } else if (task.getFinishedSuccessfullyCount() == task.getAllFileCount()) {
-            if (task.getAllFileCount() == 1) {
+        } else if (result.getFinishedSuccessfullyCount() == result.getAllFileCount()) {
+            if (result.getAllFileCount() == 1) {
                 setResult("Subtitles have been successfully auto-selected for the file", null, null);
             } else {
-                setResult("Subtitles have been successfully auto-selected for all " + task.getAllFileCount() + " files", null, null);
+                setResult("Subtitles have been successfully auto-selected for all " + result.getAllFileCount() + " files", null, null);
             }
-        } else if (task.getNotEnoughStreamsCount() == task.getAllFileCount()) {
-            if (task.getAllFileCount() == 1) {
+        } else if (result.getNotEnoughStreamsCount() == result.getAllFileCount()) {
+            if (result.getAllFileCount() == 1) {
                 setResult(null, "Auto-selection is not possible (no proper subtitles to choose from) for the file", null);
             } else {
-                setResult(null, "Auto-selection is not possible (no proper subtitles to choose from) for all " + task.getAllFileCount() + " files", null);
+                setResult(null, "Auto-selection is not possible (no proper subtitles to choose from) for all " + result.getAllFileCount() + " files", null);
             }
-        } else if (task.getFailedCount() == task.getAllFileCount()) {
-            if (task.getAllFileCount() == 1) {
+        } else if (result.getFailedCount() == result.getAllFileCount()) {
+            if (result.getAllFileCount() == 1) {
                 setResult(null, null, "Failed to perform auto-selection for the file");
             } else {
-                setResult(null, null, "Failed to perform auto-selection for all " + task.getAllFileCount() + " files");
+                setResult(null, null, "Failed to perform auto-selection for all " + result.getAllFileCount() + " files");
             }
         } else {
             String success = "";
-            if (task.getFinishedSuccessfullyCount() != 0) {
-                success += task.getFinishedSuccessfullyCount() + "/" + task.getAllFileCount();
+            if (result.getFinishedSuccessfullyCount() != 0) {
+                success += result.getFinishedSuccessfullyCount() + "/" + result.getAllFileCount();
                 success += " auto-selected successfully";
             }
 
             String warn = "";
-            if (task.getProcessedCount() != task.getAllFileCount()) {
-                warn += (task.getAllFileCount() - task.getProcessedCount()) + "/" + task.getAllFileCount();
+            if (result.getProcessedCount() != result.getAllFileCount()) {
+                warn += (result.getAllFileCount() - result.getProcessedCount()) + "/" + result.getAllFileCount();
                 warn += " cancelled";
             }
 
-            if (task.getNotEnoughStreamsCount() != 0) {
+            if (result.getNotEnoughStreamsCount() != 0) {
                 if (!StringUtils.isBlank(warn)) {
                     warn += ", ";
                 }
 
                 warn += "auto-selection is not possible for ";
-                warn += task.getNotEnoughStreamsCount() + "/" + task.getAllFileCount();
+                warn += result.getNotEnoughStreamsCount() + "/" + result.getAllFileCount();
             }
 
             String error = "";
-            if (task.getFailedCount() != 0) {
-                error += task.getFailedCount() + "/" + task.getAllFileCount();
+            if (result.getFailedCount() != 0) {
+                error += result.getFailedCount() + "/" + result.getAllFileCount();
                 error += " failed";
             }
 
@@ -324,76 +327,67 @@ public class RegularContentController {
         clearGeneralResult();
         lastProcessedFileInfo = null;
 
-        runLoadSubtitlesTask(
-                new LoadSeveralFilesAllSubtitlesTask(
-                        filesInfo,
-                        tableWithFiles.getItems(),
-                        context.getFfmpeg(),
-                        cancelTaskPaneVisible
-                )
+        LoadFilesAllSubtitlesTask task = new LoadFilesAllSubtitlesTask(
+                filesInfo,
+                tableWithFiles.getItems(),
+                context.getFfmpeg(),
+                result -> {
+                    showResult(result);
+                    stopProgress();
+                }
         );
+
+        startBackgroundTask(task);
     }
 
-    private void runLoadSubtitlesTask(LoadSubtitlesTask task) {
-        task.setOnFinished(() -> {
-            showResult(task);
-            stopProgress();
-        });
-
-        currentTask = task;
-
-        showProgress(task);
-        GuiUtils.startTask(task);
-    }
-
-    private void showResult(LoadSubtitlesTask task) {
-        if (task.getAllSubtitleCount() == 0) {
+    private void showResult(LoadSubtitlesTask.Result result) {
+        if (result.getAllSubtitleCount() == 0) {
             setResult("No subtitles to load", null, null);
-        } else if (task.getProcessedCount() == 0) {
+        } else if (result.getProcessedCount() == 0) {
             setResult(null, "Haven't load anything because of the cancellation", null);
-        } else if (task.getLoadedSuccessfullyCount() == task.getAllSubtitleCount()) {
-            if (task.getAllSubtitleCount() == 1) {
+        } else if (result.getLoadedSuccessfullyCount() == result.getAllSubtitleCount()) {
+            if (result.getAllSubtitleCount() == 1) {
                 setResult("Subtitle size has been loaded successfully", null, null);
             } else {
-                setResult("All " + task.getAllSubtitleCount() + " subtitle sizes have been loaded successfully", null, null);
+                setResult("All " + result.getAllSubtitleCount() + " subtitle sizes have been loaded successfully", null, null);
             }
-        } else if (task.getLoadedBeforeCount() == task.getAllSubtitleCount()) {
-            if (task.getAllSubtitleCount() == 1) {
+        } else if (result.getLoadedBeforeCount() == result.getAllSubtitleCount()) {
+            if (result.getAllSubtitleCount() == 1) {
                 setResult("Subtitle size has already been loaded successfully", null, null);
             } else {
-                setResult("All " + task.getAllSubtitleCount() + " subtitle sizes have already been loaded successfully", null, null);
+                setResult("All " + result.getAllSubtitleCount() + " subtitle sizes have already been loaded successfully", null, null);
             }
-        } else if (task.getFailedToLoadCount() == task.getAllSubtitleCount()) {
-            if (task.getAllSubtitleCount() == 1) {
+        } else if (result.getFailedToLoadCount() == result.getAllSubtitleCount()) {
+            if (result.getAllSubtitleCount() == 1) {
                 setResult(null, null, "Failed to load subtitle size");
             } else {
-                setResult(null, null, "Failed to load all " + task.getAllSubtitleCount() + " subtitle sizes");
+                setResult(null, null, "Failed to load all " + result.getAllSubtitleCount() + " subtitle sizes");
             }
         } else {
             String success = "";
-            if (task.getLoadedSuccessfullyCount() != 0) {
-                success += task.getLoadedSuccessfullyCount() + "/" + task.getAllSubtitleCount();
+            if (result.getLoadedSuccessfullyCount() != 0) {
+                success += result.getLoadedSuccessfullyCount() + "/" + result.getAllSubtitleCount();
                 success += " loaded successfully";
             }
 
-            if (task.getLoadedBeforeCount() != 0) {
+            if (result.getLoadedBeforeCount() != 0) {
                 if (!StringUtils.isBlank(success)) {
                     success += ", ";
                 }
 
-                success += task.getLoadedBeforeCount() + "/" + task.getAllSubtitleCount();
+                success += result.getLoadedBeforeCount() + "/" + result.getAllSubtitleCount();
                 success += " loaded before";
             }
 
             String warn = "";
-            if (task.getProcessedCount() != task.getAllSubtitleCount()) {
-                warn += (task.getAllSubtitleCount() - task.getProcessedCount()) + "/" + task.getAllSubtitleCount();
+            if (result.getProcessedCount() != result.getAllSubtitleCount()) {
+                warn += (result.getAllSubtitleCount() - result.getProcessedCount()) + "/" + result.getAllSubtitleCount();
                 warn += " cancelled";
             }
 
             String error = "";
-            if (task.getFailedToLoadCount() != 0) {
-                error += "failed to load " + task.getFailedToLoadCount() + "/" + task.getAllSubtitleCount();
+            if (result.getFailedToLoadCount() != 0) {
+                error += "failed to load " + result.getFailedToLoadCount() + "/" + result.getAllSubtitleCount();
                 error += " subtitles";
             }
 
@@ -459,16 +453,13 @@ public class RegularContentController {
                 hideUnavailableCheckbox.isSelected(),
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
-                cancelTaskPaneVisible
+                result -> {
+                    updateTableContent(result, filePanes);
+                    stopProgress();
+                }
         );
 
-        task.setOnSucceeded(e -> {
-            updateTableContent(task.getValue(), filePanes);
-            stopProgress();
-        });
-
-        showProgress(task);
-        GuiUtils.startTask(task);
+        startBackgroundTask(task);
     }
 
     private void clearGeneralResult() {
@@ -509,7 +500,7 @@ public class RegularContentController {
         resultPane.setDisable(false);
     }
 
-    private void showProgress(Task<?> task) {
+    private void showProgress(BackgroundTask<?> task) {
         choicePane.setVisible(false);
         progressPane.setVisible(true);
         resultPane.setVisible(true);
@@ -544,16 +535,14 @@ public class RegularContentController {
                 hideUnavailableCheckbox.isSelected(),
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
-                cancelTaskPaneVisible
+                result -> {
+                    updateTableContent(result, filePanes);
+                    stopProgress();
+                }
         );
 
-        task.setOnSucceeded(e -> {
-            updateTableContent(task.getValue(), filePanes);
-            stopProgress();
-        });
 
-        showProgress(task);
-        GuiUtils.startTask(task);
+        startBackgroundTask(task);
     }
 
     private static ContextMenu generateContextMenu(
@@ -685,26 +674,23 @@ public class RegularContentController {
                 this::loadSingleFileSubtitleSize,
                 this::addExternalSubtitleFileClicked,
                 this::removeExternalSubtitleFileClicked,
-                cancelTaskPaneVisible
+                result -> {
+                    filesInfo = result.getFilesInfo();
+                    allGuiFilesInfo = result.getAllGuiFilesInfo();
+                    filePanes = result.getFilePanes();
+                    updateTableContent(result.getGuiFilesToShowInfo(), result.getFilePanes());
+                    hideUnavailableCheckbox.setSelected(result.isHideUnavailable());
+
+                    chosenDirectoryPane.setVisible(false);
+                    chosenDirectoryPane.setManaged(false);
+                    addRemoveFilesPane.setVisible(true);
+                    addRemoveFilesPane.setManaged(true);
+
+                    stopProgress();
+                }
         );
 
-        task.setOnSucceeded(e -> {
-            filesInfo = task.getValue().getFilesInfo();
-            allGuiFilesInfo = task.getValue().getAllGuiFilesInfo();
-            filePanes = task.getValue().getFilePanes();
-            updateTableContent(task.getValue().getGuiFilesToShowInfo(), task.getValue().getFilePanes());
-            hideUnavailableCheckbox.setSelected(task.getValue().isHideUnavailable());
-
-            chosenDirectoryPane.setVisible(false);
-            chosenDirectoryPane.setManaged(false);
-            addRemoveFilesPane.setVisible(true);
-            addRemoveFilesPane.setManaged(true);
-
-            stopProgress();
-        });
-
-        showProgress(task);
-        GuiUtils.startTask(task);
+        startBackgroundTask(task);
     }
 
     private static List<File> getFiles(Stage stage, GuiSettings settings) {
@@ -750,27 +736,24 @@ public class RegularContentController {
                 this::loadSingleFileSubtitleSize,
                 this::addExternalSubtitleFileClicked,
                 this::removeExternalSubtitleFileClicked,
-                cancelTaskPaneVisible
+                result -> {
+                    filesInfo = result.getFilesInfo();
+                    allGuiFilesInfo = result.getAllGuiFilesInfo();
+                    filePanes = result.getFilePanes();
+                    updateTableContent(result.getGuiFilesToShowInfo(), result.getFilePanes());
+                    hideUnavailableCheckbox.setSelected(result.isHideUnavailable());
+                    chosenDirectoryField.setText(directory.getAbsolutePath());
+
+                    chosenDirectoryPane.setVisible(true);
+                    chosenDirectoryPane.setManaged(true);
+                    addRemoveFilesPane.setVisible(false);
+                    addRemoveFilesPane.setManaged(false);
+
+                    stopProgress();
+                }
         );
 
-        task.setOnSucceeded(e -> {
-            filesInfo = task.getValue().getFilesInfo();
-            allGuiFilesInfo = task.getValue().getAllGuiFilesInfo();
-            filePanes = task.getValue().getFilePanes();
-            updateTableContent(task.getValue().getGuiFilesToShowInfo(), task.getValue().getFilePanes());
-            hideUnavailableCheckbox.setSelected(task.getValue().isHideUnavailable());
-            chosenDirectoryField.setText(directory.getAbsolutePath());
-
-            chosenDirectoryPane.setVisible(true);
-            chosenDirectoryPane.setManaged(true);
-            addRemoveFilesPane.setVisible(false);
-            addRemoveFilesPane.setManaged(false);
-
-            stopProgress();
-        });
-
-        showProgress(task);
-        GuiUtils.startTask(task);
+        startBackgroundTask(task);
     }
 
     private static Optional<File> getDirectory(Stage stage, GuiSettings settings) {
@@ -816,24 +799,21 @@ public class RegularContentController {
                 this::loadSingleFileSubtitleSize,
                 this::addExternalSubtitleFileClicked,
                 this::removeExternalSubtitleFileClicked,
-                cancelTaskPaneVisible
+                result -> {
+                    filesInfo = result.getFilesInfo();
+                    allGuiFilesInfo = result.getAllGuiFilesInfo();
+                    filePanes = result.getFilePanes();
+                    updateTableContent(result.getGuiFilesToShowInfo(), result.getFilePanes());
+                    hideUnavailableCheckbox.setSelected(result.isHideUnavailable());
+
+                    /* See the huge comment in the hideUnavailableClicked() method. */
+                    tableWithFiles.scrollTo(0);
+
+                    stopProgress();
+                }
         );
 
-        task.setOnSucceeded(e -> {
-            filesInfo = task.getValue().getFilesInfo();
-            allGuiFilesInfo = task.getValue().getAllGuiFilesInfo();
-            filePanes = task.getValue().getFilePanes();
-            updateTableContent(task.getValue().getGuiFilesToShowInfo(), task.getValue().getFilePanes());
-            hideUnavailableCheckbox.setSelected(task.getValue().isHideUnavailable());
-
-            /* See the huge comment in the hideUnavailableClicked() method. */
-            tableWithFiles.scrollTo(0);
-
-            stopProgress();
-        });
-
-        showProgress(task);
-        GuiUtils.startTask(task);
+        startBackgroundTask(task);
     }
 
     @FXML
@@ -845,27 +825,24 @@ public class RegularContentController {
                 hideUnavailableCheckbox.isSelected(),
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
-                cancelTaskPaneVisible
+                result -> {
+                    updateTableContent(result, filePanes);
+
+                    /*
+                     * There is a strange bug with TableView - when the list is shrunk in size (because for example
+                     * "hide unavailable" checkbox is checked but it can also happen when refresh is clicked I suppose) and both
+                     * big list and shrunk list have vertical scrollbars table isn't shrunk unless you move the scrollbar.
+                     * I've tried many workaround but this one seems the best so far - just show the beginning of the table.
+                     * I couldn't find a bug with precise description but these ones fit quite well -
+                     * https://bugs.openjdk.java.net/browse/JDK-8095384, https://bugs.openjdk.java.net/browse/JDK-8087833.
+                     */
+                    tableWithFiles.scrollTo(0);
+
+                    stopProgress();
+                }
         );
 
-        task.setOnSucceeded(e -> {
-            updateTableContent(task.getValue(), filePanes);
-
-            /*
-             * There is a strange bug with TableView - when the list is shrunk in size (because for example
-             * "hide unavailable" checkbox is checked but it can also happen when refresh is clicked I suppose) and both
-             * big list and shrunk list have vertical scrollbars table isn't shrunk unless you move the scrollbar.
-             * I've tried many workaround but this one seems the best so far - just show the beginning of the table.
-             * I couldn't find a bug with precise description but these ones fit quite well -
-             * https://bugs.openjdk.java.net/browse/JDK-8095384, https://bugs.openjdk.java.net/browse/JDK-8087833.
-             */
-            tableWithFiles.scrollTo(0);
-
-            stopProgress();
-        });
-
-        showProgress(task);
-        GuiUtils.startTask(task);
+        startBackgroundTask(task);
     }
 
     @FXML
@@ -883,28 +860,25 @@ public class RegularContentController {
                 tableWithFiles.getItems(),
                 filePanes,
                 indices,
-                cancelTaskPaneVisible
+                result -> {
+                    filesInfo = result.getFilesInfo();
+                    allGuiFilesInfo = result.getAllGuiFilesInfo();
+                    filePanes = result.getFilePanes();
+                    updateTableContent(result.getGuiFilesToShowInfo(), result.getFilePanes());
+
+                    if (result.getRemovedCount() == 0) {
+                        throw new IllegalStateException();
+                    } else if (result.getRemovedCount() == 1) {
+                        setResult("File has been removed from the list successfully", null, null);
+                    } else {
+                        setResult(result.getRemovedCount() + " files have been removed from the list successfully", null, null);
+                    }
+
+                    stopProgress();
+                }
         );
 
-        task.setOnSucceeded(e -> {
-            filesInfo = task.getValue().getFilesInfo();
-            allGuiFilesInfo = task.getValue().getAllGuiFilesInfo();
-            filePanes = task.getValue().getFilePanes();
-            updateTableContent(task.getValue().getGuiFilesToShowInfo(), task.getValue().getFilePanes());
-
-            if (task.getValue().getRemovedCount() == 0) {
-                throw new IllegalStateException();
-            } else if (task.getValue().getRemovedCount() == 1) {
-                setResult("File has been removed from the list successfully", null, null);
-            } else {
-                setResult(task.getValue().getRemovedCount() + " files have been removed from the list successfully", null, null);
-            }
-
-            stopProgress();
-        });
-
-        showProgress(task);
-        GuiUtils.startTask(task);
+        startBackgroundTask(task);
     }
 
     @FXML
@@ -937,39 +911,36 @@ public class RegularContentController {
                 this::loadSingleFileSubtitleSize,
                 this::addExternalSubtitleFileClicked,
                 this::removeExternalSubtitleFileClicked,
-                cancelTaskPaneVisible
+                result -> {
+                    filesInfo = result.getFilesInfo();
+                    allGuiFilesInfo = result.getAllGuiFilesInfo();
+                    filePanes = result.getFilePanes();
+                    updateTableContent(result.getGuiFilesToShowInfo(), result.getFilePanes());
+
+                    if (result.getAddedCount() == 0) {
+                        if (filesToAdd.size() == 1) {
+                            setResult("File has been added already", null, null);
+                        } else {
+                            setResult("All " + filesToAdd.size() + " files have been added already", null, null);
+                        }
+                    } else if (result.getAddedCount() == filesToAdd.size()) {
+                        if (result.getAddedCount() == 1) {
+                            setResult("File has been added successfully", null, null);
+                        } else {
+                            setResult("All " + result.getAddedCount() + " files have been added successfully", null, null);
+                        }
+                    } else {
+                        String message = result.getAddedCount() + "/" + filesToAdd.size() + " successfully added, "
+                                + (filesToAdd.size() - result.getAddedCount()) + "/" + filesToAdd.size() + " added before";
+
+                        setResult(message, null, null);
+                    }
+
+                    stopProgress();
+                }
         );
 
-        task.setOnSucceeded(e -> {
-            filesInfo = task.getValue().getFilesInfo();
-            allGuiFilesInfo = task.getValue().getAllGuiFilesInfo();
-            filePanes = task.getValue().getFilePanes();
-            updateTableContent(task.getValue().getGuiFilesToShowInfo(), task.getValue().getFilePanes());
-
-            if (task.getValue().getAddedCount() == 0) {
-                if (filesToAdd.size() == 1) {
-                    setResult("File has been added already", null, null);
-                } else {
-                    setResult("All " + filesToAdd.size() + " files have been added already", null, null);
-                }
-            } else if (task.getValue().getAddedCount() == filesToAdd.size()) {
-                if (task.getValue().getAddedCount() == 1) {
-                    setResult("File has been added successfully", null, null);
-                } else {
-                    setResult("All " + task.getValue().getAddedCount() + " files have been added successfully", null, null);
-                }
-            } else {
-                String message = task.getValue().getAddedCount() + "/" + filesToAdd.size() + " successfully added, "
-                        + (filesToAdd.size() - task.getValue().getAddedCount()) + "/" + filesToAdd.size() + " added before";
-
-                setResult(message, null, null);
-            }
-
-            stopProgress();
-        });
-
-        showProgress(task);
-        GuiUtils.startTask(task);
+        startBackgroundTask(task);
     }
 
     public static GuiFileInfo findMatchingGuiFileInfo(FileInfo fileInfo, List<GuiFileInfo> guiFilesInfo) {
@@ -1144,14 +1115,17 @@ public class RegularContentController {
         guiFileInfo.setSuccessMessage(null);
         lastProcessedFileInfo = guiFileInfo;
 
-        runLoadSubtitlesTask(
-                new LoadSingleFileAllSubtitlesTask(
-                        findMatchingFileInfo(guiFileInfo, filesInfo),
-                        guiFileInfo,
-                        context.getFfmpeg(),
-                        cancelTaskPaneVisible
-                )
+        LoadSingleFileAllSubtitlesTask task = new LoadSingleFileAllSubtitlesTask(
+                findMatchingFileInfo(guiFileInfo, filesInfo),
+                guiFileInfo,
+                context.getFfmpeg(),
+                (result) -> {
+                    showResult(result);
+                    stopProgress();
+                }
         );
+
+        startBackgroundTask(task);
     }
 
     private void loadSingleFileSubtitleSize(GuiFileInfo guiFileInfo, int ffmpegIndex) {
@@ -1160,15 +1134,18 @@ public class RegularContentController {
         guiFileInfo.setSuccessMessage(null);
         lastProcessedFileInfo = guiFileInfo;
 
-        runLoadSubtitlesTask(
-                new LoadSingleSubtitleTask(
-                        ffmpegIndex,
-                        findMatchingFileInfo(guiFileInfo, filesInfo),
-                        guiFileInfo,
-                        context.getFfmpeg(),
-                        cancelTaskPaneVisible
-                )
+        LoadSingleSubtitleTask task = new LoadSingleSubtitleTask(
+                ffmpegIndex,
+                findMatchingFileInfo(guiFileInfo, filesInfo),
+                guiFileInfo,
+                context.getFfmpeg(),
+                (result) -> {
+                    //todo fix showResult(result);
+                    stopProgress();
+                }
         );
+
+        startBackgroundTask(task);
     }
 
     public boolean isAllSelected() {

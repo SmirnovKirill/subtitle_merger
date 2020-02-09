@@ -21,3 +21,16 @@
 скрытие/раскрытие
 выбор upper/lower
 выбор для мержа
+
+
+
+
+
+результаты:
+1. загрузка одного саба - task has been cancelled / has been loaded successfully / failed to load
+2. загрузка всех сабов одного файла loaded: N, loaded before: N, cancelled: N, failed: N писать в файл
+
+3. загрузка сабов всех nothing to load или loaded: N, loaded before: N, cancelled: N, failed: N
+4. добавление файлов к имеющимся Files added: N, files added before: N
+5. автоопределение Auto-selected: N, impossible: N, cancelled: N, failed: N
+6. мерж

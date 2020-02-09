@@ -1,13 +1,9 @@
 package kirill.subtitlemerger.gui;
 
-import javafx.concurrent.Task;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Tooltip;
 import javafx.util.Duration;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Arrays;
@@ -33,12 +29,6 @@ public class GuiUtils {
         return sizeBigDecimal.divide(divisor.pow(power), 2, RoundingMode.HALF_UP) + " " + sizes.get(power);
     }
 
-    public static void startTask(Task<?> task) {
-        Thread thread = new Thread(task);
-        thread.setDaemon(true);
-        thread.start();
-    }
-
     public static Tooltip generateTooltip(String text) {
         Tooltip result = new Tooltip(text);
 
@@ -50,14 +40,5 @@ public class GuiUtils {
     private static void setTooltipProperties(Tooltip tooltip) {
         tooltip.setShowDelay(Duration.ZERO);
         tooltip.setShowDuration(Duration.INDEFINITE);
-    }
-
-    public static void loadWithUncheckedException(FXMLLoader loader) {
-        try {
-            loader.load();
-        } catch (IOException e) {
-            log.error("failed to parse fxml: " + ExceptionUtils.getStackTrace(e));
-            throw new IllegalStateException();
-        }
     }
 }

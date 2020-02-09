@@ -12,6 +12,7 @@ import java.util.List;
 @Getter
 public
 class FileInfo {
+    //todo check all file related invocations
     private File file;
 
     private LocalDateTime lastModified;

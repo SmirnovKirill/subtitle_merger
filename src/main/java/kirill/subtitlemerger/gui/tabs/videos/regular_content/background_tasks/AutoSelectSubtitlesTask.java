@@ -1,10 +1,9 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
 import javafx.application.Platform;
-import javafx.beans.property.BooleanProperty;
 import kirill.subtitlemerger.gui.GuiSettings;
+import kirill.subtitlemerger.gui.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.load_subtitles.LoadSubtitlesTask;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.logic.core.Parser;
@@ -12,7 +11,9 @@ import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -20,9 +21,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public class AutoSelectSubtitlesTask extends BackgroundTask<Void> {
+public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesTask.Result> {
     private List<FileInfo> allFilesInfo;
 
     private List<GuiFileInfo> displayedGuiFilesInfo;
@@ -31,118 +33,103 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<Void> {
 
     private GuiSettings guiSettings;
 
-    @Getter
-    private int allFileCount;
-
-    @Getter
-    private int notEnoughStreamsCount;
-
-    @Getter
-    private int processedCount;
-
-    @Getter
-    private int finishedSuccessfullyCount;
-
-    @Getter
-    private int failedCount;
+    private Consumer<Result> onFinish;
 
     public AutoSelectSubtitlesTask(
             List<FileInfo> allFilesInfo,
             List<GuiFileInfo> displayedGuiFilesInfo,
             Ffmpeg ffmpeg,
             GuiSettings guiSettings,
-            BooleanProperty cancelTaskPaneVisible
+            Consumer<Result> onFinish
     ) {
-        super(cancelTaskPaneVisible);
-
         this.allFilesInfo = allFilesInfo;
         this.displayedGuiFilesInfo = displayedGuiFilesInfo;
         this.ffmpeg = ffmpeg;
         this.guiSettings = guiSettings;
+        this.onFinish = onFinish;
     }
 
     @Override
-    protected Void call() {
-        BackgroundTask.clearMessages(displayedGuiFilesInfo, this);
+    protected Result run() {
+        LoadDirectoryFilesTask.clearMessages(displayedGuiFilesInfo, this);
 
         updateMessage("getting list of files to work with...");
         List<GuiFileInfo> guiFilesInfoToWorkWith = getGuiFilesInfoToWorkWith(displayedGuiFilesInfo);
 
-        allFileCount = guiFilesInfoToWorkWith.size();
+        Result result = new Result(
+                guiFilesInfoToWorkWith.size(),
+                0,
+                0,
+                0,
+                0
+        );
+        setCancellationPossible(true);
 
-        cancelTaskPaneVisible.setValue(true);
-        try {
-            for (GuiFileInfo guiFileInfo : guiFilesInfoToWorkWith) {
-                if (super.isCancelled()) {
-                    setFinished(true);
-                    return null;
-                }
+        for (GuiFileInfo guiFileInfo : guiFilesInfoToWorkWith) {
+            if (super.isCancelled()) {
+                return result;
+            }
 
-                FileInfo fileInfo = RegularContentController.findMatchingFileInfo(guiFileInfo, allFilesInfo);
-                if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
-                    notEnoughStreamsCount++;
-                    processedCount++;
+            FileInfo fileInfo = RegularContentController.findMatchingFileInfo(guiFileInfo, allFilesInfo);
+            if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
+                result.setNotEnoughStreamsCount(result.getNotEnoughStreamsCount() + 1);
+                result.setProcessedCount(result.getProcessedCount() + 1);
+                continue;
+            }
+
+            List<SubtitleStream> matchingUpperSubtitles = getMatchingUpperSubtitles(fileInfo, guiSettings);
+            List<SubtitleStream> matchingLowerSubtitles = getMatchingLowerSubtitles(fileInfo, guiSettings);
+            if (CollectionUtils.isEmpty(matchingUpperSubtitles) || CollectionUtils.isEmpty(matchingLowerSubtitles)) {
+                result.setNotEnoughStreamsCount(result.getNotEnoughStreamsCount() + 1);
+                result.setProcessedCount(result.getProcessedCount() + 1);
+                continue;
+            }
+
+            try {
+                boolean loadedSuccessfully = loadSizesIfNecessary(
+                        fileInfo.getFile(),
+                        matchingUpperSubtitles,
+                        matchingLowerSubtitles,
+                        guiFileInfo.getSubtitleStreams(),
+                        result
+                );
+                if (!loadedSuccessfully) {
+                    result.setFailedCount(result.getFailedCount() + 1);
+                    result.setProcessedCount(result.getProcessedCount() + 1);
                     continue;
                 }
 
-                List<SubtitleStream> matchingUpperSubtitles = getMatchingUpperSubtitles(fileInfo, guiSettings);
-                List<SubtitleStream> matchingLowerSubtitles = getMatchingLowerSubtitles(fileInfo, guiSettings);
-                if (CollectionUtils.isEmpty(matchingUpperSubtitles) || CollectionUtils.isEmpty(matchingLowerSubtitles)) {
-                    notEnoughStreamsCount++;
-                    processedCount++;
-                    continue;
+                if (matchingUpperSubtitles.size() > 1) {
+                    matchingUpperSubtitles.sort(Comparator.comparing(SubtitleStream::getSubtitleSize).reversed());
+                }
+                if (matchingLowerSubtitles.size() > 1) {
+                    matchingLowerSubtitles.sort(Comparator.comparing(SubtitleStream::getSubtitleSize).reversed());
                 }
 
-                try {
-                    boolean loadedSuccessfully = loadSizesIfNecessary(
-                            fileInfo.getFile(),
-                            guiFileInfo,
-                            matchingUpperSubtitles,
-                            matchingLowerSubtitles,
-                            guiFileInfo.getSubtitleStreams()
-                    );
-                    if (!loadedSuccessfully) {
-                        failedCount++;
-                        processedCount++;
-                        continue;
-                    }
+                RegularContentController.findMatchingGuiStream(
+                        matchingUpperSubtitles.get(0).getFfmpegIndex(),
+                        guiFileInfo.getSubtitleStreams()
+                ).setSelectedAsUpper(true);
 
-                    if (matchingUpperSubtitles.size() > 1) {
-                        matchingUpperSubtitles.sort(Comparator.comparing(SubtitleStream::getSubtitleSize).reversed());
-                    }
-                    if (matchingLowerSubtitles.size() > 1) {
-                        matchingLowerSubtitles.sort(Comparator.comparing(SubtitleStream::getSubtitleSize).reversed());
-                    }
+                RegularContentController.findMatchingGuiStream(
+                        matchingLowerSubtitles.get(0).getFfmpegIndex(),
+                        guiFileInfo.getSubtitleStreams()
+                ).setSelectedAsLower(true);
 
-                    RegularContentController.findMatchingGuiStream(
-                            matchingUpperSubtitles.get(0).getFfmpegIndex(),
-                            guiFileInfo.getSubtitleStreams()
-                    ).setSelectedAsUpper(true);
+                guiFileInfo.setHaveSubtitleSizesToLoad(RegularContentController.haveSubtitlesToLoad(fileInfo));
 
-                    RegularContentController.findMatchingGuiStream(
-                            matchingLowerSubtitles.get(0).getFfmpegIndex(),
-                            guiFileInfo.getSubtitleStreams()
-                    ).setSelectedAsLower(true);
-
-                    guiFileInfo.setHaveSubtitleSizesToLoad(RegularContentController.haveSubtitlesToLoad(fileInfo));
-
-                    finishedSuccessfullyCount++;
-                    processedCount++;
-                } catch (FfmpegException e) {
-                    if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
-                        setFinished(true);
-                        return null;
-                    } else {
-                        throw new IllegalStateException();
-                    }
+                result.setFinishedSuccessfullyCount(result.getFinishedSuccessfullyCount() + 1);
+                result.setProcessedCount(result.getProcessedCount() + 1);
+            } catch (FfmpegException e) {
+                if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
+                    return result;
+                } else {
+                    throw new IllegalStateException();
                 }
             }
-        } finally {
-            cancelTaskPaneVisible.setValue(false);
         }
 
-        setFinished(true);
-        return null;
+        return result;
     }
 
     private static List<GuiFileInfo> getGuiFilesInfoToWorkWith(List<GuiFileInfo> displayedGuiFilesInfo) {
@@ -165,10 +152,10 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<Void> {
 
     private boolean loadSizesIfNecessary(
             File file,
-            GuiFileInfo guiFileInfo,
             List<SubtitleStream> upperSubtitleStreams,
             List<SubtitleStream> lowerSubtitleStreams,
-            List<GuiSubtitleStream> guiSubtitleStreams
+            List<GuiSubtitleStream> guiSubtitleStreams,
+            Result taskResult
     ) throws FfmpegException {
         boolean result = true;
 
@@ -183,8 +170,8 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<Void> {
         for (SubtitleStream subtitleStream : subtitlesToLoad) {
             updateMessage(
                     getUpdateMessage(
-                            processedCount,
-                            allFileCount,
+                            taskResult.getProcessedCount(),
+                            taskResult.getAllFileCount(),
                             subtitleStream,
                             file
                     )
@@ -251,5 +238,25 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<Void> {
                 + language
                 + (StringUtils.isBlank(subtitleStream.getTitle()) ? "" : " " + subtitleStream.getTitle())
                 + " in " + file.getName();
+    }
+
+    @Override
+    protected void onFinish(Result result) {
+        onFinish.accept(result);
+    }
+
+    @AllArgsConstructor
+    @Getter
+    @Setter
+    public static class Result {
+        private int allFileCount;
+
+        private int notEnoughStreamsCount;
+
+        private int processedCount;
+
+        private int finishedSuccessfullyCount;
+
+        private int failedCount;
     }
 }

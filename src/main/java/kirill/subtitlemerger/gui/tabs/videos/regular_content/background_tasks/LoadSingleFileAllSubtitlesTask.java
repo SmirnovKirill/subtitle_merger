@@ -1,6 +1,5 @@
-package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.load_subtitles;
+package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
-import javafx.beans.property.BooleanProperty;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStream;
@@ -8,6 +7,7 @@ import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffmpeg;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.Collections;
+import java.util.function.Consumer;
 
 public class LoadSingleFileAllSubtitlesTask extends LoadSubtitlesTask {
     private FileInfo fileInfo;
@@ -18,21 +18,21 @@ public class LoadSingleFileAllSubtitlesTask extends LoadSubtitlesTask {
             FileInfo fileInfo,
             GuiFileInfo guiFileInfo,
             Ffmpeg ffmpeg,
-            BooleanProperty cancelTaskPaneVisible
+            Consumer<Result> onFinish
     ) {
-        super(ffmpeg, cancelTaskPaneVisible);
+        super(ffmpeg, onFinish);
 
         this.fileInfo = fileInfo;
         this.guiFileInfo = guiFileInfo;
     }
 
     @Override
-    protected Void call() {
-        allSubtitleCount = getAllSubtitleCount(fileInfo);
-
-        load(null, Collections.singletonList(guiFileInfo), Collections.singletonList(fileInfo));
-
-        return null;
+    protected Result run() {
+        return load(
+                getAllSubtitleCount(fileInfo),
+                Collections.singletonList(guiFileInfo),
+                Collections.singletonList(fileInfo)
+        );
     }
 
     private static int getAllSubtitleCount(FileInfo fileInfo) {
