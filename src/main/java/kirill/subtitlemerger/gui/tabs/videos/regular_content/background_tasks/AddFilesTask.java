@@ -3,6 +3,7 @@ package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.LongProperty;
+import javafx.scene.control.ProgressIndicator;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.background_tasks.BackgroundTask;
@@ -87,7 +88,7 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
     @Override
     protected Result run() {
         List<FileInfo> filesToAddInfo = LoadDirectoryFilesTask.getFilesInfo(filesToAdd, guiContext.getFfprobe(), this);
-        removeAlreadyAdded(filesToAddInfo, filesInfo);
+        removeAlreadyAdded(filesToAddInfo, filesInfo, this);
         List<GuiFileInfo> guiFilesToAddInfo = LoadDirectoryFilesTask.convert(
                 filesToAddInfo,
                 true,
@@ -120,7 +121,14 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
         return new Result(filesToAddInfo.size(), filesInfo, allGuiFilesInfo, guiFilesToShowInfo, filePanes);
     }
 
-    private static void removeAlreadyAdded(List<FileInfo> filesToAddInfo, List<FileInfo> allFilesInfo) {
+    private static void removeAlreadyAdded(
+            List<FileInfo> filesToAddInfo,
+            List<FileInfo> allFilesInfo,
+            AddFilesTask task
+    ) {
+        task.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
+        task.updateMessage("removing already added files...");
+
         Iterator<FileInfo> iterator = filesToAddInfo.iterator();
 
         while (iterator.hasNext()) {

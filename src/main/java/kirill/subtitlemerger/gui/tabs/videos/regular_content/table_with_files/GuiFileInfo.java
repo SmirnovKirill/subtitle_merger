@@ -144,4 +144,9 @@ public class GuiFileInfo {
     public void setSomeSubtitlesHidden(boolean someSubtitlesHidden) {
         this.someSubtitlesHidden.set(someSubtitlesHidden);
     }
+
+    public void clearResult() {
+        this.successMessage = null;
+        this.errorMessage = null;
+    }
 }

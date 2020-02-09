@@ -1,6 +1,7 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
 import javafx.application.Platform;
+import javafx.scene.control.ProgressIndicator;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController;
@@ -51,10 +52,9 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
 
     @Override
     protected Result run() {
-        LoadDirectoryFilesTask.clearMessages(displayedGuiFilesInfo, this);
+        LoadDirectoryFilesTask.clearFileInfoResults(displayedGuiFilesInfo, this);
 
-        updateMessage("getting list of files to work with...");
-        List<GuiFileInfo> guiFilesInfoToWorkWith = getGuiFilesInfoToWorkWith(displayedGuiFilesInfo);
+        List<GuiFileInfo> guiFilesInfoToWorkWith = getGuiFilesInfoToWorkWith(displayedGuiFilesInfo, this);
 
         Result result = new Result(
                 guiFilesInfoToWorkWith.size(),
@@ -132,7 +132,13 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
         return result;
     }
 
-    private static List<GuiFileInfo> getGuiFilesInfoToWorkWith(List<GuiFileInfo> displayedGuiFilesInfo) {
+    private static List<GuiFileInfo> getGuiFilesInfoToWorkWith(
+            List<GuiFileInfo> displayedGuiFilesInfo,
+            AutoSelectSubtitlesTask task
+    ) {
+        task.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
+        task.updateMessage("getting list of files to work with...");
+
         return displayedGuiFilesInfo.stream().filter(GuiFileInfo::isSelected).collect(Collectors.toList());
     }
 

@@ -139,14 +139,14 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
             GuiSettings.SortDirection sortDirection,
             BackgroundTask task
     ) {
+        task.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
+
         List<GuiFileInfo> result = new ArrayList<>(allFilesInfo);
         if (hideUnavailable) {
-            task.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
             task.updateMessage("filtering unavailable...");
             result.removeIf(fileInfo -> !StringUtils.isBlank(fileInfo.getUnavailabilityReason()));
         }
 
-        task.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
         task.updateMessage("sorting file list...");
 
         Comparator<GuiFileInfo> comparator;
@@ -218,11 +218,10 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
             BackgroundTask<?> task,
             GuiSettings guiSettings
     ) {
+        task.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
+
         List<GuiFileInfo> result = new ArrayList<>();
 
-        task.updateProgress(0, filesInfo.size());
-
-        int i = 0;
         for (FileInfo fileInfo : filesInfo) {
             task.updateMessage("creating object for " + fileInfo.getFile().getName() + "...");
 
@@ -234,9 +233,6 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
                             guiSettings
                     )
             );
-
-            task.updateProgress(i + 1, filesInfo.size());
-            i++;
         }
 
         return result;
@@ -397,23 +393,16 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
         }
     }
 
-    public static void clearMessages(List<GuiFileInfo> filesInfo, BackgroundTask<?> task) {
-        task.updateProgress(0, filesInfo.size());
+    public static void clearFileInfoResults(List<GuiFileInfo> filesInfo, BackgroundTask<?> task) {
+        task.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
         task.updateMessage("clearing state...");
 
-        int i = 0;
         for (GuiFileInfo fileInfo : filesInfo) {
-            Platform.runLater(() -> {
-                fileInfo.setSuccessMessage(null);
-                fileInfo.setErrorMessage(null);
-            });
-
-            task.updateProgress(i + 1, filesInfo.size());
-            i++;
+            Platform.runLater(fileInfo::clearResult);
         }
     }
 
-    public static Map<String, FilePanes> generateFilesPanes(
+    static Map<String, FilePanes> generateFilesPanes(
             List<GuiFileInfo> filesInfo,
             LongProperty selected,
             BooleanProperty allSelected,
@@ -424,11 +413,10 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
             FilePanes.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler,
             BackgroundTask<?> task
     ) {
+        task.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
+
         Map<String, FilePanes> result = new HashMap<>();
 
-        task.updateProgress(0, filesInfo.size());
-
-        int i = 0;
         for (GuiFileInfo fileInfo : filesInfo) {
             task.updateMessage("creating gui objects for " + fileInfo.getPathToDisplay() + "...");
 
@@ -445,9 +433,6 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
                             removeExternalSubtitleFileHandler
                     )
             );
-
-            task.updateProgress(i + 1, filesInfo.size());
-            i++;
         }
 
         return result;
