@@ -351,7 +351,7 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
                 subtitleStream.getLanguage() != null ? subtitleStream.getLanguage().toString() : "unknown",
                 subtitleStream.getTitle(),
                 RegularContentController.isExtra(subtitleStream, guiSettings),
-                subtitleStream.getSubtitleSize(),
+                subtitleStream.getSubtitles() != null ? subtitleStream.getSubtitles().getSize() : null,
                 false,
                 false
         );
@@ -392,7 +392,7 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
         }
     }
 
-    public static void clearFileInfoResults(List<GuiFileInfo> filesInfo, BackgroundTask<?> task) {
+    static void clearFileInfoResults(List<GuiFileInfo> filesInfo, BackgroundTask<?> task) {
         task.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
         task.updateMessage("clearing state...");
 

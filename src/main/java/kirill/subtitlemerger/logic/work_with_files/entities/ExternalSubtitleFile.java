@@ -12,6 +12,4 @@ public class ExternalSubtitleFile {
     private File file;
 
     private Subtitles subtitles;
-
-    private int subtitleSize;
 }

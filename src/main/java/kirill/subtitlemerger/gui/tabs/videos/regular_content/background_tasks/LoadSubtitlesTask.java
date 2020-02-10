@@ -79,7 +79,7 @@ public abstract class LoadSubtitlesTask extends BackgroundTask<LoadSubtitlesTask
 
                 try {
                     String subtitleText = ffmpeg.getSubtitlesText(subtitleStream.getFfmpegIndex(), fileInfo.getFile());
-                    subtitleStream.setSubtitlesAndSize(
+                    subtitleStream.setSubtitles(
                             Parser.fromSubRipText(
                                     subtitleText,
                                     subtitleStream.getTitle(),
@@ -91,7 +91,7 @@ public abstract class LoadSubtitlesTask extends BackgroundTask<LoadSubtitlesTask
                      * Have to call this in the JavaFX thread because this change can lead to updates on the screen.
                      */
                     Platform.runLater(() -> {
-                        guiSubtitleStream.setSize(subtitleStream.getSubtitleSize());
+                        guiSubtitleStream.setSize(subtitleStream.getSubtitles().getSize());
                         guiSubtitleStream.setFailedToLoadReason(null);
                     });
 
@@ -100,15 +100,11 @@ public abstract class LoadSubtitlesTask extends BackgroundTask<LoadSubtitlesTask
                     if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
                         return result;
                     } else {
-                        Platform.runLater(() -> {
-                            guiSubtitleStream.setFailedToLoadReason(guiTextFrom(e));
-                        });
+                        Platform.runLater(() -> guiSubtitleStream.setFailedToLoadReason(guiTextFrom(e)));
                         result.setFailedToLoadCount(result.getFailedToLoadCount() + 1);
                     }
                 } catch (Parser.IncorrectFormatException e) {
-                    Platform.runLater(() -> {
-                        guiSubtitleStream.setFailedToLoadReason("subtitles seem to have incorrect format");
-                    });
+                    Platform.runLater(() -> guiSubtitleStream.setFailedToLoadReason("subtitles seem to have incorrect format"));
 
                     result.setFailedToLoadCount(result.getFailedToLoadCount() + 1);
                 }
@@ -122,7 +118,7 @@ public abstract class LoadSubtitlesTask extends BackgroundTask<LoadSubtitlesTask
        return result;
     }
 
-    static String getUpdateMessage(
+    private static String getUpdateMessage(
             Result taskResult,
             SubtitleStream subtitleStream,
             File file
@@ -141,7 +137,7 @@ public abstract class LoadSubtitlesTask extends BackgroundTask<LoadSubtitlesTask
                 + " in " + file.getName();
     }
 
-    public static String guiTextFrom(FfmpegException e) {
+    static String guiTextFrom(FfmpegException e) {
         if (e.getCode() == FfmpegException.Code.GENERAL_ERROR) {
             return "ffmpeg returned an error";
         }

@@ -1,9 +1,9 @@
 package kirill.subtitlemerger.logic.work_with_files.entities;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
-import kirill.subtitlemerger.logic.core.Writer;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
@@ -30,9 +30,8 @@ public class SubtitleStream {
 
     private boolean defaultDisposition;
 
+    @Setter
     private Subtitles subtitles;
-
-    private Integer subtitleSize;
 
     public SubtitleStream(
             int ffmpegIndex,
@@ -50,25 +49,12 @@ public class SubtitleStream {
         this.title = title;
         this.defaultDisposition = defaultDisposition;
         this.subtitles = subtitles;
-        if (subtitles != null) {
-            this.subtitleSize = calculateSubtitleSize(subtitles);
-        }
-    }
-
-    public void setSubtitlesAndSize(Subtitles subtitles) {
-        this.subtitles = subtitles;
-        this.subtitleSize = calculateSubtitleSize(subtitles);
     }
 
     public static SubtitleStream getByFfmpegIndex(int ffmpegIndex, List<SubtitleStream> allSubtitleStreams) {
         return allSubtitleStreams.stream()
                 .filter(stream -> stream.getFfmpegIndex() == ffmpegIndex)
                 .findFirst().orElseThrow(IllegalAccessError::new);
-    }
-
-    //todo move probably
-    public static int calculateSubtitleSize(Subtitles subtitles) {
-        return Writer.toSubRipText(subtitles).getBytes().length;
     }
 
     public enum UnavailabilityReason {

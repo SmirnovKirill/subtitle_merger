@@ -1,7 +1,5 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.ProgressIndicator;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStream;

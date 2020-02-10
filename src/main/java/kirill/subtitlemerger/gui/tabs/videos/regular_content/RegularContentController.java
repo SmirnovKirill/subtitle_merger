@@ -834,12 +834,10 @@ public class RegularContentController {
                 throw new IllegalStateException();
             }
 
-            int subtitleSize = SubtitleStream.calculateSubtitleSize(subtitles);
-
             guiExternalSubtitleFile.setFileName(file.getName());
-            guiExternalSubtitleFile.setSize(subtitleSize);
+            guiExternalSubtitleFile.setSize(subtitles.getSize());
 
-            fileInfo.getExternalSubtitleFiles().add(new ExternalSubtitleFile(file, subtitles, subtitleSize));
+            fileInfo.getExternalSubtitleFiles().add(new ExternalSubtitleFile(file, subtitles));
             guiFileInfo.setSuccessMessage("Subtitle file has been added to the list successfully");
         } catch (IOException e) {
             guiFileInfo.setErrorMessage("Can't read the file");
