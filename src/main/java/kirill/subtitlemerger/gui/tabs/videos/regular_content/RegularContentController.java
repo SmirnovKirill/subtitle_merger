@@ -2,7 +2,10 @@ package kirill.subtitlemerger.gui.tabs.videos.regular_content;
 
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -254,7 +257,7 @@ public class RegularContentController {
     @FXML
     private void goButtonClicked() throws FfmpegException {
         GuiFileInfo guiFileInfo = tableWithFiles.getItems().get(0);
-        FileInfo fileInfo = findMatchingFileInfo(guiFileInfo, filesInfo);
+        FileInfo fileInfo = GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo);
 
         GuiSubtitleStream guiUpperSubtitles = guiFileInfo.getSubtitleStreams().stream()
                 .filter(GuiSubtitleStream::isSelectedAsUpper)
@@ -754,33 +757,6 @@ public class RegularContentController {
         startBackgroundTask(task);
     }
 
-    public static GuiFileInfo findMatchingGuiFileInfo(FileInfo fileInfo, List<GuiFileInfo> guiFilesInfo) {
-        return guiFilesInfo.stream()
-                .filter(guiFileInfo -> Objects.equals(guiFileInfo.getFullPath(), fileInfo.getFile().getAbsolutePath()))
-                .findFirst().orElseThrow(IllegalStateException::new);
-    }
-
-    public static FileInfo findMatchingFileInfo(GuiFileInfo guiFileInfo, List<FileInfo> filesInfo) {
-        return filesInfo.stream()
-                .filter(fileInfo -> Objects.equals(fileInfo.getFile().getAbsolutePath(), guiFileInfo.getFullPath()))
-                .findFirst().orElseThrow(IllegalStateException::new);
-    }
-
-    public static GuiSubtitleStream findMatchingGuiStream(int ffmpegIndex, List<GuiSubtitleStream> guiStreams) {
-        return guiStreams.stream()
-                .filter(stream -> stream.getFfmpegIndex() == ffmpegIndex)
-                .findFirst().orElseThrow(IllegalStateException::new);
-    }
-
-    public static boolean haveSubtitlesToLoad(FileInfo fileInfo) {
-        if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
-            return false;
-        }
-
-        return fileInfo.getSubtitleStreams().stream()
-                .anyMatch(stream -> stream.getSubtitles() == null);
-    }
-
     public static boolean isExtra(SubtitleStream subtitleStream, GuiSettings guiSettings) {
         return subtitleStream.getLanguage() != guiSettings.getUpperLanguage()
                 && subtitleStream.getLanguage() != guiSettings.getLowerLanguage();
@@ -830,7 +806,7 @@ public class RegularContentController {
             );
         }
 
-        FileInfo fileInfo = findMatchingFileInfo(guiFileInfo, filesInfo);
+        FileInfo fileInfo = GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo);
 
         if (isDuplicate(file, fileInfo)) {
             guiFileInfo.setErrorMessage("This file is already added");
@@ -909,7 +885,7 @@ public class RegularContentController {
         guiFileInfo.clearResult();
         lastProcessedFileInfo = guiFileInfo;
 
-        FileInfo fileInfo = findMatchingFileInfo(guiFileInfo, filesInfo);
+        FileInfo fileInfo = GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo);
         fileInfo.getExternalSubtitleFiles().remove(1 - index);
 
         guiFileInfo.getExternalSubtitleFiles().get(index).setFileName(null);
@@ -927,7 +903,7 @@ public class RegularContentController {
         lastProcessedFileInfo = guiFileInfo;
 
         LoadSingleFileAllSubtitlesTask task = new LoadSingleFileAllSubtitlesTask(
-                findMatchingFileInfo(guiFileInfo, filesInfo),
+                GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo),
                 guiFileInfo,
                 context.getFfmpeg(),
                 (result) -> {
@@ -947,7 +923,7 @@ public class RegularContentController {
 
         LoadSingleSubtitleTask task = new LoadSingleSubtitleTask(
                 ffmpegIndex,
-                findMatchingFileInfo(guiFileInfo, filesInfo),
+                GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo),
                 guiFileInfo,
                 context.getFfmpeg(),
                 (result) -> {

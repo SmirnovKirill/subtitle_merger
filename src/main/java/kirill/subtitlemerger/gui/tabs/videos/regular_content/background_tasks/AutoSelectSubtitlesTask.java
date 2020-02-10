@@ -3,9 +3,9 @@ package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 import javafx.application.Platform;
 import javafx.scene.control.ProgressIndicator;
 import kirill.subtitlemerger.gui.GuiSettings;
-import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
+import kirill.subtitlemerger.gui.core.GuiUtils;
 import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController;
+import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.logic.core.Parser;
@@ -71,7 +71,7 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
                 return result;
             }
 
-            FileInfo fileInfo = RegularContentController.findMatchingFileInfo(guiFileInfo, allFilesInfo);
+            FileInfo fileInfo = GuiUtils.findMatchingFileInfo(guiFileInfo, allFilesInfo);
             if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
                 result.setNotEnoughStreamsCount(result.getNotEnoughStreamsCount() + 1);
                 result.setProcessedCount(result.getProcessedCount() + 1);
@@ -107,17 +107,17 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
                     matchingLowerSubtitles.sort(Comparator.comparing(SubtitleStream::getSubtitleSize).reversed());
                 }
 
-                RegularContentController.findMatchingGuiStream(
+                GuiUtils.findMatchingGuiStream(
                         matchingUpperSubtitles.get(0).getFfmpegIndex(),
                         guiFileInfo.getSubtitleStreams()
                 ).setSelectedAsUpper(true);
 
-                RegularContentController.findMatchingGuiStream(
+                GuiUtils.findMatchingGuiStream(
                         matchingLowerSubtitles.get(0).getFfmpegIndex(),
                         guiFileInfo.getSubtitleStreams()
                 ).setSelectedAsLower(true);
 
-                guiFileInfo.setHaveSubtitleSizesToLoad(RegularContentController.haveSubtitlesToLoad(fileInfo));
+                guiFileInfo.setHaveSubtitleSizesToLoad(fileInfo.haveSubtitlesToLoad());
 
                 result.setFinishedSuccessfullyCount(result.getFinishedSuccessfullyCount() + 1);
                 result.setProcessedCount(result.getProcessedCount() + 1);
@@ -188,7 +188,7 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
                 continue;
             }
 
-            GuiSubtitleStream guiSubtitleStream = RegularContentController.findMatchingGuiStream(
+            GuiSubtitleStream guiSubtitleStream = GuiUtils.findMatchingGuiStream(
                     subtitleStream.getFfmpegIndex(),
                     guiSubtitleStreams
             );

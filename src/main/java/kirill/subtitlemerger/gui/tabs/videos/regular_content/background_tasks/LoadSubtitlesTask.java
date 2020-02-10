@@ -2,9 +2,9 @@ package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
 import javafx.application.Platform;
 import javafx.scene.control.ProgressBar;
-import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
+import kirill.subtitlemerger.gui.core.GuiUtils;
 import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController;
+import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.logic.core.Parser;
@@ -50,7 +50,7 @@ public abstract class LoadSubtitlesTask extends BackgroundTask<LoadSubtitlesTask
         setCancellationPossible(true);
 
         for (GuiFileInfo guiFileInfo : guiFilesInfo) {
-            FileInfo fileInfo = RegularContentController.findMatchingFileInfo(guiFileInfo, filesInfo);
+            FileInfo fileInfo = GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo);
             if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
                 continue;
             }
@@ -72,7 +72,7 @@ public abstract class LoadSubtitlesTask extends BackgroundTask<LoadSubtitlesTask
 
                 updateMessage(getUpdateMessage(result, subtitleStream, fileInfo.getFile()));
 
-                GuiSubtitleStream guiSubtitleStream = RegularContentController.findMatchingGuiStream(
+                GuiSubtitleStream guiSubtitleStream = GuiUtils.findMatchingGuiStream(
                         subtitleStream.getFfmpegIndex(),
                         guiFileInfo.getSubtitleStreams()
                 );
@@ -116,7 +116,7 @@ public abstract class LoadSubtitlesTask extends BackgroundTask<LoadSubtitlesTask
                 result.setProcessedCount(result.getProcessedCount() + 1);
             }
 
-            guiFileInfo.setHaveSubtitleSizesToLoad(RegularContentController.haveSubtitlesToLoad(fileInfo));
+            guiFileInfo.setHaveSubtitleSizesToLoad(fileInfo.haveSubtitlesToLoad());
         }
 
        return result;

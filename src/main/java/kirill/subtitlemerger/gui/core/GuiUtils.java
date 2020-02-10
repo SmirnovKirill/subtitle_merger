@@ -2,12 +2,16 @@ package kirill.subtitlemerger.gui.core;
 
 import javafx.scene.control.Tooltip;
 import javafx.util.Duration;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
+import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import lombok.extern.apachecommons.CommonsLog;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @CommonsLog
 public class GuiUtils {
@@ -52,5 +56,17 @@ public class GuiUtils {
         } else {
             return String.format(zeroOrSeveralItemsText, count);
         }
+    }
+
+    public static FileInfo findMatchingFileInfo(GuiFileInfo guiFileInfo, List<FileInfo> filesInfo) {
+        return filesInfo.stream()
+                .filter(fileInfo -> Objects.equals(fileInfo.getFile().getAbsolutePath(), guiFileInfo.getFullPath()))
+                .findFirst().orElseThrow(IllegalStateException::new);
+    }
+
+    public static GuiSubtitleStream findMatchingGuiStream(int ffmpegIndex, List<GuiSubtitleStream> guiStreams) {
+        return guiStreams.stream()
+                .filter(stream -> stream.getFfmpegIndex() == ffmpegIndex)
+                .findFirst().orElseThrow(IllegalStateException::new);
     }
 }

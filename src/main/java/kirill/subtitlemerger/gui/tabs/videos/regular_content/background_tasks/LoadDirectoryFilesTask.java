@@ -3,7 +3,6 @@ package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.LongProperty;
 import javafx.scene.control.ProgressIndicator;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
@@ -260,7 +259,7 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
                 fileInfo.getLastModified(),
                 fileInfo.getSize(),
                 guiTextFrom(fileInfo.getUnavailabilityReason()),
-                RegularContentController.haveSubtitlesToLoad(fileInfo),
+                fileInfo.haveSubtitlesToLoad(),
                 RegularContentController.getSubtitleCanBeHiddenCount(fileInfo, guiSettings),
                 RegularContentController.getSubtitleCanBeHiddenCount(fileInfo, guiSettings) != 0,
                 subtitleStreams

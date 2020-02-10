@@ -1,7 +1,7 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
 import javafx.scene.control.ProgressBar;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController;
+import kirill.subtitlemerger.gui.core.GuiUtils;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStream;
@@ -59,7 +59,7 @@ public class LoadFilesAllSubtitlesTask extends LoadSubtitlesTask {
         int result = 0;
 
         for (GuiFileInfo guiFileToWorkWith : guiFilesToWorkWith) {
-            FileInfo fileToWorkWith = RegularContentController.findMatchingFileInfo(guiFileToWorkWith, allFiles);
+            FileInfo fileToWorkWith = GuiUtils.findMatchingFileInfo(guiFileToWorkWith, allFiles);
             if (!CollectionUtils.isEmpty(fileToWorkWith.getSubtitleStreams())) {
                 for (SubtitleStream subtitleStream : fileToWorkWith.getSubtitleStreams()) {
                     if (subtitleStream.getUnavailabilityReason() != null) {

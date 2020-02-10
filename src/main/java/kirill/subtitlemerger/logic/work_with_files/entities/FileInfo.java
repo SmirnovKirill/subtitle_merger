@@ -2,6 +2,7 @@ package kirill.subtitlemerger.logic.work_with_files.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.apache.commons.collections4.CollectionUtils;
 import org.joda.time.LocalDateTime;
 
 import java.io.File;
@@ -44,6 +45,14 @@ class FileInfo {
         this.videoContainer = videoContainer;
         this.subtitleStreams = subtitleStreams;
         this.externalSubtitleFiles = new ArrayList<>();
+    }
+
+    public boolean haveSubtitlesToLoad() {
+        if (CollectionUtils.isEmpty(subtitleStreams)) {
+            return false;
+        }
+
+        return subtitleStreams.stream().anyMatch(stream -> stream.getSubtitles() == null);
     }
 
     @AllArgsConstructor

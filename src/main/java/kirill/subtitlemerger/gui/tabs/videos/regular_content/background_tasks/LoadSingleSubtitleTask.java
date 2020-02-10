@@ -2,8 +2,8 @@ package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
 import javafx.application.Platform;
 import javafx.scene.control.ProgressBar;
+import kirill.subtitlemerger.gui.core.GuiUtils;
 import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.logic.core.Parser;
@@ -35,7 +35,7 @@ public class LoadSingleSubtitleTask extends BackgroundTask<LoadSingleSubtitleTas
         SubtitleStream subtitleStream = fileInfo.getSubtitleStreams().stream()
                 .filter(stream -> stream.getFfmpegIndex() == ffmpegIndex)
                 .findFirst().orElseThrow(IllegalStateException::new);
-        GuiSubtitleStream guiSubtitleStream = RegularContentController.findMatchingGuiStream(
+        GuiSubtitleStream guiSubtitleStream = GuiUtils.findMatchingGuiStream(
                 subtitleStream.getFfmpegIndex(),
                 guiFileInfo.getSubtitleStreams()
         );
@@ -55,7 +55,7 @@ public class LoadSingleSubtitleTask extends BackgroundTask<LoadSingleSubtitleTas
                     )
             );
 
-            boolean haveSubtitlesToLoad = RegularContentController.haveSubtitlesToLoad(fileInfo);
+            boolean haveSubtitlesToLoad = fileInfo.haveSubtitlesToLoad();
 
             Platform.runLater(() -> {
                 guiSubtitleStream.setSize(subtitleStream.getSubtitleSize());
