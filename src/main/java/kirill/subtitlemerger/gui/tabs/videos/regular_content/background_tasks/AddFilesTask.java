@@ -5,6 +5,7 @@ import javafx.beans.property.IntegerProperty;
 import javafx.scene.control.ProgressIndicator;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
+import kirill.subtitlemerger.gui.core.GuiUtils;
 import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.FilePanes;
@@ -146,21 +147,28 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
     public static MultiPartResult generateMultiPartResult(Result taskResult) {
         String success;
 
-        if (taskResult.getAddedCount() == 0) {
-            if (taskResult.getAllFilesToAdd() == 1) {
-                success = "File has been added already";
-            } else {
-                success = "All " + taskResult.getAllFilesToAdd() + " files have been added already";
-            }
-        } else if (taskResult.getAllFilesToAdd() == taskResult.getAddedCount()) {
-            if (taskResult.getAddedCount() == 1) {
-                success = "File has been added successfully";
-            } else {
-                success = "All " + taskResult.getAddedCount() + " files have been added successfully";
-            }
+        int filesToAdd = taskResult.getFilesToAddCount();
+        int actuallyAdded = taskResult.getActuallyAddedCount();
+
+        if (actuallyAdded == 0) {
+            success = GuiUtils.getTextDependingOnTheCount(
+                    filesToAdd,
+                    "File has been added already",
+                    "All %d files have been added already"
+            );
+        } else if (filesToAdd == actuallyAdded) {
+            success = GuiUtils.getTextDependingOnTheCount(
+                    actuallyAdded,
+                    "File has been added successfully",
+                    "All %d files have been added successfully"
+            );
         } else {
-            success = taskResult.getAddedCount() + "/" + taskResult.getAllFilesToAdd() + " successfully added, "
-                    + (taskResult.getAllFilesToAdd() - taskResult.getAddedCount()) + "/" + taskResult.getAllFilesToAdd() + " added before";
+            success = GuiUtils.getTextDependingOnTheCount(
+                    actuallyAdded,
+                    "1/" + filesToAdd + " files has been added successfully, ",
+                    "%d/" + filesToAdd + " files have been added successfully, "
+            );
+            success += (filesToAdd - actuallyAdded) + "/" + filesToAdd + " added before";
         }
 
         return new MultiPartResult(success, null, null);
@@ -174,9 +182,9 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
     @AllArgsConstructor
     @Getter
     public static class Result {
-        private int allFilesToAdd;
+        private int filesToAddCount;
 
-        private int addedCount;
+        private int actuallyAddedCount;
 
         private List<FileInfo> filesInfo;
 

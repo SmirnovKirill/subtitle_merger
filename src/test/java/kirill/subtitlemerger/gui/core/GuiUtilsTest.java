@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.gui;
+package kirill.subtitlemerger.gui.core;
 
 import kirill.subtitlemerger.gui.core.GuiUtils;
 import org.junit.Test;

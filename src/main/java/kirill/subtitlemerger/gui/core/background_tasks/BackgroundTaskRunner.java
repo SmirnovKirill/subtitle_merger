@@ -5,8 +5,12 @@ import javafx.concurrent.Task;
 import javafx.scene.control.ProgressIndicator;
 import lombok.extern.apachecommons.CommonsLog;
 
+/*
+ * To see the explanation on why this class has been created please read the comment in the BackgroundTask class
+ * (basically just because updateMessage and updateProgress are protected and you can't call them without creating
+ * this class).
+ */
 @CommonsLog
-//todo comment why to create this class (basically just updateMessage/updateProgress)
 final class BackgroundTaskRunner<T> extends Task<Void> {
     private BackgroundTask<T> task;
 
@@ -16,9 +20,8 @@ final class BackgroundTaskRunner<T> extends Task<Void> {
         this.task = task;
 
         /*
-         * We set empty body here because all post-actions will be performed by the onFinished method.
+         * We don't call the setOnSuccess method because all post-actions will be performed by the onFinished method.
          */
-        setOnSucceeded(event -> {});
 
         setOnFailed(event -> {
             log.error("task has failed, shouldn't happen");

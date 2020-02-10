@@ -7,6 +7,13 @@ import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import lombok.extern.apachecommons.CommonsLog;
 
+/*
+ * This class was created because I wanted to provide a safe way to create tasks that can easily be cancelled and call
+ * the same method on success and on cancellation. There is no way to do that without a separate class because if you
+ * make your class a subclass of the Task class then you can call all of the Task's methods and I didn't want that.
+ * I also had to make another class, BackgroundTaskRunner because otherwise it's impossible to call updateProgress and
+ * updateMessage methods, they are protected.
+ */
 @CommonsLog
 public abstract class BackgroundTask<T> {
     private final BackgroundTaskRunner<T> taskRunner;
@@ -76,7 +83,7 @@ public abstract class BackgroundTask<T> {
         taskRunner.cancel();
     }
 
-    public boolean isCancelled() {
+    protected boolean isCancelled() {
         return taskRunner.isCancelled();
     }
 }
