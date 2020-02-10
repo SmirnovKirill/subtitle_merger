@@ -244,11 +244,11 @@ public class RegularContentController {
         LoadFilesAllSubtitlesTask task = new LoadFilesAllSubtitlesTask(
                 filesInfo,
                 tableWithFiles.getItems(),
-                context.getFfmpeg(),
                 result -> {
-                    generalResult.update(LoadSubtitlesTask.generateMultiPartResult(result));
+                    generalResult.update(LoadFilesAllSubtitlesTask.generateMultiPartResult(result));
                     stopProgress();
-                }
+                },
+                context.getFfmpeg()
         );
 
         prepareAndStartBackgroundTask(task);
@@ -903,11 +903,11 @@ public class RegularContentController {
         LoadSingleFileAllSubtitlesTask task = new LoadSingleFileAllSubtitlesTask(
                 GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo),
                 guiFileInfo,
-                context.getFfmpeg(),
                 (result) -> {
-                    generalResult.update(LoadSubtitlesTask.generateMultiPartResult(result));
+                    generalResult.update(LoadFilesAllSubtitlesTask.generateMultiPartResult(result));
                     stopProgress();
-                }
+                },
+                context.getFfmpeg()
         );
 
         prepareAndStartBackgroundTask(task);
@@ -923,11 +923,11 @@ public class RegularContentController {
                 ffmpegIndex,
                 GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo),
                 guiFileInfo,
-                context.getFfmpeg(),
                 (result) -> {
                     generalResult.update(LoadSingleSubtitleTask.generateMultiPartResult(result));
                     stopProgress();
-                }
+                },
+                context.getFfmpeg()
         );
 
         prepareAndStartBackgroundTask(task);

@@ -392,15 +392,6 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
         }
     }
 
-    static void clearFileInfoResults(List<GuiFileInfo> filesInfo, BackgroundTask<?> task) {
-        task.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
-        task.updateMessage("clearing state...");
-
-        for (GuiFileInfo fileInfo : filesInfo) {
-            Platform.runLater(fileInfo::clearResult);
-        }
-    }
-
     static Map<String, FilePanes> generateFilesPanes(
             List<GuiFileInfo> filesInfo,
             IntegerProperty selected,

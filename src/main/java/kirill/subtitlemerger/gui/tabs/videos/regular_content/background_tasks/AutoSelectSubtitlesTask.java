@@ -57,7 +57,7 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
 
     @Override
     protected Result run() {
-        LoadDirectoryFilesTask.clearFileInfoResults(displayedGuiFilesInfo, this);
+        BackgroundTaskUtils.clearFileInfoResults(displayedGuiFilesInfo, this);
 
         List<GuiFileInfo> guiFilesInfoToWorkWith = getGuiFilesInfoToWorkWith(displayedGuiFilesInfo, this);
 
@@ -217,7 +217,7 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
                 }
 
                 result = false;
-                Platform.runLater(() -> guiSubtitleStream.setFailedToLoadReason(LoadSubtitlesTask.guiTextFrom(e)));
+                Platform.runLater(() -> guiSubtitleStream.setFailedToLoadReason(BackgroundTaskUtils.guiTextFrom(e)));
             } catch (Parser.IncorrectFormatException e) {
                 result = false;
                 Platform.runLater(() -> guiSubtitleStream.setFailedToLoadReason("subtitles seem to have incorrect format"));

@@ -25,46 +25,40 @@ public class LoadSingleSubtitleTask extends BackgroundTask<LoadSingleSubtitleTas
 
     private GuiFileInfo guiFileInfo;
 
-    private Ffmpeg ffmpeg;
-
     private Consumer<Result> onFinish;
+
+    private Ffmpeg ffmpeg;
 
     @Override
     protected Result run() {
-        SubtitleStream subtitleStream = fileInfo.getSubtitleStreams().stream()
-                .filter(stream -> stream.getFfmpegIndex() == ffmpegIndex)
-                .findFirst().orElseThrow(IllegalStateException::new);
-        GuiSubtitleStream guiSubtitleStream = GuiUtils.findMatchingGuiStream(
-                subtitleStream.getFfmpegIndex(),
-                guiFileInfo.getSubtitleStreams()
-        );
-
         updateProgress(ProgressBar.INDETERMINATE_PROGRESS, ProgressBar.INDETERMINATE_PROGRESS);
+
+        SubtitleStream stream = fileInfo.getSubtitleStreams().stream()
+                .filter(currentStream -> currentStream.getFfmpegIndex() == ffmpegIndex)
+                .findFirst().orElseThrow(IllegalStateException::new);
         updateMessage(
-                LoadSubtitlesTask.getUpdateMessage(
+                LoadFilesAllSubtitlesTask.getUpdateMessage(
                         1,
                         0,
-                        subtitleStream,
+                        stream,
                         fileInfo.getFile()
                 )
         );
 
-        setCancellationPossible(true);
+        GuiSubtitleStream guiStream = GuiUtils.findMatchingGuiStream(
+                stream.getFfmpegIndex(),
+                guiFileInfo.getSubtitleStreams()
+        );
 
+        setCancellationPossible(true);
         try {
-            String subtitleText = ffmpeg.getSubtitlesText(subtitleStream.getFfmpegIndex(), fileInfo.getFile());
-            subtitleStream.setSubtitles(
-                    Parser.fromSubRipText(
-                            subtitleText,
-                            subtitleStream.getTitle(),
-                            subtitleStream.getLanguage()
-                    )
-            );
+            String subtitleText = ffmpeg.getSubtitlesText(stream.getFfmpegIndex(), fileInfo.getFile());
+            stream.setSubtitles(Parser.fromSubRipText(subtitleText, stream.getTitle(), stream.getLanguage()));
             boolean haveSubtitlesToLoad = fileInfo.haveSubtitlesToLoad();
 
             Platform.runLater(() -> {
-                guiSubtitleStream.setSize(subtitleStream.getSubtitles().getSize());
-                guiSubtitleStream.setFailedToLoadReason(null);
+                guiStream.setSize(stream.getSubtitles().getSize());
+                guiStream.setFailedToLoadReason(null);
                 guiFileInfo.setHaveSubtitleSizesToLoad(haveSubtitlesToLoad);
             });
 
@@ -73,11 +67,11 @@ public class LoadSingleSubtitleTask extends BackgroundTask<LoadSingleSubtitleTas
             if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
                 return new Result(Status.CANCELLED);
             } else {
-                Platform.runLater(() -> guiSubtitleStream.setFailedToLoadReason(LoadSubtitlesTask.guiTextFrom(e)));
+                Platform.runLater(() -> guiStream.setFailedToLoadReason(BackgroundTaskUtils.guiTextFrom(e)));
                 return new Result(Status.ERROR);
             }
         } catch (Parser.IncorrectFormatException e) {
-            Platform.runLater(() -> guiSubtitleStream.setFailedToLoadReason("subtitles seem to have incorrect format"));
+            Platform.runLater(() -> guiStream.setFailedToLoadReason("subtitles seem to have incorrect format"));
             return new Result(Status.ERROR);
         }
     }
