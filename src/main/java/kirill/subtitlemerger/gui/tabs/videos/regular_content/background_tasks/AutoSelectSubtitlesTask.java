@@ -3,7 +3,8 @@ package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 import javafx.application.Platform;
 import javafx.scene.control.ProgressIndicator;
 import kirill.subtitlemerger.gui.GuiSettings;
-import kirill.subtitlemerger.gui.background_tasks.BackgroundTask;
+import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
+import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
@@ -244,6 +245,61 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
                 + language
                 + (StringUtils.isBlank(subtitleStream.getTitle()) ? "" : " " + subtitleStream.getTitle())
                 + " in " + file.getName();
+    }
+
+    //todo test
+    public static MultiPartResult generateMultiPartResult(Result taskResult) {
+        String success = "";
+        String warn = "";
+        String error = "";
+
+        if (taskResult.getProcessedCount() == 0) {
+            warn = "Haven't done anything because of the cancellation";
+        } else if (taskResult.getFinishedSuccessfullyCount() == taskResult.getAllFileCount()) {
+            if (taskResult.getAllFileCount() == 1) {
+                success = "Subtitles have been successfully auto-selected for the file";
+            } else {
+                success = "Subtitles have been successfully auto-selected for all " + taskResult.getAllFileCount() + " files";
+            }
+        } else if (taskResult.getNotEnoughStreamsCount() == taskResult.getAllFileCount()) {
+            if (taskResult.getAllFileCount() == 1) {
+                warn = "Auto-selection is not possible (no proper subtitles to choose from) for the file";
+            } else {
+                warn = "Auto-selection is not possible (no proper subtitles to choose from) for all " + taskResult.getAllFileCount() + " files";
+            }
+        } else if (taskResult.getFailedCount() == taskResult.getAllFileCount()) {
+            if (taskResult.getAllFileCount() == 1) {
+                error = "Failed to perform auto-selection for the file";
+            } else {
+                error = "Failed to perform auto-selection for all " + taskResult.getAllFileCount() + " files";
+            }
+        } else {
+            if (taskResult.getFinishedSuccessfullyCount() != 0) {
+                success += taskResult.getFinishedSuccessfullyCount() + "/" + taskResult.getAllFileCount();
+                success += " auto-selected successfully";
+            }
+
+            if (taskResult.getProcessedCount() != taskResult.getAllFileCount()) {
+                warn += (taskResult.getAllFileCount() - taskResult.getProcessedCount()) + "/" + taskResult.getAllFileCount();
+                warn += " cancelled";
+            }
+
+            if (taskResult.getNotEnoughStreamsCount() != 0) {
+                if (!StringUtils.isBlank(warn)) {
+                    warn += ", ";
+                }
+
+                warn += "auto-selection is not possible for ";
+                warn += taskResult.getNotEnoughStreamsCount() + "/" + taskResult.getAllFileCount();
+            }
+
+            if (taskResult.getFailedCount() != 0) {
+                error += taskResult.getFailedCount() + "/" + taskResult.getAllFileCount();
+                error += " failed";
+            }
+        }
+
+        return new MultiPartResult(success, warn, error);
     }
 
     @Override

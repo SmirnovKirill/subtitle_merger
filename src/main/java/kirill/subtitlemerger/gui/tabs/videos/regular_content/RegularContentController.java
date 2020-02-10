@@ -10,11 +10,10 @@ import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import kirill.subtitlemerger.gui.GuiConstants;
-import kirill.subtitlemerger.gui.GuiContext;
-import kirill.subtitlemerger.gui.GuiSettings;
-import kirill.subtitlemerger.gui.GuiUtils;
-import kirill.subtitlemerger.gui.background_tasks.BackgroundTask;
+import kirill.subtitlemerger.gui.*;
+import kirill.subtitlemerger.gui.core.GuiUtils;
+import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
+import kirill.subtitlemerger.gui.core.custom_controls.MultiColorResultLabels;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.*;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.LoadFilesAllSubtitlesTask;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.LoadSingleFileAllSubtitlesTask;
@@ -85,13 +84,7 @@ public class RegularContentController {
     private TextField chosenDirectoryField;
 
     @FXML
-    private Label resultLabelSuccess;
-
-    @FXML
-    private Label resultLabelWarn;
-
-    @FXML
-    private Label resultLabelError;
+    private MultiColorResultLabels generalResult;
 
     @FXML
     private Label selectedForMergeLabel;
@@ -241,7 +234,7 @@ public class RegularContentController {
 
     @FXML
     private void autoSelectButtonClicked() {
-        clearGeneralResult();
+        generalResult.clear();
         lastProcessedFileInfo = null;
 
         AutoSelectSubtitlesTask task = new AutoSelectSubtitlesTask(
@@ -250,7 +243,7 @@ public class RegularContentController {
                 context.getFfmpeg(),
                 context.getSettings(),
                 result -> {
-                    showResult(result);
+                    generalResult.update(AutoSelectSubtitlesTask.generateMultiPartResult(result));
                     stopProgress();
                 }
         );
@@ -265,63 +258,9 @@ public class RegularContentController {
         task.start();
     }
 
-    //todo refactor somehow
-    private void showResult(AutoSelectSubtitlesTask.Result result) {
-        if (result.getProcessedCount() == 0) {
-            setResult(null, "Haven't done anything because of the cancellation", null);
-        } else if (result.getFinishedSuccessfullyCount() == result.getAllFileCount()) {
-            if (result.getAllFileCount() == 1) {
-                setResult("Subtitles have been successfully auto-selected for the file", null, null);
-            } else {
-                setResult("Subtitles have been successfully auto-selected for all " + result.getAllFileCount() + " files", null, null);
-            }
-        } else if (result.getNotEnoughStreamsCount() == result.getAllFileCount()) {
-            if (result.getAllFileCount() == 1) {
-                setResult(null, "Auto-selection is not possible (no proper subtitles to choose from) for the file", null);
-            } else {
-                setResult(null, "Auto-selection is not possible (no proper subtitles to choose from) for all " + result.getAllFileCount() + " files", null);
-            }
-        } else if (result.getFailedCount() == result.getAllFileCount()) {
-            if (result.getAllFileCount() == 1) {
-                setResult(null, null, "Failed to perform auto-selection for the file");
-            } else {
-                setResult(null, null, "Failed to perform auto-selection for all " + result.getAllFileCount() + " files");
-            }
-        } else {
-            String success = "";
-            if (result.getFinishedSuccessfullyCount() != 0) {
-                success += result.getFinishedSuccessfullyCount() + "/" + result.getAllFileCount();
-                success += " auto-selected successfully";
-            }
-
-            String warn = "";
-            if (result.getProcessedCount() != result.getAllFileCount()) {
-                warn += (result.getAllFileCount() - result.getProcessedCount()) + "/" + result.getAllFileCount();
-                warn += " cancelled";
-            }
-
-            if (result.getNotEnoughStreamsCount() != 0) {
-                if (!StringUtils.isBlank(warn)) {
-                    warn += ", ";
-                }
-
-                warn += "auto-selection is not possible for ";
-                warn += result.getNotEnoughStreamsCount() + "/" + result.getAllFileCount();
-            }
-
-            String error = "";
-            if (result.getFailedCount() != 0) {
-                error += result.getFailedCount() + "/" + result.getAllFileCount();
-                error += " failed";
-            }
-
-            setResult(success, warn, error);
-        }
-    }
-
     @FXML
     private void getAllSizesButtonClicked() {
-        clearGeneralResult();
+        generalResult.clear();
         lastProcessedFileInfo = null;
 
         LoadFilesAllSubtitlesTask task = new LoadFilesAllSubtitlesTask(
@@ -329,67 +268,12 @@ public class RegularContentController {
                 tableWithFiles.getItems(),
                 context.getFfmpeg(),
                 result -> {
-                    showResult(result);
+                    generalResult.update(LoadSubtitlesTask.generateMultiPartResult(result));
                     stopProgress();
                 }
         );
 
         startBackgroundTask(task);
-    }
-
-    private void showResult(LoadSubtitlesTask.Result result) {
-        if (result.getAllSubtitleCount() == 0) {
-            setResult("No subtitles to load", null, null);
-        } else if (result.getProcessedCount() == 0) {
-            setResult(null, "Haven't load anything because of the cancellation", null);
-        } else if (result.getLoadedSuccessfullyCount() == result.getAllSubtitleCount()) {
-            if (result.getAllSubtitleCount() == 1) {
-                setResult("Subtitle size has been loaded successfully", null, null);
-            } else {
-                setResult("All " + result.getAllSubtitleCount() + " subtitle sizes have been loaded successfully", null, null);
-            }
-        } else if (result.getLoadedBeforeCount() == result.getAllSubtitleCount()) {
-            if (result.getAllSubtitleCount() == 1) {
-                setResult("Subtitle size has already been loaded successfully", null, null);
-            } else {
-                setResult("All " + result.getAllSubtitleCount() + " subtitle sizes have already been loaded successfully", null, null);
-            }
-        } else if (result.getFailedToLoadCount() == result.getAllSubtitleCount()) {
-            if (result.getAllSubtitleCount() == 1) {
-                setResult(null, null, "Failed to load subtitle size");
-            } else {
-                setResult(null, null, "Failed to load all " + result.getAllSubtitleCount() + " subtitle sizes");
-            }
-        } else {
-            String success = "";
-            if (result.getLoadedSuccessfullyCount() != 0) {
-                success += result.getLoadedSuccessfullyCount() + "/" + result.getAllSubtitleCount();
-                success += " loaded successfully";
-            }
-
-            if (result.getLoadedBeforeCount() != 0) {
-                if (!StringUtils.isBlank(success)) {
-                    success += ", ";
-                }
-
-                success += result.getLoadedBeforeCount() + "/" + result.getAllSubtitleCount();
-                success += " loaded before";
-            }
-
-            String warn = "";
-            if (result.getProcessedCount() != result.getAllSubtitleCount()) {
-                warn += (result.getAllSubtitleCount() - result.getProcessedCount()) + "/" + result.getAllSubtitleCount();
-                warn += " cancelled";
-            }
-
-            String error = "";
-            if (result.getFailedToLoadCount() != 0) {
-                error += "failed to load " + result.getFailedToLoadCount() + "/" + result.getAllSubtitleCount();
-                error += " subtitles";
-            }
-
-            setResult(success, warn, error);
-        }
     }
 
     @FXML
@@ -423,7 +307,7 @@ public class RegularContentController {
     }
 
     private void sortByChanged(Observable observable) {
-        clearGeneralResult();
+        generalResult.clear();
         clearLastProcessedResult();
 
         RadioMenuItem radioMenuItem = (RadioMenuItem) sortByGroup.getSelectedToggle();
@@ -458,12 +342,6 @@ public class RegularContentController {
         );
 
         startBackgroundTask(task);
-    }
-
-    private void clearGeneralResult() {
-        resultLabelSuccess.setText("");
-        resultLabelWarn.setText("");
-        resultLabelError.setText("");
     }
 
     private void clearLastProcessedResult() {
@@ -507,7 +385,7 @@ public class RegularContentController {
     }
 
     private void sortDirectionChanged(Observable observable) {
-        clearGeneralResult();
+        generalResult.clear();
         clearLastProcessedResult();
 
         RadioMenuItem radioMenuItem = (RadioMenuItem) sortDirectionGroup.getSelectedToggle();
@@ -614,30 +492,6 @@ public class RegularContentController {
 
     public void hide() {
         pane.setVisible(false);
-    }
-
-    void setResult(String success, String warn, String error) {
-        if (!StringUtils.isBlank(success) && (!StringUtils.isBlank(warn) || !StringUtils.isBlank(error))) {
-            resultLabelSuccess.setText(success + ", ");
-        } else if (!StringUtils.isBlank(success)) {
-            resultLabelSuccess.setText(success);
-        } else {
-            resultLabelSuccess.setText("");
-        }
-
-        if (!StringUtils.isBlank(warn) && !StringUtils.isBlank(error)) {
-            resultLabelWarn.setText(warn + ", ");
-        } else if (!StringUtils.isBlank(warn)) {
-            resultLabelWarn.setText(warn);
-        } else {
-            resultLabelWarn.setText("");
-        }
-
-        if (!StringUtils.isBlank(error)) {
-            resultLabelError.setText(error);
-        } else {
-            resultLabelError.setText("");
-        }
     }
 
     @FXML
@@ -768,7 +622,7 @@ public class RegularContentController {
         setSelected(0);
         tableWithFiles.setItems(FXCollections.emptyObservableList());
         tableWithFiles.getFilePanes().clear();
-        clearGeneralResult();
+        generalResult.clear();
         lastProcessedFileInfo = null;
         allAvailableCount.setValue(0);
         setAllSelected(false);
@@ -783,7 +637,7 @@ public class RegularContentController {
         //todo check if > 10000
 
         lastProcessedFileInfo = null;
-        clearGeneralResult();
+        generalResult.clear();
 
         LoadDirectoryFilesTask task = new LoadDirectoryFilesTask(
                 this.directory,
@@ -816,7 +670,7 @@ public class RegularContentController {
 
     @FXML
     private void hideUnavailableClicked() {
-        clearGeneralResult();
+        generalResult.clear();
         clearLastProcessedResult();
 
         SortOrShowHideUnavailableTask task = new SortOrShowHideUnavailableTask(
@@ -846,7 +700,7 @@ public class RegularContentController {
 
     @FXML
     private void removeButtonClicked() {
-        clearGeneralResult();
+        generalResult.clear();
         clearLastProcessedResult();
 
         List<Integer> indices = tableWithFiles.getSelectionModel().getSelectedIndices();
@@ -869,9 +723,9 @@ public class RegularContentController {
                     if (result.getRemovedCount() == 0) {
                         throw new IllegalStateException();
                     } else if (result.getRemovedCount() == 1) {
-                        setResult("File has been removed from the list successfully", null, null);
+                        generalResult.setSuccess("File has been removed from the list successfully");
                     } else {
-                        setResult(result.getRemovedCount() + " files have been removed from the list successfully", null, null);
+                        generalResult.setSuccess(result.getRemovedCount() + " files have been removed from the list successfully");
                     }
 
                     stopProgress();
@@ -883,7 +737,7 @@ public class RegularContentController {
 
     @FXML
     private void addButtonClicked() {
-        clearGeneralResult();
+        generalResult.clear();
         clearLastProcessedResult();
 
         List<File> filesToAdd = getFiles(stage, context.getSettings());
@@ -917,26 +771,7 @@ public class RegularContentController {
                     allGuiFilesInfo = result.getAllGuiFilesInfo();
                     filePanes = result.getFilePanes();
                     updateTableContent(result.getGuiFilesToShowInfo(), result.getFilePanes());
-
-                    if (result.getAddedCount() == 0) {
-                        if (filesToAdd.size() == 1) {
-                            setResult("File has been added already", null, null);
-                        } else {
-                            setResult("All " + filesToAdd.size() + " files have been added already", null, null);
-                        }
-                    } else if (result.getAddedCount() == filesToAdd.size()) {
-                        if (result.getAddedCount() == 1) {
-                            setResult("File has been added successfully", null, null);
-                        } else {
-                            setResult("All " + result.getAddedCount() + " files have been added successfully", null, null);
-                        }
-                    } else {
-                        String message = result.getAddedCount() + "/" + filesToAdd.size() + " successfully added, "
-                                + (filesToAdd.size() - result.getAddedCount()) + "/" + filesToAdd.size() + " added before";
-
-                        setResult(message, null, null);
-                    }
-
+                    generalResult.update(AddFilesTask.generateMultiPartResult(result));
                     stopProgress();
                 }
         );
@@ -1001,7 +836,7 @@ public class RegularContentController {
     }
 
     private void addExternalSubtitleFileClicked(GuiFileInfo guiFileInfo) {
-        clearGeneralResult();
+        generalResult.clear();
         clearLastProcessedResult();
         guiFileInfo.clearResult();
         lastProcessedFileInfo = guiFileInfo;
@@ -1094,7 +929,7 @@ public class RegularContentController {
     }
 
     private void removeExternalSubtitleFileClicked(int index, GuiFileInfo guiFileInfo) {
-        clearGeneralResult();
+        generalResult.clear();
         clearLastProcessedResult();
         guiFileInfo.clearResult();
         lastProcessedFileInfo = guiFileInfo;
@@ -1111,7 +946,7 @@ public class RegularContentController {
     }
 
     private void loadAllFileSubtitleSizes(GuiFileInfo guiFileInfo) {
-        clearGeneralResult();
+        generalResult.clear();
         clearLastProcessedResult();
         guiFileInfo.clearResult();
         lastProcessedFileInfo = guiFileInfo;
@@ -1121,7 +956,7 @@ public class RegularContentController {
                 guiFileInfo,
                 context.getFfmpeg(),
                 (result) -> {
-                    showResult(result);
+                    generalResult.update(LoadSubtitlesTask.generateMultiPartResult(result));
                     stopProgress();
                 }
         );
@@ -1130,7 +965,7 @@ public class RegularContentController {
     }
 
     private void loadSingleFileSubtitleSize(GuiFileInfo guiFileInfo, int ffmpegIndex) {
-        clearGeneralResult();
+        generalResult.clear();
         clearLastProcessedResult();
         guiFileInfo.clearResult();
         lastProcessedFileInfo = guiFileInfo;

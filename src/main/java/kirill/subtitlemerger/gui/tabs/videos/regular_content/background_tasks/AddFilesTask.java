@@ -6,7 +6,8 @@ import javafx.beans.property.LongProperty;
 import javafx.scene.control.ProgressIndicator;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
-import kirill.subtitlemerger.gui.background_tasks.BackgroundTask;
+import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
+import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.FilePanes;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
@@ -88,6 +89,7 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
     @Override
     protected Result run() {
         List<FileInfo> filesToAddInfo = LoadDirectoryFilesTask.getFilesInfo(filesToAdd, guiContext.getFfprobe(), this);
+        int allFilesToAdd = filesToAddInfo.size();
         removeAlreadyAdded(filesToAddInfo, filesInfo, this);
         List<GuiFileInfo> guiFilesToAddInfo = LoadDirectoryFilesTask.convert(
                 filesToAddInfo,
@@ -118,7 +120,7 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
                 this
         );
 
-        return new Result(filesToAddInfo.size(), filesInfo, allGuiFilesInfo, guiFilesToShowInfo, filePanes);
+        return new Result(allFilesToAdd, filesToAddInfo.size(), filesInfo, allGuiFilesInfo, guiFilesToShowInfo, filePanes);
     }
 
     private static void removeAlreadyAdded(
@@ -142,6 +144,29 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
         }
     }
 
+    public static MultiPartResult generateMultiPartResult(Result taskResult) {
+        String success;
+
+        if (taskResult.getAddedCount() == 0) {
+            if (taskResult.getAllFilesToAdd() == 1) {
+                success = "File has been added already";
+            } else {
+                success = "All " + taskResult.getAllFilesToAdd() + " files have been added already";
+            }
+        } else if (taskResult.getAllFilesToAdd() == taskResult.getAddedCount()) {
+            if (taskResult.getAddedCount() == 1) {
+                success = "File has been added successfully";
+            } else {
+                success = "All " + taskResult.getAddedCount() + " files have been added successfully";
+            }
+        } else {
+            success = taskResult.getAddedCount() + "/" + taskResult.getAllFilesToAdd() + " successfully added, "
+                    + (taskResult.getAllFilesToAdd() - taskResult.getAddedCount()) + "/" + taskResult.getAllFilesToAdd() + " added before";
+        }
+
+        return new MultiPartResult(success, null, null);
+    }
+
     @Override
     protected void onFinish(Result result) {
         this.onFinish.accept(result);
@@ -150,6 +175,8 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
     @AllArgsConstructor
     @Getter
     public static class Result {
+        private int allFilesToAdd;
+
         private int addedCount;
 
         private List<FileInfo> filesInfo;

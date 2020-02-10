@@ -27,10 +27,51 @@
 
 
 результаты:
-1. загрузка одного саба - task has been cancelled / has been loaded successfully / failed to load
-2. загрузка всех сабов одного файла loaded: N, loaded before: N, cancelled: N, failed: N писать в файл
+1. загрузка одного саба
+Task has been cancelled
+Subtitle size has been loaded successfully
+Failed to load subtitle size
 
-3. загрузка сабов всех nothing to load или loaded: N, loaded before: N, cancelled: N, failed: N
+2. загрузка всех сабов одного файла
+Task has been cancelled, nothing was loaded.
+Subtitle size has been loaded successfully / All N subtitle sizes have been loaded successfully
+Failed to load subtitle size / Failed to load all N subtitle sizes
+I/N subtitle size/sizes has/have been loaded successfully, J/N cancelled, K/N failed
+I/N subtitle size's/sizes' loading/loadings has/have been cancelled, J/N failed
+
+3. загрузка сабов всех
+Task has been cancelled, nothing was loaded
+There are no subtitle sizes to load
+Subtitle size has been loaded successfully / All N subtitle sizes have been loaded successfully
+Failed to load subtitle size / Failed to load all N subtitle sizes
+I/N subtitle size/sizes has/have been loaded successfully, J/N cancelled, K/N failed
+I/N subtitle size's/sizes' loading/loadings has/have been cancelled, J/N failed
+У каждого файла с ошибкой подписать: failed to load subtitle size / failed to load N subtitle sizes
+
 4. добавление файлов к имеющимся Files added: N, files added before: N
-5. автоопределение Auto-selected: N, impossible: N, cancelled: N, failed: N
+File has been added already / All N files have been added already
+File has been added successfully / All N files have been added successfully
+I/N files has/have been added successfully, J/N added before
+
+5. автоопределение
+Task has been cancelled, nothing was done
+Auto-selection has finished successfully for the file / Auto-selection has finished successfully for all N files
+Auto-selection is not possible for the file / Auto-selection is not possible for all N files
+Failed to perform auto-selection for the file / Failed to perform auto-selection for all N files
+Auto-selection has finished for I/N files successfully, canceled for J/N, not possible for K/N, failed for L/N
+Auto-selection has been canceled for I/N files, not possible for J/N, failed for K/n
+Auto-selection is not possible for I/N files, failed for J/N
+У каждого файла с ошибкой подписать: failed to load subtitles / failed to load N subtitles
+
 6. мерж
+Merge is not possible until you select upper and lower subtitles for each of the selected files
+
+Task has been cancelled, nothing was done
+Merge has finished successfully for the file / Merge has finished successfully for all N files
+Merge has failed for the file / Merge has failed for all N files
+Merge has finished for I/N files successfully, cancelled for J/N cancelled, failed for K/N
+Merge has been canceled for I/N files, failed for J/N
+У каждого файла с ошибкой подписать:
+please choose upper and lower subtitles before the merge - если проставить все или снять выбор ошибку убрать
+failed to load subtitles / failed to load N subtitles
+merge has failed: причина

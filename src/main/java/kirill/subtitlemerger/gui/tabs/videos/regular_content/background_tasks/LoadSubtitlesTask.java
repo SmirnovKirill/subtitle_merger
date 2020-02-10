@@ -2,7 +2,8 @@ package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
 import javafx.application.Platform;
 import javafx.scene.control.ProgressBar;
-import kirill.subtitlemerger.gui.background_tasks.BackgroundTask;
+import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
+import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
@@ -146,6 +147,62 @@ public abstract class LoadSubtitlesTask extends BackgroundTask<LoadSubtitlesTask
         }
 
         throw new IllegalStateException();
+    }
+
+    public static MultiPartResult generateMultiPartResult(Result taskResult) {
+        String success = "";
+        String warn = "";
+        String error = "";
+
+        if (taskResult.getAllSubtitleCount() == 0) {
+            success = "No subtitles to load";
+        } else if (taskResult.getProcessedCount() == 0) {
+            warn = "Haven't load anything because of the cancellation";
+        } else if (taskResult.getLoadedSuccessfullyCount() == taskResult.getAllSubtitleCount()) {
+            if (taskResult.getAllSubtitleCount() == 1) {
+                success = "Subtitle size has been loaded successfully";
+            } else {
+                success = "All " + taskResult.getAllSubtitleCount() + " subtitle sizes have been loaded successfully";
+            }
+        } else if (taskResult.getLoadedBeforeCount() == taskResult.getAllSubtitleCount()) {
+            if (taskResult.getAllSubtitleCount() == 1) {
+                success = "Subtitle size has already been loaded successfully";
+            } else {
+                success = "All " + taskResult.getAllSubtitleCount() + " subtitle sizes have already been loaded successfully";
+            }
+        } else if (taskResult.getFailedToLoadCount() == taskResult.getAllSubtitleCount()) {
+            if (taskResult.getAllSubtitleCount() == 1) {
+                error = "Failed to load subtitle size";
+            } else {
+                error = "Failed to load all " + taskResult.getAllSubtitleCount() + " subtitle sizes";
+            }
+        } else {
+            if (taskResult.getLoadedSuccessfullyCount() != 0) {
+                success += taskResult.getLoadedSuccessfullyCount() + "/" + taskResult.getAllSubtitleCount();
+                success += " loaded successfully";
+            }
+
+            if (taskResult.getLoadedBeforeCount() != 0) {
+                if (!StringUtils.isBlank(success)) {
+                    success += ", ";
+                }
+
+                success += taskResult.getLoadedBeforeCount() + "/" + taskResult.getAllSubtitleCount();
+                success += " loaded before";
+            }
+
+            if (taskResult.getProcessedCount() != taskResult.getAllSubtitleCount()) {
+                warn += (taskResult.getAllSubtitleCount() - taskResult.getProcessedCount()) + "/" + taskResult.getAllSubtitleCount();
+                warn += " cancelled";
+            }
+
+            if (taskResult.getFailedToLoadCount() != 0) {
+                error += "failed to load " + taskResult.getFailedToLoadCount() + "/" + taskResult.getAllSubtitleCount();
+                error += " subtitles";
+            }
+        }
+
+        return new MultiPartResult(success, warn, error);
     }
 
     @Override

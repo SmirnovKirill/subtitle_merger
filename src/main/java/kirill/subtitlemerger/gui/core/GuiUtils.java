@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.gui;
+package kirill.subtitlemerger.gui.core;
 
 import javafx.scene.control.Tooltip;
 import javafx.util.Duration;

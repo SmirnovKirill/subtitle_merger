@@ -9,5 +9,7 @@ public class GuiConstants {
 
     public static final String LABEL_SUCCESS_CLASS = "label-success";
 
+    public static final String LABEL_WARN_CLASS = "label-warn";
+
     public static final String LABEL_ERROR_CLASS = "label-error";
 }

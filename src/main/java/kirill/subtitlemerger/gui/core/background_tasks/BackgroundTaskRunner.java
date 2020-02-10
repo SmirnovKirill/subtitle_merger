@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.gui.background_tasks;
+package kirill.subtitlemerger.gui.core.background_tasks;
 
 import javafx.application.Platform;
 import javafx.concurrent.Task;
