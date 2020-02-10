@@ -32,13 +32,25 @@ public class GuiUtils {
     public static Tooltip generateTooltip(String text) {
         Tooltip result = new Tooltip(text);
 
-        setTooltipProperties(result);
+        result.setShowDelay(Duration.ZERO);
+        result.setShowDuration(Duration.INDEFINITE);
 
         return result;
     }
 
-    private static void setTooltipProperties(Tooltip tooltip) {
-        tooltip.setShowDelay(Duration.ZERO);
-        tooltip.setShowDuration(Duration.INDEFINITE);
+    /**
+     * @param count number of items
+     * @param oneItemText text to return when there is only one item, this text can't use any format arguments because
+     *                    there is always only one item
+     * @param zeroOrSeveralItemsText text to return when there are zero or several items, this text can use format
+     *                               argument %d inside
+     * @return text depending on the count.
+     */
+    public static String getTextDependingOnTheCount(int count, String oneItemText, String zeroOrSeveralItemsText) {
+        if (count == 1) {
+            return oneItemText;
+        } else {
+            return String.format(zeroOrSeveralItemsText, count);
+        }
     }
 }

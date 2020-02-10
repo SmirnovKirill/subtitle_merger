@@ -139,7 +139,7 @@ public class RegularContentController {
 
     private BooleanProperty allSelected;
 
-    private LongProperty selected;
+    private IntegerProperty selected;
 
     private IntegerProperty allAvailableCount;
 
@@ -152,7 +152,7 @@ public class RegularContentController {
         this.sortByGroup = new ToggleGroup();
         this.sortDirectionGroup = new ToggleGroup();
         this.allSelected = new SimpleBooleanProperty(false);
-        this.selected = new SimpleLongProperty(0);
+        this.selected = new SimpleIntegerProperty(0);
         this.allAvailableCount = new SimpleIntegerProperty(0);
         this.tableWithFiles.initialize(allSelected, selected, allAvailableCount);
         this.tableWithFiles.setContextMenu(
@@ -174,12 +174,13 @@ public class RegularContentController {
     private void selectedCountChangeListener(Observable observable) {
         setActionButtonsVisibility();
 
-        String suffix = "selected for merge";
-        if (getSelected() == 1) {
-            selectedForMergeLabel.setText("1 video " + suffix);
-        } else {
-            selectedForMergeLabel.setText(getSelected() + " videos " + suffix);
-        }
+        selectedForMergeLabel.setText(
+                GuiUtils.getTextDependingOnTheCount(
+                        getSelected(),
+                        "1 video selected for merge",
+                        "%d videos selected for merge"
+                )
+        );
     }
 
     private void setActionButtonsVisibility() {
@@ -326,7 +327,7 @@ public class RegularContentController {
 
     private void updateTableContent(List<GuiFileInfo> guiFilesToShowInfo, Map<String, FilePanes> filePanes) {
         long oldSelected = getSelected();
-        setSelected(guiFilesToShowInfo.stream().filter(GuiFileInfo::isSelected).count());
+        setSelected((int) guiFilesToShowInfo.stream().filter(GuiFileInfo::isSelected).count());
         if (oldSelected == getSelected()) {
             setActionButtonsVisibility();
         }
@@ -970,15 +971,15 @@ public class RegularContentController {
         this.allSelected.set(allSelected);
     }
 
-    public long getSelected() {
+    public int getSelected() {
         return selected.get();
     }
 
-    public LongProperty selectedProperty() {
+    public IntegerProperty selectedProperty() {
         return selected;
     }
 
-    public void setSelected(long selected) {
+    public void setSelected(int selected) {
         this.selected.set(selected);
     }
 }

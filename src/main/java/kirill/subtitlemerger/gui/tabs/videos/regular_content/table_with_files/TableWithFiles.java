@@ -2,7 +2,6 @@ package kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.LongProperty;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.FilePanes;
@@ -56,7 +55,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
      * in the constructor columns aren't initialized yet.
      */
     //todo move everything to the constructor
-    public void initialize(BooleanProperty allSelected, LongProperty selected, IntegerProperty allAvailableCount) {
+    public void initialize(BooleanProperty allSelected, IntegerProperty selected, IntegerProperty allAvailableCount) {
         TableColumn<GuiFileInfo, ?> selectedColumn = getColumns().get(0);
         CheckBox selectAllCheckBox = new CheckBox();
         selectAllCheckBox.selectedProperty().bindBidirectional(allSelected);

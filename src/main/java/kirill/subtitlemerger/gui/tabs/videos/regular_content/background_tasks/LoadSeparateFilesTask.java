@@ -2,7 +2,6 @@ package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.LongProperty;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
@@ -26,7 +25,7 @@ public class LoadSeparateFilesTask extends BackgroundTask<LoadSeparateFilesTask.
 
     private GuiContext guiContext;
 
-    private LongProperty selected;
+    private IntegerProperty selected;
 
     private BooleanProperty allSelected;
 
@@ -47,7 +46,7 @@ public class LoadSeparateFilesTask extends BackgroundTask<LoadSeparateFilesTask.
             GuiSettings.SortBy sortBy,
             GuiSettings.SortDirection sortDirection,
             GuiContext guiContext,
-            LongProperty selected,
+            IntegerProperty selected,
             BooleanProperty allSelected,
             IntegerProperty allAvailableCount,
             FilePanes.AllFileSubtitleSizesLoader allFileSubtitleSizesLoader,

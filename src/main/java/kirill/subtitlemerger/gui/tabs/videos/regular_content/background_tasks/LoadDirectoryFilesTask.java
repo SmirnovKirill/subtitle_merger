@@ -39,7 +39,7 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
 
     private GuiContext guiContext;
 
-    private LongProperty selected;
+    private IntegerProperty selected;
 
     private BooleanProperty allSelected;
 
@@ -60,7 +60,7 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
             GuiSettings.SortBy sortBy,
             GuiSettings.SortDirection sortDirection,
             GuiContext guiContext,
-            LongProperty selected,
+            IntegerProperty selected,
             BooleanProperty allSelected,
             IntegerProperty allAvailableCount,
             FilePanes.AllFileSubtitleSizesLoader allFileSubtitleSizesLoader,
@@ -404,7 +404,7 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
 
     static Map<String, FilePanes> generateFilesPanes(
             List<GuiFileInfo> filesInfo,
-            LongProperty selected,
+            IntegerProperty selected,
             BooleanProperty allSelected,
             IntegerProperty allAvailableCount,
             FilePanes.AllFileSubtitleSizesLoader allFileSubtitleSizesLoader,

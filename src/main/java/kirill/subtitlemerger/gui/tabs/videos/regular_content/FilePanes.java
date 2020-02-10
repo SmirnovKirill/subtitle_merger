@@ -5,7 +5,6 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.LongProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -29,7 +28,7 @@ public class FilePanes {
 
     private GuiFileInfo fileInfo;
 
-    private LongProperty selected;
+    private IntegerProperty selected;
 
     private BooleanProperty allSelected;
 
@@ -51,7 +50,7 @@ public class FilePanes {
 
     public FilePanes(
             GuiFileInfo fileInfo,
-            LongProperty selected,
+            IntegerProperty selected,
             BooleanProperty allSelected,
             IntegerProperty allAvailableCount,
             AllFileSubtitleSizesLoader allFileSubtitleSizesLoader,
