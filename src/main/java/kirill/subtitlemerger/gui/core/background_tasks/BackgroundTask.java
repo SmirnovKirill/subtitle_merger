@@ -33,11 +33,9 @@ public abstract class BackgroundTask<T> {
         return cancellationPossible;
     }
 
-    public void setCancellationPossible(boolean cancellationPossible) {
+    protected void setCancellationPossible(boolean cancellationPossible) {
         /* Cancellation property is usually bound to some gui element so it should be updated in the javafx thread. */
-        Platform.runLater(() -> {
-            this.cancellationPossible.set(cancellationPossible);
-        });
+        Platform.runLater(() -> this.cancellationPossible.set(cancellationPossible));
     }
 
     protected abstract T run();

@@ -146,7 +146,12 @@ public class RegularContentController {
 
     private IntegerProperty allAvailableCount;
 
-    //todo comment
+    /*
+     * Before performing a one-file operation it is better to clean the result of the previous one-file operation, it
+     * will look better. We can't just clear all files' results because it may take a lot of time if there are many
+     * files and it's unacceptable for generally fast one-file operations. So we will keep track of the last processed
+     * file to clear its result very fast when starting next one-file operation.
+     */
     private GuiFileInfo lastProcessedFileInfo;
 
     public void initialize(Stage stage, GuiContext guiContext) {
@@ -155,7 +160,11 @@ public class RegularContentController {
         this.sortByGroup = new ToggleGroup();
         this.sortDirectionGroup = new ToggleGroup();
         this.allSelected = new SimpleBooleanProperty(false);
-        this.selected = new SimpleIntegerProperty(0);
+        /*
+         * Set negative value so that value is definitely changed after loading files and invalidation listener is
+         * triggered.
+         */
+        this.selected = new SimpleIntegerProperty(-1);
         this.allAvailableCount = new SimpleIntegerProperty(0);
         this.tableWithFiles.initialize(allSelected, selected, allAvailableCount);
         this.tableWithFiles.setContextMenu(
@@ -329,11 +338,7 @@ public class RegularContentController {
     }
 
     private void updateTableContent(List<GuiFileInfo> guiFilesToShowInfo, Map<String, FilePanes> filePanes) {
-        long oldSelected = getSelected();
         setSelected((int) guiFilesToShowInfo.stream().filter(GuiFileInfo::isSelected).count());
-        if (oldSelected == getSelected()) {
-            setActionButtonsVisibility();
-        }
 
         allAvailableCount.setValue(
                 (int) guiFilesToShowInfo.stream()
@@ -344,7 +349,7 @@ public class RegularContentController {
         tableWithFiles.getFilePanes().clear();
         tableWithFiles.getFilePanes().putAll(filePanes);
         tableWithFiles.setItems(FXCollections.observableArrayList(guiFilesToShowInfo));
-        setAllSelected(getSelected() == allAvailableCount.get());
+        setAllSelected(allAvailableCount.get() > 0 && getSelected() == allAvailableCount.get());
     }
 
     private void stopProgress() {
@@ -596,8 +601,12 @@ public class RegularContentController {
 
     @FXML
     private void backToSelectionClicked() {
-        /* Just in case. See the huge comment in the hideUnavailableClicked() method. */
-        setSelected(0);
+        /*
+         * Set negative value so that value is definitely changed after loading files and invalidation listener is
+         * triggered.
+         */
+        setSelected(-1);
+
         tableWithFiles.setItems(FXCollections.emptyObservableList());
         tableWithFiles.getFilePanes().clear();
         generalResult.clear();

@@ -227,7 +227,7 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
                     from(
                             fileInfo,
                             showFullFileName,
-                            selectByDefault,
+                            selectByDefault && fileInfo.getUnavailabilityReason() == null,
                             guiSettings
                     )
             );
