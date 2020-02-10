@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import org.apache.commons.lang3.StringUtils;
 
 @AllArgsConstructor
 @Getter
@@ -28,5 +29,9 @@ public class MultiPartResult {
 
     public static MultiPartResult onlyError(String text) {
         return new MultiPartResult(null, null, text);
+    }
+
+    public boolean empty() {
+        return StringUtils.isBlank(success) && StringUtils.isBlank(warn) && StringUtils.isBlank(error);
     }
 }

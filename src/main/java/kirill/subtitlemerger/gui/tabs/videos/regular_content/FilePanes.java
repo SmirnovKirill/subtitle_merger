@@ -375,12 +375,19 @@ public class FilePanes {
         result.add(getAllSizesPane, 1, 1 + fileInfo.getExternalSubtitleFiles().size() + fileInfo.getSubtitleStreams().size());
         result.add(new Region(), 2, 1 + fileInfo.getExternalSubtitleFiles().size() + fileInfo.getSubtitleStreams().size());
 
-        GridPane.setMargin(hiddenPane, new Insets(0, 0, 0, 0));
-        GridPane.setMargin(getAllSizesPane, new Insets(0, 0, 0, 0));
+        GridPane.setMargin(hiddenPane, new Insets(3, 0, 0, 0));
+        GridPane.setMargin(getAllSizesPane, new Insets(3, 0, 0, 0));
         GridPane.setMargin(result.getChildren().get(result.getChildren().size() - 1), new Insets(0, 0, 0, 0));
 
         MultiColorResultLabels resultLabels = new MultiColorResultLabels();
-        fileInfo.resultProperty().addListener(observable -> resultLabels.update(fileInfo.getResult()));
+        resultLabels.setAlignment(Pos.CENTER);
+        resultLabels.setManaged(false);
+        resultLabels.setVisible(false);
+        fileInfo.resultProperty().addListener(observable -> {
+            resultLabels.update(fileInfo.getResult());
+            resultLabels.setVisible(!fileInfo.getResult().empty());
+            resultLabels.setManaged(!fileInfo.getResult().empty());
+        });
 
         result.addRow(
                 2 + fileInfo.getExternalSubtitleFiles().size() + fileInfo.getSubtitleStreams().size(),
@@ -396,7 +403,7 @@ public class FilePanes {
     private Pane generateHiddenPane(GuiFileInfo fileInfo) {
         HBox result = new HBox(); //todo wrapper isn't necessary
 
-        result.setAlignment(Pos.CENTER);
+        result.setAlignment(Pos.CENTER_LEFT);
 
         StringBinding showHiddenBinding = Bindings.createStringBinding(
                 () -> "show " + fileInfo.getSubtitleToHideCount() + " hidden ", fileInfo.subtitleToHideCountProperty()
