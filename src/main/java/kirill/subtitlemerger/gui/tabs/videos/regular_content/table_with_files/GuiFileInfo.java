@@ -1,6 +1,7 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files;
 
 import javafx.beans.property.*;
+import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
 import lombok.AccessLevel;
 import lombok.Getter;
 import org.joda.time.LocalDateTime;
@@ -24,12 +25,6 @@ public class GuiFileInfo {
     private String unavailabilityReason;
 
     @Getter(AccessLevel.NONE)
-    private StringProperty errorMessage;
-
-    @Getter(AccessLevel.NONE)
-    private StringProperty successMessage;
-
-    @Getter(AccessLevel.NONE)
     private BooleanProperty haveSubtitleSizesToLoad;
 
     @Getter(AccessLevel.NONE)
@@ -37,6 +32,9 @@ public class GuiFileInfo {
 
     @Getter(AccessLevel.NONE)
     private BooleanProperty someSubtitlesHidden;
+
+    @Getter(AccessLevel.NONE)
+    private ObjectProperty<MultiPartResult> result;
 
     private List<GuiSubtitleStream> subtitleStreams;
 
@@ -61,40 +59,15 @@ public class GuiFileInfo {
         this.lastModified = lastModified;
         this.size = size;
         this.unavailabilityReason = unavailabilityReason;
-        this.errorMessage = new SimpleStringProperty();
-        this.successMessage = new SimpleStringProperty();
         this.haveSubtitleSizesToLoad = new SimpleBooleanProperty(haveSubtitleSizesToLoad);
         this.subtitleToHideCount = new SimpleIntegerProperty(subtitleToHideCount);
         this.someSubtitlesHidden = new SimpleBooleanProperty(someSubtitlesHidden);
+        this.result = new SimpleObjectProperty<>();
         this.subtitleStreams = subtitleStreams;
         this.externalSubtitleFiles = Arrays.asList(
                 new GuiExternalSubtitleFile(),
                 new GuiExternalSubtitleFile()
         );
-    }
-
-    public String getErrorMessage() {
-        return errorMessage.get();
-    }
-
-    public StringProperty errorMessageProperty() {
-        return errorMessage;
-    }
-
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage.set(errorMessage);
-    }
-
-    public String getSuccessMessage() {
-        return successMessage.get();
-    }
-
-    public StringProperty successMessageProperty() {
-        return successMessage;
-    }
-
-    public void setSuccessMessage(String successMessage) {
-        this.successMessage.set(successMessage);
     }
 
     public boolean isSelected() {
@@ -145,8 +118,31 @@ public class GuiFileInfo {
         this.someSubtitlesHidden.set(someSubtitlesHidden);
     }
 
+    public MultiPartResult getResult() {
+        return result.get();
+    }
+
+    public ObjectProperty<MultiPartResult> resultProperty() {
+        return result;
+    }
+
+    public void setResult(MultiPartResult result) {
+        this.result.set(result);
+    }
+
     public void clearResult() {
-        this.successMessage = null;
-        this.errorMessage = null;
+        setResult(MultiPartResult.EMPTY);
+    }
+
+    public void setResultOnlySuccess(String text) {
+        setResult(MultiPartResult.onlySuccess(text));
+    }
+
+    public void setResultOnlyWarn(String text) {
+        setResult(MultiPartResult.onlyWarn(text));
+    }
+
+    public void setResultOnlyError(String text) {
+        setResult(MultiPartResult.onlyError(text));
     }
 }

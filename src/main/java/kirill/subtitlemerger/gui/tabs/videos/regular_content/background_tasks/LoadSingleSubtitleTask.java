@@ -4,6 +4,7 @@ import javafx.application.Platform;
 import javafx.scene.control.ProgressBar;
 import kirill.subtitlemerger.gui.core.GuiUtils;
 import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
+import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.logic.core.Parser;
@@ -13,9 +14,7 @@ import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.apache.commons.lang3.StringUtils;
 
-import java.io.File;
 import java.util.function.Consumer;
 
 @AllArgsConstructor
@@ -41,7 +40,14 @@ public class LoadSingleSubtitleTask extends BackgroundTask<LoadSingleSubtitleTas
         );
 
         updateProgress(ProgressBar.INDETERMINATE_PROGRESS, ProgressBar.INDETERMINATE_PROGRESS);
-        updateMessage(getUpdateMessage(subtitleStream, fileInfo.getFile()));
+        updateMessage(
+                LoadSubtitlesTask.getUpdateMessage(
+                        1,
+                        0,
+                        subtitleStream,
+                        fileInfo.getFile()
+                )
+        );
 
         setCancellationPossible(true);
 
@@ -54,7 +60,6 @@ public class LoadSingleSubtitleTask extends BackgroundTask<LoadSingleSubtitleTas
                             subtitleStream.getLanguage()
                     )
             );
-
             boolean haveSubtitlesToLoad = fileInfo.haveSubtitlesToLoad();
 
             Platform.runLater(() -> {
@@ -73,23 +78,30 @@ public class LoadSingleSubtitleTask extends BackgroundTask<LoadSingleSubtitleTas
             }
         } catch (Parser.IncorrectFormatException e) {
             Platform.runLater(() -> guiSubtitleStream.setFailedToLoadReason("subtitles seem to have incorrect format"));
-
             return new Result(Status.ERROR);
         }
     }
 
-    private static String getUpdateMessage(
-            SubtitleStream subtitleStream,
-            File file
-    ) {
-        String language = subtitleStream.getLanguage() != null
-                ? subtitleStream.getLanguage().toString().toUpperCase()
-                : "UNKNOWN LANGUAGE";
+    public static MultiPartResult generateMultiPartResult(Result taskResult) {
+        String success = null;
+        String warn = null;
+        String error = null;
 
-        return "getting subtitle "
-                + language
-                + (StringUtils.isBlank(subtitleStream.getTitle()) ? "" : " " + subtitleStream.getTitle())
-                + " in " + file.getName();
+        switch (taskResult.getStatus()) {
+            case SUCCESS:
+                success = "Subtitle size has been loaded successfully";
+                break;
+            case CANCELLED:
+                warn = "Task has been cancelled";
+                break;
+            case ERROR:
+                error = "Failed to load subtitle size";
+                break;
+            default:
+                throw new IllegalStateException();
+        }
+
+        return new MultiPartResult(success, warn, error);
     }
 
     @Override

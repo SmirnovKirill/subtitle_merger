@@ -226,10 +226,10 @@ public class RegularContentController {
                 }
         );
 
-        startBackgroundTask(task);
+        prepareAndStartBackgroundTask(task);
     }
 
-    private void startBackgroundTask(BackgroundTask<?> task) {
+    private void prepareAndStartBackgroundTask(BackgroundTask<?> task) {
         currentTask = task;
         showProgress(task);
         cancelTaskPane.visibleProperty().bind(task.cancellationPossibleProperty());
@@ -251,7 +251,7 @@ public class RegularContentController {
                 }
         );
 
-        startBackgroundTask(task);
+        prepareAndStartBackgroundTask(task);
     }
 
     @FXML
@@ -319,7 +319,7 @@ public class RegularContentController {
                 }
         );
 
-        startBackgroundTask(task);
+        prepareAndStartBackgroundTask(task);
     }
 
     private void clearLastProcessedResult() {
@@ -395,7 +395,7 @@ public class RegularContentController {
         );
 
 
-        startBackgroundTask(task);
+        prepareAndStartBackgroundTask(task);
     }
 
     private static ContextMenu generateContextMenu(
@@ -519,7 +519,7 @@ public class RegularContentController {
                 }
         );
 
-        startBackgroundTask(task);
+        prepareAndStartBackgroundTask(task);
     }
 
     private static List<File> getFiles(Stage stage, GuiSettings settings) {
@@ -582,7 +582,7 @@ public class RegularContentController {
                 }
         );
 
-        startBackgroundTask(task);
+        prepareAndStartBackgroundTask(task);
     }
 
     private static Optional<File> getDirectory(Stage stage, GuiSettings settings) {
@@ -643,7 +643,7 @@ public class RegularContentController {
                 }
         );
 
-        startBackgroundTask(task);
+        prepareAndStartBackgroundTask(task);
     }
 
     @FXML
@@ -673,7 +673,7 @@ public class RegularContentController {
                 }
         );
 
-        startBackgroundTask(task);
+        prepareAndStartBackgroundTask(task);
     }
 
     @FXML
@@ -701,16 +701,16 @@ public class RegularContentController {
                     if (result.getRemovedCount() == 0) {
                         throw new IllegalStateException();
                     } else if (result.getRemovedCount() == 1) {
-                        generalResult.setSuccess("File has been removed from the list successfully");
+                        generalResult.setOnlySuccess("File has been removed from the list successfully");
                     } else {
-                        generalResult.setSuccess(result.getRemovedCount() + " files have been removed from the list successfully");
+                        generalResult.setOnlySuccess(result.getRemovedCount() + " files have been removed from the list successfully");
                     }
 
                     stopProgress();
                 }
         );
 
-        startBackgroundTask(task);
+        prepareAndStartBackgroundTask(task);
     }
 
     @FXML
@@ -754,7 +754,7 @@ public class RegularContentController {
                 }
         );
 
-        startBackgroundTask(task);
+        prepareAndStartBackgroundTask(task);
     }
 
     public static boolean isExtra(SubtitleStream subtitleStream, GuiSettings guiSettings) {
@@ -809,12 +809,12 @@ public class RegularContentController {
         FileInfo fileInfo = GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo);
 
         if (isDuplicate(file, fileInfo)) {
-            guiFileInfo.setErrorMessage("This file is already added");
+            guiFileInfo.setResultOnlyError("This file is already added");
             return;
         }
 
         if (file.length() / 1024 / 1024 > GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES) {
-            guiFileInfo.setErrorMessage("File is too big (>" + GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)");
+            guiFileInfo.setResultOnlyError("File is too big (>" + GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)");
             return;
         }
 
@@ -838,11 +838,11 @@ public class RegularContentController {
             guiExternalSubtitleFile.setSize(subtitles.getSize());
 
             fileInfo.getExternalSubtitleFiles().add(new ExternalSubtitleFile(file, subtitles));
-            guiFileInfo.setSuccessMessage("Subtitle file has been added to the list successfully");
+            guiFileInfo.setResultOnlySuccess("Subtitle file has been added to the list successfully");
         } catch (IOException e) {
-            guiFileInfo.setErrorMessage("Can't read the file");
+            guiFileInfo.setResultOnlyError("Can't read the file");
         } catch (Parser.IncorrectFormatException e) {
-            guiFileInfo.setErrorMessage("Can't add the file because it has incorrect format");
+            guiFileInfo.setResultOnlyError("Can't add the file because it has incorrect format");
         }
     }
 
@@ -891,7 +891,7 @@ public class RegularContentController {
         guiFileInfo.getExternalSubtitleFiles().get(index).setSelectedAsUpper(false);
         guiFileInfo.getExternalSubtitleFiles().get(index).setSelectedAsLower(false);
 
-        guiFileInfo.setSuccessMessage("Subtitle file has been removed from the list successfully");
+        guiFileInfo.setResultOnlySuccess("Subtitle file has been removed from the list successfully");
     }
 
     private void loadAllFileSubtitleSizes(GuiFileInfo guiFileInfo) {
@@ -910,7 +910,7 @@ public class RegularContentController {
                 }
         );
 
-        startBackgroundTask(task);
+        prepareAndStartBackgroundTask(task);
     }
 
     private void loadSingleFileSubtitleSize(GuiFileInfo guiFileInfo, int ffmpegIndex) {
@@ -925,12 +925,12 @@ public class RegularContentController {
                 guiFileInfo,
                 context.getFfmpeg(),
                 (result) -> {
-                    //todo fix showResult(result);
+                    generalResult.update(LoadSingleSubtitleTask.generateMultiPartResult(result));
                     stopProgress();
                 }
         );
 
-        startBackgroundTask(task);
+        prepareAndStartBackgroundTask(task);
     }
 
     public boolean isAllSelected() {

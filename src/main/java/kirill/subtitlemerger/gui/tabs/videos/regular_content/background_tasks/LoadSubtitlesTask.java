@@ -70,7 +70,14 @@ public abstract class LoadSubtitlesTask extends BackgroundTask<LoadSubtitlesTask
                     continue;
                 }
 
-                updateMessage(getUpdateMessage(result, subtitleStream, fileInfo.getFile()));
+                updateMessage(
+                        getUpdateMessage(
+                                result.getAllSubtitleCount(),
+                                result.getProcessedCount(),
+                                subtitleStream,
+                                fileInfo.getFile()
+                        )
+                );
 
                 GuiSubtitleStream guiSubtitleStream = GuiUtils.findMatchingGuiStream(
                         subtitleStream.getFfmpegIndex(),
@@ -118,8 +125,9 @@ public abstract class LoadSubtitlesTask extends BackgroundTask<LoadSubtitlesTask
        return result;
     }
 
-    private static String getUpdateMessage(
-            Result taskResult,
+    static String getUpdateMessage(
+            int allSubtitleCount,
+            int processedCount,
             SubtitleStream subtitleStream,
             File file
     ) {
@@ -127,8 +135,8 @@ public abstract class LoadSubtitlesTask extends BackgroundTask<LoadSubtitlesTask
                 ? subtitleStream.getLanguage().toString().toUpperCase()
                 : "UNKNOWN LANGUAGE";
 
-        String progressPrefix = taskResult.getAllSubtitleCount() > 1
-                ? (taskResult.getProcessedCount() + 1) + "/" + taskResult.getAllSubtitleCount() + " "
+        String progressPrefix = allSubtitleCount > 1
+                ? String.format("%d/%d ", processedCount + 1, allSubtitleCount)
                 : "";
 
         return progressPrefix + "getting subtitle "

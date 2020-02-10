@@ -10,9 +10,23 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 public class MultiPartResult {
+    public static final MultiPartResult EMPTY = new MultiPartResult(null, null, null);
+
     private String success;
 
     private String warn;
 
     private String error;
+
+    public static MultiPartResult onlySuccess(String text) {
+        return new MultiPartResult(text, null, null);
+    }
+
+    public static MultiPartResult onlyWarn(String text) {
+        return new MultiPartResult(null, text, null);
+    }
+
+    public static MultiPartResult onlyError(String text) {
+        return new MultiPartResult(null, null, text);
+    }
 }

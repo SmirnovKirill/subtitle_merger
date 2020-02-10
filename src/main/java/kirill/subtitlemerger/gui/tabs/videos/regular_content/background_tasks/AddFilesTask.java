@@ -165,8 +165,8 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
         } else {
             success = GuiUtils.getTextDependingOnTheCount(
                     actuallyAdded,
-                    "1/" + filesToAdd + " files has been added successfully, ",
-                    "%d/" + filesToAdd + " files have been added successfully, "
+                    String.format("1/%d files has been added successfully, ", filesToAdd),
+                    String.format("%%d/%d files have been added successfully, ", filesToAdd)
             );
             success += (filesToAdd - actuallyAdded) + "/" + filesToAdd + " added before";
         }

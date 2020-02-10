@@ -13,6 +13,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.core.GuiUtils;
+import kirill.subtitlemerger.gui.core.custom_controls.MultiColorResultLabels;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiExternalSubtitleFile;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
@@ -378,31 +379,16 @@ public class FilePanes {
         GridPane.setMargin(getAllSizesPane, new Insets(0, 0, 0, 0));
         GridPane.setMargin(result.getChildren().get(result.getChildren().size() - 1), new Insets(0, 0, 0, 0));
 
-        StackPane statusPane = new StackPane();
-
-        Label errorMessageLabel = new Label();
-        errorMessageLabel.textProperty().bind(fileInfo.errorMessageProperty());
-        errorMessageLabel.getStyleClass().add("label-error");
-        BooleanBinding showErrorMessage = Bindings.isNotEmpty(fileInfo.errorMessageProperty());
-        errorMessageLabel.visibleProperty().bind(showErrorMessage);
-        errorMessageLabel.managedProperty().bind(showErrorMessage);
-
-        Label successMessageLabel = new Label();
-        successMessageLabel.textProperty().bind(fileInfo.successMessageProperty());
-        successMessageLabel.getStyleClass().add("label-success");
-        BooleanBinding showSuccessMessage = Bindings.isNotEmpty(fileInfo.successMessageProperty());
-        successMessageLabel.visibleProperty().bind(showSuccessMessage);
-        successMessageLabel.managedProperty().bind(showSuccessMessage);
-
-        statusPane.getChildren().addAll(errorMessageLabel, successMessageLabel);
+        MultiColorResultLabels resultLabels = new MultiColorResultLabels();
+        fileInfo.resultProperty().addListener(observable -> resultLabels.update(fileInfo.getResult()));
 
         result.addRow(
                 2 + fileInfo.getExternalSubtitleFiles().size() + fileInfo.getSubtitleStreams().size(),
-                statusPane
+                resultLabels
         );
 
-        GridPane.setColumnSpan(statusPane, 3);
-        GridPane.setMargin(statusPane, new Insets(10, 0, 0, 0));
+        GridPane.setColumnSpan(resultLabels, 3);
+        GridPane.setMargin(resultLabels, new Insets(10, 0, 0, 0));
 
         return result;
     }
