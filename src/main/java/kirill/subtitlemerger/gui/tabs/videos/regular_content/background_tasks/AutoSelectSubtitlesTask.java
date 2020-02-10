@@ -77,7 +77,7 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
 
             FileInfo fileInfo = GuiUtils.findMatchingFileInfo(guiFileInfo, allFilesInfo);
             if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
-                result.setNotEnoughStreamsCount(result.getNotEnoughStreamsCount() + 1);
+                result.setNotPossibleCount(result.getNotPossibleCount() + 1);
                 result.setProcessedCount(result.getProcessedCount() + 1);
                 continue;
             }
@@ -85,7 +85,7 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
             List<SubtitleStream> matchingUpperSubtitles = getMatchingUpperSubtitles(fileInfo, guiSettings);
             List<SubtitleStream> matchingLowerSubtitles = getMatchingLowerSubtitles(fileInfo, guiSettings);
             if (CollectionUtils.isEmpty(matchingUpperSubtitles) || CollectionUtils.isEmpty(matchingLowerSubtitles)) {
-                result.setNotEnoughStreamsCount(result.getNotEnoughStreamsCount() + 1);
+                result.setNotPossibleCount(result.getNotPossibleCount() + 1);
                 result.setProcessedCount(result.getProcessedCount() + 1);
                 continue;
             }
@@ -248,53 +248,83 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
     }
 
     public static MultiPartResult generateMultiPartResult(Result taskResult) {
-        String success = "";
-        String warn = "";
-        String error = "";
+        String success = null;
+        String warn = null;
+        String error = null;
 
         if (taskResult.getProcessedCount() == 0) {
-            warn = "Haven't done anything because of the cancellation";
+            warn = "Task has been cancelled, nothing was done";
         } else if (taskResult.getFinishedSuccessfullyCount() == taskResult.getAllFileCount()) {
-            if (taskResult.getAllFileCount() == 1) {
-                success = "Subtitles have been successfully auto-selected for the file";
-            } else {
-                success = "Subtitles have been successfully auto-selected for all " + taskResult.getAllFileCount() + " files";
-            }
-        } else if (taskResult.getNotEnoughStreamsCount() == taskResult.getAllFileCount()) {
-            if (taskResult.getAllFileCount() == 1) {
-                warn = "Auto-selection is not possible (no proper subtitles to choose from) for the file";
-            } else {
-                warn = "Auto-selection is not possible (no proper subtitles to choose from) for all " + taskResult.getAllFileCount() + " files";
-            }
+            success = GuiUtils.getTextDependingOnTheCount(
+                    taskResult.getFinishedSuccessfullyCount(),
+                    "Auto-selection has finished successfully for the file",
+                    "Auto-selection has finished successfully for all %d files"
+            );
+        } else if (taskResult.getNotPossibleCount() == taskResult.getAllFileCount()) {
+            warn = GuiUtils.getTextDependingOnTheCount(
+                    taskResult.getNotPossibleCount(),
+                    "Auto-selection is not possible for the file",
+                    "Auto-selection is not possible for all %d files"
+            );
         } else if (taskResult.getFailedCount() == taskResult.getAllFileCount()) {
-            if (taskResult.getAllFileCount() == 1) {
-                error = "Failed to perform auto-selection for the file";
-            } else {
-                error = "Failed to perform auto-selection for all " + taskResult.getAllFileCount() + " files";
-            }
+            error = GuiUtils.getTextDependingOnTheCount(
+                    taskResult.getFailedCount(),
+                    "Failed to perform auto-selection for the file",
+                    "Failed to perform auto-selection for all %d files"
+            );
         } else {
             if (taskResult.getFinishedSuccessfullyCount() != 0) {
-                success += taskResult.getFinishedSuccessfullyCount() + "/" + taskResult.getAllFileCount();
-                success += " auto-selected successfully";
+                success = String.format(
+                        "Auto-selection has finished for %d/%d files successfully",
+                        taskResult.getFinishedSuccessfullyCount(),
+                        taskResult.getAllFileCount()
+                );
             }
 
             if (taskResult.getProcessedCount() != taskResult.getAllFileCount()) {
-                warn += (taskResult.getAllFileCount() - taskResult.getProcessedCount()) + "/" + taskResult.getAllFileCount();
-                warn += " cancelled";
+                if (taskResult.getFinishedSuccessfullyCount() == 0) {
+                    warn = String.format(
+                            "Auto-selection has been canceled for %d/%d files",
+                            taskResult.getAllFileCount() - taskResult.getProcessedCount(),
+                            taskResult.getAllFileCount()
+                    );
+                } else {
+                    warn = String.format(
+                            "canceled for %d/%d",
+                            taskResult.getAllFileCount() - taskResult.getProcessedCount(),
+                            taskResult.getAllFileCount()
+                    );
+                }
             }
 
-            if (taskResult.getNotEnoughStreamsCount() != 0) {
-                if (!StringUtils.isBlank(warn)) {
-                    warn += ", ";
+            if (taskResult.getNotPossibleCount() != 0) {
+                if (taskResult.getProcessedCount() != taskResult.getAllFileCount()) {
+                    warn += String.format(
+                            ", not possible for %d/%d",
+                            taskResult.getNotPossibleCount(),
+                            taskResult.getAllFileCount()
+                    );
+                } else if (taskResult.getFinishedSuccessfullyCount() != 0) {
+                    warn = String.format(
+                            "not possible for %d/%d",
+                            taskResult.getNotPossibleCount(),
+                            taskResult.getAllFileCount()
+                    );
+                } else {
+                    warn = String.format(
+                            "Auto-selection is not possible for %d/%d files",
+                            taskResult.getNotPossibleCount(),
+                            taskResult.getAllFileCount()
+                    );
                 }
-
-                warn += "auto-selection is not possible for ";
-                warn += taskResult.getNotEnoughStreamsCount() + "/" + taskResult.getAllFileCount();
             }
 
             if (taskResult.getFailedCount() != 0) {
-                error += taskResult.getFailedCount() + "/" + taskResult.getAllFileCount();
-                error += " failed";
+                error = String.format(
+                        "failed for %d/%d",
+                        taskResult.getFailedCount(),
+                        taskResult.getAllFileCount()
+                );
             }
         }
 
@@ -312,11 +342,11 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
     public static class Result {
         private int allFileCount;
 
-        private int notEnoughStreamsCount;
-
         private int processedCount;
 
         private int finishedSuccessfullyCount;
+
+        private int notPossibleCount;
 
         private int failedCount;
     }

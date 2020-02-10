@@ -9,7 +9,7 @@ import static org.mockito.Mockito.when;
 
 public class TestResultMessages {
     @Test
-    public void testAddFilesTask() {
+    public void testAddFiles() {
         assertThat(
                 AddFilesTask.generateMultiPartResult(getMockedAddFilesResult(1, 0))
         ).isEqualTo(new MultiPartResult("File has been added already", null, null));
@@ -52,6 +52,237 @@ public class TestResultMessages {
 
         when(result.getFilesToAddCount()).thenReturn(filesToAddCount);
         when(result.getActuallyAddedCount()).thenReturn(actuallyAddedCount);
+
+        return result;
+    }
+
+    @Test
+    public void testAutoSelectSubtitles() {
+        assertThat(
+                AutoSelectSubtitlesTask.generateMultiPartResult(
+                        getMockedAutoSelectSubtitlesResult(
+                                11,
+                                0,
+                                0,
+                                0,
+                                0
+                        )
+                )
+        ).isEqualTo(new MultiPartResult(null, "Task has been cancelled, nothing was done", null));
+
+        assertThat(
+                AutoSelectSubtitlesTask.generateMultiPartResult(
+                        getMockedAutoSelectSubtitlesResult(
+                                1,
+                                1,
+                                1,
+                                0,
+                                0
+                        )
+                )
+        ).isEqualTo(
+                new MultiPartResult(
+                        "Auto-selection has finished successfully for the file",
+                        null,
+                        null
+                )
+        );
+
+        assertThat(
+                AutoSelectSubtitlesTask.generateMultiPartResult(
+                        getMockedAutoSelectSubtitlesResult(
+                                2,
+                                2,
+                                2,
+                                0,
+                                0
+                        )
+                )
+        ).isEqualTo(
+                new MultiPartResult(
+                        "Auto-selection has finished successfully for all 2 files",
+                        null,
+                        null
+                )
+        );
+
+        assertThat(
+                AutoSelectSubtitlesTask.generateMultiPartResult(
+                        getMockedAutoSelectSubtitlesResult(
+                                1,
+                                1,
+                                0,
+                                1,
+                                0
+                        )
+                )
+        ).isEqualTo(new MultiPartResult(null, "Auto-selection is not possible for the file", null));
+
+        assertThat(
+                AutoSelectSubtitlesTask.generateMultiPartResult(
+                        getMockedAutoSelectSubtitlesResult(
+                                2,
+                                2,
+                                0,
+                                2,
+                                0
+                        )
+                )
+        ).isEqualTo(
+                new MultiPartResult(null, "Auto-selection is not possible for all 2 files", null)
+        );
+
+        assertThat(
+                AutoSelectSubtitlesTask.generateMultiPartResult(
+                        getMockedAutoSelectSubtitlesResult(
+                                1,
+                                1,
+                                0,
+                                0,
+                                1
+                        )
+                )
+        ).isEqualTo(
+                new MultiPartResult(null, null, "Failed to perform auto-selection for the file")
+        );
+
+        assertThat(
+                AutoSelectSubtitlesTask.generateMultiPartResult(
+                        getMockedAutoSelectSubtitlesResult(
+                                2,
+                                2,
+                                0,
+                                0,
+                                2
+                        )
+                )
+        ).isEqualTo(
+                new MultiPartResult(null, null, "Failed to perform auto-selection for all 2 files")
+        );
+
+        assertThat(
+                AutoSelectSubtitlesTask.generateMultiPartResult(
+                        getMockedAutoSelectSubtitlesResult(
+                                4,
+                                3,
+                                1,
+                                1,
+                                1
+                        )
+                )
+        ).isEqualTo(
+                new MultiPartResult(
+                        "Auto-selection has finished for 1/4 files successfully",
+                        "canceled for 1/4, not possible for 1/4",
+                        "failed for 1/4"
+                )
+        );
+
+        assertThat(
+                AutoSelectSubtitlesTask.generateMultiPartResult(
+                        getMockedAutoSelectSubtitlesResult(
+                                5,
+                                4,
+                                2,
+                                1,
+                                1
+                        )
+                )
+        ).isEqualTo(
+                new MultiPartResult(
+                        "Auto-selection has finished for 2/5 files successfully",
+                        "canceled for 1/5, not possible for 1/5",
+                        "failed for 1/5"
+                )
+        );
+
+        assertThat(
+                AutoSelectSubtitlesTask.generateMultiPartResult(
+                        getMockedAutoSelectSubtitlesResult(
+                                3,
+                                2,
+                                0,
+                                1,
+                                1
+                        )
+                )
+        ).isEqualTo(
+                new MultiPartResult(
+                        null,
+                        "Auto-selection has been canceled for 1/3 files, not possible for 1/3",
+                        "failed for 1/3"
+                )
+        );
+
+        assertThat(
+                AutoSelectSubtitlesTask.generateMultiPartResult(
+                        getMockedAutoSelectSubtitlesResult(
+                                4,
+                                2,
+                                0,
+                                1,
+                                1
+                        )
+                )
+        ).isEqualTo(
+                new MultiPartResult(
+                        null,
+                        "Auto-selection has been canceled for 2/4 files, not possible for 1/4",
+                        "failed for 1/4"
+                )
+        );
+
+        assertThat(
+                AutoSelectSubtitlesTask.generateMultiPartResult(
+                        getMockedAutoSelectSubtitlesResult(
+                                2,
+                                2,
+                                0,
+                                1,
+                                1
+                        )
+                )
+        ).isEqualTo(
+                new MultiPartResult(
+                        null,
+                        "Auto-selection is not possible for 1/2 files",
+                        "failed for 1/2"
+                )
+        );
+
+        assertThat(
+                AutoSelectSubtitlesTask.generateMultiPartResult(
+                        getMockedAutoSelectSubtitlesResult(
+                                3,
+                                3,
+                                0,
+                                2,
+                                1
+                        )
+                )
+        ).isEqualTo(
+                new MultiPartResult(
+                        null,
+                        "Auto-selection is not possible for 2/3 files",
+                        "failed for 1/3"
+                )
+        );
+    }
+
+    private static AutoSelectSubtitlesTask.Result getMockedAutoSelectSubtitlesResult(
+            int allFileCount,
+            int processedCount,
+            int finishedSuccessfullyCount,
+            int notPossibleCount,
+            int failedCount
+    ) {
+        AutoSelectSubtitlesTask.Result result = mock(AutoSelectSubtitlesTask.Result.class);
+
+        when(result.getAllFileCount()).thenReturn(allFileCount);
+        when(result.getProcessedCount()).thenReturn(processedCount);
+        when(result.getFinishedSuccessfullyCount()).thenReturn(finishedSuccessfullyCount);
+        when(result.getNotPossibleCount()).thenReturn(notPossibleCount);
+        when(result.getFailedCount()).thenReturn(failedCount);
 
         return result;
     }
