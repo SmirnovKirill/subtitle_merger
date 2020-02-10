@@ -372,7 +372,7 @@ public class TestResultMessages {
                 )
         ).isEqualTo(
                 new MultiPartResult(
-                        "1/3 subtitle size has been loaded successfully",
+                        "1/3 subtitle sizes has been loaded successfully",
                         "1/3 cancelled",
                         "1/3 failed"
                 )
@@ -407,7 +407,7 @@ public class TestResultMessages {
         ).isEqualTo(
                 new MultiPartResult(
                         null,
-                        "1/2 subtitle size's loading has been cancelled",
+                        "1/2 subtitle sizes' loading has been cancelled",
                         "1/2 failed"
                 )
         );

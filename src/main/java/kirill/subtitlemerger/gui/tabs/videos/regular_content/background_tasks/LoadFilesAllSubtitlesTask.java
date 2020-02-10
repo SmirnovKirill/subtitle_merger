@@ -193,7 +193,7 @@ public class LoadFilesAllSubtitlesTask extends BackgroundTask<LoadFilesAllSubtit
                 success = GuiUtils.getTextDependingOnTheCount(
                         taskResult.getLoadedSuccessfullyCount(),
                         String.format(
-                                "1/%d subtitle size has been loaded successfully",
+                                "1/%d subtitle sizes has been loaded successfully",
                                 taskResult.getStreamToLoadCount()
                         ),
                         String.format(
@@ -208,7 +208,7 @@ public class LoadFilesAllSubtitlesTask extends BackgroundTask<LoadFilesAllSubtit
                     warn = GuiUtils.getTextDependingOnTheCount(
                             taskResult.getStreamToLoadCount() - taskResult.getProcessedCount(),
                             String.format(
-                                    "1/%d subtitle size's loading has been cancelled",
+                                    "1/%d subtitle sizes' loading has been cancelled",
                                     taskResult.getStreamToLoadCount()
                             ),
                             String.format(

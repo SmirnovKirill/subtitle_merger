@@ -904,7 +904,7 @@ public class RegularContentController {
                 GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo),
                 guiFileInfo,
                 (result) -> {
-                    generalResult.update(LoadFilesAllSubtitlesTask.generateMultiPartResult(result));
+                    guiFileInfo.setResult(LoadFilesAllSubtitlesTask.generateMultiPartResult(result));
                     stopProgress();
                 },
                 context.getFfmpeg()
