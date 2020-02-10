@@ -168,9 +168,8 @@ class GuiSettings {
         }
 
         missingSettings = generateMissingSettings();
-        if (ffprobeFile == null || ffmpegFile == null) {
-            setFfprobeFfmpegIfTheyArePacked();
-        }
+
+        setDefaultSettingsIfNecessary();
     }
 
     private static Optional<File> getValidatedDirectory(String rawValue) throws ConfigException {
@@ -312,7 +311,19 @@ class GuiSettings {
         return FXCollections.observableSet(result);
     }
 
-    private void setFfprobeFfmpegIfTheyArePacked() {
+    private void setDefaultSettingsIfNecessary() {
+        try {
+            if (sortBy == null) {
+                saveSortBy(GuiSettings.SortBy.MODIFICATION_TIME.toString());
+            }
+
+            if (sortDirection == null) {
+                saveSortDirection(GuiSettings.SortDirection.ASCENDING.toString());
+            }
+        } catch (ConfigException e) {
+            log.error("failed to save sort parameters, should not happen: " + e.getMessage());
+        }
+
         if (ffprobeFile == null) {
             File packedFfprobeFile = getPackedFfprobeFile().orElse(null);
             if (packedFfprobeFile != null) {

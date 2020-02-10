@@ -10,15 +10,13 @@ import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import kirill.subtitlemerger.gui.*;
+import kirill.subtitlemerger.gui.GuiConstants;
+import kirill.subtitlemerger.gui.GuiContext;
+import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.core.GuiUtils;
 import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.core.custom_controls.MultiColorResultLabels;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.*;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.LoadFilesAllSubtitlesTask;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.LoadSingleFileAllSubtitlesTask;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.LoadSingleSubtitleTask;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.LoadSubtitlesTask;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiExternalSubtitleFile;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
@@ -39,7 +37,10 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
@@ -119,8 +120,8 @@ public class RegularContentController {
     @FXML
     private Button removeSelectedButton;
 
-    //todo message property probably
-    private BooleanProperty cancelTaskPaneVisible = new SimpleBooleanProperty(false);
+    @FXML
+    private Pane cancelTaskPane;
 
     private ToggleGroup sortByGroup;
 
@@ -145,22 +146,9 @@ public class RegularContentController {
     //todo comment
     private GuiFileInfo lastProcessedFileInfo;
 
-    public boolean getCancelTaskPaneVisible() {
-        return cancelTaskPaneVisible.get();
-    }
-
-    public BooleanProperty cancelTaskPaneVisibleProperty() {
-        return cancelTaskPaneVisible;
-    }
-
-    public void setCancelTaskPaneVisible(boolean cancelTaskPaneVisible) {
-        this.cancelTaskPaneVisible.set(cancelTaskPaneVisible);
-    }
-
     public void initialize(Stage stage, GuiContext guiContext) {
         this.stage = stage;
         this.context = guiContext;
-        saveDefaultSortSettingsIfNotSet(guiContext.getSettings());
         this.sortByGroup = new ToggleGroup();
         this.sortDirectionGroup = new ToggleGroup();
         this.allSelected = new SimpleBooleanProperty(false);
@@ -181,20 +169,6 @@ public class RegularContentController {
         this.removeSelectedButton.disableProperty().bind(
                 Bindings.isEmpty(tableWithFiles.getSelectionModel().getSelectedIndices())
         );
-    }
-
-    private static void saveDefaultSortSettingsIfNotSet(GuiSettings settings) {
-        try {
-            if (settings.getSortBy() == null) {
-                settings.saveSortBy(GuiSettings.SortBy.MODIFICATION_TIME.toString());
-            }
-
-            if (settings.getSortDirection() == null) {
-                settings.saveSortDirection(GuiSettings.SortDirection.ASCENDING.toString());
-            }
-        } catch (GuiSettings.ConfigException e) {
-            log.error("failed to save sort parameters, should not happen: " + ExceptionUtils.getStackTrace(e));
-        }
     }
 
     private void selectedCountChangeListener(Observable observable) {
@@ -254,7 +228,7 @@ public class RegularContentController {
     private void startBackgroundTask(BackgroundTask<?> task) {
         currentTask = task;
         showProgress(task);
-        cancelTaskPaneVisible.bind(task.cancellationPossibleProperty());
+        cancelTaskPane.visibleProperty().bind(task.cancellationPossibleProperty());
         task.start();
     }
 

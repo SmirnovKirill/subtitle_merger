@@ -114,7 +114,7 @@
     <VBox fx:id="progressPane" spacing="10" alignment="CENTER" visible="false">
         <ProgressIndicator fx:id="progressIndicator"/>
         <Label fx:id="progressLabel"/>
-        <HBox alignment="CENTER" visible="${controller.cancelTaskPaneVisible}">
+        <HBox fx:id="cancelTaskPane" alignment="CENTER">
             <Label text="Please be patient, this may take a while depending on the size. If you want to cancel the task click "/>
             <Hyperlink text="here" onAction="#cancelTaskClicked">
                 <padding>
