@@ -168,57 +168,71 @@ public class LoadFilesAllSubtitlesTask extends BackgroundTask<LoadFilesAllSubtit
     }
 
     public static MultiPartResult generateMultiPartResult(Result taskResult) {
-        String success = "";
-        String warn = "";
-        String error = "";
+        String success = null;
+        String warn = null;
+        String error = null;
 
-      /*  if (taskResult.getAllSubtitleCount() == 0) {
-            success = "No subtitles to load";
+        if (taskResult.getStreamToLoadCount() == 0) {
+            warn = "There are no subtitle sizes to load";
         } else if (taskResult.getProcessedCount() == 0) {
-            warn = "Haven't load anything because of the cancellation";
-        } else if (taskResult.getLoadedSuccessfullyCount() == taskResult.getAllSubtitleCount()) {
-            if (taskResult.getAllSubtitleCount() == 1) {
-                success = "Subtitle size has been loaded successfully";
-            } else {
-                success = "All " + taskResult.getAllSubtitleCount() + " subtitle sizes have been loaded successfully";
-            }
-        } else if (taskResult.getLoadedBeforeCount() == taskResult.getAllSubtitleCount()) {
-            if (taskResult.getAllSubtitleCount() == 1) {
-                success = "Subtitle size has already been loaded successfully";
-            } else {
-                success = "All " + taskResult.getAllSubtitleCount() + " subtitle sizes have already been loaded successfully";
-            }
-        } else if (taskResult.getFailedToLoadCount() == taskResult.getAllSubtitleCount()) {
-            if (taskResult.getAllSubtitleCount() == 1) {
-                error = "Failed to load subtitle size";
-            } else {
-                error = "Failed to load all " + taskResult.getAllSubtitleCount() + " subtitle sizes";
-            }
+            warn = "Task has been cancelled, nothing was loaded";
+        } else if (taskResult.getLoadedSuccessfullyCount() == taskResult.getStreamToLoadCount()) {
+            success = GuiUtils.getTextDependingOnTheCount(
+                    taskResult.getLoadedSuccessfullyCount(),
+                    "Subtitle size has been loaded successfully",
+                    "All %d subtitle sizes have been loaded successfully"
+            );
+        } else if (taskResult.getFailedToLoadCount() == taskResult.getStreamToLoadCount()) {
+            error = GuiUtils.getTextDependingOnTheCount(
+                    taskResult.getFailedToLoadCount(),
+                    "Failed to load subtitle size",
+                    "Failed to load all %d subtitle sizes"
+            );
         } else {
             if (taskResult.getLoadedSuccessfullyCount() != 0) {
-                success += taskResult.getLoadedSuccessfullyCount() + "/" + taskResult.getAllSubtitleCount();
-                success += " loaded successfully";
+                success = GuiUtils.getTextDependingOnTheCount(
+                        taskResult.getLoadedSuccessfullyCount(),
+                        String.format(
+                                "1/%d subtitle size has been loaded successfully",
+                                taskResult.getStreamToLoadCount()
+                        ),
+                        String.format(
+                                "%%d/%d subtitle sizes have been loaded successfully",
+                                taskResult.getStreamToLoadCount()
+                        )
+                );
             }
 
-            if (taskResult.getLoadedBeforeCount() != 0) {
-                if (!StringUtils.isBlank(success)) {
-                    success += ", ";
+            if (taskResult.getProcessedCount() != taskResult.getStreamToLoadCount()) {
+                if (taskResult.getLoadedSuccessfullyCount() == 0) {
+                    warn = GuiUtils.getTextDependingOnTheCount(
+                            taskResult.getStreamToLoadCount() - taskResult.getProcessedCount(),
+                            String.format(
+                                    "1/%d subtitle size's loading has been cancelled",
+                                    taskResult.getStreamToLoadCount()
+                            ),
+                            String.format(
+                                    "%%d/%d subtitle sizes' loading have been cancelled",
+                                    taskResult.getStreamToLoadCount()
+                            )
+                    );
+                } else {
+                    warn = String.format(
+                            "%d/%d cancelled",
+                            taskResult.getStreamToLoadCount() - taskResult.getProcessedCount(),
+                            taskResult.getStreamToLoadCount()
+                    );
                 }
-
-                success += taskResult.getLoadedBeforeCount() + "/" + taskResult.getAllSubtitleCount();
-                success += " loaded before";
-            }
-
-            if (taskResult.getProcessedCount() != taskResult.getAllSubtitleCount()) {
-                warn += (taskResult.getAllSubtitleCount() - taskResult.getProcessedCount()) + "/" + taskResult.getAllSubtitleCount();
-                warn += " cancelled";
             }
 
             if (taskResult.getFailedToLoadCount() != 0) {
-                error += "failed to load " + taskResult.getFailedToLoadCount() + "/" + taskResult.getAllSubtitleCount();
-                error += " subtitles";
+                error = String.format(
+                        "%d/%d failed",
+                        taskResult.getFailedToLoadCount(),
+                        taskResult.getStreamToLoadCount()
+                );
             }
-        }*/
+        }
 
         return new MultiPartResult(success, warn, error);
     }

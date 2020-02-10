@@ -58,8 +58,8 @@ Task has been cancelled, nothing was done
 Auto-selection has finished successfully for the file / Auto-selection has finished successfully for all N files
 Auto-selection is not possible for the file / Auto-selection is not possible for all N files
 Failed to perform auto-selection for the file / Failed to perform auto-selection for all N files
-Auto-selection has finished for I/N files successfully, canceled for J/N, not possible for K/N, failed for L/N
-Auto-selection has been canceled for I/N files, not possible for J/N, failed for K/n
+Auto-selection has finished for I/N files successfully, cancelled for J/N, not possible for K/N, failed for L/N
+Auto-selection has been cancelled for I/N files, not possible for J/N, failed for K/n
 Auto-selection is not possible for I/N files, failed for J/N
 У каждого файла с ошибкой подписать: failed to load subtitles / failed to load N subtitles
 
@@ -70,7 +70,7 @@ Task has been cancelled, nothing was done
 Merge has finished successfully for the file / Merge has finished successfully for all N files
 Merge has failed for the file / Merge has failed for all N files
 Merge has finished for I/N files successfully, cancelled for J/N cancelled, failed for K/N
-Merge has been canceled for I/N files, failed for J/N
+Merge has been cancelled for I/N files, failed for J/N
 У каждого файла с ошибкой подписать:
 please choose upper and lower subtitles before the merge - если проставить все или снять выбор ошибку убрать
 failed to load subtitles / failed to load N subtitles

@@ -1,6 +1,5 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
-import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.scene.control.ProgressIndicator;

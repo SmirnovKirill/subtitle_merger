@@ -284,13 +284,13 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
             if (taskResult.getProcessedCount() != taskResult.getAllFileCount()) {
                 if (taskResult.getFinishedSuccessfullyCount() == 0) {
                     warn = String.format(
-                            "Auto-selection has been canceled for %d/%d files",
+                            "Auto-selection has been cancelled for %d/%d files",
                             taskResult.getAllFileCount() - taskResult.getProcessedCount(),
                             taskResult.getAllFileCount()
                     );
                 } else {
                     warn = String.format(
-                            "canceled for %d/%d",
+                            "cancelled for %d/%d",
                             taskResult.getAllFileCount() - taskResult.getProcessedCount(),
                             taskResult.getAllFileCount()
                     );

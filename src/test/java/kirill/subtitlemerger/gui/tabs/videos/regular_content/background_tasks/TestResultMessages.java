@@ -173,7 +173,7 @@ public class TestResultMessages {
         ).isEqualTo(
                 new MultiPartResult(
                         "Auto-selection has finished for 1/4 files successfully",
-                        "canceled for 1/4, not possible for 1/4",
+                        "cancelled for 1/4, not possible for 1/4",
                         "failed for 1/4"
                 )
         );
@@ -191,7 +191,7 @@ public class TestResultMessages {
         ).isEqualTo(
                 new MultiPartResult(
                         "Auto-selection has finished for 2/5 files successfully",
-                        "canceled for 1/5, not possible for 1/5",
+                        "cancelled for 1/5, not possible for 1/5",
                         "failed for 1/5"
                 )
         );
@@ -209,7 +209,7 @@ public class TestResultMessages {
         ).isEqualTo(
                 new MultiPartResult(
                         null,
-                        "Auto-selection has been canceled for 1/3 files, not possible for 1/3",
+                        "Auto-selection has been cancelled for 1/3 files, not possible for 1/3",
                         "failed for 1/3"
                 )
         );
@@ -227,7 +227,7 @@ public class TestResultMessages {
         ).isEqualTo(
                 new MultiPartResult(
                         null,
-                        "Auto-selection has been canceled for 2/4 files, not possible for 1/4",
+                        "Auto-selection has been cancelled for 2/4 files, not possible for 1/4",
                         "failed for 1/4"
                 )
         );
@@ -283,6 +283,165 @@ public class TestResultMessages {
         when(result.getFinishedSuccessfullyCount()).thenReturn(finishedSuccessfullyCount);
         when(result.getNotPossibleCount()).thenReturn(notPossibleCount);
         when(result.getFailedCount()).thenReturn(failedCount);
+
+        return result;
+    }
+
+    @Test
+    public void testLoadSubtitles() {
+        assertThat(
+                LoadFilesAllSubtitlesTask.generateMultiPartResult(
+                        getMockedLoadSubtitlesResult(
+                                0,
+                                0,
+                                0,
+                                0
+                        )
+                )
+        ).isEqualTo(new MultiPartResult(null, "There are no subtitle sizes to load", null));
+
+        assertThat(
+                LoadFilesAllSubtitlesTask.generateMultiPartResult(
+                        getMockedLoadSubtitlesResult(
+                                11,
+                                0,
+                                0,
+                                0
+                        )
+                )
+        ).isEqualTo(new MultiPartResult(null, "Task has been cancelled, nothing was loaded", null));
+
+        assertThat(
+                LoadFilesAllSubtitlesTask.generateMultiPartResult(
+                        getMockedLoadSubtitlesResult(
+                                1,
+                                1,
+                                1,
+                                0
+                        )
+                )
+        ).isEqualTo(new MultiPartResult("Subtitle size has been loaded successfully", null, null));
+
+        assertThat(
+                LoadFilesAllSubtitlesTask.generateMultiPartResult(
+                        getMockedLoadSubtitlesResult(
+                                2,
+                                2,
+                                2,
+                                0
+                        )
+                )
+        ).isEqualTo(
+                new MultiPartResult(
+                        "All 2 subtitle sizes have been loaded successfully",
+                        null,
+                        null
+                )
+        );
+
+        assertThat(
+                LoadFilesAllSubtitlesTask.generateMultiPartResult(
+                        getMockedLoadSubtitlesResult(
+                                1,
+                                1,
+                                0,
+                                1
+                        )
+                )
+        ).isEqualTo(new MultiPartResult(null, null, "Failed to load subtitle size"));
+
+        assertThat(
+                LoadFilesAllSubtitlesTask.generateMultiPartResult(
+                        getMockedLoadSubtitlesResult(
+                                2,
+                                2,
+                                0,
+                                2
+                        )
+                )
+        ).isEqualTo(new MultiPartResult(null, null, "Failed to load all 2 subtitle sizes"));
+
+        assertThat(
+                LoadFilesAllSubtitlesTask.generateMultiPartResult(
+                        getMockedLoadSubtitlesResult(
+                                3,
+                                2,
+                                1,
+                                1
+                        )
+                )
+        ).isEqualTo(
+                new MultiPartResult(
+                        "1/3 subtitle size has been loaded successfully",
+                        "1/3 cancelled",
+                        "1/3 failed"
+                )
+        );
+
+        assertThat(
+                LoadFilesAllSubtitlesTask.generateMultiPartResult(
+                        getMockedLoadSubtitlesResult(
+                                4,
+                                3,
+                                2,
+                                1
+                        )
+                )
+        ).isEqualTo(
+                new MultiPartResult(
+                        "2/4 subtitle sizes have been loaded successfully",
+                        "1/4 cancelled",
+                        "1/4 failed"
+                )
+        );
+
+        assertThat(
+                LoadFilesAllSubtitlesTask.generateMultiPartResult(
+                        getMockedLoadSubtitlesResult(
+                                2,
+                                1,
+                                0,
+                                1
+                        )
+                )
+        ).isEqualTo(
+                new MultiPartResult(
+                        null,
+                        "1/2 subtitle size's loading has been cancelled",
+                        "1/2 failed"
+                )
+        );
+
+        assertThat(
+                LoadFilesAllSubtitlesTask.generateMultiPartResult(
+                        getMockedLoadSubtitlesResult(
+                                3,
+                                1,
+                                0,
+                                1
+                        )
+                )
+        ).isEqualTo(
+                new MultiPartResult(
+                        null,
+                        "2/3 subtitle sizes' loading have been cancelled",
+                        "1/3 failed"
+                )
+        );
+    }
+
+    private static LoadFilesAllSubtitlesTask.Result getMockedLoadSubtitlesResult(
+            int streamToLoadCount,
+            int processedCount,
+            int loadedSuccessfullyCount,
+            int failedToLoadCount
+    ) {
+        LoadFilesAllSubtitlesTask.Result result = mock(LoadFilesAllSubtitlesTask.Result.class);
+
+        when(result.getStreamToLoadCount()).thenReturn(streamToLoadCount);
+        when(result.getProcessedCount()).thenReturn(processedCount);
+        when(result.getLoadedSuccessfullyCount()).thenReturn(loadedSuccessfullyCount);
+        when(result.getFailedToLoadCount()).thenReturn(failedToLoadCount);
 
         return result;
     }
