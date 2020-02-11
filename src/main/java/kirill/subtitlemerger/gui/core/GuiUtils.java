@@ -1,5 +1,6 @@
 package kirill.subtitlemerger.gui.core;
 
+import javafx.beans.property.StringProperty;
 import javafx.scene.control.Tooltip;
 import javafx.util.Duration;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
@@ -36,10 +37,23 @@ public class GuiUtils {
     public static Tooltip generateTooltip(String text) {
         Tooltip result = new Tooltip(text);
 
-        result.setShowDelay(Duration.ZERO);
-        result.setShowDuration(Duration.INDEFINITE);
+        setTooltipProperties(result);
 
         return result;
+    }
+
+    public static Tooltip generateTooltip(StringProperty text) {
+        Tooltip result = new Tooltip();
+
+        result.textProperty().bind(text);
+        setTooltipProperties(result);
+
+        return result;
+    }
+
+    private static void setTooltipProperties(Tooltip tooltip) {
+        tooltip.setShowDelay(Duration.ZERO);
+        tooltip.setShowDuration(Duration.INDEFINITE);
     }
 
     /**

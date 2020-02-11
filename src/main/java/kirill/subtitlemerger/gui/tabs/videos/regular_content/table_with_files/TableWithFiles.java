@@ -8,15 +8,12 @@ import kirill.subtitlemerger.gui.tabs.videos.regular_content.FilePanes;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @CommonsLog
 public class TableWithFiles extends TableView<GuiFileInfo> {
-    private static final String ROW_UNAVAILABLE_CLASS = "row-unavailable";
-
     @Getter
     private final Map<String, FilePanes> filePanes;
 
@@ -25,29 +22,8 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
         this.filePanes = new HashMap<>();
 
-        getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        setSelectionModel(null);
         setPlaceholder(new Label("there are no files to display"));
-
-        setRowFactory(this::generateRow);
-    }
-
-    private TableRow<GuiFileInfo> generateRow(TableView<GuiFileInfo> tableView) {
-        return new TableRow<>() {
-            @Override
-            protected void updateItem(GuiFileInfo fileInfo, boolean empty){
-                super.updateItem(fileInfo, empty);
-
-                getStyleClass().remove(ROW_UNAVAILABLE_CLASS);
-
-                if (fileInfo == null) {
-                    return;
-                }
-
-                if (!StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
-                    getStyleClass().add(ROW_UNAVAILABLE_CLASS);
-                }
-            }
-        };
     }
 
     /*

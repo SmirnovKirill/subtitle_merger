@@ -68,8 +68,8 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
                 0,
                 0
         );
-        setCancellationPossible(true);
 
+        setCancellationPossible(true);
         for (GuiFileInfo guiFileInfo : guiFilesInfoToWorkWith) {
             if (super.isCancelled()) {
                 return result;
@@ -95,7 +95,7 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
                         fileInfo.getFile(),
                         matchingUpperSubtitles,
                         matchingLowerSubtitles,
-                        guiFileInfo.getSubtitleStreams(),
+                        guiFileInfo,
                         result
                 );
                 if (!loadedSuccessfully) {
@@ -165,7 +165,7 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
             File file,
             List<SubtitleStream> upperSubtitleStreams,
             List<SubtitleStream> lowerSubtitleStreams,
-            List<GuiSubtitleStream> guiSubtitleStreams,
+            GuiFileInfo fileInfo,
             Result taskResult
     ) throws FfmpegException {
         boolean result = true;
@@ -178,51 +178,58 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
             subtitlesToLoad.addAll(lowerSubtitleStreams);
         }
 
-        for (SubtitleStream subtitleStream : subtitlesToLoad) {
+        int failedToLoadForFile = 0;
+
+        for (SubtitleStream stream : subtitlesToLoad) {
             updateMessage(
                     getUpdateMessage(
                             taskResult.getProcessedCount(),
                             taskResult.getAllFileCount(),
-                            subtitleStream,
+                            stream,
                             file
                     )
             );
 
-            if (subtitleStream.getSubtitles() != null) {
+            if (stream.getSubtitles() != null) {
                 continue;
             }
 
-            GuiSubtitleStream guiSubtitleStream = GuiUtils.findMatchingGuiStream(
-                    subtitleStream.getFfmpegIndex(),
-                    guiSubtitleStreams
+            GuiSubtitleStream guiStream = GuiUtils.findMatchingGuiStream(
+                    stream.getFfmpegIndex(),
+                    fileInfo.getSubtitleStreams()
             );
 
             try {
-                String subtitleText = ffmpeg.getSubtitlesText(subtitleStream.getFfmpegIndex(), file);
-                subtitleStream.setSubtitles(
+                String subtitleText = ffmpeg.getSubtitlesText(stream.getFfmpegIndex(), file);
+                stream.setSubtitles(
                         Parser.fromSubRipText(
                                 subtitleText,
-                                subtitleStream.getTitle(),
-                                subtitleStream.getLanguage()
+                                stream.getTitle(),
+                                stream.getLanguage()
                         )
                 );
 
                 /*
                  * Have to call this in the JavaFX thread because this change can lead to updates on the screen.
                  */
-                Platform.runLater(() -> guiSubtitleStream.setSize(subtitleStream.getSubtitles().getSize()));
+                Platform.runLater(() -> guiStream.setSize(stream.getSubtitles().getSize()));
             } catch (FfmpegException e) {
                 if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
+                    setFileInfoErrorIfNecessary(failedToLoadForFile, fileInfo);
                     throw e;
                 }
 
                 result = false;
-                Platform.runLater(() -> guiSubtitleStream.setFailedToLoadReason(BackgroundTaskUtils.guiTextFrom(e)));
+                Platform.runLater(() -> guiStream.setFailedToLoadReason(BackgroundTaskUtils.guiTextFrom(e)));
+                failedToLoadForFile++;
             } catch (Parser.IncorrectFormatException e) {
                 result = false;
-                Platform.runLater(() -> guiSubtitleStream.setFailedToLoadReason("subtitles seem to have incorrect format"));
+                Platform.runLater(() -> guiStream.setFailedToLoadReason("subtitles seem to have incorrect format"));
+                failedToLoadForFile++;
             }
         }
+
+        setFileInfoErrorIfNecessary(failedToLoadForFile, fileInfo);
 
         return result;
     }
@@ -245,6 +252,20 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
                 + language
                 + (StringUtils.isBlank(subtitleStream.getTitle()) ? "" : " " + subtitleStream.getTitle())
                 + " in " + file.getName();
+    }
+
+    private static void setFileInfoErrorIfNecessary(int failedToLoadForFile, GuiFileInfo fileInfo) {
+        if (failedToLoadForFile == 0) {
+            return;
+        }
+
+        String message = GuiUtils.getTextDependingOnTheCount(
+                failedToLoadForFile,
+                "Auto-select has failed because failed to load subtitle size",
+                "Auto-select has failed because failed to load %d subtitle sizes"
+        );
+
+        Platform.runLater(() -> fileInfo.setResultOnlyError(message));
     }
 
     public static MultiPartResult generateMultiPartResult(Result taskResult) {

@@ -178,9 +178,9 @@ public class RegularContentController {
 
         this.sortByGroup.selectedToggleProperty().addListener(this::sortByChanged);
         this.sortDirectionGroup.selectedToggleProperty().addListener(this::sortDirectionChanged);
-        this.removeSelectedButton.disableProperty().bind(
+        /*//todo restore this.removeSelectedButton.disableProperty().bind(
                 Bindings.isEmpty(tableWithFiles.getSelectionModel().getSelectedIndices())
-        );
+        );*/
     }
 
     private void selectedCountChangeListener(Observable observable) {
@@ -189,8 +189,8 @@ public class RegularContentController {
         selectedForMergeLabel.setText(
                 GuiUtils.getTextDependingOnTheCount(
                         getSelected(),
-                        "1 video selected for merge",
-                        "%d videos selected for merge"
+                        "1 video selected",
+                        "%d videos selected"
                 )
         );
     }

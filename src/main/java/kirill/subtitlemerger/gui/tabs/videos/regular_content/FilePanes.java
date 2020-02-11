@@ -25,6 +25,10 @@ import org.joda.time.format.DateTimeFormatter;
 
 @Getter
 public class FilePanes {
+    private static final String PANE_UNAVAILABLE_CLASS = "pane-unavailable";
+
+    private static final String PANE_ERROR_CLASS = "pane-error";
+
     private static final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern("dd.MM.YYYY HH:mm");
 
     private GuiFileInfo fileInfo;
@@ -70,6 +74,17 @@ public class FilePanes {
         this.selectPane = generateSelectedCellPane();
         this.fileDescriptionPane = generateFileDescriptionCellPane(fileInfo);
         this.subtitlePane = generateSubtitlesCellPane(fileInfo);
+        fileInfo.resultProperty().addListener(observable -> {
+            if (!StringUtils.isBlank(fileInfo.getResult().getError())) {
+                selectPane.getStyleClass().add(PANE_ERROR_CLASS);
+                fileDescriptionPane.getStyleClass().add(PANE_ERROR_CLASS);
+                subtitlePane.getStyleClass().add(PANE_ERROR_CLASS);
+            } else {
+                selectPane.getStyleClass().remove(PANE_ERROR_CLASS);
+                fileDescriptionPane.getStyleClass().remove(PANE_ERROR_CLASS);
+                subtitlePane.getStyleClass().remove(PANE_ERROR_CLASS);
+            }
+        });
     }
 
     private Pane generateSelectedCellPane() {
@@ -78,6 +93,7 @@ public class FilePanes {
         result.setAlignment(Pos.TOP_LEFT);
 
         if (!StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
+            result.getStyleClass().add(PANE_UNAVAILABLE_CLASS);
             return result;
         }
 
@@ -103,6 +119,9 @@ public class FilePanes {
 
         result.setPadding(new Insets(3, 5, 3, 3));
         result.setSpacing(10);
+        if (!StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
+            result.getStyleClass().add(PANE_UNAVAILABLE_CLASS);
+        }
 
         Label pathLabel = new Label(fileInfo.getPathToDisplay());
         pathLabel.getStyleClass().add("path-label");
@@ -141,6 +160,7 @@ public class FilePanes {
         if (!StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
             HBox result = new HBox();
             result.setAlignment(Pos.CENTER_LEFT);
+            result.getStyleClass().add(PANE_UNAVAILABLE_CLASS);
 
             Label reason = new Label(StringUtils.capitalize(fileInfo.getUnavailabilityReason()));
             result.getChildren().add(reason);
@@ -293,12 +313,11 @@ public class FilePanes {
             errorImageView.setFitHeight(errorImageView.getFitWidth());
             errorImageLabel.setGraphic(errorImageView);
 
-            errorImageLabel.setTooltip(GuiUtils.generateTooltip(stream.getFailedToLoadReason()));
+            BooleanBinding failedToLoad = stream.failedToLoadReasonProperty().isNotEmpty();
 
-            if (StringUtils.isBlank(stream.getFailedToLoadReason())) {
-                errorImageLabel.setVisible(false);
-                errorImageLabel.setManaged(false);
-            }
+            errorImageLabel.setTooltip(GuiUtils.generateTooltip(stream.failedToLoadReasonProperty()));
+            errorImageLabel.visibleProperty().bind(failedToLoad);
+            errorImageLabel.managedProperty().bind(failedToLoad);
 
             Label sizeLabel = new Label();
 

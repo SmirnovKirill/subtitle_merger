@@ -54,6 +54,8 @@ public class LoadFilesAllSubtitlesTask extends BackgroundTask<LoadFilesAllSubtit
                 continue;
             }
 
+            int failedToLoadForFile = 0;
+
             for (SubtitleStream stream : fileInfo.getSubtitleStreams()) {
                 if (super.isCancelled()) {
                     return result;
@@ -91,18 +93,23 @@ public class LoadFilesAllSubtitlesTask extends BackgroundTask<LoadFilesAllSubtit
                     result.setLoadedSuccessfullyCount(result.getLoadedSuccessfullyCount() + 1);
                 } catch (FfmpegException e) {
                     if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
+                        setFileInfoErrorIfNecessary(failedToLoadForFile, guiFileInfo);
                         return result;
                     } else {
                         Platform.runLater(() -> guiStream.setFailedToLoadReason(BackgroundTaskUtils.guiTextFrom(e)));
                         result.setFailedToLoadCount(result.getFailedToLoadCount() + 1);
+                        failedToLoadForFile++;
                     }
                 } catch (Parser.IncorrectFormatException e) {
                     Platform.runLater(() -> guiStream.setFailedToLoadReason("subtitles seem to have incorrect format"));
                     result.setFailedToLoadCount(result.getFailedToLoadCount() + 1);
+                    failedToLoadForFile++;
                 }
 
                 result.setProcessedCount(result.getProcessedCount() + 1);
             }
+
+            setFileInfoErrorIfNecessary(failedToLoadForFile, guiFileInfo);
 
             boolean haveSubtitlesToLoad = fileInfo.haveSubtitlesToLoad();
             Platform.runLater(() -> guiFileInfo.setHaveSubtitleSizesToLoad(haveSubtitlesToLoad));
@@ -165,6 +172,20 @@ public class LoadFilesAllSubtitlesTask extends BackgroundTask<LoadFilesAllSubtit
                 + language
                 + (StringUtils.isBlank(subtitleStream.getTitle()) ? "" : " " + subtitleStream.getTitle())
                 + " in " + file.getName();
+    }
+
+    private static void setFileInfoErrorIfNecessary(int failedToLoadForFile, GuiFileInfo fileInfo) {
+        if (failedToLoadForFile == 0) {
+            return;
+        }
+
+        String message = GuiUtils.getTextDependingOnTheCount(
+                failedToLoadForFile,
+                "Failed to load subtitle size",
+                "Failed to load %d subtitle sizes"
+        );
+
+        Platform.runLater(() -> fileInfo.setResultOnlyError(message));
     }
 
     public static MultiPartResult generateMultiPartResult(Result taskResult) {
