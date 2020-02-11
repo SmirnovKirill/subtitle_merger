@@ -90,7 +90,8 @@ public class FilePanes {
     private Pane generateSelectedCellPane() {
         HBox result = new HBox();
 
-        result.setAlignment(Pos.TOP_LEFT);
+        result.setPadding(new Insets(2, 2, 2, 2));
+        result.setAlignment(Pos.TOP_CENTER);
 
         if (!StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
             result.getStyleClass().add(PANE_UNAVAILABLE_CLASS);
@@ -117,7 +118,7 @@ public class FilePanes {
     private Pane generateFileDescriptionCellPane(GuiFileInfo fileInfo) {
         VBox result = new VBox();
 
-        result.setPadding(new Insets(3, 5, 3, 3));
+        result.setPadding(new Insets(2, 3, 2, 2));
         result.setSpacing(10);
         if (!StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
             result.getStyleClass().add(PANE_UNAVAILABLE_CLASS);
@@ -159,6 +160,7 @@ public class FilePanes {
     private Pane generateSubtitlesCellPane(GuiFileInfo fileInfo) {
         if (!StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
             HBox result = new HBox();
+            result.setPadding(new Insets(2, 2, 2, 3));
             result.setAlignment(Pos.CENTER_LEFT);
             result.getStyleClass().add(PANE_UNAVAILABLE_CLASS);
 
@@ -173,7 +175,7 @@ public class FilePanes {
         result.setGridLinesVisible(GuiConstants.DEBUG);
 
         result.setHgap(15);
-        result.setPadding(new Insets(3, 3, 3, 5));
+        result.setPadding(new Insets(2, 2, 2, 3));
 
         ColumnConstraints columnConstraints = new ColumnConstraints();
         columnConstraints.setHgrow(Priority.ALWAYS);

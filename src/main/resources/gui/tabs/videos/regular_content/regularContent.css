@@ -34,6 +34,9 @@
 
 .table-cell {
     -fx-padding: 0;
+    -fx-background-color: -fx-table-cell-border-color, -fx-background;
+    -fx-background-insets: 0, 0 1 0 0;
+    -fx-border-color: null;
 }
 
 .table-view .table-row-cell .label,
