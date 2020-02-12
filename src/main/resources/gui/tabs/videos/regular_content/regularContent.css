@@ -49,7 +49,7 @@
     -fx-padding: 0;
     -fx-border-width: 0;
     -fx-background-color: -fx-table-cell-right-border-color, -fx-table-cell-border-color, -fx-table-cell-background;
-    -fx-background-insets: 0, 1 1 0 1, 0 1 1 0;
+    -fx-background-insets: 0, 1 1 0 0, 0 1 1 0;
 }
 
 .table-cell:odd {
@@ -64,15 +64,15 @@
     -fx-pane-right-border-color: -fx-table-cell-border-color;
     -fx-pane-background: #f9dddb;
 
-    -fx-background-color: -fx-table-cell-right-border-color, -fx-table-cell-border-color, -fx-table-cell-background;
-    -fx-background-insets: 0, 1 1 0 1, 0 1 1 0;
+    -fx-background-color: -fx-pane-right-border-color, -fx-table-cell-border-color, -fx-pane-background;
+    -fx-background-insets: 0, 1 1 0 0, 0 1 1 0;
 }
 
-.table-cell .pane-error:odd {
+.table-cell:odd .pane-error {
     -fx-pane-background: derive(#f9dddb, -2%);
 }
 
-.table-cell .pane-error:last-visible {
+.table-cell:last-visible .pane-error {
     -fx-pane-right-border-color: -fx-box-border;
 }
 
