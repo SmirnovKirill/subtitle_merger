@@ -604,6 +604,8 @@ public class RegularContentController {
 
         choicePane.setVisible(true);
         resultPane.setVisible(false);
+
+        System.gc();
     }
 
     @FXML

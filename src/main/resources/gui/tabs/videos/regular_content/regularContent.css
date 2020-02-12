@@ -27,8 +27,8 @@
     -fx-background-radius: 0;
 }
 
-.table-view .scroll-bar:vertical {
-    -fx-background-insets: 0, 0 1 0 0;
+.table-view > .virtual-flow > .scroll-bar:vertical {
+    -fx-background-insets: 0, 0;
 }
 
 .pane-unavailable {
@@ -43,23 +43,37 @@
  parts of the background are expanded not that you will see color of the element below unlike with the border.
 */
 .table-cell {
+    -fx-table-cell-right-border-color: -fx-table-cell-border-color;
+    -fx-table-cell-background: -fx-control-inner-background;
+
     -fx-padding: 0;
     -fx-border-width: 0;
-    -fx-background-color: -fx-table-cell-border-color, -fx-control-inner-background;
-    -fx-background-insets: 0, 0 1 1 0;
+    -fx-background-color: -fx-table-cell-right-border-color, -fx-table-cell-border-color, -fx-table-cell-background;
+    -fx-background-insets: 0, 1 1 0 1, 0 1 1 0;
 }
 
 .table-cell:odd {
-    -fx-background-color: -fx-table-cell-border-color, -fx-control-inner-background-alt;
+    -fx-table-cell-background: -fx-control-inner-background-alt;
+}
+
+.table-cell:last-visible {
+    -fx-table-cell-right-border-color: -fx-box-border;
 }
 
 .table-cell .pane-error {
-    -fx-background-color: -fx-table-cell-border-color, #f9dddb;
-    -fx-background-insets: 0, 0 1 1 0;
+    -fx-pane-right-border-color: -fx-table-cell-border-color;
+    -fx-pane-background: #f9dddb;
+
+    -fx-background-color: -fx-table-cell-right-border-color, -fx-table-cell-border-color, -fx-table-cell-background;
+    -fx-background-insets: 0, 1 1 0 1, 0 1 1 0;
 }
 
-.table-cell:odd .pane-error {
-    -fx-background-color: -fx-table-cell-border-color, derive(#f9dddb, -2%);
+.table-cell .pane-error:odd {
+    -fx-pane-background: derive(#f9dddb, -2%);
+}
+
+.table-cell .pane-error:last-visible {
+    -fx-pane-right-border-color: -fx-box-border;
 }
 
 .table-view .table-row-cell .label,
