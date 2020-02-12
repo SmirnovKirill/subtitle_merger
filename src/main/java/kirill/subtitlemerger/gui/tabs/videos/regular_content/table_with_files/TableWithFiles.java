@@ -76,6 +76,9 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler
 
     ) {
+        this.allSelected = allSelected;
+        this.selected = selected;
+        this.allAvailableCount = allAvailableCount;
         this.allFileSubtitleSizesLoader = allFileSubtitleSizesLoader;
         this.singleFileSubtitleSizeLoader = singleFileSubtitleSizeLoader;
         this.addExternalSubtitleFileHandler = addExternalSubtitleFileHandler;
@@ -123,7 +126,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
     private Pane generateSelectedCellPane(GuiFileInfo fileInfo) {
         HBox result = new HBox();
 
-        result.setPadding(new Insets(2, 2, 2, 2));
+        result.setPadding(new Insets(4, 0, 4, 0));
         result.setAlignment(Pos.TOP_CENTER);
 
         if (!StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
@@ -151,7 +154,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
     private Pane generateFileDescriptionCellPane(GuiFileInfo fileInfo) {
         VBox result = new VBox();
 
-        result.setPadding(new Insets(2, 3, 2, 2));
+        result.setPadding(new Insets(4, 5, 4, 4));
         result.setSpacing(10);
         if (!StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
             result.getStyleClass().add(PANE_UNAVAILABLE_CLASS);
@@ -193,7 +196,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
     private Pane generateSubtitlesCellPane(GuiFileInfo fileInfo) {
         if (!StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
             HBox result = new HBox();
-            result.setPadding(new Insets(2, 2, 2, 3));
+            result.setPadding(new Insets(4, 4, 4, 5));
             result.setAlignment(Pos.CENTER_LEFT);
             result.getStyleClass().add(PANE_UNAVAILABLE_CLASS);
 
@@ -208,7 +211,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         result.setGridLinesVisible(GuiConstants.DEBUG);
 
         result.setHgap(15);
-        result.setPadding(new Insets(2, 2, 2, 3));
+        result.setPadding(new Insets(4, 4, 4, 5));
 
         ColumnConstraints columnConstraints = new ColumnConstraints();
         columnConstraints.setHgrow(Priority.ALWAYS);
@@ -230,29 +233,6 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             return result;
         }
 
-        Button button = new Button("Add subtitle file");
-        button.getStyleClass().add("add-subtitle-file");
-
-        BooleanBinding canAddMoreFiles = Bindings.isEmpty(fileInfo.getExternalSubtitleFiles().get(0).fileNameProperty())
-                .or(Bindings.isEmpty(fileInfo.getExternalSubtitleFiles().get(1).fileNameProperty()));
-
-        button.visibleProperty().bind(canAddMoreFiles);
-        button.managedProperty().bind(canAddMoreFiles);
-        Image image = new Image("/gui/icons/add.png");
-        ImageView imageView = new ImageView(image);
-        imageView.setFitWidth(8);
-        imageView.setFitHeight(imageView.getFitWidth());
-        button.setGraphic(imageView);
-        button.setOnAction((event -> addExternalSubtitleFileHandler.buttonClicked(fileInfo)));
-
-        result.addRow(
-                0,
-                button
-        );
-
-        GridPane.setColumnSpan(button, 3);
-        GridPane.setMargin(button, new Insets(0, 0, 5, 0));
-
         int externalSubtitleFileIndex = 0;
         for (GuiExternalSubtitleFile externalSubtitleFile : fileInfo.getExternalSubtitleFiles()) {
             HBox fileNameAndRemove = new HBox();
@@ -269,8 +249,8 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
             Button removeButton = new Button();
             removeButton.getStyleClass().add("image-button");
-            image = new Image("/gui/icons/remove.png");
-            imageView = new ImageView(image);
+            Image image = new Image("/gui/icons/remove.png");
+            ImageView imageView = new ImageView(image);
             imageView.setFitWidth(8);
             imageView.setFitHeight(imageView.getFitWidth());
             removeButton.setGraphic(imageView);
@@ -298,7 +278,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
             radios.getChildren().addAll(upper, lower);
 
-            int rowIndex = 1 + externalSubtitleFileIndex;
+            int rowIndex = externalSubtitleFileIndex;
             result.add(fileNameAndRemove, 0, rowIndex);
             result.add(sizeLabel, 1, rowIndex);
             result.add(radios, 2, rowIndex);
@@ -388,9 +368,9 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
             radios.getChildren().addAll(upper, lower);
 
-            result.add(titlePane, 0, 1 + fileInfo.getExternalSubtitleFiles().size() + streamIndex);
-            result.add(sizePane, 1, 1 + fileInfo.getExternalSubtitleFiles().size() + streamIndex);
-            result.add(radios, 2, 1 + fileInfo.getExternalSubtitleFiles().size() + streamIndex);
+            result.add(titlePane, 0, fileInfo.getExternalSubtitleFiles().size() + streamIndex);
+            result.add(sizePane, 1, fileInfo.getExternalSubtitleFiles().size() + streamIndex);
+            result.add(radios, 2, fileInfo.getExternalSubtitleFiles().size() + streamIndex);
 
             int bottomMargin = 2;
 
@@ -412,7 +392,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             streamIndex++;
         }
 
-        Pane hiddenPane = generateHiddenPane(fileInfo);
+        Pane hiddenAndAddPane = generateHiddenAndAddPane(fileInfo);
 
         HBox getAllSizesPane = new HBox();
         getAllSizesPane.setAlignment(Pos.CENTER);
@@ -425,11 +405,11 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
         getAllSizesPane.getChildren().add(getAllSizes);
 
-        result.add(hiddenPane, 0, 1 + fileInfo.getExternalSubtitleFiles().size() + fileInfo.getSubtitleStreams().size());
-        result.add(getAllSizesPane, 1, 1 + fileInfo.getExternalSubtitleFiles().size() + fileInfo.getSubtitleStreams().size());
-        result.add(new Region(), 2, 1 + fileInfo.getExternalSubtitleFiles().size() + fileInfo.getSubtitleStreams().size());
+        result.add(hiddenAndAddPane, 0, fileInfo.getExternalSubtitleFiles().size() + fileInfo.getSubtitleStreams().size());
+        result.add(getAllSizesPane, 1, fileInfo.getExternalSubtitleFiles().size() + fileInfo.getSubtitleStreams().size());
+        result.add(new Region(), 2, fileInfo.getExternalSubtitleFiles().size() + fileInfo.getSubtitleStreams().size());
 
-        GridPane.setMargin(hiddenPane, new Insets(3, 0, 0, 0));
+        GridPane.setMargin(hiddenAndAddPane, new Insets(3, 0, 0, 0));
         GridPane.setMargin(getAllSizesPane, new Insets(3, 0, 0, 0));
         GridPane.setMargin(result.getChildren().get(result.getChildren().size() - 1), new Insets(0, 0, 0, 0));
 
@@ -444,7 +424,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         });
 
         result.addRow(
-                2 + fileInfo.getExternalSubtitleFiles().size() + fileInfo.getSubtitleStreams().size(),
+                1 + fileInfo.getExternalSubtitleFiles().size() + fileInfo.getSubtitleStreams().size(),
                 resultLabels
         );
 
@@ -454,26 +434,44 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         return result;
     }
 
-    private Pane generateHiddenPane(GuiFileInfo fileInfo) {
-        HBox result = new HBox(); //todo wrapper isn't necessary
+    private Pane generateHiddenAndAddPane(GuiFileInfo fileInfo) {
+        HBox result = new HBox();
 
         result.setAlignment(Pos.CENTER_LEFT);
 
-        StringBinding showHiddenBinding = Bindings.createStringBinding(
-                () -> "show " + fileInfo.getSubtitleToHideCount() + " hidden ", fileInfo.subtitleToHideCountProperty()
-        );
+        if (fileInfo.getSubtitleToHideCount() > 0) {
+            Hyperlink showAllLink = new Hyperlink();
+            showAllLink.textProperty().bind(
+                    Bindings.when(fileInfo.someSubtitlesHiddenProperty())
+                            .then("show " + fileInfo.getSubtitleToHideCount() + " hidden")
+                            .otherwise("hide extra")
+            );
+            showAllLink.setOnAction(event -> fileInfo.setSomeSubtitlesHidden(!fileInfo.isSomeSubtitlesHidden()));
 
-        Hyperlink showAllLink = new Hyperlink();
-        showAllLink.visibleProperty().bind(fileInfo.subtitleToHideCountProperty().greaterThan(0));
-        showAllLink.managedProperty().bind(fileInfo.subtitleToHideCountProperty().greaterThan(0));
-        showAllLink.textProperty().bind(
-                Bindings.when(fileInfo.someSubtitlesHiddenProperty())
-                        .then(showHiddenBinding)
-                        .otherwise("hide extra subtitles")
-        );
-        showAllLink.setOnAction(event -> fileInfo.setSomeSubtitlesHidden(!fileInfo.isSomeSubtitlesHidden()));
+            result.getChildren().add(showAllLink);
 
-        result.getChildren().addAll(showAllLink);
+            Region spacer = new Region();
+            spacer.setMinWidth(15);
+            spacer.setMaxWidth(15);
+            result.getChildren().add(spacer);
+        }
+
+        Button button = new Button("Add subtitle");
+        button.getStyleClass().add("add-subtitle");
+
+        BooleanBinding canAddMoreFiles = Bindings.isEmpty(fileInfo.getExternalSubtitleFiles().get(0).fileNameProperty())
+                .or(Bindings.isEmpty(fileInfo.getExternalSubtitleFiles().get(1).fileNameProperty()));
+
+        button.visibleProperty().bind(canAddMoreFiles);
+        button.managedProperty().bind(canAddMoreFiles);
+        Image image = new Image("/gui/icons/add.png");
+        ImageView imageView = new ImageView(image);
+        imageView.setFitWidth(8);
+        imageView.setFitHeight(imageView.getFitWidth());
+        button.setGraphic(imageView);
+        button.setOnAction((event -> addExternalSubtitleFileHandler.buttonClicked(fileInfo)));
+
+        result.getChildren().add(button);
 
         return result;
     }

@@ -27,8 +27,7 @@ public class GuiFileInfo {
     @Getter(AccessLevel.NONE)
     private BooleanProperty haveSubtitleSizesToLoad;
 
-    @Getter(AccessLevel.NONE)
-    private IntegerProperty subtitleToHideCount;
+    private int subtitleToHideCount;
 
     @Getter(AccessLevel.NONE)
     private BooleanProperty someSubtitlesHidden;
@@ -60,7 +59,7 @@ public class GuiFileInfo {
         this.size = size;
         this.unavailabilityReason = unavailabilityReason;
         this.haveSubtitleSizesToLoad = new SimpleBooleanProperty(haveSubtitleSizesToLoad);
-        this.subtitleToHideCount = new SimpleIntegerProperty(subtitleToHideCount);
+        this.subtitleToHideCount = subtitleToHideCount;
         this.someSubtitlesHidden = new SimpleBooleanProperty(someSubtitlesHidden);
         this.result = new SimpleObjectProperty<>();
         this.subtitleStreams = subtitleStreams;
@@ -92,18 +91,6 @@ public class GuiFileInfo {
 
     public void setHaveSubtitleSizesToLoad(boolean haveSubtitleSizesToLoad) {
         this.haveSubtitleSizesToLoad.set(haveSubtitleSizesToLoad);
-    }
-
-    public int getSubtitleToHideCount() {
-        return subtitleToHideCount.get();
-    }
-
-    public IntegerProperty subtitleToHideCountProperty() {
-        return subtitleToHideCount;
-    }
-
-    public void setSubtitleToHideCount(int subtitleToHideCount) {
-        this.subtitleToHideCount.set(subtitleToHideCount);
     }
 
     public boolean isSomeSubtitlesHidden() {
