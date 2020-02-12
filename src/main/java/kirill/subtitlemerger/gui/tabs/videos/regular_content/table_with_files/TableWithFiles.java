@@ -417,11 +417,8 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         resultLabels.setAlignment(Pos.CENTER);
         resultLabels.setManaged(false);
         resultLabels.setVisible(false);
-        fileInfo.resultProperty().addListener(observable -> {
-            resultLabels.update(fileInfo.getResult());
-            resultLabels.setVisible(!fileInfo.getResult().empty());
-            resultLabels.setManaged(!fileInfo.getResult().empty());
-        });
+        fileInfo.resultProperty().addListener(observable -> setResultLabels(fileInfo, resultLabels));
+        setResultLabels(fileInfo, resultLabels);
 
         result.addRow(
                 1 + fileInfo.getExternalSubtitleFiles().size() + fileInfo.getSubtitleStreams().size(),
@@ -476,6 +473,16 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         return result;
     }
 
+    private static void setResultLabels(GuiFileInfo fileInfo, MultiColorResultLabels resultLabels) {
+        if (fileInfo.getResult() == null) {
+            return;
+        }
+
+        resultLabels.update(fileInfo.getResult());
+        resultLabels.setVisible(!fileInfo.getResult().empty());
+        resultLabels.setManaged(!fileInfo.getResult().empty());
+    }
+
     @FunctionalInterface
     public interface AllFileSubtitleSizesLoader {
         void load(GuiFileInfo guiFileInfo);
@@ -516,28 +523,27 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
             Pane pane = cellCache.get(cellType).get(fileInfo.getFullPath());
             if (pane == null) {
-                long start = System.currentTimeMillis();
                 Pane newPane = cellPaneGenerator.generateNode(fileInfo);
 
                 if (StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
-                    fileInfo.resultProperty().addListener(observable -> {
-                        if (!StringUtils.isBlank(fileInfo.getResult().getError())) {
-                            newPane.getStyleClass().add(PANE_ERROR_CLASS);
-                        } else {
-                            newPane.getStyleClass().remove(PANE_ERROR_CLASS);
-                        }
-                    });
+                    fileInfo.resultProperty().addListener(observable -> setOrRemoveErrorClass(fileInfo, newPane));
+                    setOrRemoveErrorClass(fileInfo, newPane);
                 }
 
                 pane = newPane;
                 cellCache.get(cellType).put(fileInfo.getFullPath(), pane);
-                System.out.println("from scratch " + cellType + " " + (System.currentTimeMillis() - start) + " ms");
-            } else {
-                System.out.println("got from cache");
             }
 
             setGraphic(pane);
             setText(null);
+        }
+
+        private void setOrRemoveErrorClass(GuiFileInfo fileInfo, Pane pane) {
+            if (fileInfo.getResult() != null && !StringUtils.isBlank(fileInfo.getResult().getError())) {
+                pane.getStyleClass().add(PANE_ERROR_CLASS);
+            } else {
+                pane.getStyleClass().remove(PANE_ERROR_CLASS);
+            }
         }
     }
 
