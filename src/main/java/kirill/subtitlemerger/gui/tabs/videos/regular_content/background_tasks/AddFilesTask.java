@@ -1,14 +1,11 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.IntegerProperty;
 import javafx.scene.control.ProgressIndicator;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.core.GuiUtils;
 import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.FilePanes;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import lombok.AllArgsConstructor;
@@ -17,7 +14,6 @@ import lombok.Getter;
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -36,20 +32,6 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
 
     private GuiContext guiContext;
 
-    private IntegerProperty selected;
-
-    private BooleanProperty allSelected;
-
-    private IntegerProperty allAvailableCount;
-
-    private FilePanes.AllFileSubtitleSizesLoader allFileSubtitleSizesLoader;
-
-    private FilePanes.SingleFileSubtitleSizeLoader singleFileSubtitleSizeLoader;
-
-    private FilePanes.AddExternalSubtitleFileHandler addExternalSubtitleFileHandler;
-
-    private FilePanes.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler;
-
     private Consumer<Result> onFinish;
 
     public AddFilesTask(
@@ -60,13 +42,6 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
             GuiSettings.SortBy sortBy,
             GuiSettings.SortDirection sortDirection,
             GuiContext guiContext,
-            IntegerProperty selected,
-            BooleanProperty allSelected,
-            IntegerProperty allAvailableCount,
-            FilePanes.AllFileSubtitleSizesLoader allFileSubtitleSizesLoader,
-            FilePanes.SingleFileSubtitleSizeLoader singleFileSubtitleSizeLoader,
-            FilePanes.AddExternalSubtitleFileHandler addExternalSubtitleFileHandler,
-            FilePanes.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler,
             Consumer<Result> onFinish
     ) {
         this.filesInfo = filesInfo;
@@ -76,13 +51,6 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
         this.sortBy = sortBy;
         this.sortDirection = sortDirection;
         this.guiContext = guiContext;
-        this.selected = selected;
-        this.allSelected = allSelected;
-        this.allAvailableCount = allAvailableCount;
-        this.allFileSubtitleSizesLoader = allFileSubtitleSizesLoader;
-        this.singleFileSubtitleSizeLoader = singleFileSubtitleSizeLoader;
-        this.addExternalSubtitleFileHandler = addExternalSubtitleFileHandler;
-        this.removeExternalSubtitleFileHandler = removeExternalSubtitleFileHandler;
         this.onFinish = onFinish;
     }
 
@@ -98,17 +66,6 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
                 this,
                 guiContext.getSettings()
         );
-        Map<String, FilePanes> filePanes = LoadDirectoryFilesTask.generateFilesPanes(
-                guiFilesToAddInfo,
-                selected,
-                allSelected,
-                allAvailableCount,
-                allFileSubtitleSizesLoader,
-                singleFileSubtitleSizeLoader,
-                addExternalSubtitleFileHandler,
-                removeExternalSubtitleFileHandler,
-                this
-        );
         filesInfo.addAll(filesToAddInfo);
         allGuiFilesInfo.addAll(guiFilesToAddInfo);
 
@@ -120,7 +77,7 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
                 this
         );
 
-        return new Result(allFilesToAdd, filesToAddInfo.size(), filesInfo, allGuiFilesInfo, guiFilesToShowInfo, filePanes);
+        return new Result(allFilesToAdd, filesToAddInfo.size(), filesInfo, allGuiFilesInfo, guiFilesToShowInfo);
     }
 
     private static void removeAlreadyAdded(
@@ -191,7 +148,5 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
         private List<GuiFileInfo> allGuiFilesInfo;
 
         private List<GuiFileInfo> guiFilesToShowInfo;
-
-        private Map<String, FilePanes> filePanes;
     }
 }

@@ -1,26 +1,61 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files;
 
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.StringBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
-import javafx.scene.Node;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.FilePanes;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.*;
+import kirill.subtitlemerger.gui.GuiConstants;
+import kirill.subtitlemerger.gui.core.GuiUtils;
+import kirill.subtitlemerger.gui.core.custom_controls.MultiColorResultLabels;
+import kirill.subtitlemerger.gui.core.entities.CacheMap;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @CommonsLog
 public class TableWithFiles extends TableView<GuiFileInfo> {
-    @Getter
-    private final Map<String, FilePanes> filePanes;
+    private static final String PANE_UNAVAILABLE_CLASS = "pane-unavailable";
+
+    private static final String PANE_ERROR_CLASS = "pane-error";
+
+    private static final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern("dd.MM.YYYY HH:mm");
+
+    private final Map<CellType, Map<String, Pane>> cellCache;
+
+    private IntegerProperty selected;
+
+    private BooleanProperty allSelected;
+
+    private IntegerProperty allAvailableCount;
+
+    private AllFileSubtitleSizesLoader allFileSubtitleSizesLoader;
+
+    private SingleFileSubtitleSizeLoader singleFileSubtitleSizeLoader;
+
+    private AddExternalSubtitleFileHandler addExternalSubtitleFileHandler;
+
+    private RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler;
 
     public TableWithFiles() {
         super();
 
-        this.filePanes = new HashMap<>();
+        this.cellCache = new HashMap<>();
+        for (CellType cellType : CellType.values()) {
+            cellCache.put(cellType, new CacheMap<>(1000));
+        }
 
         setSelectionModel(null);
         setPlaceholder(new Label("there are no files to display"));
@@ -31,7 +66,21 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
      * in the constructor columns aren't initialized yet.
      */
     //todo move everything to the constructor
-    public void initialize(BooleanProperty allSelected, IntegerProperty selected, IntegerProperty allAvailableCount) {
+    public void initialize(
+            BooleanProperty allSelected,
+            IntegerProperty selected,
+            IntegerProperty allAvailableCount,
+            AllFileSubtitleSizesLoader allFileSubtitleSizesLoader,
+            SingleFileSubtitleSizeLoader singleFileSubtitleSizeLoader,
+            AddExternalSubtitleFileHandler addExternalSubtitleFileHandler,
+            RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler
+
+    ) {
+        this.allFileSubtitleSizesLoader = allFileSubtitleSizesLoader;
+        this.singleFileSubtitleSizeLoader = singleFileSubtitleSizeLoader;
+        this.addExternalSubtitleFileHandler = addExternalSubtitleFileHandler;
+        this.removeExternalSubtitleFileHandler = removeExternalSubtitleFileHandler;
+
         TableColumn<GuiFileInfo, ?> selectedColumn = getColumns().get(0);
         CheckBox selectAllCheckBox = new CheckBox();
         selectAllCheckBox.selectedProperty().bindBidirectional(allSelected);
@@ -53,24 +102,407 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         subtitlesColumn.setCellFactory(this::generateSubtitlesCell);
     }
 
+    public void clearCache() {
+        for (CellType cellType : CellType.values()) {
+            cellCache.get(cellType).clear();
+        }
+    }
+
     private <T> TableWithFilesCell<T> generateSelectedCell(TableColumn<GuiFileInfo, T> column) {
-        return new TableWithFilesCell<>(FilePanes::getSelectPane, filePanes);
+        return new TableWithFilesCell<>(CellType.SELECTED, this::generateSelectedCellPane);
     }
 
     private <T> TableWithFilesCell<T> generateFileDescriptionCell(TableColumn<GuiFileInfo, T> column) {
-        return new TableWithFilesCell<>(FilePanes::getFileDescriptionPane, filePanes);
+        return new TableWithFilesCell<>(CellType.FILE_DESCRIPTION, this::generateFileDescriptionCellPane);
     }
 
     private <T> TableWithFilesCell<T> generateSubtitlesCell(TableColumn<GuiFileInfo, T> column) {
-        return new TableWithFilesCell<>(FilePanes::getSubtitlePane, filePanes);
+        return new TableWithFilesCell<>(CellType.SUBTITLES, this::generateSubtitlesCellPane);
     }
 
+    private Pane generateSelectedCellPane(GuiFileInfo fileInfo) {
+        HBox result = new HBox();
+
+        result.setPadding(new Insets(2, 2, 2, 2));
+        result.setAlignment(Pos.TOP_CENTER);
+
+        if (!StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
+            result.getStyleClass().add(PANE_UNAVAILABLE_CLASS);
+            return result;
+        }
+
+        CheckBox checkBox = new CheckBox();
+
+        checkBox.selectedProperty().bindBidirectional(fileInfo.selectedProperty());
+        checkBox.setOnAction((event) -> {
+            if (checkBox.isSelected()) {
+                selected.set(selected.getValue() + 1);
+            } else {
+                selected.set(selected.getValue() - 1);
+            }
+            allSelected.set(selected.getValue() == allAvailableCount.get());
+        });
+
+        result.getChildren().add(checkBox);
+
+        return result;
+    }
+
+    private Pane generateFileDescriptionCellPane(GuiFileInfo fileInfo) {
+        VBox result = new VBox();
+
+        result.setPadding(new Insets(2, 3, 2, 2));
+        result.setSpacing(10);
+        if (!StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
+            result.getStyleClass().add(PANE_UNAVAILABLE_CLASS);
+        }
+
+        Label pathLabel = new Label(fileInfo.getPathToDisplay());
+        pathLabel.getStyleClass().add("path-label");
+
+        Pane paneWithSizeAndLastModifiedTime = generatePaneWithSizeAndLastModifiedTime(fileInfo);
+
+        result.getChildren().addAll(pathLabel, paneWithSizeAndLastModifiedTime);
+
+        return result;
+    }
+
+    private Pane generatePaneWithSizeAndLastModifiedTime(GuiFileInfo fileInfo) {
+        GridPane result = new GridPane();
+
+        result.setHgap(30);
+        result.setGridLinesVisible(GuiConstants.DEBUG);
+        Label sizeTitle = new Label("size");
+
+        Label lastModifiedTitle = new Label("last modified");
+
+        Label size = new Label(GuiUtils.getFileSizeTextual(fileInfo.getSize()));
+
+        Label lastModified = new Label(FORMATTER.print(fileInfo.getLastModified()));
+
+        result.addRow(0, sizeTitle, size);
+        result.addRow(1, lastModifiedTitle, lastModified);
+
+        /* Labels of the first row. */
+        GridPane.setMargin(result.getChildren().get(0), new Insets(0, 0, 3, 0));
+        GridPane.setMargin(result.getChildren().get(2), new Insets(0, 0, 3, 0));
+
+        return result;
+    }
+
+    private Pane generateSubtitlesCellPane(GuiFileInfo fileInfo) {
+        if (!StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
+            HBox result = new HBox();
+            result.setPadding(new Insets(2, 2, 2, 3));
+            result.setAlignment(Pos.CENTER_LEFT);
+            result.getStyleClass().add(PANE_UNAVAILABLE_CLASS);
+
+            Label reason = new Label(StringUtils.capitalize(fileInfo.getUnavailabilityReason()));
+            result.getChildren().add(reason);
+
+            return result;
+        }
+
+        GridPane result = new GridPane();
+
+        result.setGridLinesVisible(GuiConstants.DEBUG);
+
+        result.setHgap(15);
+        result.setPadding(new Insets(2, 2, 2, 3));
+
+        ColumnConstraints columnConstraints = new ColumnConstraints();
+        columnConstraints.setHgrow(Priority.ALWAYS);
+        result.getColumnConstraints().add(columnConstraints);
+
+        columnConstraints = new ColumnConstraints();
+        columnConstraints.setMinWidth(Region.USE_PREF_SIZE);
+        result.getColumnConstraints().add(columnConstraints);
+
+        columnConstraints = new ColumnConstraints();
+        columnConstraints.setMinWidth(Region.USE_PREF_SIZE);
+        result.getColumnConstraints().add(columnConstraints);
+
+        columnConstraints = new ColumnConstraints();
+        columnConstraints.setMinWidth(Region.USE_PREF_SIZE);
+        result.getColumnConstraints().add(columnConstraints);
+
+        if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
+            return result;
+        }
+
+        Button button = new Button("Add subtitle file");
+        button.getStyleClass().add("add-subtitle-file");
+
+        BooleanBinding canAddMoreFiles = Bindings.isEmpty(fileInfo.getExternalSubtitleFiles().get(0).fileNameProperty())
+                .or(Bindings.isEmpty(fileInfo.getExternalSubtitleFiles().get(1).fileNameProperty()));
+
+        button.visibleProperty().bind(canAddMoreFiles);
+        button.managedProperty().bind(canAddMoreFiles);
+        Image image = new Image("/gui/icons/add.png");
+        ImageView imageView = new ImageView(image);
+        imageView.setFitWidth(8);
+        imageView.setFitHeight(imageView.getFitWidth());
+        button.setGraphic(imageView);
+        button.setOnAction((event -> addExternalSubtitleFileHandler.buttonClicked(fileInfo)));
+
+        result.addRow(
+                0,
+                button
+        );
+
+        GridPane.setColumnSpan(button, 3);
+        GridPane.setMargin(button, new Insets(0, 0, 5, 0));
+
+        int externalSubtitleFileIndex = 0;
+        for (GuiExternalSubtitleFile externalSubtitleFile : fileInfo.getExternalSubtitleFiles()) {
+            HBox fileNameAndRemove = new HBox();
+            fileNameAndRemove.setSpacing(10);
+            fileNameAndRemove.setAlignment(Pos.CENTER_LEFT);
+
+            Label fileName = new Label();
+            fileName.textProperty().bind(externalSubtitleFile.fileNameProperty());
+
+            StringBinding sizeBinding = Bindings.createStringBinding(
+                    () -> "Size: " + GuiUtils.getFileSizeTextual(externalSubtitleFile.getSize()),
+                    externalSubtitleFile.sizeProperty()
+            );
+
+            Button removeButton = new Button();
+            removeButton.getStyleClass().add("image-button");
+            image = new Image("/gui/icons/remove.png");
+            imageView = new ImageView(image);
+            imageView.setFitWidth(8);
+            imageView.setFitHeight(imageView.getFitWidth());
+            removeButton.setGraphic(imageView);
+
+            //todo remove awful
+            int index = externalSubtitleFileIndex;
+
+            removeButton.setOnAction(event -> removeExternalSubtitleFileHandler.buttonClicked(index, fileInfo));
+
+            fileNameAndRemove.getChildren().addAll(fileName, new Region(), removeButton);
+            HBox.setHgrow(fileNameAndRemove.getChildren().get(1), Priority.ALWAYS);
+
+            Label sizeLabel = new Label();
+            sizeLabel.textProperty().bind(sizeBinding);
+
+            HBox radios = new HBox();
+            radios.setSpacing(5);
+            radios.setAlignment(Pos.CENTER);
+
+            RadioButton upper = new RadioButton("upper");
+            upper.selectedProperty().bindBidirectional(externalSubtitleFile.selectedAsUpperProperty());
+
+            RadioButton lower = new RadioButton("lower");
+            lower.selectedProperty().bindBidirectional(externalSubtitleFile.selectedAsLowerProperty());
+
+            radios.getChildren().addAll(upper, lower);
+
+            int rowIndex = 1 + externalSubtitleFileIndex;
+            result.add(fileNameAndRemove, 0, rowIndex);
+            result.add(sizeLabel, 1, rowIndex);
+            result.add(radios, 2, rowIndex);
+
+            int bottomMargin = 2;
+
+            GridPane.setMargin(fileNameAndRemove, new Insets(0, 0, bottomMargin, 0));
+            GridPane.setMargin(sizeLabel, new Insets(0, 0, bottomMargin, 0));
+            GridPane.setMargin(radios, new Insets(0, 0, bottomMargin, 0));
+
+            BooleanBinding externalFileUsed = Bindings.isNotEmpty(externalSubtitleFile.fileNameProperty());
+
+            fileNameAndRemove.visibleProperty().bind(externalFileUsed);
+            fileNameAndRemove.managedProperty().bind(externalFileUsed);
+            sizeLabel.visibleProperty().bind(externalFileUsed);
+            sizeLabel.managedProperty().bind(externalFileUsed);
+            radios.visibleProperty().bind(externalFileUsed);
+            radios.managedProperty().bind(externalFileUsed);
+
+            externalSubtitleFileIndex++;
+        }
+
+        BooleanBinding showExtra = Bindings.not(fileInfo.someSubtitlesHiddenProperty());
+
+        int streamIndex = 0;
+        for (GuiSubtitleStream stream : fileInfo.getSubtitleStreams()) {
+            HBox titlePane = new HBox();
+            titlePane.setAlignment(Pos.CENTER_LEFT);
+
+            Label language = new Label(stream.getLanguage().toUpperCase());
+            titlePane.getChildren().add(language);
+
+            if (!StringUtils.isBlank(stream.getTitle())) {
+                titlePane.getChildren().add(new Label(" (" + stream.getTitle() + ")"));
+            }
+
+            HBox sizePane = new HBox();
+            sizePane.setAlignment(Pos.CENTER_LEFT);
+            sizePane.setSpacing(5);
+
+            Label errorImageLabel = new Label();
+            errorImageLabel.setAlignment(Pos.CENTER);
+
+            Image errorImage = new Image("/gui/icons/error.png");
+            ImageView errorImageView = new ImageView(errorImage);
+            errorImageView.setFitWidth(12);
+            errorImageView.setFitHeight(errorImageView.getFitWidth());
+            errorImageLabel.setGraphic(errorImageView);
+
+            BooleanBinding failedToLoad = stream.failedToLoadReasonProperty().isNotEmpty();
+
+            errorImageLabel.setTooltip(GuiUtils.generateTooltip(stream.failedToLoadReasonProperty()));
+            errorImageLabel.visibleProperty().bind(failedToLoad);
+            errorImageLabel.managedProperty().bind(failedToLoad);
+
+            Label sizeLabel = new Label();
+
+            StringBinding unknownSizeBinding = Bindings.createStringBinding(
+                    () -> "Size: ? KB ", stream.sizeProperty()
+            );
+            StringBinding knownSizeBinding = Bindings.createStringBinding(
+                    () -> "Size: " + GuiUtils.getFileSizeTextual(stream.getSize()), stream.sizeProperty()
+            );
+
+            sizeLabel.textProperty().bind(
+                    Bindings.when(stream.sizeProperty().isEqualTo(GuiSubtitleStream.UNKNOWN_SIZE))
+                            .then(unknownSizeBinding)
+                            .otherwise(knownSizeBinding)
+            );
+
+            Hyperlink getSizeLink = new Hyperlink("get size");
+            getSizeLink.setOnAction(event -> singleFileSubtitleSizeLoader.load(fileInfo, stream.getFfmpegIndex()));
+            getSizeLink.visibleProperty().bind(stream.sizeProperty().isEqualTo(GuiSubtitleStream.UNKNOWN_SIZE));
+            getSizeLink.managedProperty().bind(stream.sizeProperty().isEqualTo(GuiSubtitleStream.UNKNOWN_SIZE));
+
+            sizePane.getChildren().addAll(sizeLabel, getSizeLink, errorImageLabel);
+
+            HBox radios = new HBox();
+            radios.setSpacing(5);
+            radios.setAlignment(Pos.CENTER);
+
+            RadioButton upper = new RadioButton("upper");
+            upper.selectedProperty().bindBidirectional(stream.selectedAsUpperProperty());
+
+            RadioButton lower = new RadioButton("lower");
+            lower.selectedProperty().bindBidirectional(stream.selectedAsLowerProperty());
+
+            radios.getChildren().addAll(upper, lower);
+
+            result.add(titlePane, 0, 1 + fileInfo.getExternalSubtitleFiles().size() + streamIndex);
+            result.add(sizePane, 1, 1 + fileInfo.getExternalSubtitleFiles().size() + streamIndex);
+            result.add(radios, 2, 1 + fileInfo.getExternalSubtitleFiles().size() + streamIndex);
+
+            int bottomMargin = 2;
+
+            if (stream.isExtra()) {
+                titlePane.visibleProperty().bind(showExtra);
+                titlePane.managedProperty().bind(showExtra);
+                sizeLabel.visibleProperty().bind(showExtra);
+                sizeLabel.managedProperty().bind(showExtra);
+                sizePane.visibleProperty().bind(showExtra);
+                sizePane.managedProperty().bind(showExtra);
+                radios.visibleProperty().bind(showExtra);
+                radios.managedProperty().bind(showExtra);
+            }
+
+            GridPane.setMargin(titlePane, new Insets(0, 0, bottomMargin, 0));
+            GridPane.setMargin(sizePane, new Insets(0, 0, bottomMargin, 0));
+            GridPane.setMargin(radios, new Insets(0, 0, bottomMargin, 0));
+
+            streamIndex++;
+        }
+
+        Pane hiddenPane = generateHiddenPane(fileInfo);
+
+        HBox getAllSizesPane = new HBox();
+        getAllSizesPane.setAlignment(Pos.CENTER);
+
+        Hyperlink getAllSizes = new Hyperlink("get all sizes");
+        getAllSizes.setOnAction(event -> allFileSubtitleSizesLoader.load(fileInfo));
+
+        getAllSizes.visibleProperty().bind(fileInfo.haveSubtitleSizesToLoadProperty());
+        getAllSizes.managedProperty().bind(fileInfo.haveSubtitleSizesToLoadProperty());
+
+        getAllSizesPane.getChildren().add(getAllSizes);
+
+        result.add(hiddenPane, 0, 1 + fileInfo.getExternalSubtitleFiles().size() + fileInfo.getSubtitleStreams().size());
+        result.add(getAllSizesPane, 1, 1 + fileInfo.getExternalSubtitleFiles().size() + fileInfo.getSubtitleStreams().size());
+        result.add(new Region(), 2, 1 + fileInfo.getExternalSubtitleFiles().size() + fileInfo.getSubtitleStreams().size());
+
+        GridPane.setMargin(hiddenPane, new Insets(3, 0, 0, 0));
+        GridPane.setMargin(getAllSizesPane, new Insets(3, 0, 0, 0));
+        GridPane.setMargin(result.getChildren().get(result.getChildren().size() - 1), new Insets(0, 0, 0, 0));
+
+        MultiColorResultLabels resultLabels = new MultiColorResultLabels();
+        resultLabels.setAlignment(Pos.CENTER);
+        resultLabels.setManaged(false);
+        resultLabels.setVisible(false);
+        fileInfo.resultProperty().addListener(observable -> {
+            resultLabels.update(fileInfo.getResult());
+            resultLabels.setVisible(!fileInfo.getResult().empty());
+            resultLabels.setManaged(!fileInfo.getResult().empty());
+        });
+
+        result.addRow(
+                2 + fileInfo.getExternalSubtitleFiles().size() + fileInfo.getSubtitleStreams().size(),
+                resultLabels
+        );
+
+        GridPane.setColumnSpan(resultLabels, 3);
+        GridPane.setMargin(resultLabels, new Insets(10, 0, 0, 0));
+
+        return result;
+    }
+
+    private Pane generateHiddenPane(GuiFileInfo fileInfo) {
+        HBox result = new HBox(); //todo wrapper isn't necessary
+
+        result.setAlignment(Pos.CENTER_LEFT);
+
+        StringBinding showHiddenBinding = Bindings.createStringBinding(
+                () -> "show " + fileInfo.getSubtitleToHideCount() + " hidden ", fileInfo.subtitleToHideCountProperty()
+        );
+
+        Hyperlink showAllLink = new Hyperlink();
+        showAllLink.visibleProperty().bind(fileInfo.subtitleToHideCountProperty().greaterThan(0));
+        showAllLink.managedProperty().bind(fileInfo.subtitleToHideCountProperty().greaterThan(0));
+        showAllLink.textProperty().bind(
+                Bindings.when(fileInfo.someSubtitlesHiddenProperty())
+                        .then(showHiddenBinding)
+                        .otherwise("hide extra subtitles")
+        );
+        showAllLink.setOnAction(event -> fileInfo.setSomeSubtitlesHidden(!fileInfo.isSomeSubtitlesHidden()));
+
+        result.getChildren().addAll(showAllLink);
+
+        return result;
+    }
+
+    @FunctionalInterface
+    public interface AllFileSubtitleSizesLoader {
+        void load(GuiFileInfo guiFileInfo);
+    }
+
+    @FunctionalInterface
+    public interface SingleFileSubtitleSizeLoader {
+        void load(GuiFileInfo guiFileInfo, int ffmpegIndex);
+    }
+
+    @FunctionalInterface
+    public interface AddExternalSubtitleFileHandler {
+        void buttonClicked(GuiFileInfo guiFileInfo);
+    }
+
+    @FunctionalInterface
+    public interface RemoveExternalSubtitleFileHandler {
+        void buttonClicked(int index, GuiFileInfo guiFileInfo);
+    }
 
     @AllArgsConstructor
-    public static class TableWithFilesCell<T> extends TableCell<GuiFileInfo, T> {
-        private CellNodeGenerator cellNodeGenerator;
+    private class TableWithFilesCell<T> extends TableCell<GuiFileInfo, T> {
+        private CellType cellType;
 
-        private Map<String, FilePanes> filePanes;
+        private CellPaneGenerator cellPaneGenerator;
 
         @Override
         protected void updateItem(T item, boolean empty) {
@@ -84,13 +516,41 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
                 return;
             }
 
-            setGraphic(cellNodeGenerator.generateNode(filePanes.get(fileInfo.getFullPath())));
+            Pane pane = cellCache.get(cellType).get(fileInfo.getFullPath());
+            if (pane == null) {
+                long start = System.currentTimeMillis();
+                Pane newPane = cellPaneGenerator.generateNode(fileInfo);
+
+                if (StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
+                    fileInfo.resultProperty().addListener(observable -> {
+                        if (!StringUtils.isBlank(fileInfo.getResult().getError())) {
+                            newPane.getStyleClass().add(PANE_ERROR_CLASS);
+                        } else {
+                            newPane.getStyleClass().remove(PANE_ERROR_CLASS);
+                        }
+                    });
+                }
+
+                pane = newPane;
+                cellCache.get(cellType).put(fileInfo.getFullPath(), pane);
+                System.out.println("from scratch " + cellType + " " + (System.currentTimeMillis() - start) + " ms");
+            } else {
+                System.out.println("got from cache");
+            }
+
+            setGraphic(pane);
             setText(null);
         }
+    }
 
-        @FunctionalInterface
-        interface CellNodeGenerator {
-            Node generateNode(FilePanes filePanes);
-        }
+    @FunctionalInterface
+    interface CellPaneGenerator {
+        Pane generateNode(GuiFileInfo fileInfo);
+    }
+
+    private enum CellType {
+        SELECTED,
+        FILE_DESCRIPTION,
+        SUBTITLES
     }
 }

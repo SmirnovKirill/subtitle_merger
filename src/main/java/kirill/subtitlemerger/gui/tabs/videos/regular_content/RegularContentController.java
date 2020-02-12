@@ -1,7 +1,6 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content;
 
 import javafx.beans.Observable;
-import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -41,7 +40,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -138,8 +136,6 @@ public class RegularContentController {
 
     private List<GuiFileInfo> allGuiFilesInfo;
 
-    private Map<String, FilePanes> filePanes;
-
     private BooleanProperty allSelected;
 
     private IntegerProperty selected;
@@ -166,7 +162,15 @@ public class RegularContentController {
          */
         this.selected = new SimpleIntegerProperty(-1);
         this.allAvailableCount = new SimpleIntegerProperty(0);
-        this.tableWithFiles.initialize(allSelected, selected, allAvailableCount);
+        this.tableWithFiles.initialize(
+                allSelected,
+                selected,
+                allAvailableCount,
+                this::loadAllFileSubtitleSizes,
+                this::loadSingleFileSubtitleSize,
+                this::addExternalSubtitleFileClicked,
+                this::removeExternalSubtitleFileClicked
+        );
         this.tableWithFiles.setContextMenu(
                 generateContextMenu(
                         this.sortByGroup,
@@ -323,7 +327,7 @@ public class RegularContentController {
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
                 result -> {
-                    updateTableContent(result, filePanes);
+                    updateTableContent(result);
                     stopProgress();
                 }
         );
@@ -337,7 +341,7 @@ public class RegularContentController {
         }
     }
 
-    private void updateTableContent(List<GuiFileInfo> guiFilesToShowInfo, Map<String, FilePanes> filePanes) {
+    private void updateTableContent(List<GuiFileInfo> guiFilesToShowInfo) {
         setSelected((int) guiFilesToShowInfo.stream().filter(GuiFileInfo::isSelected).count());
 
         allAvailableCount.setValue(
@@ -346,8 +350,7 @@ public class RegularContentController {
                         .count()
         );
 
-        tableWithFiles.getFilePanes().clear();
-        tableWithFiles.getFilePanes().putAll(filePanes);
+        tableWithFiles.clearCache();
         tableWithFiles.setItems(FXCollections.observableArrayList(guiFilesToShowInfo));
         setAllSelected(allAvailableCount.get() > 0 && getSelected() == allAvailableCount.get());
     }
@@ -394,7 +397,7 @@ public class RegularContentController {
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
                 result -> {
-                    updateTableContent(result, filePanes);
+                    updateTableContent(result);
                     stopProgress();
                 }
         );
@@ -501,18 +504,10 @@ public class RegularContentController {
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
                 context,
-                selected,
-                allSelected,
-                allAvailableCount,
-                this::loadAllFileSubtitleSizes,
-                this::loadSingleFileSubtitleSize,
-                this::addExternalSubtitleFileClicked,
-                this::removeExternalSubtitleFileClicked,
                 result -> {
                     filesInfo = result.getFilesInfo();
                     allGuiFilesInfo = result.getAllGuiFilesInfo();
-                    filePanes = result.getFilePanes();
-                    updateTableContent(result.getGuiFilesToShowInfo(), result.getFilePanes());
+                    updateTableContent(result.getGuiFilesToShowInfo());
                     hideUnavailableCheckbox.setSelected(result.isHideUnavailable());
 
                     chosenDirectoryPane.setVisible(false);
@@ -563,18 +558,10 @@ public class RegularContentController {
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
                 context,
-                selected,
-                allSelected,
-                allAvailableCount,
-                this::loadAllFileSubtitleSizes,
-                this::loadSingleFileSubtitleSize,
-                this::addExternalSubtitleFileClicked,
-                this::removeExternalSubtitleFileClicked,
                 result -> {
                     filesInfo = result.getFilesInfo();
                     allGuiFilesInfo = result.getAllGuiFilesInfo();
-                    filePanes = result.getFilePanes();
-                    updateTableContent(result.getGuiFilesToShowInfo(), result.getFilePanes());
+                    updateTableContent(result.getGuiFilesToShowInfo());
                     hideUnavailableCheckbox.setSelected(result.isHideUnavailable());
                     chosenDirectoryField.setText(directory.getAbsolutePath());
 
@@ -607,8 +594,8 @@ public class RegularContentController {
          */
         setSelected(-1);
 
+        tableWithFiles.clearCache();
         tableWithFiles.setItems(FXCollections.emptyObservableList());
-        tableWithFiles.getFilePanes().clear();
         generalResult.clear();
         lastProcessedFileInfo = null;
         allAvailableCount.setValue(0);
@@ -631,18 +618,10 @@ public class RegularContentController {
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
                 context,
-                selected,
-                allSelected,
-                allAvailableCount,
-                this::loadAllFileSubtitleSizes,
-                this::loadSingleFileSubtitleSize,
-                this::addExternalSubtitleFileClicked,
-                this::removeExternalSubtitleFileClicked,
                 result -> {
                     filesInfo = result.getFilesInfo();
                     allGuiFilesInfo = result.getAllGuiFilesInfo();
-                    filePanes = result.getFilePanes();
-                    updateTableContent(result.getGuiFilesToShowInfo(), result.getFilePanes());
+                    updateTableContent(result.getGuiFilesToShowInfo());
                     hideUnavailableCheckbox.setSelected(result.isHideUnavailable());
 
                     /* See the huge comment in the hideUnavailableClicked() method. */
@@ -666,7 +645,7 @@ public class RegularContentController {
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
                 result -> {
-                    updateTableContent(result, filePanes);
+                    updateTableContent(result);
 
                     /*
                      * There is a strange bug with TableView - when the list is shrunk in size (because for example
@@ -699,13 +678,11 @@ public class RegularContentController {
                 filesInfo,
                 allGuiFilesInfo,
                 tableWithFiles.getItems(),
-                filePanes,
                 indices,
                 result -> {
                     filesInfo = result.getFilesInfo();
                     allGuiFilesInfo = result.getAllGuiFilesInfo();
-                    filePanes = result.getFilePanes();
-                    updateTableContent(result.getGuiFilesToShowInfo(), result.getFilePanes());
+                    updateTableContent(result.getGuiFilesToShowInfo());
 
                     if (result.getRemovedCount() == 0) {
                         throw new IllegalStateException();
@@ -746,18 +723,10 @@ public class RegularContentController {
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
                 context,
-                selected,
-                allSelected,
-                allAvailableCount,
-                this::loadAllFileSubtitleSizes,
-                this::loadSingleFileSubtitleSize,
-                this::addExternalSubtitleFileClicked,
-                this::removeExternalSubtitleFileClicked,
                 result -> {
                     filesInfo = result.getFilesInfo();
                     allGuiFilesInfo = result.getAllGuiFilesInfo();
-                    filePanes = result.getFilePanes();
-                    updateTableContent(result.getGuiFilesToShowInfo(), result.getFilePanes());
+                    updateTableContent(result.getGuiFilesToShowInfo());
                     generalResult.update(AddFilesTask.generateMultiPartResult(result));
                     stopProgress();
                 }

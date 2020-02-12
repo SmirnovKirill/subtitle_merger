@@ -1,12 +1,9 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.IntegerProperty;
 import javafx.scene.control.ProgressIndicator;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.FilePanes;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiExternalSubtitleFile;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
@@ -37,20 +34,6 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
 
     private GuiContext guiContext;
 
-    private IntegerProperty selected;
-
-    private BooleanProperty allSelected;
-
-    private IntegerProperty allAvailableCount;
-
-    private FilePanes.AllFileSubtitleSizesLoader allFileSubtitleSizesLoader;
-
-    private FilePanes.SingleFileSubtitleSizeLoader singleFileSubtitleSizeLoader;
-
-    private FilePanes.AddExternalSubtitleFileHandler addExternalSubtitleFileHandler;
-
-    private FilePanes.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler;
-
     private Consumer<Result> onFinish;
 
     public LoadDirectoryFilesTask(
@@ -58,26 +41,12 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
             GuiSettings.SortBy sortBy,
             GuiSettings.SortDirection sortDirection,
             GuiContext guiContext,
-            IntegerProperty selected,
-            BooleanProperty allSelected,
-            IntegerProperty allAvailableCount,
-            FilePanes.AllFileSubtitleSizesLoader allFileSubtitleSizesLoader,
-            FilePanes.SingleFileSubtitleSizeLoader singleFileSubtitleSizeLoader,
-            FilePanes.AddExternalSubtitleFileHandler addExternalSubtitleFileHandler,
-            FilePanes.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler,
             Consumer<Result> onFinish
     ) {
         this.directory = directory;
         this.sortBy = sortBy;
         this.sortDirection = sortDirection;
         this.guiContext = guiContext;
-        this.selected = selected;
-        this.allSelected = allSelected;
-        this.allAvailableCount = allAvailableCount;
-        this.allFileSubtitleSizesLoader = allFileSubtitleSizesLoader;
-        this.singleFileSubtitleSizeLoader = singleFileSubtitleSizeLoader;
-        this.addExternalSubtitleFileHandler = addExternalSubtitleFileHandler;
-        this.removeExternalSubtitleFileHandler = removeExternalSubtitleFileHandler;
         this.onFinish = onFinish;
     }
 
@@ -92,17 +61,6 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
                 this,
                 guiContext.getSettings()
         );
-        Map<String, FilePanes> filePanes = generateFilesPanes(
-                allGuiFilesInfo,
-                selected,
-                allSelected,
-                allAvailableCount,
-                allFileSubtitleSizesLoader,
-                singleFileSubtitleSizeLoader,
-                addExternalSubtitleFileHandler,
-                removeExternalSubtitleFileHandler,
-                this
-        );
 
         boolean hideUnavailable = shouldHideUnavailable(filesInfo, this);
         List<GuiFileInfo> guiFilesToShowInfo = getFilesInfoToShow(
@@ -113,7 +71,7 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
                 this
         );
 
-        return new Result(filesInfo, allGuiFilesInfo, guiFilesToShowInfo, hideUnavailable, filePanes);
+        return new Result(filesInfo, allGuiFilesInfo, guiFilesToShowInfo, hideUnavailable);
     }
 
     private static List<File> getDirectoryFiles(File directory, LoadDirectoryFilesTask task) {
@@ -391,42 +349,6 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
         }
     }
 
-    static Map<String, FilePanes> generateFilesPanes(
-            List<GuiFileInfo> filesInfo,
-            IntegerProperty selected,
-            BooleanProperty allSelected,
-            IntegerProperty allAvailableCount,
-            FilePanes.AllFileSubtitleSizesLoader allFileSubtitleSizesLoader,
-            FilePanes.SingleFileSubtitleSizeLoader singleFileSubtitleSizeLoader,
-            FilePanes.AddExternalSubtitleFileHandler addExternalSubtitleFileHandler,
-            FilePanes.RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler,
-            BackgroundTask<?> task
-    ) {
-        task.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
-
-        Map<String, FilePanes> result = new HashMap<>();
-
-        for (GuiFileInfo fileInfo : filesInfo) {
-            task.updateMessage("creating gui objects for " + fileInfo.getPathToDisplay() + "...");
-
-            result.put(
-                    fileInfo.getFullPath(),
-                    new FilePanes(
-                            fileInfo,
-                            selected,
-                            allSelected,
-                            allAvailableCount,
-                            allFileSubtitleSizesLoader,
-                            singleFileSubtitleSizeLoader,
-                            addExternalSubtitleFileHandler,
-                            removeExternalSubtitleFileHandler
-                    )
-            );
-        }
-
-        return result;
-    }
-
     @Override
     protected void onFinish(Result result) {
         onFinish.accept(result);
@@ -442,7 +364,5 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
         private List<GuiFileInfo> guiFilesToShowInfo;
 
         private boolean hideUnavailable;
-
-        private Map<String, FilePanes> filePanes;
     }
 }
