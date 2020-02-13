@@ -685,6 +685,7 @@ public class RegularContentController {
                     updateTableContent(result.getGuiFilesToShowInfo());
 
                     if (result.getRemovedCount() == 0) {
+                        log.error("nothing has been removed, that shouldn't happen");
                         throw new IllegalStateException();
                     } else if (result.getRemovedCount() == 1) {
                         generalResult.setOnlySuccess("File has been removed from the list successfully");
@@ -809,6 +810,7 @@ public class RegularContentController {
             } else if (fileInfo.getExternalSubtitleStreams().size() == 1) {
                 guiExternalSubtitleStream = guiFileInfo.getExternalSubtitleStreams().get(1);
             } else {
+                log.error("unexpected amount of subtitle streams: " + fileInfo.getExternalSubtitleStreams().size());
                 throw new IllegalStateException();
             }
 
@@ -867,7 +869,6 @@ public class RegularContentController {
         if (!(fileInfo.getSubtitleStreams().get(indexOfLastStream) instanceof ExternalSubtitleStream)) {
             log.error("last stream is not external, that shouldn't happen");
             throw new IllegalStateException();
-            //todo check that all illegal state exceptions have log records
         }
         fileInfo.getSubtitleStreams().remove(indexOfLastStream);
 
