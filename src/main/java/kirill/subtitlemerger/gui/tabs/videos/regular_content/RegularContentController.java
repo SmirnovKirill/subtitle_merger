@@ -180,9 +180,9 @@ public class RegularContentController {
 
         this.sortByGroup.selectedToggleProperty().addListener(this::sortByChanged);
         this.sortDirectionGroup.selectedToggleProperty().addListener(this::sortDirectionChanged);
-        /*//todo restore this.removeSelectedButton.disableProperty().bind(
-                Bindings.isEmpty(tableWithFiles.getSelectionModel().getSelectedIndices())
-        );*/
+        this.removeSelectedButton.disableProperty().bind(
+                selected.isEqualTo(0)
+        );
     }
 
     private void selectedCountChangeListener(Observable observable) {
@@ -325,7 +325,7 @@ public class RegularContentController {
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
                 result -> {
-                    updateTableContent(result, false);
+                    updateTableContent(result, tableWithFiles.getMode(), false);
                     stopProgress();
                 }
         );
@@ -339,7 +339,11 @@ public class RegularContentController {
         }
     }
 
-    private void updateTableContent(List<GuiFileInfo> guiFilesToShowInfo, boolean clearTableCache) {
+    private void updateTableContent(
+            List<GuiFileInfo> guiFilesToShowInfo,
+            TableWithFiles.Mode mode,
+            boolean clearTableCache
+    ) {
         setSelected((int) guiFilesToShowInfo.stream().filter(GuiFileInfo::isSelected).count());
 
         allAvailableCount.setValue(
@@ -351,6 +355,7 @@ public class RegularContentController {
         if (clearTableCache) {
             tableWithFiles.clearCache();
         }
+        tableWithFiles.setMode(mode);
         tableWithFiles.setItems(FXCollections.observableArrayList(guiFilesToShowInfo));
         setAllSelected(allAvailableCount.get() > 0 && getSelected() == allAvailableCount.get());
     }
@@ -397,7 +402,7 @@ public class RegularContentController {
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
                 result -> {
-                    updateTableContent(result, false);
+                    updateTableContent(result, tableWithFiles.getMode(), false);
                     stopProgress();
                 }
         );
@@ -507,7 +512,7 @@ public class RegularContentController {
                 result -> {
                     filesInfo = result.getFilesInfo();
                     allGuiFilesInfo = result.getAllGuiFilesInfo();
-                    updateTableContent(result.getGuiFilesToShowInfo(), true);
+                    updateTableContent(result.getGuiFilesToShowInfo(), TableWithFiles.Mode.SEPARATE_FILES, true);
                     hideUnavailableCheckbox.setSelected(result.isHideUnavailable());
 
                     chosenDirectoryPane.setVisible(false);
@@ -561,7 +566,7 @@ public class RegularContentController {
                 result -> {
                     filesInfo = result.getFilesInfo();
                     allGuiFilesInfo = result.getAllGuiFilesInfo();
-                    updateTableContent(result.getGuiFilesToShowInfo(), true);
+                    updateTableContent(result.getGuiFilesToShowInfo(), TableWithFiles.Mode.DIRECTORY, true);
                     hideUnavailableCheckbox.setSelected(result.isHideUnavailable());
                     chosenDirectoryField.setText(directory.getAbsolutePath());
 
@@ -595,6 +600,7 @@ public class RegularContentController {
         setSelected(-1);
 
         tableWithFiles.clearCache();
+        tableWithFiles.setMode(null);
         tableWithFiles.setItems(FXCollections.emptyObservableList());
         generalResult.clear();
         lastProcessedFileInfo = null;
@@ -623,7 +629,7 @@ public class RegularContentController {
                 result -> {
                     filesInfo = result.getFilesInfo();
                     allGuiFilesInfo = result.getAllGuiFilesInfo();
-                    updateTableContent(result.getGuiFilesToShowInfo(), true);
+                    updateTableContent(result.getGuiFilesToShowInfo(), tableWithFiles.getMode(), true);
                     hideUnavailableCheckbox.setSelected(result.isHideUnavailable());
 
                     /* See the huge comment in the hideUnavailableClicked() method. */
@@ -647,7 +653,7 @@ public class RegularContentController {
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
                 result -> {
-                    updateTableContent(result, false);
+                    updateTableContent(result, tableWithFiles.getMode(), false);
 
                     /*
                      * There is a strange bug with TableView - when the list is shrunk in size (because for example
@@ -671,20 +677,14 @@ public class RegularContentController {
         generalResult.clear();
         clearLastProcessedResult();
 
-        List<Integer> indices = tableWithFiles.getSelectionModel().getSelectedIndices();
-        if (CollectionUtils.isEmpty(indices)) {
-            return;
-        }
-
         RemoveFilesTask task = new RemoveFilesTask(
                 filesInfo,
                 allGuiFilesInfo,
                 tableWithFiles.getItems(),
-                indices,
                 result -> {
                     filesInfo = result.getFilesInfo();
                     allGuiFilesInfo = result.getAllGuiFilesInfo();
-                    updateTableContent(result.getGuiFilesToShowInfo(), false);
+                    updateTableContent(result.getGuiFilesToShowInfo(), tableWithFiles.getMode(), false);
 
                     if (result.getRemovedCount() == 0) {
                         log.error("nothing has been removed, that shouldn't happen");
@@ -729,7 +729,7 @@ public class RegularContentController {
                 result -> {
                     filesInfo = result.getFilesInfo();
                     allGuiFilesInfo = result.getAllGuiFilesInfo();
-                    updateTableContent(result.getGuiFilesToShowInfo(), false);
+                    updateTableContent(result.getGuiFilesToShowInfo(), tableWithFiles.getMode(), false);
                     generalResult.update(AddFilesTask.generateMultiPartResult(result));
                     stopProgress();
                 }

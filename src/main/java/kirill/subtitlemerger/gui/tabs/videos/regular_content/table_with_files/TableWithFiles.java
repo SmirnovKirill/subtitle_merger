@@ -16,6 +16,8 @@ import kirill.subtitlemerger.gui.core.GuiUtils;
 import kirill.subtitlemerger.gui.core.custom_controls.MultiColorResultLabels;
 import kirill.subtitlemerger.gui.core.entities.CacheMap;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -48,6 +50,10 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
     private AddExternalSubtitleFileHandler addExternalSubtitleFileHandler;
 
     private RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler;
+
+    @Getter
+    @Setter
+    private Mode mode;
 
     public TableWithFiles() {
         super();
@@ -131,7 +137,15 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
         if (!StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
             result.getStyleClass().add(PANE_UNAVAILABLE_CLASS);
-            return result;
+
+            /*
+             * We should stop there if in the directory mode, checkbox isn't needed because there is no point in
+             * selecting an unavailable file. On the contrary, in the files mode it's possible to select the unavailable
+             * file to remove it. Because of the ability to remove the file the behaviour is different.
+             */
+            if (mode == Mode.DIRECTORY) {
+                return result;
+            }
         }
 
         CheckBox checkBox = new CheckBox();
@@ -546,5 +560,10 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         SELECTED,
         FILE_DESCRIPTION,
         SUBTITLES
+    }
+
+    public enum Mode {
+        SEPARATE_FILES,
+        DIRECTORY
     }
 }
