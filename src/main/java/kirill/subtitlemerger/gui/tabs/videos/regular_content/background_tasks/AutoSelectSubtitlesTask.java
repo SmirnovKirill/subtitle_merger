@@ -6,9 +6,10 @@ import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.core.GuiUtils;
 import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFfmpegSubtitleStream;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.logic.core.Parser;
+import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffmpeg;
@@ -82,8 +83,8 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
                 continue;
             }
 
-            List<SubtitleStream> matchingUpperSubtitles = getMatchingUpperSubtitles(fileInfo, guiSettings);
-            List<SubtitleStream> matchingLowerSubtitles = getMatchingLowerSubtitles(fileInfo, guiSettings);
+            List<FfmpegSubtitleStream> matchingUpperSubtitles = getMatchingUpperSubtitles(fileInfo, guiSettings);
+            List<FfmpegSubtitleStream> matchingLowerSubtitles = getMatchingLowerSubtitles(fileInfo, guiSettings);
             if (CollectionUtils.isEmpty(matchingUpperSubtitles) || CollectionUtils.isEmpty(matchingLowerSubtitles)) {
                 result.setNotPossibleCount(result.getNotPossibleCount() + 1);
                 result.setProcessedCount(result.getProcessedCount() + 1);
@@ -112,12 +113,12 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
                 }
 
                 GuiUtils.findMatchingGuiStream(
-                        matchingUpperSubtitles.get(0).getFfmpegIndex(),
+                        matchingUpperSubtitles.get(0).getUniqueId(),
                         guiFileInfo.getSubtitleStreams()
                 ).setSelectedAsUpper(true);
 
                 GuiUtils.findMatchingGuiStream(
-                        matchingLowerSubtitles.get(0).getFfmpegIndex(),
+                        matchingLowerSubtitles.get(0).getUniqueId(),
                         guiFileInfo.getSubtitleStreams()
                 ).setSelectedAsLower(true);
 
@@ -147,15 +148,15 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
         return displayedGuiFilesInfo.stream().filter(GuiFileInfo::isSelected).collect(Collectors.toList());
     }
 
-    private static List<SubtitleStream> getMatchingUpperSubtitles(FileInfo fileInfo, GuiSettings guiSettings) {
-        return fileInfo.getSubtitleStreams().stream()
+    private static List<FfmpegSubtitleStream> getMatchingUpperSubtitles(FileInfo fileInfo, GuiSettings guiSettings) {
+        return fileInfo.getFfmpegSubtitleStreams().stream()
                 .filter(stream -> stream.getUnavailabilityReason() == null)
                 .filter(stream -> stream.getLanguage() == guiSettings.getUpperLanguage())
                 .collect(Collectors.toList());
     }
 
-    private static List<SubtitleStream> getMatchingLowerSubtitles(FileInfo fileInfo, GuiSettings guiSettings) {
-        return fileInfo.getSubtitleStreams().stream()
+    private static List<FfmpegSubtitleStream> getMatchingLowerSubtitles(FileInfo fileInfo, GuiSettings guiSettings) {
+        return fileInfo.getFfmpegSubtitleStreams().stream()
                 .filter(stream -> stream.getUnavailabilityReason() == null)
                 .filter(stream -> stream.getLanguage() == guiSettings.getLowerLanguage())
                 .collect(Collectors.toList());
@@ -163,14 +164,14 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
 
     private boolean loadSizesIfNecessary(
             File file,
-            List<SubtitleStream> upperSubtitleStreams,
-            List<SubtitleStream> lowerSubtitleStreams,
+            List<FfmpegSubtitleStream> upperSubtitleStreams,
+            List<FfmpegSubtitleStream> lowerSubtitleStreams,
             GuiFileInfo fileInfo,
             Result taskResult
     ) throws FfmpegException {
         boolean result = true;
 
-        List<SubtitleStream> subtitlesToLoad = new ArrayList<>();
+        List<FfmpegSubtitleStream> subtitlesToLoad = new ArrayList<>();
         if (upperSubtitleStreams.size() > 1) {
             subtitlesToLoad.addAll(upperSubtitleStreams);
         }
@@ -180,7 +181,7 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
 
         int failedToLoadForFile = 0;
 
-        for (SubtitleStream stream : subtitlesToLoad) {
+        for (FfmpegSubtitleStream stream : subtitlesToLoad) {
             updateMessage(
                     getUpdateMessage(
                             taskResult.getProcessedCount(),
@@ -194,9 +195,9 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
                 continue;
             }
 
-            GuiSubtitleStream guiStream = GuiUtils.findMatchingGuiStream(
-                    stream.getFfmpegIndex(),
-                    fileInfo.getSubtitleStreams()
+            GuiFfmpegSubtitleStream guiStream = GuiUtils.findMatchingGuiStream(
+                    stream.getUniqueId(),
+                    fileInfo.getFfmpegSubtitleStreams()
             );
 
             try {
@@ -237,7 +238,7 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
     private static String getUpdateMessage(
             int processedCount,
             int allSubtitleCount,
-            SubtitleStream subtitleStream,
+            FfmpegSubtitleStream subtitleStream,
             File file
     ) {
         String language = subtitleStream.getLanguage() != null

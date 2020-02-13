@@ -4,11 +4,11 @@ import javafx.application.Platform;
 import javafx.scene.control.ProgressBar;
 import kirill.subtitlemerger.gui.core.GuiUtils;
 import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFfmpegSubtitleStream;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.logic.core.Parser;
+import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
-import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import lombok.AllArgsConstructor;
@@ -38,7 +38,7 @@ public class LoadSingleFileAllSubtitlesTask extends BackgroundTask<LoadFilesAllS
         );
 
         setCancellationPossible(true);
-        for (SubtitleStream stream : fileInfo.getSubtitleStreams()) {
+        for (FfmpegSubtitleStream stream : fileInfo.getFfmpegSubtitleStreams()) {
             if (super.isCancelled()) {
                 return result;
             }
@@ -56,9 +56,9 @@ public class LoadSingleFileAllSubtitlesTask extends BackgroundTask<LoadFilesAllS
                     )
             );
 
-            GuiSubtitleStream guiStream = GuiUtils.findMatchingGuiStream(
-                    stream.getFfmpegIndex(),
-                    guiFileInfo.getSubtitleStreams()
+            GuiFfmpegSubtitleStream guiStream = GuiUtils.findMatchingGuiStream(
+                    stream.getUniqueId(),
+                    guiFileInfo.getFfmpegSubtitleStreams()
             );
             try {
                 String subtitleText = ffmpeg.getSubtitlesText(stream.getFfmpegIndex(), fileInfo.getFile());
@@ -98,7 +98,7 @@ public class LoadSingleFileAllSubtitlesTask extends BackgroundTask<LoadFilesAllS
         int result = 0;
 
         if (!CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
-            for (SubtitleStream stream : fileInfo.getSubtitleStreams()) {
+            for (FfmpegSubtitleStream stream : fileInfo.getFfmpegSubtitleStreams()) {
                 if (stream.getUnavailabilityReason() != null || stream.getSubtitles() != null) {
                     continue;
                 }

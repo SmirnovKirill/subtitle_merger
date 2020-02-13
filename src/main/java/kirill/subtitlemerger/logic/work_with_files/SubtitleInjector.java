@@ -29,7 +29,7 @@ public class SubtitleInjector {
                 title,
                 mainLanguage,
                 makeDefault,
-                fileInfo.getSubtitleStreams(),
+                fileInfo.getFfmpegSubtitleStreams(),
                 fileInfo.getFile()
         );
     }

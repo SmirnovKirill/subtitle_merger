@@ -5,11 +5,11 @@ import javafx.scene.control.ProgressBar;
 import kirill.subtitlemerger.gui.core.GuiUtils;
 import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFfmpegSubtitleStream;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.logic.core.Parser;
+import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
-import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import lombok.AllArgsConstructor;
@@ -33,7 +33,7 @@ public class LoadSingleSubtitleTask extends BackgroundTask<LoadSingleSubtitleTas
     protected Result run() {
         updateProgress(ProgressBar.INDETERMINATE_PROGRESS, ProgressBar.INDETERMINATE_PROGRESS);
 
-        SubtitleStream stream = fileInfo.getSubtitleStreams().stream()
+        FfmpegSubtitleStream stream = fileInfo.getFfmpegSubtitleStreams().stream()
                 .filter(currentStream -> currentStream.getFfmpegIndex() == ffmpegIndex)
                 .findFirst().orElseThrow(IllegalStateException::new);
         updateMessage(
@@ -45,9 +45,9 @@ public class LoadSingleSubtitleTask extends BackgroundTask<LoadSingleSubtitleTas
                 )
         );
 
-        GuiSubtitleStream guiStream = GuiUtils.findMatchingGuiStream(
-                stream.getFfmpegIndex(),
-                guiFileInfo.getSubtitleStreams()
+        GuiFfmpegSubtitleStream guiStream = GuiUtils.findMatchingGuiStream(
+                stream.getUniqueId(),
+                guiFileInfo.getFfmpegSubtitleStreams()
         );
 
         setCancellationPossible(true);

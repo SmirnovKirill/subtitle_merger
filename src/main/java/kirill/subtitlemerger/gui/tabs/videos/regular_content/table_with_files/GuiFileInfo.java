@@ -1,13 +1,16 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files;
 
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
 import lombok.AccessLevel;
 import lombok.Getter;
 import org.joda.time.LocalDateTime;
 
-import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 public class GuiFileInfo {
@@ -37,8 +40,6 @@ public class GuiFileInfo {
 
     private List<GuiSubtitleStream> subtitleStreams;
 
-    private List<GuiExternalSubtitleFile> externalSubtitleFiles;
-
     public GuiFileInfo(
             String pathToDisplay,
             String fullPath,
@@ -50,7 +51,6 @@ public class GuiFileInfo {
             int subtitleToHideCount,
             boolean someSubtitlesHidden,
             List<GuiSubtitleStream> subtitleStreams
-
     ) {
         this.pathToDisplay = pathToDisplay;
         this.fullPath = fullPath;
@@ -63,10 +63,6 @@ public class GuiFileInfo {
         this.someSubtitlesHidden = new SimpleBooleanProperty(someSubtitlesHidden);
         this.result = new SimpleObjectProperty<>();
         this.subtitleStreams = subtitleStreams;
-        this.externalSubtitleFiles = Arrays.asList(
-                new GuiExternalSubtitleFile(),
-                new GuiExternalSubtitleFile()
-        );
     }
 
     public boolean isSelected() {
@@ -131,5 +127,19 @@ public class GuiFileInfo {
 
     public void setResultOnlyError(String text) {
         setResult(MultiPartResult.onlyError(text));
+    }
+
+    public List<GuiFfmpegSubtitleStream> getFfmpegSubtitleStreams() {
+        return subtitleStreams.stream()
+                .filter(stream -> stream instanceof GuiFfmpegSubtitleStream)
+                .map(GuiFfmpegSubtitleStream.class::cast)
+                .collect(Collectors.toList());
+    }
+
+    public List<GuiExternalSubtitleStream> getExternalSubtitleStreams() {
+        return subtitleStreams.stream()
+                .filter(stream -> stream instanceof GuiExternalSubtitleStream)
+                .map(GuiExternalSubtitleStream.class::cast)
+                .collect(Collectors.toList());
     }
 }

@@ -1,10 +1,7 @@
 package kirill.subtitlemerger.logic.work_with_files;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
-import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
-import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleCodec;
-import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStream;
-import kirill.subtitlemerger.logic.work_with_files.entities.VideoFormat;
+import kirill.subtitlemerger.logic.work_with_files.entities.*;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffprobe;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.json.JsonFfprobeFileInfo;
@@ -93,28 +90,28 @@ public class FileInfoGetter {
             SubtitleCodec codec = SubtitleCodec.from(stream.getCodecName()).orElse(null);
             if (codec == null) {
                 result.add(
-                        new SubtitleStream(
-                                stream.getIndex(),
+                        new FfmpegSubtitleStream(
                                 null,
-                                SubtitleStream.UnavailabilityReason.NOT_ALLOWED_CODEC,
+                                null,
+                                stream.getIndex(),
+                                FfmpegSubtitleStream.UnavailabilityReason.NOT_ALLOWED_CODEC,
                                 getLanguage(stream).orElse(null),
                                 getTitle(stream).orElse(null),
-                                isDefaultDisposition(stream),
-                                null
+                                isDefaultDisposition(stream)
                         )
                 );
                 continue;
             }
 
             result.add(
-                    new SubtitleStream(
-                            stream.getIndex(),
+                    new FfmpegSubtitleStream(
                             codec,
+                            null,
+                            stream.getIndex(),
                             null,
                             getLanguage(stream).orElse(null),
                             getTitle(stream).orElse(null),
-                            isDefaultDisposition(stream),
-                            null
+                            isDefaultDisposition(stream)
                     )
             );
         }

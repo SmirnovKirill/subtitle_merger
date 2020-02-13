@@ -233,128 +233,132 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             return result;
         }
 
-        int externalSubtitleFileIndex = 0;
-        for (GuiExternalSubtitleFile externalSubtitleFile : fileInfo.getExternalSubtitleFiles()) {
-            HBox fileNameAndRemove = new HBox();
-            fileNameAndRemove.setSpacing(10);
-            fileNameAndRemove.setAlignment(Pos.CENTER_LEFT);
-
-            Label fileName = new Label();
-            fileName.textProperty().bind(externalSubtitleFile.fileNameProperty());
-
-            StringBinding sizeBinding = Bindings.createStringBinding(
-                    () -> "Size: " + GuiUtils.getFileSizeTextual(externalSubtitleFile.getSize()),
-                    externalSubtitleFile.sizeProperty()
-            );
-
-            Button removeButton = new Button();
-            removeButton.getStyleClass().add("image-button");
-            Image image = new Image("/gui/icons/remove.png");
-            ImageView imageView = new ImageView(image);
-            imageView.setFitWidth(8);
-            imageView.setFitHeight(imageView.getFitWidth());
-            removeButton.setGraphic(imageView);
-
-            //todo remove awful
-            int index = externalSubtitleFileIndex;
-
-            removeButton.setOnAction(event -> removeExternalSubtitleFileHandler.buttonClicked(index, fileInfo));
-
-            fileNameAndRemove.getChildren().addAll(fileName, new Region(), removeButton);
-            HBox.setHgrow(fileNameAndRemove.getChildren().get(1), Priority.ALWAYS);
-
-            Label sizeLabel = new Label();
-            sizeLabel.textProperty().bind(sizeBinding);
-
-            HBox radios = new HBox();
-            radios.setSpacing(5);
-            radios.setAlignment(Pos.CENTER);
-
-            RadioButton upper = new RadioButton("upper");
-            upper.selectedProperty().bindBidirectional(externalSubtitleFile.selectedAsUpperProperty());
-
-            RadioButton lower = new RadioButton("lower");
-            lower.selectedProperty().bindBidirectional(externalSubtitleFile.selectedAsLowerProperty());
-
-            radios.getChildren().addAll(upper, lower);
-
-            int rowIndex = externalSubtitleFileIndex;
-            result.add(fileNameAndRemove, 0, rowIndex);
-            result.add(sizeLabel, 1, rowIndex);
-            result.add(radios, 2, rowIndex);
-
-            int bottomMargin = 2;
-
-            GridPane.setMargin(fileNameAndRemove, new Insets(0, 0, bottomMargin, 0));
-            GridPane.setMargin(sizeLabel, new Insets(0, 0, bottomMargin, 0));
-            GridPane.setMargin(radios, new Insets(0, 0, bottomMargin, 0));
-
-            BooleanBinding externalFileUsed = Bindings.isNotEmpty(externalSubtitleFile.fileNameProperty());
-
-            fileNameAndRemove.visibleProperty().bind(externalFileUsed);
-            fileNameAndRemove.managedProperty().bind(externalFileUsed);
-            sizeLabel.visibleProperty().bind(externalFileUsed);
-            sizeLabel.managedProperty().bind(externalFileUsed);
-            radios.visibleProperty().bind(externalFileUsed);
-            radios.managedProperty().bind(externalFileUsed);
-
-            externalSubtitleFileIndex++;
-        }
-
         BooleanBinding showExtra = Bindings.not(fileInfo.someSubtitlesHiddenProperty());
+
+        int bottomMargin = 2;
 
         int streamIndex = 0;
         for (GuiSubtitleStream stream : fileInfo.getSubtitleStreams()) {
-            HBox titlePane = new HBox();
-            titlePane.setAlignment(Pos.CENTER_LEFT);
+            BooleanBinding bindingForRadioCellVisibility = null;
 
-            Label language = new Label(stream.getLanguage().toUpperCase());
-            titlePane.getChildren().add(language);
+            if (stream instanceof GuiFfmpegSubtitleStream) {
+                GuiFfmpegSubtitleStream ffmpegStream = (GuiFfmpegSubtitleStream) stream;
 
-            if (!StringUtils.isBlank(stream.getTitle())) {
-                titlePane.getChildren().add(new Label(" (" + stream.getTitle() + ")"));
+                HBox titlePane = new HBox();
+                titlePane.setAlignment(Pos.CENTER_LEFT);
+
+                Label language = new Label(ffmpegStream.getLanguage().toUpperCase());
+                titlePane.getChildren().add(language);
+
+                if (!StringUtils.isBlank(ffmpegStream.getTitle())) {
+                    titlePane.getChildren().add(new Label(" (" + ffmpegStream.getTitle() + ")"));
+                }
+
+                HBox sizePane = new HBox();
+                sizePane.setAlignment(Pos.CENTER_LEFT);
+                sizePane.setSpacing(5);
+
+                Label errorImageLabel = new Label();
+                errorImageLabel.setAlignment(Pos.CENTER);
+
+                Image errorImage = new Image("/gui/icons/error.png");
+                ImageView errorImageView = new ImageView(errorImage);
+                errorImageView.setFitWidth(12);
+                errorImageView.setFitHeight(errorImageView.getFitWidth());
+                errorImageLabel.setGraphic(errorImageView);
+
+                BooleanBinding failedToLoad = ffmpegStream.failedToLoadReasonProperty().isNotEmpty();
+
+                errorImageLabel.setTooltip(GuiUtils.generateTooltip(ffmpegStream.failedToLoadReasonProperty()));
+                errorImageLabel.visibleProperty().bind(failedToLoad);
+                errorImageLabel.managedProperty().bind(failedToLoad);
+
+                Label sizeLabel = new Label();
+
+                StringBinding unknownSizeBinding = Bindings.createStringBinding(
+                        () -> "Size: ? KB ", stream.sizeProperty()
+                );
+                StringBinding knownSizeBinding = Bindings.createStringBinding(
+                        () -> "Size: " + GuiUtils.getFileSizeTextual(stream.getSize()), stream.sizeProperty()
+                );
+
+                sizeLabel.textProperty().bind(
+                        Bindings.when(stream.sizeProperty().isEqualTo(GuiSubtitleStream.UNKNOWN_SIZE))
+                                .then(unknownSizeBinding)
+                                .otherwise(knownSizeBinding)
+                );
+
+                Hyperlink getSizeLink = new Hyperlink("get size");
+                getSizeLink.setOnAction(event -> singleFileSubtitleSizeLoader.load(fileInfo, ffmpegStream.getFfmpegIndex()));
+                getSizeLink.visibleProperty().bind(stream.sizeProperty().isEqualTo(GuiSubtitleStream.UNKNOWN_SIZE));
+                getSizeLink.managedProperty().bind(stream.sizeProperty().isEqualTo(GuiSubtitleStream.UNKNOWN_SIZE));
+
+                sizePane.getChildren().addAll(sizeLabel, getSizeLink, errorImageLabel);
+
+                titlePane.visibleProperty().bind(showExtra);
+                titlePane.managedProperty().bind(showExtra);
+                sizeLabel.visibleProperty().bind(showExtra);
+                sizeLabel.managedProperty().bind(showExtra);
+                sizePane.visibleProperty().bind(showExtra);
+                sizePane.managedProperty().bind(showExtra);
+
+                result.add(titlePane, 0, streamIndex);
+                result.add(sizePane, 1, streamIndex);
+
+                GridPane.setMargin(titlePane, new Insets(0, 0, bottomMargin, 0));
+                GridPane.setMargin(sizePane, new Insets(0, 0, bottomMargin, 0));
+
+                if (ffmpegStream.isExtra()) {
+                    bindingForRadioCellVisibility = showExtra;
+                }
+            } else if (stream instanceof GuiExternalSubtitleStream) {
+                GuiExternalSubtitleStream externalStream = (GuiExternalSubtitleStream) stream;
+
+                HBox fileNameAndRemove = new HBox();
+                fileNameAndRemove.setSpacing(10);
+                fileNameAndRemove.setAlignment(Pos.CENTER_LEFT);
+
+                Label fileName = new Label();
+                fileName.textProperty().bind(externalStream.fileNameProperty());
+
+                StringBinding sizeBinding = Bindings.createStringBinding(
+                        () -> "Size: " + GuiUtils.getFileSizeTextual(externalStream.getSize()),
+                        externalStream.sizeProperty()
+                );
+
+                Button removeButton = new Button();
+                removeButton.getStyleClass().add("image-button");
+                Image image = new Image("/gui/icons/remove.png");
+                ImageView imageView = new ImageView(image);
+                imageView.setFitWidth(8);
+                imageView.setFitHeight(imageView.getFitWidth());
+                removeButton.setGraphic(imageView);
+
+                removeButton.setOnAction(event -> removeExternalSubtitleFileHandler.buttonClicked(externalStream.getIndex(), fileInfo));
+
+                fileNameAndRemove.getChildren().addAll(fileName, new Region(), removeButton);
+                HBox.setHgrow(fileNameAndRemove.getChildren().get(1), Priority.ALWAYS);
+
+                Label sizeLabel = new Label();
+                sizeLabel.textProperty().bind(sizeBinding);
+
+                BooleanBinding externalFileUsed = Bindings.isNotEmpty(externalStream.fileNameProperty());
+
+                fileNameAndRemove.visibleProperty().bind(externalFileUsed);
+                fileNameAndRemove.managedProperty().bind(externalFileUsed);
+                sizeLabel.visibleProperty().bind(externalFileUsed);
+                sizeLabel.managedProperty().bind(externalFileUsed);
+
+                result.add(fileNameAndRemove, 0, streamIndex);
+                result.add(sizeLabel, 1, streamIndex);
+
+                GridPane.setMargin(fileNameAndRemove, new Insets(0, 0, bottomMargin, 0));
+                GridPane.setMargin(sizeLabel, new Insets(0, 0, bottomMargin, 0));
+
+                bindingForRadioCellVisibility = externalFileUsed;
+            } else {
+                throw new IllegalStateException();
             }
-
-            HBox sizePane = new HBox();
-            sizePane.setAlignment(Pos.CENTER_LEFT);
-            sizePane.setSpacing(5);
-
-            Label errorImageLabel = new Label();
-            errorImageLabel.setAlignment(Pos.CENTER);
-
-            Image errorImage = new Image("/gui/icons/error.png");
-            ImageView errorImageView = new ImageView(errorImage);
-            errorImageView.setFitWidth(12);
-            errorImageView.setFitHeight(errorImageView.getFitWidth());
-            errorImageLabel.setGraphic(errorImageView);
-
-            BooleanBinding failedToLoad = stream.failedToLoadReasonProperty().isNotEmpty();
-
-            errorImageLabel.setTooltip(GuiUtils.generateTooltip(stream.failedToLoadReasonProperty()));
-            errorImageLabel.visibleProperty().bind(failedToLoad);
-            errorImageLabel.managedProperty().bind(failedToLoad);
-
-            Label sizeLabel = new Label();
-
-            StringBinding unknownSizeBinding = Bindings.createStringBinding(
-                    () -> "Size: ? KB ", stream.sizeProperty()
-            );
-            StringBinding knownSizeBinding = Bindings.createStringBinding(
-                    () -> "Size: " + GuiUtils.getFileSizeTextual(stream.getSize()), stream.sizeProperty()
-            );
-
-            sizeLabel.textProperty().bind(
-                    Bindings.when(stream.sizeProperty().isEqualTo(GuiSubtitleStream.UNKNOWN_SIZE))
-                            .then(unknownSizeBinding)
-                            .otherwise(knownSizeBinding)
-            );
-
-            Hyperlink getSizeLink = new Hyperlink("get size");
-            getSizeLink.setOnAction(event -> singleFileSubtitleSizeLoader.load(fileInfo, stream.getFfmpegIndex()));
-            getSizeLink.visibleProperty().bind(stream.sizeProperty().isEqualTo(GuiSubtitleStream.UNKNOWN_SIZE));
-            getSizeLink.managedProperty().bind(stream.sizeProperty().isEqualTo(GuiSubtitleStream.UNKNOWN_SIZE));
-
-            sizePane.getChildren().addAll(sizeLabel, getSizeLink, errorImageLabel);
 
             HBox radios = new HBox();
             radios.setSpacing(5);
@@ -368,25 +372,13 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
             radios.getChildren().addAll(upper, lower);
 
-            result.add(titlePane, 0, fileInfo.getExternalSubtitleFiles().size() + streamIndex);
-            result.add(sizePane, 1, fileInfo.getExternalSubtitleFiles().size() + streamIndex);
-            result.add(radios, 2, fileInfo.getExternalSubtitleFiles().size() + streamIndex);
-
-            int bottomMargin = 2;
-
-            if (stream.isExtra()) {
-                titlePane.visibleProperty().bind(showExtra);
-                titlePane.managedProperty().bind(showExtra);
-                sizeLabel.visibleProperty().bind(showExtra);
-                sizeLabel.managedProperty().bind(showExtra);
-                sizePane.visibleProperty().bind(showExtra);
-                sizePane.managedProperty().bind(showExtra);
-                radios.visibleProperty().bind(showExtra);
-                radios.managedProperty().bind(showExtra);
+            if (bindingForRadioCellVisibility != null) {
+                radios.visibleProperty().bind(bindingForRadioCellVisibility);
+                radios.managedProperty().bind(bindingForRadioCellVisibility);
             }
 
-            GridPane.setMargin(titlePane, new Insets(0, 0, bottomMargin, 0));
-            GridPane.setMargin(sizePane, new Insets(0, 0, bottomMargin, 0));
+            result.add(radios, 2, streamIndex);
+
             GridPane.setMargin(radios, new Insets(0, 0, bottomMargin, 0));
 
             streamIndex++;
@@ -405,9 +397,9 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
         getAllSizesPane.getChildren().add(getAllSizes);
 
-        result.add(hiddenAndAddPane, 0, fileInfo.getExternalSubtitleFiles().size() + fileInfo.getSubtitleStreams().size());
-        result.add(getAllSizesPane, 1, fileInfo.getExternalSubtitleFiles().size() + fileInfo.getSubtitleStreams().size());
-        result.add(new Region(), 2, fileInfo.getExternalSubtitleFiles().size() + fileInfo.getSubtitleStreams().size());
+        result.add(hiddenAndAddPane, 0, fileInfo.getSubtitleStreams().size());
+        result.add(getAllSizesPane, 1, fileInfo.getSubtitleStreams().size());
+        result.add(new Region(), 2, fileInfo.getSubtitleStreams().size());
 
         GridPane.setMargin(hiddenAndAddPane, new Insets(3, 0, 0, 0));
         GridPane.setMargin(getAllSizesPane, new Insets(3, 0, 0, 0));
@@ -421,7 +413,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         setResultLabels(fileInfo, resultLabels);
 
         result.addRow(
-                1 + fileInfo.getExternalSubtitleFiles().size() + fileInfo.getSubtitleStreams().size(),
+                1 + fileInfo.getSubtitleStreams().size(),
                 resultLabels
         );
 
@@ -456,8 +448,8 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         Button button = new Button("Add subtitle");
         button.getStyleClass().add("add-subtitle");
 
-        BooleanBinding canAddMoreFiles = Bindings.isEmpty(fileInfo.getExternalSubtitleFiles().get(0).fileNameProperty())
-                .or(Bindings.isEmpty(fileInfo.getExternalSubtitleFiles().get(1).fileNameProperty()));
+        BooleanBinding canAddMoreFiles = fileInfo.getExternalSubtitleStreams().get(0).fileNameProperty().isEmpty()
+                .or(fileInfo.getExternalSubtitleStreams().get(1).fileNameProperty().isEmpty());
 
         button.visibleProperty().bind(canAddMoreFiles);
         button.managedProperty().bind(canAddMoreFiles);

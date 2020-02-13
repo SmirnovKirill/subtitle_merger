@@ -3,7 +3,7 @@ package kirill.subtitlemerger.logic.work_with_files.ffmpeg;
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.logic.core.Writer;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
-import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStream;
+import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -106,7 +106,7 @@ public class Ffmpeg {
             String title,
             LanguageAlpha3Code mainLanguage,
             boolean makeDefault,
-            List<SubtitleStream> subtitleStreams,
+            List<FfmpegSubtitleStream> ffmpegSubtitleStreams,
             File videoFile
     ) throws FfmpegException {
         /*
@@ -130,7 +130,7 @@ public class Ffmpeg {
                         title,
                         mainLanguage,
                         makeDefault,
-                        subtitleStreams,
+                        ffmpegSubtitleStreams,
                         videoFile,
                         outputTemp
                 );
@@ -164,13 +164,13 @@ public class Ffmpeg {
             String title,
             LanguageAlpha3Code mainLanguage,
             boolean makeDefault,
-            List<SubtitleStream> subtitleStreams,
+            List<FfmpegSubtitleStream> ffmpegSubtitleStreams,
             File videoFile,
             File outputTemp
     ) {
         List<String> result = new ArrayList<>();
 
-        int newStreamIndex = subtitleStreams.size();
+        int newStreamIndex = ffmpegSubtitleStreams.size();
 
         result.add(ffmpegFile.getAbsolutePath());
         result.add("-y");
@@ -199,7 +199,7 @@ public class Ffmpeg {
         result.addAll(Arrays.asList("-metadata:s:s:" + newStreamIndex, "title=" + title));
 
         if (makeDefault) {
-            for (SubtitleStream subtitleStream : subtitleStreams) {
+            for (FfmpegSubtitleStream subtitleStream : ffmpegSubtitleStreams) {
                 if (subtitleStream.isDefaultDisposition()) {
                     result.addAll(Arrays.asList("-disposition:" + subtitleStream.getFfmpegIndex(), "0"));
                 }

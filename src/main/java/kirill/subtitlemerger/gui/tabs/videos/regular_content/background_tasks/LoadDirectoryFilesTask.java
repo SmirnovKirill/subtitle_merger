@@ -5,13 +5,14 @@ import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiExternalSubtitleFile;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiExternalSubtitleStream;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFfmpegSubtitleStream;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.work_with_files.FileInfoGetter;
+import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
-import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffprobe;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -204,9 +205,13 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
 
         List<GuiSubtitleStream> subtitleStreams = new ArrayList<>();
         if (!CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
-            subtitleStreams = fileInfo.getSubtitleStreams().stream()
+            subtitleStreams = fileInfo.getFfmpegSubtitleStreams().stream()
                     .map(subtitleStream -> from(subtitleStream, guiSettings))
                     .collect(Collectors.toList());
+        }
+
+        for (int i = 0; i < 2; i++) {
+            subtitleStreams.add(new GuiExternalSubtitleStream(i));
         }
 
         GuiFileInfo result = new GuiFileInfo(
@@ -222,7 +227,7 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
                 subtitleStreams
         );
 
-        //todo refactor ugly
+        //todo move probably
         for (GuiSubtitleStream stream : result.getSubtitleStreams()) {
             stream.selectedAsUpperProperty().addListener((observableValue, oldValue, newValue) -> {
                 if (!Boolean.TRUE.equals(newValue)) {
@@ -230,14 +235,11 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
                 }
 
                 for (GuiSubtitleStream currentStream : result.getSubtitleStreams()) {
-                    if (currentStream.getFfmpegIndex() == stream.getFfmpegIndex()) {
+                    if (Objects.equals(currentStream.getUniqueId(), stream.getUniqueId())) {
                         currentStream.setSelectedAsLower(false);
                     } else {
                         currentStream.setSelectedAsUpper(false);
                     }
-                }
-                for (GuiExternalSubtitleFile externalSubtitleFile : result.getExternalSubtitleFiles()) {
-                    externalSubtitleFile.setSelectedAsUpper(false);
                 }
             });
 
@@ -247,51 +249,10 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
                 }
 
                 for (GuiSubtitleStream currentStream : result.getSubtitleStreams()) {
-                    if (currentStream.getFfmpegIndex() == stream.getFfmpegIndex()) {
+                    if (Objects.equals(currentStream.getUniqueId(), stream.getUniqueId())) {
                         currentStream.setSelectedAsUpper(false);
                     } else {
                         currentStream.setSelectedAsLower(false);
-                    }
-                }
-                for (GuiExternalSubtitleFile externalSubtitleFile : result.getExternalSubtitleFiles()) {
-                    externalSubtitleFile.setSelectedAsLower(false);
-                }
-            });
-        }
-
-        for (GuiExternalSubtitleFile externalSubtitleFile : result.getExternalSubtitleFiles()) {
-            externalSubtitleFile.selectedAsUpperProperty().addListener((observableValue, oldValue, newValue) -> {
-                if (!Boolean.TRUE.equals(newValue)) {
-                    return;
-                }
-
-                for (GuiSubtitleStream currentStream : result.getSubtitleStreams()) {
-                    currentStream.setSelectedAsUpper(false);
-                }
-
-                for (GuiExternalSubtitleFile currentSubtitleFile : result.getExternalSubtitleFiles()) {
-                    if (Objects.equals(currentSubtitleFile.getFileName(), externalSubtitleFile.getFileName())) {
-                        currentSubtitleFile.setSelectedAsLower(false);
-                    } else {
-                        currentSubtitleFile.setSelectedAsUpper(false);
-                    }
-                }
-            });
-
-            externalSubtitleFile.selectedAsLowerProperty().addListener((observableValue, oldValue, newValue) -> {
-                if (!Boolean.TRUE.equals(newValue)) {
-                    return;
-                }
-
-                for (GuiSubtitleStream currentStream : result.getSubtitleStreams()) {
-                    currentStream.setSelectedAsLower(false);
-                }
-
-                for (GuiExternalSubtitleFile currentSubtitleFile : result.getExternalSubtitleFiles()) {
-                    if (Objects.equals(currentSubtitleFile.getFileName(), externalSubtitleFile.getFileName())) {
-                        currentSubtitleFile.setSelectedAsUpper(false);
-                    } else {
-                        currentSubtitleFile.setSelectedAsLower(false);
                     }
                 }
             });
@@ -300,26 +261,26 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
         return result;
     }
 
-    private static GuiSubtitleStream from(SubtitleStream subtitleStream, GuiSettings guiSettings) {
-        return new GuiSubtitleStream(
+    private static GuiFfmpegSubtitleStream from(FfmpegSubtitleStream subtitleStream, GuiSettings guiSettings) {
+        return new GuiFfmpegSubtitleStream(
+                subtitleStream.getSubtitles() != null ? subtitleStream.getSubtitles().getSize() : null,
+                false,
+                false,
                 subtitleStream.getFfmpegIndex(),
                 guiTextFrom(subtitleStream.getUnavailabilityReason()),
                 null,
                 subtitleStream.getLanguage() != null ? subtitleStream.getLanguage().toString() : "unknown",
                 subtitleStream.getTitle(),
-                RegularContentController.isExtra(subtitleStream, guiSettings),
-                subtitleStream.getSubtitles() != null ? subtitleStream.getSubtitles().getSize() : null,
-                false,
-                false
+                RegularContentController.isExtra(subtitleStream, guiSettings)
         );
     }
 
-    private static String guiTextFrom(SubtitleStream.UnavailabilityReason unavailabilityReason) {
+    private static String guiTextFrom(FfmpegSubtitleStream.UnavailabilityReason unavailabilityReason) {
         if (unavailabilityReason == null) {
             return "";
         }
 
-        if (unavailabilityReason == SubtitleStream.UnavailabilityReason.NOT_ALLOWED_CODEC) {
+        if (unavailabilityReason == FfmpegSubtitleStream.UnavailabilityReason.NOT_ALLOWED_CODEC) {
             return "subtitle has a not allowed type";
         }
 

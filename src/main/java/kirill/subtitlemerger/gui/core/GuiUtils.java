@@ -78,9 +78,9 @@ public class GuiUtils {
                 .findFirst().orElseThrow(IllegalStateException::new);
     }
 
-    public static GuiSubtitleStream findMatchingGuiStream(int ffmpegIndex, List<GuiSubtitleStream> guiStreams) {
+    public static <T extends GuiSubtitleStream> T findMatchingGuiStream(String id, List<T> guiStreams) {
         return guiStreams.stream()
-                .filter(stream -> stream.getFfmpegIndex() == ffmpegIndex)
+                .filter(stream -> Objects.equals(stream.getUniqueId(), id))
                 .findFirst().orElseThrow(IllegalStateException::new);
     }
 }

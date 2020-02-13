@@ -6,8 +6,8 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.joda.time.LocalDateTime;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Getter
@@ -30,8 +30,6 @@ class FileInfo {
 
     private List<SubtitleStream> subtitleStreams;
 
-    private List<ExternalSubtitleFile> externalSubtitleFiles;
-
     public FileInfo(
             File file,
             UnavailabilityReason unavailabilityReason,
@@ -44,7 +42,20 @@ class FileInfo {
         this.unavailabilityReason = unavailabilityReason;
         this.videoContainer = videoContainer;
         this.subtitleStreams = subtitleStreams;
-        this.externalSubtitleFiles = new ArrayList<>();
+    }
+
+    public List<FfmpegSubtitleStream> getFfmpegSubtitleStreams() {
+        return subtitleStreams.stream()
+                .filter(stream -> stream instanceof FfmpegSubtitleStream)
+                .map(FfmpegSubtitleStream.class::cast)
+                .collect(Collectors.toList());
+    }
+
+    public List<ExternalSubtitleStream> getExternalSubtitleStreams() {
+        return subtitleStreams.stream()
+                .filter(stream -> stream instanceof ExternalSubtitleStream)
+                .map(ExternalSubtitleStream.class::cast)
+                .collect(Collectors.toList());
     }
 
     public boolean haveSubtitlesToLoad() {

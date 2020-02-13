@@ -1,60 +1,44 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files;
 
-import javafx.beans.property.*;
-import lombok.AccessLevel;
-import lombok.Getter;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import kirill.subtitlemerger.logic.work_with_files.entities.ExternalSubtitleStream;
+import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 
-@Getter
-public class GuiSubtitleStream {
+import java.util.List;
+import java.util.stream.Collectors;
+
+public abstract class GuiSubtitleStream {
     public static final int UNKNOWN_SIZE = -1;
 
-    /*
-     * The word "ffmpeg" here emphasizes the fact that it's not a regular index, but an index got from ffmpeg.
-     * For example the first subtitle stream may have index 2 because the first two indices are assigned to the video
-     * and audio streams.
-     */
-    private int ffmpegIndex;
-
-    private String unavailabilityReason;
-
-    @Getter(AccessLevel.NONE)
-    private StringProperty failedToLoadReason;
-
-    private String language;
-
-    private String title;
-
-    private boolean extra;
-
-    @Getter(AccessLevel.NONE)
     private IntegerProperty size;
 
-    @Getter(AccessLevel.NONE)
     private BooleanProperty selectedAsUpper;
 
-    @Getter(AccessLevel.NONE)
     private BooleanProperty selectedAsLower;
 
     public GuiSubtitleStream(
-            int ffmpegIndex,
-            String unavailabilityReason,
-            String failedToLoadReason,
-            String language,
-            String title,
-            boolean extra,
             Integer size,
             boolean selectedAsUpper,
             boolean selectedAsLower
     ) {
-        this.ffmpegIndex = ffmpegIndex;
-        this.unavailabilityReason = unavailabilityReason;
-        this.failedToLoadReason = new SimpleStringProperty(failedToLoadReason);
-        this.language = language;
-        this.title = title;
-        this.extra = extra;
         this.size = new SimpleIntegerProperty(size != null ? size : UNKNOWN_SIZE);
         this.selectedAsUpper = new SimpleBooleanProperty(selectedAsUpper);
         this.selectedAsLower = new SimpleBooleanProperty(selectedAsLower);
+    }
+
+    public int getSize() {
+        return size.get();
+    }
+
+    public IntegerProperty sizeProperty() {
+        return size;
+    }
+
+    public void setSize(int size) {
+        this.size.set(size);
     }
 
     public boolean isSelectedAsUpper() {
@@ -81,35 +65,5 @@ public class GuiSubtitleStream {
         this.selectedAsLower.set(selectedAsLower);
     }
 
-    public String getUnavailabilityReason() {
-        return unavailabilityReason;
-    }
-
-    public void setUnavailabilityReason(String unavailabilityReason) {
-        this.unavailabilityReason = unavailabilityReason;
-    }
-
-    public String getFailedToLoadReason() {
-        return failedToLoadReason.get();
-    }
-
-    public StringProperty failedToLoadReasonProperty() {
-        return failedToLoadReason;
-    }
-
-    public void setFailedToLoadReason(String failedToLoadReason) {
-        this.failedToLoadReason.set(failedToLoadReason);
-    }
-
-    public int getSize() {
-        return size.get();
-    }
-
-    public IntegerProperty sizeProperty() {
-        return size;
-    }
-
-    public void setSize(int size) {
-        this.size.set(size);
-    }
+    public abstract String getUniqueId();
 }
