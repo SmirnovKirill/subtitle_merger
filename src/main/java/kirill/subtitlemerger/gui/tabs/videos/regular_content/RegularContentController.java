@@ -325,7 +325,7 @@ public class RegularContentController {
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
                 result -> {
-                    updateTableContent(result);
+                    updateTableContent(result, false);
                     stopProgress();
                 }
         );
@@ -339,7 +339,7 @@ public class RegularContentController {
         }
     }
 
-    private void updateTableContent(List<GuiFileInfo> guiFilesToShowInfo) {
+    private void updateTableContent(List<GuiFileInfo> guiFilesToShowInfo, boolean clearTableCache) {
         setSelected((int) guiFilesToShowInfo.stream().filter(GuiFileInfo::isSelected).count());
 
         allAvailableCount.setValue(
@@ -348,7 +348,9 @@ public class RegularContentController {
                         .count()
         );
 
-        tableWithFiles.clearCache();
+        if (clearTableCache) {
+            tableWithFiles.clearCache();
+        }
         tableWithFiles.setItems(FXCollections.observableArrayList(guiFilesToShowInfo));
         setAllSelected(allAvailableCount.get() > 0 && getSelected() == allAvailableCount.get());
     }
@@ -395,7 +397,7 @@ public class RegularContentController {
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
                 result -> {
-                    updateTableContent(result);
+                    updateTableContent(result, false);
                     stopProgress();
                 }
         );
@@ -487,13 +489,13 @@ public class RegularContentController {
             return;
         }
 
-        context.setWorkWithVideosInProgress(true);
-
         try {
             context.getSettings().saveLastDirectoryWithVideos(files.get(0).getParent());
         } catch (GuiSettings.ConfigException e) {
             log.error("failed to save last directory with videos, shouldn't happen: " + getStackTrace(e));
         }
+
+        context.setWorkWithVideosInProgress(true);
 
         directory = null;
 
@@ -505,7 +507,7 @@ public class RegularContentController {
                 result -> {
                     filesInfo = result.getFilesInfo();
                     allGuiFilesInfo = result.getAllGuiFilesInfo();
-                    updateTableContent(result.getGuiFilesToShowInfo());
+                    updateTableContent(result.getGuiFilesToShowInfo(), true);
                     hideUnavailableCheckbox.setSelected(result.isHideUnavailable());
 
                     chosenDirectoryPane.setVisible(false);
@@ -541,13 +543,13 @@ public class RegularContentController {
             return;
         }
 
-        context.setWorkWithVideosInProgress(true);
-
         try {
             context.getSettings().saveLastDirectoryWithVideos(directory.getAbsolutePath());
         } catch (GuiSettings.ConfigException e) {
             log.error("failed to save last directory with videos, that shouldn't happen: " + getStackTrace(e));
         }
+
+        context.setWorkWithVideosInProgress(true);
 
         this.directory = directory;
 
@@ -559,7 +561,7 @@ public class RegularContentController {
                 result -> {
                     filesInfo = result.getFilesInfo();
                     allGuiFilesInfo = result.getAllGuiFilesInfo();
-                    updateTableContent(result.getGuiFilesToShowInfo());
+                    updateTableContent(result.getGuiFilesToShowInfo(), true);
                     hideUnavailableCheckbox.setSelected(result.isHideUnavailable());
                     chosenDirectoryField.setText(directory.getAbsolutePath());
 
@@ -621,7 +623,7 @@ public class RegularContentController {
                 result -> {
                     filesInfo = result.getFilesInfo();
                     allGuiFilesInfo = result.getAllGuiFilesInfo();
-                    updateTableContent(result.getGuiFilesToShowInfo());
+                    updateTableContent(result.getGuiFilesToShowInfo(), true);
                     hideUnavailableCheckbox.setSelected(result.isHideUnavailable());
 
                     /* See the huge comment in the hideUnavailableClicked() method. */
@@ -645,7 +647,7 @@ public class RegularContentController {
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
                 result -> {
-                    updateTableContent(result);
+                    updateTableContent(result, false);
 
                     /*
                      * There is a strange bug with TableView - when the list is shrunk in size (because for example
@@ -682,7 +684,7 @@ public class RegularContentController {
                 result -> {
                     filesInfo = result.getFilesInfo();
                     allGuiFilesInfo = result.getAllGuiFilesInfo();
-                    updateTableContent(result.getGuiFilesToShowInfo());
+                    updateTableContent(result.getGuiFilesToShowInfo(), false);
 
                     if (result.getRemovedCount() == 0) {
                         log.error("nothing has been removed, that shouldn't happen");
@@ -727,7 +729,7 @@ public class RegularContentController {
                 result -> {
                     filesInfo = result.getFilesInfo();
                     allGuiFilesInfo = result.getAllGuiFilesInfo();
-                    updateTableContent(result.getGuiFilesToShowInfo());
+                    updateTableContent(result.getGuiFilesToShowInfo(), false);
                     generalResult.update(AddFilesTask.generateMultiPartResult(result));
                     stopProgress();
                 }

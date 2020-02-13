@@ -139,7 +139,7 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
         for (File file : files) {
             task.updateMessage("getting file info " + file.getName() + "...");
 
-            if (!file.isDirectory() && file.exists()) {
+            if (file.isFile() && file.exists()) {
                 result.add(
                         FileInfoGetter.getFileInfoWithoutSubtitles(
                                 file,
