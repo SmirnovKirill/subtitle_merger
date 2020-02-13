@@ -88,6 +88,7 @@
 }
 
 .add-subtitle {
-    -fx-padding: 3;
+    -fx-padding: 0;
     -fx-background-color: transparent;
+    -fx-background-insets: 0;
 }

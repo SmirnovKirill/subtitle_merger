@@ -225,10 +225,6 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         columnConstraints.setMinWidth(Region.USE_PREF_SIZE);
         result.getColumnConstraints().add(columnConstraints);
 
-        columnConstraints = new ColumnConstraints();
-        columnConstraints.setMinWidth(Region.USE_PREF_SIZE);
-        result.getColumnConstraints().add(columnConstraints);
-
         if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
             return result;
         }
@@ -295,12 +291,14 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
                 sizePane.getChildren().addAll(sizeLabel, getSizeLink, errorImageLabel);
 
-                titlePane.visibleProperty().bind(showExtra);
-                titlePane.managedProperty().bind(showExtra);
-                sizeLabel.visibleProperty().bind(showExtra);
-                sizeLabel.managedProperty().bind(showExtra);
-                sizePane.visibleProperty().bind(showExtra);
-                sizePane.managedProperty().bind(showExtra);
+                if (ffmpegStream.isExtra()) {
+                    titlePane.visibleProperty().bind(showExtra);
+                    titlePane.managedProperty().bind(showExtra);
+                    sizeLabel.visibleProperty().bind(showExtra);
+                    sizeLabel.managedProperty().bind(showExtra);
+                    sizePane.visibleProperty().bind(showExtra);
+                    sizePane.managedProperty().bind(showExtra);
+                }
 
                 result.add(titlePane, 0, streamIndex);
                 result.add(sizePane, 1, streamIndex);
@@ -440,8 +438,8 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             result.getChildren().add(showAllLink);
 
             Region spacer = new Region();
-            spacer.setMinWidth(15);
-            spacer.setMaxWidth(15);
+            spacer.setMinWidth(25);
+            spacer.setMaxWidth(25);
             result.getChildren().add(spacer);
         }
 
@@ -455,7 +453,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         button.managedProperty().bind(canAddMoreFiles);
         Image image = new Image("/gui/icons/add.png");
         ImageView imageView = new ImageView(image);
-        imageView.setFitWidth(8);
+        imageView.setFitWidth(9);
         imageView.setFitHeight(imageView.getFitWidth());
         button.setGraphic(imageView);
         button.setOnAction((event -> addExternalSubtitleFileHandler.buttonClicked(fileInfo)));
