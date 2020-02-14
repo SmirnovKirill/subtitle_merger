@@ -89,7 +89,7 @@ public class SubtitleFilesTabController {
             return;
         }
 
-        InputFileInfo inputFileInfo = getInputFileInfo(path, fileType, filesInfo).orElse(null);
+        InputFileInfo inputFileInfo = getInputFileInfo(path, fileType, fileOrigin, filesInfo).orElse(null);
         updateFilesInfo(inputFileInfo, fileType, filesInfo);
         markOtherFileNotDuplicate(fileType, filesInfo);
         if (fileOrigin == FileOrigin.FILE_CHOOSER && inputFileInfo != null && inputFileInfo.getParent() != null) {
@@ -112,7 +112,12 @@ public class SubtitleFilesTabController {
         }
     }
 
-    private static Optional<InputFileInfo> getInputFileInfo(String path, InputFileType fileType, FilesInfo filesInfo) {
+    private static Optional<InputFileInfo> getInputFileInfo(
+            String path,
+            InputFileType fileType,
+            FileOrigin fileOrigin,
+            FilesInfo filesInfo
+    ) {
         FileValidator.InputFileInfo validatorFileInfo = FileValidator.getInputFileInfo(
                 path,
                 Collections.singletonList("srt"),
@@ -129,6 +134,7 @@ public class SubtitleFilesTabController {
                             path,
                             validatorFileInfo.getFile(),
                             validatorFileInfo.getParent(),
+                            fileOrigin,
                             false,
                             null,
                             SubtitleFilesTabController.InputFileInfo.from(validatorFileInfo.getIncorrectFileReason())
@@ -148,6 +154,7 @@ public class SubtitleFilesTabController {
                             path,
                             validatorFileInfo.getFile(),
                             validatorFileInfo.getParent(),
+                            fileOrigin,
                             isDuplicate(validatorFileInfo.getFile(), fileType, filesInfo),
                             subtitles,
                             null
@@ -159,6 +166,7 @@ public class SubtitleFilesTabController {
                             path,
                             validatorFileInfo.getFile(),
                             validatorFileInfo.getParent(),
+                            fileOrigin,
                             false,
                             null,
                             SubtitleFilesTabController.IncorrectInputFileReason.INCORRECT_SUBTITLE_FORMAT
@@ -236,7 +244,7 @@ public class SubtitleFilesTabController {
         }
 
         setMergeButtonVisibility();
-        showErrorsIfNecessary(fileOrigin);
+        showErrorsIfNecessary();
     }
 
     private void clearState() {
@@ -280,12 +288,12 @@ public class SubtitleFilesTabController {
         mergeButton.setDisable(disable);
     }
 
-    private void showErrorsIfNecessary(FileOrigin fileOrigin) {
+    private void showErrorsIfNecessary() {
         List<String> errorMessageParts = new ArrayList<>();
 
         InputFileInfo upperFileInfo = filesInfo.getUpperFileInfo();
         if (upperFileInfo != null && (upperFileInfo.isDuplicate || upperFileInfo.getIncorrectFileReason() != null)) {
-            showFileElementsAsIncorrect(ExtendedFileType.UPPER_SUBTITLES, fileOrigin);
+            showFileElementsAsIncorrect(ExtendedFileType.UPPER_SUBTITLES);
 
             if (upperFileInfo.getIncorrectFileReason() != null) {
                 errorMessageParts.add(getErrorText(upperFileInfo.getPath(), upperFileInfo.getIncorrectFileReason()));
@@ -296,7 +304,7 @@ public class SubtitleFilesTabController {
 
         InputFileInfo lowerFileInfo = filesInfo.getLowerFileInfo();
         if (lowerFileInfo != null && (lowerFileInfo.isDuplicate || lowerFileInfo.getIncorrectFileReason() != null)) {
-            showFileElementsAsIncorrect(ExtendedFileType.LOWER_SUBTITLES, fileOrigin);
+            showFileElementsAsIncorrect(ExtendedFileType.LOWER_SUBTITLES);
 
             if (lowerFileInfo.getIncorrectFileReason() != null) {
                 errorMessageParts.add(getErrorText(lowerFileInfo.getPath(), lowerFileInfo.getIncorrectFileReason()));
@@ -307,7 +315,7 @@ public class SubtitleFilesTabController {
 
         OutputFileInfo mergedFileInfo = filesInfo.getMergedFileInfo();
         if (mergedFileInfo != null && mergedFileInfo.getIncorrectFileReason() != null) {
-            showFileElementsAsIncorrect(ExtendedFileType.MERGED_SUBTITLES, fileOrigin);
+            showFileElementsAsIncorrect(ExtendedFileType.MERGED_SUBTITLES);
 
             if (mergedFileInfo.getIncorrectFileReason() != null) {
                 errorMessageParts.add(getErrorText(mergedFileInfo.getPath(), mergedFileInfo.getIncorrectFileReason()));
@@ -333,12 +341,12 @@ public class SubtitleFilesTabController {
         resultLabels.update(MultiPartResult.onlyError(errorMessage.toString()));
     }
 
-    private void showFileElementsAsIncorrect(ExtendedFileType fileType, FileOrigin fileOrigin) {
+    private void showFileElementsAsIncorrect(ExtendedFileType fileType) {
         if (fileType == ExtendedFileType.UPPER_SUBTITLES) {
             upperPathField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
             upperPathField.getStyleClass().add(GuiConstants.TEXT_FIELD_ERROR_CLASS);
 
-            if (fileOrigin == FileOrigin.FILE_CHOOSER) {
+            if (filesInfo.getUpperFileInfo().getFileOrigin() == FileOrigin.FILE_CHOOSER) {
                 upperChooseButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
                 upperChooseButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
             }
@@ -346,7 +354,7 @@ public class SubtitleFilesTabController {
             lowerPathField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
             lowerPathField.getStyleClass().add(GuiConstants.TEXT_FIELD_ERROR_CLASS);
 
-            if (fileOrigin == FileOrigin.FILE_CHOOSER) {
+            if (filesInfo.getLowerFileInfo().getFileOrigin() == FileOrigin.FILE_CHOOSER) {
                 lowerChooseButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
                 lowerChooseButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
             }
@@ -354,7 +362,7 @@ public class SubtitleFilesTabController {
             mergedPathField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
             mergedPathField.getStyleClass().add(GuiConstants.TEXT_FIELD_ERROR_CLASS);
 
-            if (fileOrigin == FileOrigin.FILE_CHOOSER) {
+            if (filesInfo.getMergedFileInfo().getFileOrigin() == FileOrigin.FILE_CHOOSER) {
                 mergedChooseButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
                 mergedChooseButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
             }
@@ -369,10 +377,10 @@ public class SubtitleFilesTabController {
         switch (reason) {
             case PATH_IS_TOO_LONG:
                 return "File path is too long";
-            case FILE_DOES_NOT_EXIST:
-                return "File " + path + " doesn't exist";
             case NOT_A_FILE:
                 return path + " is not a file";
+            case FILE_DOES_NOT_EXIST:
+                return "File " + path + " doesn't exist";
             case FAILED_TO_GET_PARENT_DIRECTORY:
                 return path + ": failed to get parent directory";
             case EXTENSION_IS_NOT_VALID:
@@ -398,8 +406,6 @@ public class SubtitleFilesTabController {
         switch (reason) {
             case PATH_IS_TOO_LONG:
                 return "File path is too long";
-            case FILE_DOES_NOT_EXIST:
-                return "File " + path + " doesn't exist";
             case NOT_A_FILE:
                 return path + " is not a file";
             case FAILED_TO_GET_PARENT_DIRECTORY:
@@ -428,7 +434,8 @@ public class SubtitleFilesTabController {
     private static Optional<OutputFileInfo> getOutputFileInfo(String path, FileOrigin fileOrigin) {
         FileValidator.OutputFileInfo validatorFileInfo = FileValidator.getOutputFileInfo(
                 path,
-                Collections.singletonList("srt")
+                Collections.singletonList("srt"),
+                true
         ).orElse(null);
         if (validatorFileInfo == null) {
             return Optional.empty();
@@ -540,8 +547,7 @@ public class SubtitleFilesTabController {
             );
         } catch (IOException e) {
             showFileElementsAsIncorrect(
-                    ExtendedFileType.MERGED_SUBTITLES,
-                    filesInfo.getMergedFileInfo().getFileOrigin()
+                    ExtendedFileType.MERGED_SUBTITLES
             );
             resultLabels.update(MultiPartResult.onlyError("Can't merge subtitles:\n\u2022 can't write to this file"));
             return;
@@ -580,6 +586,8 @@ public class SubtitleFilesTabController {
 
         private File parent;
 
+        private FileOrigin fileOrigin;
+
         @Setter
         private boolean isDuplicate;
 
@@ -591,10 +599,10 @@ public class SubtitleFilesTabController {
             switch (reason) {
                 case PATH_IS_TOO_LONG:
                     return SubtitleFilesTabController.IncorrectInputFileReason.PATH_IS_TOO_LONG;
-                case FILE_DOES_NOT_EXIST:
-                    return SubtitleFilesTabController.IncorrectInputFileReason.FILE_DOES_NOT_EXIST;
                 case NOT_A_FILE:
                     return SubtitleFilesTabController.IncorrectInputFileReason.NOT_A_FILE;
+                case FILE_DOES_NOT_EXIST:
+                    return SubtitleFilesTabController.IncorrectInputFileReason.FILE_DOES_NOT_EXIST;
                 case FAILED_TO_GET_PARENT_DIRECTORY:
                     return SubtitleFilesTabController.IncorrectInputFileReason.FAILED_TO_GET_PARENT_DIRECTORY;
                 case EXTENSION_IS_NOT_VALID:
@@ -611,8 +619,8 @@ public class SubtitleFilesTabController {
 
     private enum IncorrectInputFileReason {
         PATH_IS_TOO_LONG,
-        FILE_DOES_NOT_EXIST,
         NOT_A_FILE,
+        FILE_DOES_NOT_EXIST,
         FAILED_TO_GET_PARENT_DIRECTORY,
         EXTENSION_IS_NOT_VALID,
         FILE_IS_TOO_BIG,
@@ -637,8 +645,6 @@ public class SubtitleFilesTabController {
             switch (reason) {
                 case PATH_IS_TOO_LONG:
                     return IncorrectOutputFileReason.PATH_IS_TOO_LONG;
-                case FILE_DOES_NOT_EXIST:
-                    return IncorrectOutputFileReason.FILE_DOES_NOT_EXIST;
                 case NOT_A_FILE:
                     return IncorrectOutputFileReason.NOT_A_FILE;
                 case FAILED_TO_GET_PARENT_DIRECTORY:
@@ -653,7 +659,6 @@ public class SubtitleFilesTabController {
 
     private enum IncorrectOutputFileReason {
         PATH_IS_TOO_LONG,
-        FILE_DOES_NOT_EXIST,
         NOT_A_FILE,
         FAILED_TO_GET_PARENT_DIRECTORY,
         EXTENSION_IS_NOT_VALID

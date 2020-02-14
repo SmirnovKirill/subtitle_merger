@@ -31,14 +31,14 @@ public class FileValidator {
         }
 
         File file = new File(path);
+        if (!file.isFile()) {
+            return Optional.of(new InputFileInfo(file, null, IncorrectInputFileReason.NOT_A_FILE, null));
+        }
+
         if (!file.exists()) {
             return Optional.of(
                     new InputFileInfo(file, null, IncorrectInputFileReason.FILE_DOES_NOT_EXIST, null)
             );
-        }
-
-        if (!file.isFile()) {
-            return Optional.of(new InputFileInfo(file, null, IncorrectInputFileReason.NOT_A_FILE, null));
         }
 
         String parentPath = file.getParent();
@@ -88,7 +88,11 @@ public class FileValidator {
         return Optional.of(new InputFileInfo(file, parent, null, content));
     }
 
-    public static Optional<OutputFileInfo> getOutputFileInfo(String path, Collection<String> allowedExtensions) {
+    public static Optional<OutputFileInfo> getOutputFileInfo(
+            String path,
+            Collection<String> allowedExtensions,
+            boolean allowNonExistent
+    ) {
         if (StringUtils.isBlank(path)) {
             return Optional.empty();
         }
@@ -98,12 +102,12 @@ public class FileValidator {
         }
 
         File file = new File(path);
-        if (!file.exists()) {
-            return Optional.of(new OutputFileInfo(file, null, IncorrectOutputFileReason.FILE_DOES_NOT_EXIST));
-        }
-
         if (!file.isFile()) {
             return Optional.of(new OutputFileInfo(file, null, IncorrectOutputFileReason.NOT_A_FILE));
+        }
+
+        if (!allowNonExistent && !file.exists()) {
+            return Optional.of(new OutputFileInfo(file, null, IncorrectOutputFileReason.FILE_DOES_NOT_EXIST));
         }
 
         String parentPath = file.getParent();
@@ -142,8 +146,8 @@ public class FileValidator {
 
     public enum IncorrectInputFileReason {
         PATH_IS_TOO_LONG,
-        FILE_DOES_NOT_EXIST,
         NOT_A_FILE,
+        FILE_DOES_NOT_EXIST,
         FAILED_TO_GET_PARENT_DIRECTORY,
         EXTENSION_IS_NOT_VALID,
         FILE_IS_TOO_BIG,
@@ -162,8 +166,8 @@ public class FileValidator {
 
     public enum IncorrectOutputFileReason {
         PATH_IS_TOO_LONG,
-        FILE_DOES_NOT_EXIST,
         NOT_A_FILE,
+        FILE_DOES_NOT_EXIST,
         FAILED_TO_GET_PARENT_DIRECTORY,
         EXTENSION_IS_NOT_VALID
     }
