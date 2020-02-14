@@ -35,4 +35,27 @@ public class GuiUtilsTest {
         assertThat(GuiUtils.getFileSizeTextual(TB)).isEqualTo("1.00 TB");
         assertThat(GuiUtils.getFileSizeTextual(2047 * TB)).isEqualTo("2047.00 TB");
     }
+
+    @Test
+    public void testShortenedString() {
+        assertThat(
+                GuiUtils.getShortenedStringIfNecessary("test", 2, 2)
+        ).isEqualTo("test");
+
+        assertThat(
+                GuiUtils.getShortenedStringIfNecessary("testlonger", 2, 2)
+        ).isEqualTo("te...er");
+
+        assertThat(
+                GuiUtils.getShortenedStringIfNecessary("testlonger", 2, 5)
+        ).isEqualTo("te...onger");
+
+        assertThat(
+                GuiUtils.getShortenedStringIfNecessary("testlonger", 2, 6)
+        ).isEqualTo("testlonger");
+
+        assertThat(
+                GuiUtils.getShortenedStringIfNecessary("testlonger", 3, 5)
+        ).isEqualTo("testlonger");
+    }
 }

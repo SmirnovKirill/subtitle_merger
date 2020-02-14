@@ -12,12 +12,12 @@ import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.core.GuiUtils;
 import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.core.custom_controls.MultiColorResultLabels;
+import kirill.subtitlemerger.gui.tabs.subtitle_files.SubtitleFilesTabController;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.*;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiExternalSubtitleStream;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
@@ -794,8 +794,8 @@ public class RegularContentController {
             return;
         }
 
-        if (file.length() / 1024 / 1024 > GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES) {
-            guiFileInfo.setResultOnlyError("File is too big (>" + GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)");
+        if (file.length() / 1024 / 1024 > SubtitleFilesTabController.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES) {
+            guiFileInfo.setResultOnlyError("File is too big (>" + SubtitleFilesTabController.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)");
             return;
         }
 

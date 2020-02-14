@@ -14,7 +14,7 @@ import javafx.scene.layout.*;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.core.GuiUtils;
 import kirill.subtitlemerger.gui.core.custom_controls.MultiColorResultLabels;
-import kirill.subtitlemerger.gui.core.entities.CacheMap;
+import kirill.subtitlemerger.logic.utils.CacheMap;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;

@@ -3,6 +3,11 @@
     -fx-border-width: 2px;
 }
 
+.text-field-error {
+    -fx-text-fill: #e2574c;
+    -fx-border-width: 2px;
+}
+
 .label-success {
     -fx-text-fill: green;
 }

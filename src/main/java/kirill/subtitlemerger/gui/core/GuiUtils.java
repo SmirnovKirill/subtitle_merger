@@ -1,7 +1,9 @@
 package kirill.subtitlemerger.gui.core;
 
 import javafx.beans.property.StringProperty;
+import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
+import javafx.scene.input.KeyCode;
 import javafx.util.Duration;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
@@ -13,9 +15,58 @@ import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 @CommonsLog
 public class GuiUtils {
+    /**
+     * Set change listeners so that the onChange method will be invoked each time Enter button is pressed or the focus
+     * is lost.
+     */
+    public static void setTextFieldChangeListeners(TextField textField, Consumer<String> onChange) {
+        textField.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                return;
+            }
+
+            String value = textField.getText();
+            onChange.accept(value);
+        });
+
+        textField.setOnKeyPressed(keyEvent -> {
+            if (!keyEvent.getCode().equals(KeyCode.ENTER)) {
+                return;
+            }
+
+            String value = textField.getText();
+            onChange.accept(value);
+        });
+    }
+
+    /**
+     * Returns the shortened version of the string if necessary. String will be shortened only if its size is larger
+     * than or equal to charsBeforeEllipsis + charsAfterEllipsis + 3. These 3 extra characters are needed because if
+     * less than 3 characters are shortened it would look weird.
+     *
+     * @param string string to process
+     * @param charsBeforeEllipsis number of characters before the ellipsis in the shortened string
+     * @param charsAfterEllipsis number of characters after the ellipsis in the shortened string
+     * @return the shortened version of the string if it was too long or the original string otherwise
+     */
+    public static String getShortenedStringIfNecessary(
+            String string,
+            int charsBeforeEllipsis,
+            int charsAfterEllipsis
+    ) {
+        if (string.length() < charsBeforeEllipsis + charsAfterEllipsis + 3) {
+            return string;
+        }
+
+        return string.substring(0, charsBeforeEllipsis)
+                + "..."
+                + string.substring(string.length() - charsAfterEllipsis);
+    }
+
     public static String getFileSizeTextual(long size) {
         List<String> sizes = Arrays.asList("B", "KB", "MB", "GB", "TB");
 

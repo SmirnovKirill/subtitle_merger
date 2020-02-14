@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.gui.core.entities;
+package kirill.subtitlemerger.logic.utils;
 
 import lombok.AllArgsConstructor;
 
