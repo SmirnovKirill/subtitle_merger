@@ -1,11 +1,19 @@
 .button-error {
-    -fx-text-fill: #e2574c;
-    -fx-border-width: 2px;
+    -fx-outer-border: #e2574c;
+}
+
+.button-error:focused {
+    -fx-focus-color: #e2574c;
+    -fx-faint-focus-color: #e2574c22;
 }
 
 .text-field-error {
-    -fx-text-fill: #e2574c;
-    -fx-border-width: 2px;
+    -fx-text-box-border: #e2574c;
+}
+
+.text-field-error:focused {
+    -fx-focus-color: #e2574c;
+    -fx-faint-focus-color: #e2574c22;
 }
 
 .label-success {
