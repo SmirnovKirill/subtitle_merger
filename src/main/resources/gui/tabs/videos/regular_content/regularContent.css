@@ -86,9 +86,3 @@
 .table-view .table-row-cell .path-label {
     -fx-font-size: 1.0em;
 }
-
-.add-subtitle {
-    -fx-padding: 0;
-    -fx-background-color: transparent;
-    -fx-background-insets: 0;
-}

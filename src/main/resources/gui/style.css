@@ -59,7 +59,7 @@
     -fx-text-fill: -fx-text-base-color;
 }
 
-/* button that consists only of one image */
+/* button that consists only of one image or image and text, it should look very simple, without any borders */
 .image-button {
     -fx-padding: 0;
     -fx-background-color: transparent;

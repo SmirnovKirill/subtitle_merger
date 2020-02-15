@@ -32,9 +32,6 @@ import java.util.*;
 
 @CommonsLog
 public class SubtitleFilesTabController {
-    //todo refactor
-    public static final int INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES = 10;
-
     private Stage stage;
 
     private GuiSettings settings;
@@ -121,7 +118,7 @@ public class SubtitleFilesTabController {
         FileValidator.InputFileInfo validatorFileInfo = FileValidator.getInputFileInfo(
                 path,
                 Collections.singletonList("srt"),
-                INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES * 1024 * 1024,
+                GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES * 1024 * 1024,
                 true
         ).orElse(null);
         if (validatorFileInfo == null) {
@@ -386,7 +383,8 @@ public class SubtitleFilesTabController {
             case EXTENSION_IS_NOT_VALID:
                 return "File " + path + " has an incorrect extension";
             case FILE_IS_TOO_BIG:
-                return "File " + path + " is too big (>" + INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)";
+                return "File " + path + " is too big (>"
+                        + GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)";
             case FAILED_TO_READ_CONTENT:
                 return path + ": failed to read the file";
             case INCORRECT_SUBTITLE_FORMAT:

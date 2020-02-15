@@ -1,8 +1,11 @@
 package kirill.subtitlemerger.gui.core;
 
 import javafx.beans.property.StringProperty;
+import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.util.Duration;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
@@ -65,6 +68,19 @@ public class GuiUtils {
         return string.substring(0, charsBeforeEllipsis)
                 + "..."
                 + string.substring(string.length() - charsAfterEllipsis);
+    }
+
+    public static Button createImageButton(String text, String imageUrl, int width, int height) {
+        Button result = new Button(text);
+
+        result.getStyleClass().add("image-button");
+
+        ImageView imageView = new ImageView(new Image(imageUrl));
+        imageView.setFitWidth(width);
+        imageView.setFitHeight(height);
+        result.setGraphic(imageView);
+
+        return result;
     }
 
     public static String getFileSizeTextual(long size) {

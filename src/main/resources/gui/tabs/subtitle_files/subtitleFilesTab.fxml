@@ -5,10 +5,12 @@
 <?import javafx.scene.layout.*?>
 <?import kirill.subtitlemerger.gui.GuiConstants?>
 <?import kirill.subtitlemerger.gui.core.custom_controls.MultiColorResultLabels?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
 <Tab xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
      fx:controller="kirill.subtitlemerger.gui.tabs.subtitle_files.SubtitleFilesTabController"
      text="Subtitle files">
-    <GridPane hgap="35" vgap="40">
+    <GridPane hgap="35" vgap="40" stylesheets="/gui/tabs/subtitle_files/subtitleFilesTab.css">
         <gridLinesVisible><GuiConstants fx:constant="DEBUG"/></gridLinesVisible>
 
         <padding>
@@ -19,7 +21,16 @@
                GridPane.halignment="LEFT" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
         <HBox alignment="CENTER_RIGHT" spacing="20"
               GridPane.halignment="RIGHT" GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS">
-            <TextField fx:id="upperPathField" HBox.hgrow="ALWAYS" promptText="not selected"/>
+            <HBox alignment="CENTER" spacing="10" HBox.hgrow="ALWAYS">
+                <TextField fx:id="upperPathField" HBox.hgrow="ALWAYS" promptText="not selected"/>
+                <Button styleClass="image-button">
+                    <graphic>
+                        <ImageView fitHeight="16" fitWidth="16">
+                            <Image url="/gui/icons/eye.png"/>
+                        </ImageView>
+                    </graphic>
+                </Button>
+            </HBox>
             <Button fx:id="upperChooseButton" onAction="#upperSubtitlesButtonClicked" text="Choose file"/>
         </HBox>
 

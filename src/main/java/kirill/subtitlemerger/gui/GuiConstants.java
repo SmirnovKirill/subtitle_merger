@@ -3,6 +3,8 @@ package kirill.subtitlemerger.gui;
 public class GuiConstants {
     public static final boolean DEBUG = false;
 
+    public static final int INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES = 10;
+
     public static final String BUTTON_ERROR_CLASS = "button-error";
 
     public static final String TEXT_FIELD_ERROR_CLASS = "text-field-error";

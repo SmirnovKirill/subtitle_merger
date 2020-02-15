@@ -298,12 +298,23 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
                                 .otherwise(knownSizeBinding)
                 );
 
+                Button previewButton = GuiUtils.createImageButton(
+                        "",
+                        "/gui/icons/eye.png",
+                        15,
+                        10
+                );
+                previewButton.visibleProperty().bind(stream.sizeProperty().isNotEqualTo(GuiSubtitleStream.UNKNOWN_SIZE));
+                previewButton.managedProperty().bind(stream.sizeProperty().isNotEqualTo(GuiSubtitleStream.UNKNOWN_SIZE));
+
                 Hyperlink getSizeLink = new Hyperlink("get size");
                 getSizeLink.setOnAction(event -> singleFileSubtitleSizeLoader.load(fileInfo, ffmpegStream.getFfmpegIndex()));
                 getSizeLink.visibleProperty().bind(stream.sizeProperty().isEqualTo(GuiSubtitleStream.UNKNOWN_SIZE));
                 getSizeLink.managedProperty().bind(stream.sizeProperty().isEqualTo(GuiSubtitleStream.UNKNOWN_SIZE));
 
-                sizePane.getChildren().addAll(sizeLabel, getSizeLink, errorImageLabel);
+                Region spacer = new Region();
+                sizePane.getChildren().addAll(sizeLabel, getSizeLink, errorImageLabel, spacer, previewButton);
+                HBox.setHgrow(spacer, Priority.ALWAYS);
 
                 if (ffmpegStream.isExtra()) {
                     titlePane.visibleProperty().bind(showExtra);
@@ -409,13 +420,23 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
         getAllSizesPane.getChildren().add(getAllSizes);
 
+        HBox previewPane = new HBox();
+        previewPane.setAlignment(Pos.CENTER);
+        Button previewButton = GuiUtils.createImageButton(
+                "result",
+                "/gui/icons/eye.png",
+                15,
+                10
+        );
+        previewPane.getChildren().add(previewButton);
+
         result.add(hiddenAndAddPane, 0, fileInfo.getSubtitleStreams().size());
         result.add(getAllSizesPane, 1, fileInfo.getSubtitleStreams().size());
-        result.add(new Region(), 2, fileInfo.getSubtitleStreams().size());
+        result.add(previewPane, 2, fileInfo.getSubtitleStreams().size());
 
         GridPane.setMargin(hiddenAndAddPane, new Insets(3, 0, 0, 0));
         GridPane.setMargin(getAllSizesPane, new Insets(3, 0, 0, 0));
-        GridPane.setMargin(result.getChildren().get(result.getChildren().size() - 1), new Insets(0, 0, 0, 0));
+        GridPane.setMargin(previewPane, new Insets(3, 0, 0, 0));
 
         MultiColorResultLabels resultLabels = new MultiColorResultLabels();
         resultLabels.setAlignment(Pos.CENTER);
@@ -457,20 +478,19 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             result.getChildren().add(spacer);
         }
 
-        Button button = new Button("Add subtitle");
-        button.getStyleClass().add("add-subtitle");
+        Button button = GuiUtils.createImageButton(
+                "Add subtitles",
+                "/gui/icons/add.png",
+                9,
+                9
+        );
+        button.setOnAction((event -> addExternalSubtitleFileHandler.buttonClicked(fileInfo)));
 
         BooleanBinding canAddMoreFiles = fileInfo.getExternalSubtitleStreams().get(0).fileNameProperty().isEmpty()
                 .or(fileInfo.getExternalSubtitleStreams().get(1).fileNameProperty().isEmpty());
 
         button.visibleProperty().bind(canAddMoreFiles);
         button.managedProperty().bind(canAddMoreFiles);
-        Image image = new Image("/gui/icons/add.png");
-        ImageView imageView = new ImageView(image);
-        imageView.setFitWidth(9);
-        imageView.setFitHeight(imageView.getFitWidth());
-        button.setGraphic(imageView);
-        button.setOnAction((event -> addExternalSubtitleFileHandler.buttonClicked(fileInfo)));
 
         result.getChildren().add(button);
 
