@@ -1,7 +1,5 @@
 package kirill.subtitlemerger.gui.tabs.subtitle_files;
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -484,16 +482,7 @@ public class SubtitleFilesTabController {
     }
 
     private boolean agreeToOverwrite(MergedFileInfo mergedFileInfo) {
-        BooleanProperty result = new SimpleBooleanProperty(false);
-
-        Stage dialogStage = generateAgreeToOverwriteStage(mergedFileInfo, result);
-        dialogStage.showAndWait();
-
-        return result.get();
-    }
-
-    private Stage generateAgreeToOverwriteStage(MergedFileInfo mergedFileInfo, BooleanProperty agreeToOverwrite) {
-        Stage result = new Stage();
+        Stage dialogStage = new Stage();
 
         String fileName = GuiUtils.getShortenedStringIfNecessary(
                 mergedFileInfo.getFile().getName(),
@@ -510,25 +499,15 @@ public class SubtitleFilesTabController {
         }
 
         FileExistsDialog fileExistsDialog = new FileExistsDialog();
-        fileExistsDialog.initialize(
-                fileName,
-                parentName,
-                event -> {
-                    agreeToOverwrite.setValue(false);
-                    result.close();
-                },
-                event -> {
-                    agreeToOverwrite.setValue(true);
-                    result.close();
-                }
-        );
+        fileExistsDialog.initialize(fileName, parentName, dialogStage);
 
-        result.initModality(Modality.APPLICATION_MODAL);
-        result.initOwner(stage);
-        result.setResizable(false);
-        result.setScene(new Scene(fileExistsDialog));
+        dialogStage.initModality(Modality.APPLICATION_MODAL);
+        dialogStage.initOwner(stage);
+        dialogStage.setResizable(false);
+        dialogStage.setScene(new Scene(fileExistsDialog));
+        dialogStage.showAndWait();
 
-        return result;
+        return fileExistsDialog.isAgreeToOverwrite();
     }
 
     @FXML

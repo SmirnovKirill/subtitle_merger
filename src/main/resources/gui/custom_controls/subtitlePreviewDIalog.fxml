@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.VBox?>
+<fx:root xmlns:fx="http://javafx.com/fxml"
+         type="javafx.scene.layout.VBox"
+         prefHeight="400"
+         prefWidth="600"
+>
+    <TextArea fx:id="textArea"/>
+</fx:root>
