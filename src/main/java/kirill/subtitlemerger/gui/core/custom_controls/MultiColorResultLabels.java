@@ -1,5 +1,7 @@
 package kirill.subtitlemerger.gui.core.custom_controls;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import kirill.subtitlemerger.gui.GuiConstants;
@@ -14,17 +16,35 @@ public class MultiColorResultLabels extends HBox {
 
     private Label errorLabel;
 
+    private BooleanProperty wrapText;
+
     public MultiColorResultLabels() {
+        wrapText = new SimpleBooleanProperty(false);
         successLabel = new Label();
         successLabel.getStyleClass().add(GuiConstants.LABEL_SUCCESS_CLASS);
+        successLabel.wrapTextProperty().bind(wrapText);
 
         warnLabel = new Label();
         warnLabel.getStyleClass().add(GuiConstants.LABEL_WARN_CLASS);
+        warnLabel.wrapTextProperty().bind(wrapText);
 
         errorLabel = new Label();
         errorLabel.getStyleClass().add(GuiConstants.LABEL_ERROR_CLASS);
+        errorLabel.wrapTextProperty().bind(wrapText);
 
         getChildren().addAll(successLabel, warnLabel, errorLabel);
+    }
+
+    public boolean isWrapText() {
+        return wrapText.get();
+    }
+
+    public BooleanProperty wrapTextProperty() {
+        return wrapText;
+    }
+
+    public void setWrapText(boolean wrapText) {
+        this.wrapText.set(wrapText);
     }
 
     public void update(MultiPartResult multiPartResult) {

@@ -7,11 +7,13 @@ import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.core.GuiUtils;
 import kirill.subtitlemerger.gui.core.custom_controls.MultiColorResultLabels;
+import kirill.subtitlemerger.gui.core.custom_controls.SubtitlePreviewDialog;
 import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
 import kirill.subtitlemerger.logic.core.Merger;
 import kirill.subtitlemerger.logic.core.Parser;
@@ -29,6 +31,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -144,6 +147,7 @@ public class SubtitleFilesTabController {
                             validatorFileInfo.getParent(),
                             fileOrigin,
                             false,
+                            validatorFileInfo.getContent(),
                             null,
                             SubtitleFilesTabController.InputFileInfo.from(validatorFileInfo.getIncorrectFileReason())
                     )
@@ -152,7 +156,7 @@ public class SubtitleFilesTabController {
 
         try {
             Subtitles subtitles = Parser.fromSubRipText(
-                    new String(validatorFileInfo.getContent(), StandardCharsets.UTF_8), //todo auto-detect encoding
+                    new String(validatorFileInfo.getContent(), StandardCharsets.UTF_8),
                     fileType.toString(),
                     null
             );
@@ -164,6 +168,7 @@ public class SubtitleFilesTabController {
                             validatorFileInfo.getParent(),
                             fileOrigin,
                             isDuplicate(validatorFileInfo.getFile(), fileType, filesInfo),
+                            validatorFileInfo.getContent(),
                             subtitles,
                             null
                     )
@@ -176,6 +181,7 @@ public class SubtitleFilesTabController {
                             validatorFileInfo.getParent(),
                             fileOrigin,
                             false,
+                            validatorFileInfo.getContent(),
                             null,
                             SubtitleFilesTabController.IncorrectInputFileReason.INCORRECT_SUBTITLE_FORMAT
                     )
@@ -404,7 +410,8 @@ public class SubtitleFilesTabController {
             case FAILED_TO_READ_CONTENT:
                 return path + ": failed to read the file";
             case INCORRECT_SUBTITLE_FORMAT:
-                return "File " + path + " has incorrect subtitle format";
+                return "File " + path + " has incorrect subtitle format, it can happen if the file is not UTF-8-encoded"
+                        + ", you can change the encoding pressing the preview button";
             default:
                 throw new IllegalStateException();
         }
@@ -501,6 +508,9 @@ public class SubtitleFilesTabController {
         FileExistsDialog fileExistsDialog = new FileExistsDialog();
         fileExistsDialog.initialize(fileName, parentName, dialogStage);
 
+        //todo set stage parameters in the same manner everywhere
+        dialogStage.setTitle("File exists!");
+        dialogStage.initStyle(StageStyle.UTILITY);
         dialogStage.initModality(Modality.APPLICATION_MODAL);
         dialogStage.initOwner(stage);
         dialogStage.setResizable(false);
@@ -511,7 +521,27 @@ public class SubtitleFilesTabController {
     }
 
     @FXML
-    private void upperSubtitlesButtonClicked() {
+    private void upperPreviewClicked() {
+        showPreview(filesInfo.getUpperFileInfo().getRawData(), StandardCharsets.UTF_8);
+    }
+
+    private void showPreview(byte[] data, Charset originalCharset) {
+        Stage dialogStage = new Stage();
+
+        SubtitlePreviewDialog subtitlePreviewDialog = new SubtitlePreviewDialog();
+        subtitlePreviewDialog.initialize(data, originalCharset);
+
+        dialogStage.setTitle("Subtitle preview");
+        dialogStage.initStyle(StageStyle.UTILITY);
+        dialogStage.initModality(Modality.APPLICATION_MODAL);
+        dialogStage.initOwner(stage);
+        dialogStage.setResizable(false);
+        dialogStage.setScene(new Scene(subtitlePreviewDialog));
+        dialogStage.showAndWait();
+    }
+
+    @FXML
+    private void upperChooseClicked() {
         File file = getInputFile(InputFileType.UPPER_SUBTITLES, stage, settings).orElse(null);
         processInputFilePath(
                 file != null ? file.getAbsolutePath() : null,
@@ -553,7 +583,12 @@ public class SubtitleFilesTabController {
     }
 
     @FXML
-    private void lowerSubtitlesButtonClicked() {
+    private void lowerPreviewClicked() {
+        showPreview(filesInfo.getLowerFileInfo().getRawData(), StandardCharsets.UTF_8);
+    }
+
+    @FXML
+    private void lowerChooseClicked() {
         File file = getInputFile(InputFileType.LOWER_SUBTITLES, stage, settings).orElse(null);
         processInputFilePath(
                 file != null ? file.getAbsolutePath() : null,
@@ -646,6 +681,8 @@ public class SubtitleFilesTabController {
 
         @Setter
         private boolean isDuplicate;
+
+        private byte[] rawData;
 
         private Subtitles subtitles;
 

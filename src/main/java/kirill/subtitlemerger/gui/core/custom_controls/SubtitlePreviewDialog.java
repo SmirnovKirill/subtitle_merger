@@ -19,7 +19,7 @@ public class SubtitlePreviewDialog extends VBox {
 
     private Charset charset;
 
-    SubtitlePreviewDialog() {
+    public SubtitlePreviewDialog() {
         FXMLLoader fxmlLoader = new FXMLLoader(
                 getClass().getResource("/gui/custom_controls/subtitlePreviewDialog.fxml")
         );
