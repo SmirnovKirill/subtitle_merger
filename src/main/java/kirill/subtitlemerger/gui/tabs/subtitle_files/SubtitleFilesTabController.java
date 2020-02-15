@@ -1,9 +1,13 @@
 package kirill.subtitlemerger.gui.tabs.subtitle_files;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
@@ -43,16 +47,25 @@ public class SubtitleFilesTabController {
     private TextField upperPathField;
 
     @FXML
+    private Button upperPreview;
+
+    @FXML
     private Button lowerChooseButton;
 
     @FXML
     private TextField lowerPathField;
 
     @FXML
+    private Button lowerPreview;
+
+    @FXML
     private Button mergedChooseButton;
 
     @FXML
     private TextField mergedPathField;
+
+    @FXML
+    private Button mergedPreview;
 
     @FXML
     private Button mergeButton;
@@ -77,7 +90,7 @@ public class SubtitleFilesTabController {
         );
         GuiUtils.setTextFieldChangeListeners(
                 mergedPathField,
-                (path) -> processOutputFilePath(path, FileOrigin.TEXT_FIELD)
+                (path) -> processMergedFilePath(path, FileOrigin.TEXT_FIELD)
         );
     }
 
@@ -240,6 +253,7 @@ public class SubtitleFilesTabController {
             updatePathFields();
         }
 
+        setPreviewButtonsDisabled();
         setMergeButtonVisibility();
         showErrorsIfNecessary();
     }
@@ -273,13 +287,15 @@ public class SubtitleFilesTabController {
         );
     }
 
+    private void setPreviewButtonsDisabled() {
+        upperPreview.setDisable(!filesInfo.upperFileOk());
+        lowerPreview.setDisable(!filesInfo.lowerFileOk());
+        mergedPreview.setDisable(!filesInfo.upperFileOk() || !filesInfo.lowerFileOk());
+    }
+
     private void setMergeButtonVisibility() {
-        boolean disable = filesInfo.getUpperFileInfo() == null
-                || filesInfo.getUpperFileInfo().getIncorrectFileReason() != null
-                || filesInfo.getUpperFileInfo().isDuplicate()
-                || filesInfo.getLowerFileInfo() == null
-                || filesInfo.getLowerFileInfo().getIncorrectFileReason() != null
-                || filesInfo.getLowerFileInfo().isDuplicate()
+        boolean disable = !filesInfo.upperFileOk()
+                || !filesInfo.lowerFileOk()
                 || filesInfo.getMergedFileInfo() == null
                 || filesInfo.getMergedFileInfo().getIncorrectFileReason() != null;
         mergeButton.setDisable(disable);
@@ -310,7 +326,7 @@ public class SubtitleFilesTabController {
             }
         }
 
-        OutputFileInfo mergedFileInfo = filesInfo.getMergedFileInfo();
+        MergedFileInfo mergedFileInfo = filesInfo.getMergedFileInfo();
         if (mergedFileInfo != null && mergedFileInfo.getIncorrectFileReason() != null) {
             showFileElementsAsIncorrect(ExtendedFileType.MERGED_SUBTITLES);
 
@@ -374,8 +390,10 @@ public class SubtitleFilesTabController {
         switch (reason) {
             case PATH_IS_TOO_LONG:
                 return "File path is too long";
-            case NOT_A_FILE:
-                return path + " is not a file";
+            case INVALID_PATH:
+                return "File path is invalid";
+            case IS_A_DIRECTORY:
+                return path + " is a directory, not a file";
             case FILE_DOES_NOT_EXIST:
                 return "File " + path + " doesn't exist";
             case FAILED_TO_GET_PARENT_DIRECTORY:
@@ -398,16 +416,16 @@ public class SubtitleFilesTabController {
         return GuiUtils.getShortenedStringIfNecessary(path, 20, 40);
     }
 
-    private static String getErrorText(String path, IncorrectOutputFileReason reason) {
+    private static String getErrorText(String path, IncorrectMergedFileReason reason) {
         path = getShortenedPath(path);
 
         switch (reason) {
             case PATH_IS_TOO_LONG:
                 return "File path is too long";
-            case NOT_A_FILE:
-                return path + " is not a file";
-            case FAILED_TO_GET_PARENT_DIRECTORY:
-                return path + ": failed to get parent directory";
+            case INVALID_PATH:
+                return "File path is invalid";
+            case IS_A_DIRECTORY:
+                return path + " is a directory, not a file";
             case EXTENSION_IS_NOT_VALID:
                 return "File " + path + " has an incorrect extension";
             default:
@@ -415,21 +433,30 @@ public class SubtitleFilesTabController {
         }
     }
 
-    private void processOutputFilePath(String path, FileOrigin fileOrigin) {
+    private void processMergedFilePath(String path, FileOrigin fileOrigin) {
         if (fileOrigin == FileOrigin.TEXT_FIELD && pathNotChanged(path, ExtendedFileType.MERGED_SUBTITLES, filesInfo)) {
             return;
         }
 
-        OutputFileInfo outputFileInfo = getOutputFileInfo(path, fileOrigin).orElse(null);
-        filesInfo.setMergedFileInfo(outputFileInfo);
-        if (fileOrigin == FileOrigin.FILE_CHOOSER && outputFileInfo != null && outputFileInfo.getParent() != null) {
-            saveLastDirectoryInConfig(ExtendedFileType.MERGED_SUBTITLES, outputFileInfo.getParent(), settings);
+        MergedFileInfo mergedFileInfo = getMergedFileInfo(path, fileOrigin).orElse(null);
+        if (fileOrigin == FileOrigin.TEXT_FIELD && fileExists(mergedFileInfo)) {
+            if (!agreeToOverwrite(mergedFileInfo)) {
+                mergedPathField.setText(
+                        filesInfo.getMergedFileInfo() != null ? filesInfo.getMergedFileInfo().getPath() : null
+                );
+                return;
+            }
+        }
+
+        filesInfo.setMergedFileInfo(mergedFileInfo);
+        if (fileOrigin == FileOrigin.FILE_CHOOSER && mergedFileInfo != null && mergedFileInfo.getParent() != null) {
+            saveLastDirectoryInConfig(ExtendedFileType.MERGED_SUBTITLES, mergedFileInfo.getParent(), settings);
         }
 
         updateScene(fileOrigin);
     }
 
-    private static Optional<OutputFileInfo> getOutputFileInfo(String path, FileOrigin fileOrigin) {
+    private static Optional<MergedFileInfo> getMergedFileInfo(String path, FileOrigin fileOrigin) {
         FileValidator.OutputFileInfo validatorFileInfo = FileValidator.getOutputFileInfo(
                 path,
                 Collections.singletonList("srt"),
@@ -440,16 +467,68 @@ public class SubtitleFilesTabController {
         }
 
         return Optional.of(
-                new OutputFileInfo(
+                new MergedFileInfo(
                         path,
                         validatorFileInfo.getFile(),
                         validatorFileInfo.getParent(),
                         fileOrigin,
                         validatorFileInfo.getIncorrectFileReason() != null
-                                ? OutputFileInfo.from(validatorFileInfo.getIncorrectFileReason())
+                                ? MergedFileInfo.from(validatorFileInfo.getIncorrectFileReason())
                                 : null
                 )
         );
+    }
+
+    private static boolean fileExists(MergedFileInfo fileInfo) {
+        return fileInfo != null && fileInfo.getFile() != null && fileInfo.getFile().exists();
+    }
+
+    private boolean agreeToOverwrite(MergedFileInfo mergedFileInfo) {
+        BooleanProperty result = new SimpleBooleanProperty(false);
+
+        Stage dialogStage = generateAgreeToOverwriteStage(mergedFileInfo, result);
+        dialogStage.showAndWait();
+
+        return result.get();
+    }
+
+    private Stage generateAgreeToOverwriteStage(MergedFileInfo mergedFileInfo, BooleanProperty agreeToOverwrite) {
+        Stage result = new Stage();
+
+        String fileName = GuiUtils.getShortenedStringIfNecessary(
+                mergedFileInfo.getFile().getName(),
+                0,
+                32
+        );
+        String parentName = "-";
+        if (mergedFileInfo.getParent() != null) {
+            parentName = GuiUtils.getShortenedStringIfNecessary(
+                    mergedFileInfo.getParent().getName(),
+                    0,
+                    32
+            );
+        }
+
+        FileExistsDialog fileExistsDialog = new FileExistsDialog();
+        fileExistsDialog.initialize(
+                fileName,
+                parentName,
+                event -> {
+                    agreeToOverwrite.setValue(false);
+                    result.close();
+                },
+                event -> {
+                    agreeToOverwrite.setValue(true);
+                    result.close();
+                }
+        );
+
+        result.initModality(Modality.APPLICATION_MODAL);
+        result.initOwner(stage);
+        result.setResizable(false);
+        result.setScene(new Scene(fileExistsDialog));
+
+        return result;
     }
 
     @FXML
@@ -506,11 +585,11 @@ public class SubtitleFilesTabController {
 
     @FXML
     private void mergedSubtitlesButtonClicked() {
-        File file = getOutputFile(stage, settings).orElse(null);
-        processOutputFilePath(file != null ? file.getAbsolutePath() : null, FileOrigin.FILE_CHOOSER);
+        File file = getMergedFile(stage, settings).orElse(null);
+        processMergedFilePath(file != null ? file.getAbsolutePath() : null, FileOrigin.FILE_CHOOSER);
     }
 
-    private static Optional<File> getOutputFile(Stage stage, GuiSettings settings) {
+    private static Optional<File> getMergedFile(Stage stage, GuiSettings settings) {
         FileChooser fileChooser = new FileChooser();
 
         fileChooser.setTitle("Please choose where to save the result");
@@ -597,8 +676,10 @@ public class SubtitleFilesTabController {
             switch (reason) {
                 case PATH_IS_TOO_LONG:
                     return SubtitleFilesTabController.IncorrectInputFileReason.PATH_IS_TOO_LONG;
-                case NOT_A_FILE:
-                    return SubtitleFilesTabController.IncorrectInputFileReason.NOT_A_FILE;
+                case INVALID_PATH:
+                    return SubtitleFilesTabController.IncorrectInputFileReason.INVALID_PATH;
+                case IS_A_DIRECTORY:
+                    return SubtitleFilesTabController.IncorrectInputFileReason.IS_A_DIRECTORY;
                 case FILE_DOES_NOT_EXIST:
                     return SubtitleFilesTabController.IncorrectInputFileReason.FILE_DOES_NOT_EXIST;
                 case FAILED_TO_GET_PARENT_DIRECTORY:
@@ -617,7 +698,8 @@ public class SubtitleFilesTabController {
 
     private enum IncorrectInputFileReason {
         PATH_IS_TOO_LONG,
-        NOT_A_FILE,
+        INVALID_PATH,
+        IS_A_DIRECTORY,
         FILE_DOES_NOT_EXIST,
         FAILED_TO_GET_PARENT_DIRECTORY,
         EXTENSION_IS_NOT_VALID,
@@ -628,7 +710,7 @@ public class SubtitleFilesTabController {
 
     @AllArgsConstructor
     @Getter
-    private static class OutputFileInfo {
+    private static class MergedFileInfo {
         private String path;
 
         private File file;
@@ -637,28 +719,28 @@ public class SubtitleFilesTabController {
 
         private FileOrigin fileOrigin;
 
-        private IncorrectOutputFileReason incorrectFileReason;
+        private IncorrectMergedFileReason incorrectFileReason;
 
-        static IncorrectOutputFileReason from(FileValidator.IncorrectOutputFileReason reason) {
+        static IncorrectMergedFileReason from(FileValidator.IncorrectOutputFileReason reason) {
             switch (reason) {
                 case PATH_IS_TOO_LONG:
-                    return IncorrectOutputFileReason.PATH_IS_TOO_LONG;
-                case NOT_A_FILE:
-                    return IncorrectOutputFileReason.NOT_A_FILE;
-                case FAILED_TO_GET_PARENT_DIRECTORY:
-                    return IncorrectOutputFileReason.FAILED_TO_GET_PARENT_DIRECTORY;
+                    return IncorrectMergedFileReason.PATH_IS_TOO_LONG;
+                case INVALID_PATH:
+                    return IncorrectMergedFileReason.INVALID_PATH;
+                case IS_A_DIRECTORY:
+                    return IncorrectMergedFileReason.IS_A_DIRECTORY;
                 case EXTENSION_IS_NOT_VALID:
-                    return IncorrectOutputFileReason.EXTENSION_IS_NOT_VALID;
+                    return IncorrectMergedFileReason.EXTENSION_IS_NOT_VALID;
                 default:
                     throw new IllegalStateException();
             }
         }
     }
 
-    private enum IncorrectOutputFileReason {
+    private enum IncorrectMergedFileReason {
         PATH_IS_TOO_LONG,
-        NOT_A_FILE,
-        FAILED_TO_GET_PARENT_DIRECTORY,
+        INVALID_PATH,
+        IS_A_DIRECTORY,
         EXTENSION_IS_NOT_VALID
     }
 
@@ -670,6 +752,18 @@ public class SubtitleFilesTabController {
 
         private InputFileInfo lowerFileInfo;
 
-        private OutputFileInfo mergedFileInfo;
+        private MergedFileInfo mergedFileInfo;
+
+        boolean upperFileOk() {
+            return inputFileOk(upperFileInfo);
+        }
+
+        boolean lowerFileOk() {
+            return inputFileOk(lowerFileInfo);
+        }
+
+        private static boolean inputFileOk(InputFileInfo fileInfo) {
+            return fileInfo != null && !fileInfo.isDuplicate && fileInfo.getIncorrectFileReason() == null;
+        }
     }
 }

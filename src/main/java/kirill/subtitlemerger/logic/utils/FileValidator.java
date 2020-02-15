@@ -8,6 +8,8 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -30,9 +32,19 @@ public class FileValidator {
             );
         }
 
+        try {
+            Path.of(path);
+        } catch (InvalidPathException e) {
+            return Optional.of(
+                    new InputFileInfo(null, null, IncorrectInputFileReason.INVALID_PATH, null)
+            );
+        }
+
         File file = new File(path);
-        if (!file.isFile()) {
-            return Optional.of(new InputFileInfo(file, null, IncorrectInputFileReason.NOT_A_FILE, null));
+        if (file.isDirectory()) {
+            return Optional.of(
+                    new InputFileInfo(file, null, IncorrectInputFileReason.IS_A_DIRECTORY, null)
+            );
         }
 
         if (!file.exists()) {
@@ -101,27 +113,28 @@ public class FileValidator {
             return Optional.of(new OutputFileInfo(null, null, IncorrectOutputFileReason.PATH_IS_TOO_LONG));
         }
 
-        File file = new File(path);
-        if (!file.isFile()) {
-            return Optional.of(new OutputFileInfo(file, null, IncorrectOutputFileReason.NOT_A_FILE));
+        try {
+            Path.of(path);
+        } catch (InvalidPathException e) {
+            return Optional.of(new OutputFileInfo(null, null, IncorrectOutputFileReason.INVALID_PATH));
         }
 
-        if (!allowNonExistent && !file.exists()) {
-            return Optional.of(new OutputFileInfo(file, null, IncorrectOutputFileReason.FILE_DOES_NOT_EXIST));
+        File file = new File(path);
+        if (file.isDirectory()) {
+            return Optional.of(new OutputFileInfo(file, null, IncorrectOutputFileReason.IS_A_DIRECTORY));
         }
 
         String parentPath = file.getParent();
-        if (StringUtils.isBlank(parentPath)) {
-            return Optional.of(
-                    new OutputFileInfo(file, null, IncorrectOutputFileReason.FAILED_TO_GET_PARENT_DIRECTORY)
-            );
+        File parent = null;
+        if (!StringUtils.isBlank(parentPath)) {
+            parent = new File(parentPath);
+            if (!parent.exists() || !parent.isDirectory()) {
+                parent = null;
+            }
         }
 
-        File parent = new File(parentPath);
-        if (!parent.exists() || !parent.isDirectory()) {
-            return Optional.of(
-                    new OutputFileInfo(file, null, IncorrectOutputFileReason.FAILED_TO_GET_PARENT_DIRECTORY)
-            );
+        if (!allowNonExistent && !file.exists()) {
+            return Optional.of(new OutputFileInfo(file, parent, IncorrectOutputFileReason.FILE_DOES_NOT_EXIST));
         }
 
         String extension = FilenameUtils.getExtension(file.getAbsolutePath());
@@ -146,7 +159,8 @@ public class FileValidator {
 
     public enum IncorrectInputFileReason {
         PATH_IS_TOO_LONG,
-        NOT_A_FILE,
+        INVALID_PATH,
+        IS_A_DIRECTORY,
         FILE_DOES_NOT_EXIST,
         FAILED_TO_GET_PARENT_DIRECTORY,
         EXTENSION_IS_NOT_VALID,
@@ -166,9 +180,9 @@ public class FileValidator {
 
     public enum IncorrectOutputFileReason {
         PATH_IS_TOO_LONG,
-        NOT_A_FILE,
+        INVALID_PATH,
+        IS_A_DIRECTORY,
         FILE_DOES_NOT_EXIST,
-        FAILED_TO_GET_PARENT_DIRECTORY,
         EXTENSION_IS_NOT_VALID
     }
 }
