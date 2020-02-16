@@ -93,6 +93,13 @@ public class SubtitleFilesTabController {
 
     private FilesInfo filesInfo;
 
+    /*
+     * We need this special flag because otherwise the dialog window will be shown twice if we change the value and
+     * press enter. Because pressing the enter button will fire the event but after the dialog windows is opened another
+     * event (losing text field's focus) is fired.
+     */
+    private boolean agreeToOverwriteInProgress;
+
     public void initialize(Stage stage, GuiContext context) {
         this.stage = stage;
         this.settings = context.getSettings();
@@ -502,6 +509,10 @@ public class SubtitleFilesTabController {
 
         MergedFileInfo mergedFileInfo = getMergedFileInfo(path, fileOrigin).orElse(null);
         if (fileOrigin == FileOrigin.TEXT_FIELD && fileExists(mergedFileInfo)) {
+            if (agreeToOverwriteInProgress) {
+                return;
+            }
+
             if (!agreeToOverwrite(mergedFileInfo)) {
                 mergedPathField.setText(
                         filesInfo.getMergedFileInfo() != null ? filesInfo.getMergedFileInfo().getPath() : null
@@ -546,6 +557,8 @@ public class SubtitleFilesTabController {
     }
 
     private boolean agreeToOverwrite(MergedFileInfo mergedFileInfo) {
+        agreeToOverwriteInProgress = true;
+
         Stage dialogStage = new Stage();
 
         String fileName = GuiUtils.getShortenedStringIfNecessary(
@@ -573,6 +586,8 @@ public class SubtitleFilesTabController {
         dialogStage.setResizable(false);
         dialogStage.setScene(new Scene(fileExistsDialog));
         dialogStage.showAndWait();
+
+        agreeToOverwriteInProgress = false;
 
         return fileExistsDialog.isAgreeToOverwrite();
     }
