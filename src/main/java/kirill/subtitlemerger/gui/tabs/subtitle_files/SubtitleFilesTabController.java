@@ -10,7 +10,6 @@ import javafx.scene.layout.Pane;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
@@ -580,7 +579,6 @@ public class SubtitleFilesTabController {
 
         //todo set stage parameters in the same manner everywhere
         dialogStage.setTitle("File exists!");
-        dialogStage.initStyle(StageStyle.UTILITY);
         dialogStage.initModality(Modality.APPLICATION_MODAL);
         dialogStage.initOwner(stage);
         dialogStage.setResizable(false);
@@ -606,10 +604,9 @@ public class SubtitleFilesTabController {
         Stage dialogStage = new Stage();
 
         SubtitlePreviewDialog subtitlePreviewDialog = new SubtitlePreviewDialog();
-        subtitlePreviewDialog.initialize(data, originalCharset);
+        subtitlePreviewDialog.initializeInputFile(data, originalCharset, "");
 
         dialogStage.setTitle("Subtitle preview");
-        dialogStage.initStyle(StageStyle.UTILITY);
         dialogStage.initModality(Modality.APPLICATION_MODAL);
         dialogStage.initOwner(stage);
         dialogStage.setResizable(false);
@@ -642,11 +639,11 @@ public class SubtitleFilesTabController {
     @FXML
     private void upperChooseClicked() {
         File file = getInputFile(InputFileType.UPPER_SUBTITLES, stage, settings).orElse(null);
-        processInputFilePath(
-                file != null ? file.getAbsolutePath() : null,
-                InputFileType.UPPER_SUBTITLES,
-                FileOrigin.FILE_CHOOSER
-        );
+        if (file == null) {
+            return;
+        }
+
+        processInputFilePath(file.getAbsolutePath(), InputFileType.UPPER_SUBTITLES, FileOrigin.FILE_CHOOSER);
     }
 
     private static Optional<File> getInputFile(InputFileType fileType, Stage stage, GuiSettings settings) {
@@ -694,17 +691,21 @@ public class SubtitleFilesTabController {
     @FXML
     private void lowerChooseClicked() {
         File file = getInputFile(InputFileType.LOWER_SUBTITLES, stage, settings).orElse(null);
-        processInputFilePath(
-                file != null ? file.getAbsolutePath() : null,
-                InputFileType.LOWER_SUBTITLES,
-                FileOrigin.FILE_CHOOSER
-        );
+        if (file == null) {
+            return;
+        }
+
+        processInputFilePath(file.getAbsolutePath(), InputFileType.LOWER_SUBTITLES, FileOrigin.FILE_CHOOSER);
     }
 
     @FXML
     private void mergedSubtitlesButtonClicked() {
         File file = getMergedFile(stage, settings).orElse(null);
-        processMergedFilePath(file != null ? file.getAbsolutePath() : null, FileOrigin.FILE_CHOOSER);
+        if (file == null) {
+            return;
+        }
+
+        processMergedFilePath(file.getAbsolutePath(), FileOrigin.FILE_CHOOSER);
     }
 
     private static Optional<File> getMergedFile(Stage stage, GuiSettings settings) {
