@@ -8,12 +8,15 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.LocalTime;
 import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @CommonsLog
 public class Parser {
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("HH:mm:ss,SSS");
+
     public static Subtitles fromSubRipText(
             String subRipText,
             String subtitlesName,
@@ -97,7 +100,7 @@ public class Parser {
 
         String fromText = currentLine.substring(0, delimiterIndex).trim();
         try {
-            return DateTimeFormat.forPattern("HH:mm:ss,SSS").parseLocalTime(fromText);
+            return TIME_FORMATTER.parseLocalTime(fromText);
         } catch (IllegalArgumentException e) {
             throw new IncorrectFormatException();
         }
@@ -115,7 +118,7 @@ public class Parser {
 
         String toText = currentLine.substring(delimiterIndex + 1).trim();
         try {
-            return DateTimeFormat.forPattern("HH:mm:ss,SSS").parseLocalTime(toText);
+            return TIME_FORMATTER.parseLocalTime(toText);
         } catch (IllegalArgumentException e) {
             throw new IncorrectFormatException();
         }

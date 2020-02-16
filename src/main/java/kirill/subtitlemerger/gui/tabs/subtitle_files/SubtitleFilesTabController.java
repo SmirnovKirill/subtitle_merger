@@ -359,7 +359,7 @@ public class SubtitleFilesTabController {
         int index = 0;
         for (String part : errorMessageParts) {
             if (index != 0) {
-                errorMessage.append("\n");
+                errorMessage.append(System.lineSeparator());
             }
 
             errorMessage.append("\u2022").append(" ").append(part);
@@ -685,7 +685,11 @@ public class SubtitleFilesTabController {
             showFileElementsAsIncorrect(
                     ExtendedFileType.MERGED_SUBTITLES
             );
-            resultLabels.update(MultiPartResult.onlyError("Can't merge subtitles:\n\u2022 can't write to this file"));
+            resultLabels.update(
+                    MultiPartResult.onlyError(
+                            "Can't merge subtitles:" + System.lineSeparator() + "\u2022 can't write to this file"
+                    )
+            );
             return;
         }
 

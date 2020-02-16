@@ -4,8 +4,11 @@ import kirill.subtitlemerger.logic.core.entities.Subtitle;
 import kirill.subtitlemerger.logic.core.entities.SubtitleLine;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 public class Writer {
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("HH:mm:ss,SSS");
+
     public static String toSubRipText(Subtitles subtitles) {
         StringBuilder result = new StringBuilder();
 
@@ -13,12 +16,12 @@ public class Writer {
             Subtitle subtitle = subtitles.getSubtitles().get(i);
 
             result.append(subtitle.getNumber());
-            result.append("\n");
+            result.append(System.lineSeparator());
 
-            result.append(DateTimeFormat.forPattern("HH:mm:ss,SSS").print(subtitle.getFrom()));
+            result.append(TIME_FORMATTER.print(subtitle.getFrom()));
             result.append(" --> ");
-            result.append(DateTimeFormat.forPattern("HH:mm:ss,SSS").print(subtitle.getTo()));
-            result.append("\n");
+            result.append(TIME_FORMATTER.print(subtitle.getTo()));
+            result.append(System.lineSeparator());
 
             for (int j = 0; j < subtitle.getLines().size(); j++) {
                 SubtitleLine line = subtitle.getLines().get(j);
@@ -26,12 +29,12 @@ public class Writer {
                 result.append(line.getText());
 
                 if (j != subtitle.getLines().size() - 1 || i != subtitles.getSubtitles().size() - 1) {
-                    result.append("\n");
+                    result.append(System.lineSeparator());
                 }
             }
 
             if (i != subtitles.getSubtitles().size() - 1) {
-                result.append("\n");
+                result.append(System.lineSeparator());
             }
         }
 
