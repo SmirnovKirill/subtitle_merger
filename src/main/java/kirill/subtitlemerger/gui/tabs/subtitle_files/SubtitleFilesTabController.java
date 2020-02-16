@@ -41,6 +41,10 @@ import java.util.*;
 
 @CommonsLog
 public class SubtitleFilesTabController {
+    public static final String CHOOSE_FILE_TEXT = "Choose file";
+
+    private static final String CHANGE_FILE_TEXT = "Change file";
+
     private Stage stage;
 
     private GuiSettings settings;
@@ -170,7 +174,7 @@ public class SubtitleFilesTabController {
         if (StringUtils.isBlank(path)) {
             return currentPath == null;
         } else {
-            return Objects.equals(path, currentPath);
+            return Objects.equals(path.trim(), currentPath);
         }
     }
 
@@ -310,6 +314,7 @@ public class SubtitleFilesTabController {
             updatePathFields();
         }
 
+        setFileButtonTexts();
         setPreviewButtonsDisabled();
         setMergeButtonVisibility();
         showErrorsIfNecessary();
@@ -342,6 +347,12 @@ public class SubtitleFilesTabController {
                         ? filesInfo.getMergedFileInfo().getFile().getAbsolutePath()
                         : null
         );
+    }
+
+    private void setFileButtonTexts() {
+        upperChooseButton.setText(filesInfo.getUpperFileInfo() != null ? CHANGE_FILE_TEXT : CHOOSE_FILE_TEXT);
+        lowerChooseButton.setText(filesInfo.getLowerFileInfo() != null ? CHANGE_FILE_TEXT : CHOOSE_FILE_TEXT);
+        mergedChooseButton.setText(filesInfo.getMergedFileInfo() != null ? CHANGE_FILE_TEXT : CHOOSE_FILE_TEXT);
     }
 
     private void setPreviewButtonsDisabled() {
