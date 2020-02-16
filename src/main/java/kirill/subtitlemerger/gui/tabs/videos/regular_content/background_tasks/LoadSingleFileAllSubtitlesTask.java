@@ -62,7 +62,7 @@ public class LoadSingleFileAllSubtitlesTask extends BackgroundTask<LoadFilesAllS
             );
             try {
                 String subtitleText = ffmpeg.getSubtitlesText(stream.getFfmpegIndex(), fileInfo.getFile());
-                stream.setSubtitles(Parser.fromSubRipText(subtitleText, stream.getTitle(), stream.getLanguage()));
+                stream.setSubtitles(Parser.fromSubRipText(subtitleText, stream.getLanguage()));
 
                 /*
                  * Have to call this in the JavaFX thread because this change can lead to updates on the screen.

@@ -202,13 +202,7 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
 
             try {
                 String subtitleText = ffmpeg.getSubtitlesText(stream.getFfmpegIndex(), file);
-                stream.setSubtitles(
-                        Parser.fromSubRipText(
-                                subtitleText,
-                                stream.getTitle(),
-                                stream.getLanguage()
-                        )
-                );
+                stream.setSubtitles(Parser.fromSubRipText(subtitleText, stream.getLanguage()));
 
                 /*
                  * Have to call this in the JavaFX thread because this change can lead to updates on the screen.

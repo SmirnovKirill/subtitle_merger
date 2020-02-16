@@ -1,7 +1,6 @@
 package kirill.subtitlemerger.logic.core;
 
 import kirill.subtitlemerger.logic.core.entities.Subtitle;
-import kirill.subtitlemerger.logic.core.entities.SubtitleLine;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -24,9 +23,7 @@ public class Writer {
             result.append(System.lineSeparator());
 
             for (int j = 0; j < subtitle.getLines().size(); j++) {
-                SubtitleLine line = subtitle.getLines().get(j);
-
-                result.append(line.getText());
+                result.append(subtitle.getLines().get(j));
 
                 if (j != subtitle.getLines().size() - 1 || i != subtitles.getSubtitles().size() - 1) {
                     result.append(System.lineSeparator());

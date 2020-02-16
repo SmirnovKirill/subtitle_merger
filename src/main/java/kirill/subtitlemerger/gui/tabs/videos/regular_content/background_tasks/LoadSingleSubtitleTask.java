@@ -53,7 +53,7 @@ public class LoadSingleSubtitleTask extends BackgroundTask<LoadSingleSubtitleTas
         setCancellationPossible(true);
         try {
             String subtitleText = ffmpeg.getSubtitlesText(stream.getFfmpegIndex(), fileInfo.getFile());
-            stream.setSubtitles(Parser.fromSubRipText(subtitleText, stream.getTitle(), stream.getLanguage()));
+            stream.setSubtitles(Parser.fromSubRipText(subtitleText, stream.getLanguage()));
             boolean haveSubtitlesToLoad = fileInfo.haveSubtitlesToLoad();
 
             Platform.runLater(() -> {

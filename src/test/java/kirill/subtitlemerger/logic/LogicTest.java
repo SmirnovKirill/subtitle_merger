@@ -21,7 +21,6 @@ public class LogicTest {
                         LogicTest.class.getResourceAsStream("/MainTest/testParseFromFileToSubtitles/sub.srt"),
                         StandardCharsets.UTF_8
                 ),
-                "ru",
                 LanguageAlpha3Code.rus
         );
 
@@ -38,7 +37,6 @@ public class LogicTest {
                         LogicTest.class.getResourceAsStream("/MainTest/testMerged/upper.srt"),
                         StandardCharsets.UTF_8
                 ),
-                "upper",
                 LanguageAlpha3Code.rus
         );
         Subtitles lowerSubtitles = Parser.fromSubRipText(
@@ -46,7 +44,6 @@ public class LogicTest {
                         LogicTest.class.getResourceAsStream("/MainTest/testMerged/lower.srt"),
                         StandardCharsets.UTF_8
                 ),
-                "lower",
                 LanguageAlpha3Code.eng
         );
 

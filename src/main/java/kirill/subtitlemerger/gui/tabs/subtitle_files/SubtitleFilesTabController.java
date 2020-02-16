@@ -209,7 +209,6 @@ public class SubtitleFilesTabController {
         try {
             Subtitles subtitles = Parser.fromSubRipText(
                     new String(validatorFileInfo.getContent(), StandardCharsets.UTF_8),
-                    fileType.toString(),
                     null
             );
 
@@ -622,11 +621,7 @@ public class SubtitleFilesTabController {
         }
 
         try {
-            Subtitles subtitles = Parser.fromSubRipText(
-                    new String(fileInfo.getRawData(), newCharset),
-                    fileInfo.getPath(), //todo remove
-                    null
-            );
+            Subtitles subtitles = Parser.fromSubRipText(new String(fileInfo.getRawData(), newCharset), null);
             fileInfo.setSubtitles(subtitles);
             fileInfo.setIncorrectFileReason(null);
         } catch (Parser.IncorrectFormatException e) {

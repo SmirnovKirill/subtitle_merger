@@ -1,14 +1,15 @@
 package kirill.subtitlemerger.logic.core.entities;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.joda.time.LocalTime;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
 public class Subtitle {
@@ -18,5 +19,5 @@ public class Subtitle {
 
     private LocalTime to;
 
-    private List<SubtitleLine> lines = new ArrayList<>();
+    private List<String> lines;
 }

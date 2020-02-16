@@ -2,7 +2,6 @@ package kirill.subtitlemerger.logic.core;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.logic.core.entities.Subtitle;
-import kirill.subtitlemerger.logic.core.entities.SubtitleLine;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
@@ -19,7 +18,6 @@ public class Parser {
 
     public static Subtitles fromSubRipText(
             String subRipText,
-            String subtitlesName,
             LanguageAlpha3Code language
     ) throws IncorrectFormatException {
         List<Subtitle> result = new ArrayList<>();
@@ -62,7 +60,8 @@ public class Parser {
                     continue;
                 }
 
-                currentSubtitle.getLines().add(new SubtitleLine(currentLine, subtitlesName));
+                currentSubtitle.setLines(new ArrayList<>());
+                currentSubtitle.getLines().add(currentLine);
                 parsingStage = ParsingStage.PARSED_FIRST_LINE;
             } else {
                 if (StringUtils.isBlank(currentLine)) {
@@ -71,7 +70,7 @@ public class Parser {
                     currentSubtitle = null;
                     parsingStage = ParsingStage.HAVE_NOT_STARTED;
                 } else {
-                    currentSubtitle.getLines().add(new SubtitleLine(currentLine, subtitlesName));
+                    currentSubtitle.getLines().add(currentLine);
                 }
             }
         }

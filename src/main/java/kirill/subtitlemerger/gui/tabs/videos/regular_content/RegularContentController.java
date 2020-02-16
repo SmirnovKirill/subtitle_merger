@@ -802,7 +802,6 @@ public class RegularContentController {
         try {
             Subtitles subtitles = Parser.fromSubRipText(
                     FileUtils.readFileToString(file, StandardCharsets.UTF_8),
-                    "external",
                     null
             );
 
