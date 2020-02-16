@@ -174,7 +174,7 @@ public class SubtitleFilesTabController {
         if (StringUtils.isBlank(path)) {
             return currentPath == null;
         } else {
-            return Objects.equals(path.trim(), currentPath);
+            return Objects.equals(path, currentPath);
         }
     }
 
@@ -462,7 +462,7 @@ public class SubtitleFilesTabController {
     }
 
     private static String getErrorText(String path, IncorrectInputFileReason reason) {
-        path = getShortenedPath(path);
+        path = getShortenedPath(path.trim());
 
         switch (reason) {
             case PATH_IS_TOO_LONG:
