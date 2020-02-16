@@ -573,7 +573,6 @@ public class SubtitleFilesTabController {
         dialogStage.setResizable(false);
         dialogStage.setScene(new Scene(fileExistsDialog));
         dialogStage.showAndWait();
-        System.out.println("check");
 
         return fileExistsDialog.isAgreeToOverwrite();
     }
