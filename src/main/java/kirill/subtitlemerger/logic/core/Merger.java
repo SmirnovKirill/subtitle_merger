@@ -16,6 +16,7 @@ import static java.util.stream.Collectors.toSet;
 @CommonsLog
 public class Merger {
     public static Subtitles mergeSubtitles(Subtitles upperSubtitles, Subtitles lowerSubtitles) {
+        //todo check different sources, maybe refactor
         List<String> sortedSources = getSortedSources(upperSubtitles, lowerSubtitles);
 
         Subtitles result = makeInitialMerge(upperSubtitles, lowerSubtitles);

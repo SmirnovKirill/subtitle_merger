@@ -7,5 +7,5 @@
          prefHeight="400"
          prefWidth="600"
 >
-    <TextArea fx:id="textArea"/>
+    <TextArea fx:id="textArea" VBox.vgrow="ALWAYS"/>
 </fx:root>

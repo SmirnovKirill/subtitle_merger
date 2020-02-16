@@ -149,6 +149,7 @@ public class SubtitleFilesTabController {
                             false,
                             validatorFileInfo.getContent(),
                             null,
+                            null,
                             SubtitleFilesTabController.InputFileInfo.from(validatorFileInfo.getIncorrectFileReason())
                     )
             );
@@ -169,6 +170,7 @@ public class SubtitleFilesTabController {
                             fileOrigin,
                             isDuplicate(validatorFileInfo.getFile(), fileType, filesInfo),
                             validatorFileInfo.getContent(),
+                            StandardCharsets.UTF_8,
                             subtitles,
                             null
                     )
@@ -182,6 +184,7 @@ public class SubtitleFilesTabController {
                             fileOrigin,
                             false,
                             validatorFileInfo.getContent(),
+                            StandardCharsets.UTF_8,
                             null,
                             SubtitleFilesTabController.IncorrectInputFileReason.INCORRECT_SUBTITLE_FORMAT
                     )
@@ -292,9 +295,18 @@ public class SubtitleFilesTabController {
     }
 
     private void setPreviewButtonsDisabled() {
-        upperPreview.setDisable(!filesInfo.upperFileOk());
-        lowerPreview.setDisable(!filesInfo.lowerFileOk());
+        upperPreview.setDisable(makePreviewDisabled(filesInfo.getUpperFileInfo()));
+        lowerPreview.setDisable(makePreviewDisabled(filesInfo.getLowerFileInfo()));
         mergedPreview.setDisable(!filesInfo.upperFileOk() || !filesInfo.lowerFileOk());
+    }
+
+    private static boolean makePreviewDisabled(InputFileInfo fileInfo) {
+        if (fileInfo == null || fileInfo.isDuplicate()) {
+            return true;
+        }
+
+        return fileInfo.getIncorrectFileReason() != null
+                && fileInfo.getIncorrectFileReason() != IncorrectInputFileReason.INCORRECT_SUBTITLE_FORMAT;
     }
 
     private void setMergeButtonVisibility() {
@@ -516,16 +528,22 @@ public class SubtitleFilesTabController {
         dialogStage.setResizable(false);
         dialogStage.setScene(new Scene(fileExistsDialog));
         dialogStage.showAndWait();
+        System.out.println("check");
 
         return fileExistsDialog.isAgreeToOverwrite();
     }
 
     @FXML
     private void upperPreviewClicked() {
-        showPreview(filesInfo.getUpperFileInfo().getRawData(), StandardCharsets.UTF_8);
+        Charset newCharset = showPreview(
+                filesInfo.getUpperFileInfo().getRawData(),
+                filesInfo.getUpperFileInfo().getCharset()
+        );
+
+        updateCharsetIfChanged(filesInfo.getUpperFileInfo(), newCharset);
     }
 
-    private void showPreview(byte[] data, Charset originalCharset) {
+    private Charset showPreview(byte[] data, Charset originalCharset) {
         Stage dialogStage = new Stage();
 
         SubtitlePreviewDialog subtitlePreviewDialog = new SubtitlePreviewDialog();
@@ -538,6 +556,28 @@ public class SubtitleFilesTabController {
         dialogStage.setResizable(false);
         dialogStage.setScene(new Scene(subtitlePreviewDialog));
         dialogStage.showAndWait();
+
+        return originalCharset;
+    }
+
+    private void updateCharsetIfChanged(InputFileInfo fileInfo, Charset newCharset) {
+        if (Objects.equals(fileInfo.getCharset(), newCharset)) {
+            return;
+        }
+
+        try {
+            Subtitles subtitles = Parser.fromSubRipText(
+                    new String(fileInfo.getRawData(), newCharset),
+                    fileInfo.getPath(), //todo remove
+                    null
+            );
+            fileInfo.setSubtitles(subtitles);
+            fileInfo.setIncorrectFileReason(null);
+        } catch (Parser.IncorrectFormatException e) {
+            fileInfo.setSubtitles(null);
+            fileInfo.setIncorrectFileReason(IncorrectInputFileReason.INCORRECT_SUBTITLE_FORMAT);
+        }
+        fileInfo.setCharset(newCharset);
     }
 
     @FXML
@@ -584,7 +624,12 @@ public class SubtitleFilesTabController {
 
     @FXML
     private void lowerPreviewClicked() {
-        showPreview(filesInfo.getLowerFileInfo().getRawData(), StandardCharsets.UTF_8);
+        Charset newCharset = showPreview(
+                filesInfo.getLowerFileInfo().getRawData(),
+                filesInfo.getLowerFileInfo().getCharset()
+        );
+
+        updateCharsetIfChanged(filesInfo.getLowerFileInfo(), newCharset);
     }
 
     @FXML
@@ -684,8 +729,13 @@ public class SubtitleFilesTabController {
 
         private byte[] rawData;
 
+        @Setter
+        private Charset charset;
+
+        @Setter
         private Subtitles subtitles;
 
+        @Setter
         private IncorrectInputFileReason incorrectFileReason;
 
         static IncorrectInputFileReason from(FileValidator.IncorrectInputFileReason reason) {
