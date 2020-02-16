@@ -3,7 +3,10 @@ package kirill.subtitlemerger.gui.tabs.subtitle_files;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.Pane;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -12,6 +15,7 @@ import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.core.GuiUtils;
+import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.core.custom_controls.MultiColorResultLabels;
 import kirill.subtitlemerger.gui.core.custom_controls.SubtitlePreviewDialog;
 import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
@@ -27,6 +31,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
@@ -40,6 +45,9 @@ public class SubtitleFilesTabController {
     private Stage stage;
 
     private GuiSettings settings;
+
+    @FXML
+    private Pane mainPane;
 
     @FXML
     private Button upperChooseButton;
@@ -72,6 +80,15 @@ public class SubtitleFilesTabController {
     private Button mergeButton;
 
     @FXML
+    private Pane progressPane;
+
+    @FXML
+    private ProgressIndicator progressIndicator;
+
+    @FXML
+    private Label progressLabel;
+
+    @FXML
     private MultiColorResultLabels resultLabels;
 
     private FilesInfo filesInfo;
@@ -100,26 +117,54 @@ public class SubtitleFilesTabController {
             return;
         }
 
-        InputFileInfo inputFileInfo = getInputFileInfo(path, fileType, fileOrigin, filesInfo).orElse(null);
-        updateFilesInfo(inputFileInfo, fileType, filesInfo);
-        markOtherFileNotDuplicate(fileType, filesInfo);
-        if (fileOrigin == FileOrigin.FILE_CHOOSER && inputFileInfo != null && inputFileInfo.getParent() != null) {
-            saveLastDirectoryInConfig(fileType.getExtendedFileType(), inputFileInfo.getParent(), settings);
-        }
+        //todo refactor, logic is cluttered
+        BackgroundTask<Optional<InputFileInfo>> task = new BackgroundTask<>() {
+            @Override
+            protected Optional<InputFileInfo> run() {
+                updateMessage("processing file " + path + "...");
+                return getInputFileInfo(path, fileType, fileOrigin, filesInfo);
+            }
 
-        updateScene(fileOrigin);
+            @Override
+            protected void onFinish(Optional<InputFileInfo> result) {
+                InputFileInfo inputFileInfo = result.orElse(null);
+                updateFilesInfo(inputFileInfo, fileType, filesInfo);
+                markOtherFileNotDuplicate(fileType, filesInfo);
+                if (fileOrigin == FileOrigin.FILE_CHOOSER && inputFileInfo != null && inputFileInfo.getParent() != null) {
+                    saveLastDirectoryInConfig(fileType.getExtendedFileType(), inputFileInfo.getParent(), settings);
+                }
+
+                updateScene(fileOrigin);
+
+                progressPane.setVisible(false);
+                mainPane.setDisable(false);
+            }
+        };
+
+        progressPane.setVisible(true);
+        mainPane.setDisable(true);
+        progressIndicator.progressProperty().bind(task.progressProperty());
+        progressLabel.textProperty().bind(task.messageProperty());
+
+        task.start();
     }
 
     private static boolean pathNotChanged(String path, ExtendedFileType fileType, FilesInfo filesInfo) {
+        String currentPath;
         if (fileType == ExtendedFileType.UPPER_SUBTITLES) {
-            return filesInfo.getUpperFileInfo() != null && Objects.equals(path, filesInfo.getUpperFileInfo().getPath());
+            currentPath = filesInfo.getUpperFileInfo() != null ? filesInfo.getUpperFileInfo().getPath() : null;
         } else if (fileType == ExtendedFileType.LOWER_SUBTITLES) {
-            return filesInfo.getLowerFileInfo() != null && Objects.equals(path, filesInfo.getLowerFileInfo().getPath());
+            currentPath = filesInfo.getLowerFileInfo() != null ? filesInfo.getLowerFileInfo().getPath() : null;
         } else if (fileType == ExtendedFileType.MERGED_SUBTITLES) {
-            return filesInfo.getMergedFileInfo() != null
-                    && Objects.equals(path, filesInfo.getMergedFileInfo().getPath());
+            currentPath = filesInfo.getMergedFileInfo() != null ? filesInfo.getMergedFileInfo().getPath() : null;
         } else {
             throw new IllegalStateException();
+        }
+
+        if (StringUtils.isBlank(path)) {
+            return currentPath == null;
+        } else {
+            return Objects.equals(path, currentPath);
         }
     }
 
@@ -670,30 +715,50 @@ public class SubtitleFilesTabController {
     private void mergeButtonClicked() {
         clearState();
 
-        Subtitles result = Merger.mergeSubtitles(
-                filesInfo.getUpperFileInfo().getSubtitles(),
-                filesInfo.getLowerFileInfo().getSubtitles()
-        );
+        //todo refactor, logic is cluttered
+        BackgroundTask<MultiPartResult> task = new BackgroundTask<>() {
+            @Override
+            protected MultiPartResult run() {
+                updateMessage("merging subtitles...");
 
-        try {
-            FileUtils.writeStringToFile(
-                    filesInfo.getMergedFileInfo().getFile(),
-                    Writer.toSubRipText(result),
-                    StandardCharsets.UTF_8
-            );
-        } catch (IOException e) {
-            showFileElementsAsIncorrect(
-                    ExtendedFileType.MERGED_SUBTITLES
-            );
-            resultLabels.update(
-                    MultiPartResult.onlyError(
+                Subtitles result = Merger.mergeSubtitles(
+                        filesInfo.getUpperFileInfo().getSubtitles(),
+                        filesInfo.getLowerFileInfo().getSubtitles()
+                );
+
+                try {
+                    FileUtils.writeStringToFile(
+                            filesInfo.getMergedFileInfo().getFile(),
+                            Writer.toSubRipText(result),
+                            StandardCharsets.UTF_8
+                    );
+
+                    return MultiPartResult.onlySuccess("Subtitles have been merged successfully!");
+                } catch (IOException e) {
+                    return MultiPartResult.onlyError(
                             "Can't merge subtitles:" + System.lineSeparator() + "\u2022 can't write to this file"
-                    )
-            );
-            return;
-        }
+                    );
+                }
+            }
 
-        resultLabels.update(MultiPartResult.onlySuccess("Subtitles have been merged successfully!"));
+            @Override
+            protected void onFinish(MultiPartResult result) {
+                if (!StringUtils.isBlank(result.getError())) {
+                    showFileElementsAsIncorrect(ExtendedFileType.MERGED_SUBTITLES);
+                }
+                resultLabels.update(result);
+
+                progressPane.setVisible(false);
+                mainPane.setDisable(false);
+            }
+        };
+
+        progressPane.setVisible(true);
+        mainPane.setDisable(true);
+        progressIndicator.progressProperty().bind(task.progressProperty());
+        progressLabel.textProperty().bind(task.messageProperty());
+
+        task.start();
     }
 
     @AllArgsConstructor
