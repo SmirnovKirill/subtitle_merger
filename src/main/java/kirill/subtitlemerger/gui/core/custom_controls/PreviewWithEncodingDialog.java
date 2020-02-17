@@ -18,7 +18,7 @@ import java.nio.charset.Charset;
 import java.util.Objects;
 
 @CommonsLog
-public class SubtitlePreviewDialog extends VBox {
+public class PreviewWithEncodingDialog extends VBox {
     private static final CharsetStringConverter CHARSET_STRING_CONVERTER = new CharsetStringConverter();
 
     @FXML
@@ -37,9 +37,9 @@ public class SubtitlePreviewDialog extends VBox {
 
     private Charset encoding;
 
-    public SubtitlePreviewDialog() {
+    public PreviewWithEncodingDialog() {
         FXMLLoader fxmlLoader = new FXMLLoader(
-                getClass().getResource("/gui/custom_controls/subtitlePreviewDialog.fxml")
+                getClass().getResource("/gui/custom_controls/previewWithEncodingDialog.fxml")
         );
         fxmlLoader.setRoot(this);
         fxmlLoader.setController(this);

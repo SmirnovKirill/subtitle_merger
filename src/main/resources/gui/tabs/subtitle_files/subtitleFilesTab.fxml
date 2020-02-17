@@ -6,7 +6,6 @@
 <?import javafx.scene.layout.*?>
 <?import kirill.subtitlemerger.gui.core.custom_controls.MultiColorResultLabels?>
 <?import kirill.subtitlemerger.gui.GuiConstants?>
-<?import kirill.subtitlemerger.gui.tabs.subtitle_files.SubtitleFilesTabController?>
 <Tab xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
      fx:controller="kirill.subtitlemerger.gui.tabs.subtitle_files.SubtitleFilesTabController"
      text="Subtitle files">
@@ -32,9 +31,7 @@
                         </graphic>
                     </Button>
                 </HBox>
-                <Button fx:id="upperChooseButton" onAction="#upperChooseClicked">
-                    <SubtitleFilesTabController fx:constant="CHOOSE_FILE_TEXT"/>
-                </Button>
+                <Button fx:id="upperChooseButton" onAction="#upperChooseClicked" text="Choose file"/>
             </HBox>
 
             <Label text="Please choose the file with the lower subtitles"
@@ -51,9 +48,7 @@
                         </graphic>
                     </Button>
                 </HBox>
-                <Button fx:id="lowerChooseButton" onAction="#lowerChooseClicked">
-                    <SubtitleFilesTabController fx:constant="CHOOSE_FILE_TEXT"/>
-                </Button>
+                <Button fx:id="lowerChooseButton" onAction="#lowerChooseClicked" text="Choose file"/>
             </HBox>
 
             <Label text="Please choose where to save the result"
@@ -70,9 +65,7 @@
                         </graphic>
                     </Button>
                 </HBox>
-                <Button fx:id="mergedChooseButton" onAction="#mergedSubtitlesButtonClicked">
-                    <SubtitleFilesTabController fx:constant="CHOOSE_FILE_TEXT"/>
-                </Button>
+                <Button fx:id="mergedChooseButton" onAction="#mergedSubtitlesButtonClicked" text="Choose file"/>
             </HBox>
 
             <Button fx:id="mergeButton" onAction="#mergeButtonClicked"

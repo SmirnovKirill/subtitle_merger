@@ -16,7 +16,7 @@ import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.core.GuiUtils;
 import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.core.custom_controls.MultiColorResultLabels;
-import kirill.subtitlemerger.gui.core.custom_controls.SubtitlePreviewDialog;
+import kirill.subtitlemerger.gui.core.custom_controls.PreviewWithEncodingDialog;
 import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
 import kirill.subtitlemerger.logic.core.Merger;
 import kirill.subtitlemerger.logic.core.Parser;
@@ -41,10 +41,6 @@ import java.util.*;
 
 @CommonsLog
 public class SubtitleFilesTabController {
-    public static final String CHOOSE_FILE_TEXT = "Choose file";
-
-    private static final String CHANGE_FILE_TEXT = "Change file";
-
     private Stage stage;
 
     private GuiSettings settings;
@@ -314,7 +310,6 @@ public class SubtitleFilesTabController {
             updatePathFields();
         }
 
-        setFileButtonTexts();
         setPreviewButtonsDisabled();
         setMergeButtonVisibility();
         showErrorsIfNecessary();
@@ -347,12 +342,6 @@ public class SubtitleFilesTabController {
                         ? filesInfo.getMergedFileInfo().getFile().getAbsolutePath()
                         : null
         );
-    }
-
-    private void setFileButtonTexts() {
-        upperChooseButton.setText(filesInfo.getUpperFileInfo() != null ? CHANGE_FILE_TEXT : CHOOSE_FILE_TEXT);
-        lowerChooseButton.setText(filesInfo.getLowerFileInfo() != null ? CHANGE_FILE_TEXT : CHOOSE_FILE_TEXT);
-        mergedChooseButton.setText(filesInfo.getMergedFileInfo() != null ? CHANGE_FILE_TEXT : CHOOSE_FILE_TEXT);
     }
 
     private void setPreviewButtonsDisabled() {
@@ -613,7 +602,7 @@ public class SubtitleFilesTabController {
     private Charset showPreview(byte[] data, Charset originalCharset) {
         Stage dialogStage = new Stage();
 
-        SubtitlePreviewDialog subtitlePreviewDialog = new SubtitlePreviewDialog();
+        PreviewWithEncodingDialog subtitlePreviewDialog = new PreviewWithEncodingDialog();
         subtitlePreviewDialog.initializeInputFile(data, originalCharset, "");
 
         dialogStage.setTitle("Subtitle preview");
