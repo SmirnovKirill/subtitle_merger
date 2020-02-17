@@ -28,6 +28,10 @@
     -fx-text-fill: #e2574c;
 }
 
+.underline {
+    -fx-underline: true;
+}
+
 .hyperlink,
 .hyperlink:focused  {
     -fx-border-style: none;

@@ -581,7 +581,11 @@ public class SubtitleFilesTabController {
         dialogStage.initModality(Modality.APPLICATION_MODAL);
         dialogStage.initOwner(stage);
         dialogStage.setResizable(false);
-        dialogStage.setScene(new Scene(fileExistsDialog));
+
+        Scene scene = new Scene(fileExistsDialog);
+        scene.getStylesheets().add("/gui/style.css");
+        dialogStage.setScene(scene);
+
         dialogStage.showAndWait();
 
         agreeToOverwriteInProgress = false;
@@ -591,8 +595,8 @@ public class SubtitleFilesTabController {
 
     @FXML
     private void upperPreviewClicked() {
-        Charset selectedCharset = showInputFilePreview(filesInfo.getUpperFileInfo());
-        updateCharsetIfChanged(filesInfo.getUpperFileInfo(), selectedCharset);
+        Charset selectedEncoding = showInputFilePreview(filesInfo.getUpperFileInfo());
+        updateEncodingIfChanged(filesInfo.getUpperFileInfo(), selectedEncoding);
     }
 
     private Charset showInputFilePreview(InputFileInfo fileInfo) {
@@ -611,13 +615,17 @@ public class SubtitleFilesTabController {
         dialogStage.initModality(Modality.APPLICATION_MODAL);
         dialogStage.initOwner(stage);
         dialogStage.setResizable(false);
-        dialogStage.setScene(new Scene(subtitlePreviewDialog));
+
+        Scene scene = new Scene(subtitlePreviewDialog);
+        scene.getStylesheets().add("/gui/style.css");
+        dialogStage.setScene(scene);
+
         dialogStage.showAndWait();
 
         return subtitlePreviewDialog.getEncodingToReturn();
     }
 
-    private void updateCharsetIfChanged(InputFileInfo fileInfo, Charset selectedCharset) {
+    private void updateEncodingIfChanged(InputFileInfo fileInfo, Charset selectedCharset) {
         if (Objects.equals(fileInfo.getCharset(), selectedCharset)) {
             return;
         }
@@ -680,8 +688,8 @@ public class SubtitleFilesTabController {
 
     @FXML
     private void lowerPreviewClicked() {
-        Charset selectedCharset = showInputFilePreview(filesInfo.getLowerFileInfo());
-        updateCharsetIfChanged(filesInfo.getLowerFileInfo(), selectedCharset);
+        Charset selectedEncoding = showInputFilePreview(filesInfo.getLowerFileInfo());
+        updateEncodingIfChanged(filesInfo.getLowerFileInfo(), selectedEncoding);
     }
 
     @FXML

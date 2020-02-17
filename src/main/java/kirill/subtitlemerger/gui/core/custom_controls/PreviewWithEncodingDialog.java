@@ -52,6 +52,8 @@ public class PreviewWithEncodingDialog extends VBox {
     @Getter
     private Charset encodingToReturn;
 
+    private Stage dialogStage;
+
     public PreviewWithEncodingDialog() {
         FXMLLoader fxmlLoader = new FXMLLoader(
                 getClass().getResource("/gui/custom_controls/previewWithEncodingDialog.fxml")
@@ -74,6 +76,7 @@ public class PreviewWithEncodingDialog extends VBox {
         this.originalEncoding = originalEncoding;
         currentEncoding = originalEncoding;
         encodingToReturn = originalEncoding;
+        this.dialogStage = dialogStage;
 
         encodingComboBox.getSelectionModel().select(originalEncoding);
         splitAndSetListView(new String(data, originalEncoding));
@@ -85,15 +88,16 @@ public class PreviewWithEncodingDialog extends VBox {
         listView.setItems(FXCollections.observableArrayList(LogicConstants.LINE_SEPARATOR_PATTERN.split(text)));
     }
 
-    private void setButtonActions(Stage dialogStage) {
-        cancelButton.setOnAction(event -> {
-            encodingToReturn = originalEncoding;
-            dialogStage.close();
-        });
-        saveButton.setOnAction(event -> {
-            encodingToReturn = currentEncoding;
-            dialogStage.close();
-        });
+    @FXML
+    private void cancelButtonClicked() {
+        encodingToReturn = originalEncoding;
+        dialogStage.close();
+    }
+
+    @FXML
+    private void saveButtonClicked() {
+        encodingToReturn = currentEncoding;
+        dialogStage.close();
     }
 
     @FXML

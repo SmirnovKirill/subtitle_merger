@@ -16,14 +16,16 @@
                HBox.hgrow="ALWAYS"/>
     </HBox>
     <HBox alignment="CENTER_LEFT">
-        <Label text="Current encoding"/>
+        <Label text="Current encoding (changing the encoding "/>
+        <Label styleClass="underline" text="will not"/>
+        <Label text=" change the file)"/>
         <Region HBox.hgrow="ALWAYS"/>
         <ComboBox fx:id="encodingComboBox" onAction="#encodingChanged"/>
     </HBox>
     <MultiColorResultLabels fx:id="resultLabels" visible="false" managed="false"/>
     <ListView fx:id="listView" focusTraversable="false" VBox.vgrow="ALWAYS"/>
     <HBox spacing="10" alignment="CENTER">
-        <Button fx:id="cancelButton" text="Cancel"/>
-        <Button fx:id="saveButton" text="Save changes" disable="true"/>
+        <Button fx:id="cancelButton" onAction="#cancelButtonClicked" text="Cancel"/>
+        <Button fx:id="saveButton" onAction="#saveButtonClicked" text="Save changes" disable="true"/>
     </HBox>
 </fx:root>
