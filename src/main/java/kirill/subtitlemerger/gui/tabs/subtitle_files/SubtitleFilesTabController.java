@@ -472,7 +472,7 @@ public class SubtitleFilesTabController {
             case FAILED_TO_READ_CONTENT:
                 return path + ": failed to read the file";
             case INCORRECT_SUBTITLE_FORMAT:
-                return "File " + path + " has incorrect subtitle format, it can happen if the file is not UTF-8-encoded"
+                return "File " + path + " has an incorrect subtitle format, it can happen if the file is not UTF-8-encoded"
                         + ", you can change the encoding pressing the preview button";
             default:
                 throw new IllegalStateException();

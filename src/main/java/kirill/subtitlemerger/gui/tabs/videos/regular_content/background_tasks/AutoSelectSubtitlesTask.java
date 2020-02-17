@@ -219,7 +219,7 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
                 failedToLoadForFile++;
             } catch (Parser.IncorrectFormatException e) {
                 result = false;
-                Platform.runLater(() -> guiStream.setFailedToLoadReason("subtitles seem to have incorrect format"));
+                Platform.runLater(() -> guiStream.setFailedToLoadReason("subtitles seem to have an incorrect format"));
                 failedToLoadForFile++;
             }
         }

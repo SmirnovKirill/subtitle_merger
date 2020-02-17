@@ -22,7 +22,7 @@
         <Region HBox.hgrow="ALWAYS"/>
         <ComboBox fx:id="encodingComboBox" onAction="#encodingChanged"/>
     </HBox>
-    <MultiColorResultLabels fx:id="resultLabels" visible="false" managed="false"/>
+    <MultiColorResultLabels fx:id="resultLabels"/>
     <ListView fx:id="listView" focusTraversable="false" VBox.vgrow="ALWAYS"/>
     <HBox spacing="10" alignment="CENTER">
         <Button fx:id="cancelButton" onAction="#cancelButtonClicked" text="Cancel"/>

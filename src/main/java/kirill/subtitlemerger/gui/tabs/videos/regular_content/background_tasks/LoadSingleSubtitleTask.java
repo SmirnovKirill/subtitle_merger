@@ -71,7 +71,7 @@ public class LoadSingleSubtitleTask extends BackgroundTask<LoadSingleSubtitleTas
                 return new Result(Status.ERROR);
             }
         } catch (Parser.IncorrectFormatException e) {
-            Platform.runLater(() -> guiStream.setFailedToLoadReason("subtitles seem to have incorrect format"));
+            Platform.runLater(() -> guiStream.setFailedToLoadReason("subtitles seem to have an incorrect format"));
             return new Result(Status.ERROR);
         }
     }

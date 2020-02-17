@@ -101,7 +101,7 @@ public class LoadFilesAllSubtitlesTask extends BackgroundTask<LoadFilesAllSubtit
                         failedToLoadForFile++;
                     }
                 } catch (Parser.IncorrectFormatException e) {
-                    Platform.runLater(() -> guiStream.setFailedToLoadReason("subtitles seem to have incorrect format"));
+                    Platform.runLater(() -> guiStream.setFailedToLoadReason("subtitles seem to have an incorrect format"));
                     result.setFailedToLoadCount(result.getFailedToLoadCount() + 1);
                     failedToLoadForFile++;
                 }

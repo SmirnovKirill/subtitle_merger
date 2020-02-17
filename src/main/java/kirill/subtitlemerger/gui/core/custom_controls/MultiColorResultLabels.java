@@ -19,6 +19,9 @@ public class MultiColorResultLabels extends HBox {
     private BooleanProperty wrapText;
 
     public MultiColorResultLabels() {
+        setVisible(false);
+        setManaged(false);
+
         wrapText = new SimpleBooleanProperty(false);
         successLabel = new Label();
         successLabel.getStyleClass().add(GuiConstants.LABEL_SUCCESS_CLASS);
@@ -52,7 +55,11 @@ public class MultiColorResultLabels extends HBox {
         String warn = null;
         String error = null;
 
+        boolean empty = true;
+
         if (!StringUtils.isBlank(multiPartResult.getSuccess())) {
+            empty = false;
+
             success = multiPartResult.getSuccess();
             if (!StringUtils.isBlank(multiPartResult.getWarn()) || !StringUtils.isBlank(multiPartResult.getError())) {
                 success += ", ";
@@ -60,6 +67,8 @@ public class MultiColorResultLabels extends HBox {
         }
 
         if (!StringUtils.isBlank(multiPartResult.getWarn())) {
+            empty = false;
+
             warn = multiPartResult.getWarn();
             if (!StringUtils.isBlank(multiPartResult.getError())) {
                 warn += ", ";
@@ -67,12 +76,17 @@ public class MultiColorResultLabels extends HBox {
         }
 
         if (!StringUtils.isBlank(multiPartResult.getError())) {
+            empty = false;
+
             error = multiPartResult.getError();
         }
 
         successLabel.setText(success);
         warnLabel.setText(warn);
         errorLabel.setText(error);
+
+        setVisible(!empty);
+        setManaged(!empty);
     }
 
     public void clear() {

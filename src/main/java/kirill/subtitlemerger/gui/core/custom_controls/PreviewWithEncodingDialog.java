@@ -19,6 +19,8 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Objects;
 
 @CommonsLog
@@ -67,8 +69,9 @@ public class PreviewWithEncodingDialog extends VBox {
             throw new IllegalStateException();
         }
 
-        listView.setSelectionModel(new NoSelectionModel<>());
+        encodingComboBox.setConverter(CHARSET_STRING_CONVERTER);
         encodingComboBox.getItems().setAll(GuiConstants.SUPPORTED_ENCODINGS);
+        listView.setSelectionModel(new NoSelectionModel<>());
     }
 
     public void initialize(byte[] data, Charset originalEncoding, String title, Stage dialogStage) {
@@ -78,14 +81,55 @@ public class PreviewWithEncodingDialog extends VBox {
         encodingToReturn = originalEncoding;
         this.dialogStage = dialogStage;
 
-        encodingComboBox.getSelectionModel().select(originalEncoding);
-        splitAndSetListView(new String(data, originalEncoding));
         titleLabel.setText(title);
+        encodingComboBox.getSelectionModel().select(originalEncoding);
+        showContent(false);
     }
 
-    private void splitAndSetListView(String text) {
+    private void showContent(boolean showMessageIfSuccess) {
         listView.getItems().clear();
-        listView.setItems(FXCollections.observableArrayList(LogicConstants.LINE_SEPARATOR_PATTERN.split(text)));
+
+        String text = new String(data, currentEncoding);
+        String[] lines = LogicConstants.LINE_SEPARATOR_PATTERN.split(text);
+        if (Arrays.stream(lines).anyMatch(line -> line.length() > 1000)) {
+            listView.setDisable(true);
+            listView.setItems(
+                    FXCollections.observableArrayList(
+                            Collections.singletonList("Unfortunately, preview is unavailable")
+                    )
+            );
+
+            resultLabels.setOnlyError(
+                    String.format(
+                            "This encoding (%s) doesn't fit or the file has an incorrect format",
+                            currentEncoding.name()
+                    )
+            );
+        } else {
+            listView.setDisable(false);
+            listView.setItems(FXCollections.observableArrayList(LogicConstants.LINE_SEPARATOR_PATTERN.split(text)));
+
+            if (showMessageIfSuccess) {
+                if (Objects.equals(currentEncoding, originalEncoding)) {
+                    resultLabels.setOnlySuccess("Encoding has been restored to the original value successfully");
+                } else {
+                    resultLabels.setOnlySuccess("Encoding has been changed successfully");
+                }
+            }
+        }
+    }
+
+    @FXML
+    private void encodingChanged() {
+        Charset encoding = encodingComboBox.getSelectionModel().getSelectedItem();
+
+        if (Objects.equals(encoding, currentEncoding)) {
+            return;
+        }
+
+        currentEncoding = encoding;
+        showContent(true);
+        saveButton.setDisable(Objects.equals(currentEncoding, originalEncoding));
     }
 
     @FXML
@@ -100,18 +144,6 @@ public class PreviewWithEncodingDialog extends VBox {
         dialogStage.close();
     }
 
-    @FXML
-    private void encodingChanged() {
-        Charset encoding = encodingComboBox.getSelectionModel().getSelectedItem();
-
-        if (Objects.equals(encoding, currentEncoding)) {
-            return;
-        }
-
-        currentEncoding = encoding;
-        saveButton.setDisable(Objects.equals(currentEncoding, originalEncoding));
-        splitAndSetListView(new String(data, currentEncoding));
-    }
 
     private static class CharsetStringConverter extends StringConverter<Charset> {
         @Override
