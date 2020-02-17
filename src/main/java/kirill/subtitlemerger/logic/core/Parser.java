@@ -1,6 +1,7 @@
 package kirill.subtitlemerger.logic.core;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
+import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.core.entities.Subtitle;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import lombok.extern.apachecommons.CommonsLog;
@@ -25,7 +26,7 @@ public class Parser {
         Subtitle currentSubtitle = null;
         ParsingStage parsingStage = ParsingStage.HAVE_NOT_STARTED;
 
-        for (String currentLine : subRipText.split("\\r?\\n")) {
+        for (String currentLine : LogicConstants.LINE_SEPARATOR_PATTERN.split(subRipText)) {
             /*
              * This special character can be found at the beginning of the very first line so we have to remove it
              * in order to parse int correctly.

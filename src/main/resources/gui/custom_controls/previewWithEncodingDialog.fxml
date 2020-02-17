@@ -11,7 +11,10 @@
     <padding>
         <Insets top="20" right="20" bottom="20" left="20"/>
     </padding>
-    <Label fx:id="descriptionLabel" textAlignment="CENTER" wrapText="true"/>
+    <HBox>
+        <Label fx:id="titleLabel" alignment="CENTER" textAlignment="CENTER" wrapText="true" maxWidth="Infinity"
+               HBox.hgrow="ALWAYS"/>
+    </HBox>
     <HBox alignment="CENTER_LEFT">
         <Label text="Current encoding"/>
         <Region HBox.hgrow="ALWAYS"/>

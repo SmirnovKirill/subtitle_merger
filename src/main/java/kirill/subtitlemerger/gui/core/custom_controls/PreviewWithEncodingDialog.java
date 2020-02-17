@@ -3,13 +3,17 @@ package kirill.subtitlemerger.gui.core.custom_controls;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.core.NoSelectionModel;
+import kirill.subtitlemerger.logic.LogicConstants;
+import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -22,20 +26,31 @@ public class PreviewWithEncodingDialog extends VBox {
     private static final CharsetStringConverter CHARSET_STRING_CONVERTER = new CharsetStringConverter();
 
     @FXML
-    private Label descriptionLabel;
+    private Label titleLabel;
 
     @FXML
     private ComboBox<Charset> encodingComboBox;
 
     @FXML
+    private MultiColorResultLabels resultLabels;
+
+    @FXML
     private ListView<String> listView;
 
     @FXML
-    private MultiColorResultLabels resultLabels;
+    private Button cancelButton;
+
+    @FXML
+    private Button saveButton;
 
     private byte[] data;
 
-    private Charset encoding;
+    private Charset originalEncoding;
+
+    private Charset currentEncoding;
+
+    @Getter
+    private Charset encodingToReturn;
 
     public PreviewWithEncodingDialog() {
         FXMLLoader fxmlLoader = new FXMLLoader(
@@ -54,39 +69,44 @@ public class PreviewWithEncodingDialog extends VBox {
         encodingComboBox.getItems().setAll(GuiConstants.SUPPORTED_ENCODINGS);
     }
 
-    public void initializeInputFile(byte[] data, Charset encoding, String filePath) {
+    public void initialize(byte[] data, Charset originalEncoding, String title, Stage dialogStage) {
         this.data = data;
-        this.encoding = encoding;
-        encodingComboBox.getSelectionModel().select(encoding);
+        this.originalEncoding = originalEncoding;
+        currentEncoding = originalEncoding;
+        encodingToReturn = originalEncoding;
 
-        splitAndSetListView(new String(data, encoding));
+        encodingComboBox.getSelectionModel().select(originalEncoding);
+        splitAndSetListView(new String(data, originalEncoding));
+        titleLabel.setText(title);
+    }
+
+    private void splitAndSetListView(String text) {
+        listView.getItems().clear();
+        listView.setItems(FXCollections.observableArrayList(LogicConstants.LINE_SEPARATOR_PATTERN.split(text)));
+    }
+
+    private void setButtonActions(Stage dialogStage) {
+        cancelButton.setOnAction(event -> {
+            encodingToReturn = originalEncoding;
+            dialogStage.close();
+        });
+        saveButton.setOnAction(event -> {
+            encodingToReturn = currentEncoding;
+            dialogStage.close();
+        });
     }
 
     @FXML
     private void encodingChanged() {
         Charset encoding = encodingComboBox.getSelectionModel().getSelectedItem();
 
-        if (Objects.equals(encoding, this.encoding)) {
+        if (Objects.equals(encoding, currentEncoding)) {
             return;
         }
 
-        this.encoding = encoding;
-        splitAndSetListView(new String(data, encoding));
-    }
-
-    public void initializeResult(String result, String upperSubtitleName, String lowerSubtitleName) {
-        splitAndSetListView(result);
-
-        descriptionLabel.setText(
-                "This is the result of merging\n"
-                        + "\u2022 " + upperSubtitleName
-                        + "\u2022 " + lowerSubtitleName
-        );
-    }
-
-    private void splitAndSetListView(String text) {
-        listView.getItems().clear();
-        listView.setItems(FXCollections.observableArrayList(text.split("\\r?\\n")));
+        currentEncoding = encoding;
+        saveButton.setDisable(Objects.equals(currentEncoding, originalEncoding));
+        splitAndSetListView(new String(data, currentEncoding));
     }
 
     private static class CharsetStringConverter extends StringConverter<Charset> {
