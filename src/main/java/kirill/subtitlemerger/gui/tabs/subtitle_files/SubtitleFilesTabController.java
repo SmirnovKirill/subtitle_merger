@@ -17,6 +17,7 @@ import kirill.subtitlemerger.gui.core.GuiUtils;
 import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.core.custom_controls.MultiColorResultLabels;
 import kirill.subtitlemerger.gui.core.custom_controls.PreviewWithEncodingDialog;
+import kirill.subtitlemerger.gui.core.custom_controls.PreviewWithEncodingDialogController;
 import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
 import kirill.subtitlemerger.logic.core.Merger;
 import kirill.subtitlemerger.logic.core.Parser;
@@ -595,11 +596,11 @@ public class SubtitleFilesTabController {
 
     @FXML
     private void upperPreviewClicked() {
-        PreviewWithEncodingDialog.UserSelection userSelection = showInputSubtitlePreview(filesInfo.getUpperFileInfo());
+        PreviewWithEncodingDialogController.UserSelection userSelection = showInputSubtitlePreview(filesInfo.getUpperFileInfo());
         updateSubtitlesAndEncodingIfChanged(filesInfo.getUpperFileInfo(), userSelection);
     }
 
-    private PreviewWithEncodingDialog.UserSelection showInputSubtitlePreview(InputFileInfo fileInfo) {
+    private PreviewWithEncodingDialogController.UserSelection showInputSubtitlePreview(InputFileInfo fileInfo) {
         String path = GuiUtils.getShortenedStringIfNecessary(
                 fileInfo.getPath().trim(),
                 0,
@@ -608,8 +609,9 @@ public class SubtitleFilesTabController {
 
         Stage dialogStage = new Stage();
 
-        PreviewWithEncodingDialog subtitlePreviewDialog = new PreviewWithEncodingDialog();
-        subtitlePreviewDialog.initialize(
+        PreviewWithEncodingDialogController dialogController = new PreviewWithEncodingDialogController();
+        PreviewWithEncodingDialog subtitlePreviewDialog = new PreviewWithEncodingDialog(dialogController);
+        dialogController.initialize(
                 fileInfo.getRawData(),
                 fileInfo.getEncoding(),
                 fileInfo.getSubtitles(),
@@ -628,12 +630,12 @@ public class SubtitleFilesTabController {
 
         dialogStage.showAndWait();
 
-        return subtitlePreviewDialog.getUserSelection();
+        return dialogController.getUserSelection();
     }
 
     private void updateSubtitlesAndEncodingIfChanged(
             InputFileInfo fileInfo,
-            PreviewWithEncodingDialog.UserSelection userSelection
+            PreviewWithEncodingDialogController.UserSelection userSelection
     ) {
         if (Objects.equals(fileInfo.getEncoding(), userSelection.getEncoding())) {
             return;
@@ -694,7 +696,7 @@ public class SubtitleFilesTabController {
 
     @FXML
     private void lowerPreviewClicked() {
-        PreviewWithEncodingDialog.UserSelection dialogResult = showInputSubtitlePreview(filesInfo.getLowerFileInfo());
+        PreviewWithEncodingDialogController.UserSelection dialogResult = showInputSubtitlePreview(filesInfo.getLowerFileInfo());
         updateSubtitlesAndEncodingIfChanged(filesInfo.getLowerFileInfo(), dialogResult);
     }
 

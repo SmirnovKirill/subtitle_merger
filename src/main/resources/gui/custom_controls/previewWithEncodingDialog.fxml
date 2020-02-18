@@ -4,28 +4,33 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import kirill.subtitlemerger.gui.core.custom_controls.MultiColorResultLabels?>
-<fx:root xmlns:fx="http://javafx.com/fxml" type="javafx.scene.layout.VBox" prefHeight="600" prefWidth="900"
-         spacing="10"
+<fx:root xmlns:fx="http://javafx.com/fxml" type="javafx.scene.layout.StackPane" prefHeight="600" prefWidth="900"
          stylesheets="/gui/custom_controls/previewWithEncodingDialog.css"
 >
     <padding>
         <Insets top="20" right="20" bottom="20" left="20"/>
     </padding>
-    <HBox>
-        <Label fx:id="titleLabel" alignment="CENTER" textAlignment="CENTER" wrapText="true" maxWidth="Infinity"
-               HBox.hgrow="ALWAYS"/>
-    </HBox>
-    <HBox alignment="CENTER_LEFT">
-        <Label text="Current encoding (changing the encoding "/>
-        <Label styleClass="underline" text="will not"/>
-        <Label text=" change the file)"/>
-        <Region HBox.hgrow="ALWAYS"/>
-        <ComboBox fx:id="encodingComboBox" onAction="#encodingChanged"/>
-    </HBox>
-    <MultiColorResultLabels fx:id="resultLabels"/>
-    <ListView fx:id="listView" focusTraversable="false" VBox.vgrow="ALWAYS"/>
-    <HBox spacing="10" alignment="CENTER">
-        <Button fx:id="cancelButton" onAction="#cancelButtonClicked" text="Cancel"/>
-        <Button fx:id="saveButton" onAction="#saveButtonClicked" text="Save changes" disable="true"/>
-    </HBox>
+    <VBox fx:id="mainPane" spacing="10">
+        <HBox>
+            <Label fx:id="titleLabel" alignment="CENTER" textAlignment="CENTER" wrapText="true" maxWidth="Infinity"
+                   HBox.hgrow="ALWAYS"/>
+        </HBox>
+        <HBox alignment="CENTER_LEFT">
+            <Label text="Current encoding (changing the encoding "/>
+            <Label styleClass="underline" text="will not"/>
+            <Label text=" change the file)"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <ComboBox fx:id="encodingComboBox" onAction="#encodingChanged"/>
+        </HBox>
+        <MultiColorResultLabels fx:id="resultLabels"/>
+        <ListView fx:id="listView" focusTraversable="false" VBox.vgrow="ALWAYS"/>
+        <HBox spacing="10" alignment="CENTER">
+            <Button onAction="#cancelButtonClicked" text="Cancel"/>
+            <Button fx:id="saveButton" onAction="#saveButtonClicked" text="Save changes" disable="true"/>
+        </HBox>
+    </VBox>
+    <VBox fx:id="progressPane" spacing="10" alignment="CENTER" visible="false">
+        <ProgressIndicator fx:id="progressIndicator"/>
+        <Label fx:id="progressLabel"/>
+    </VBox>
 </fx:root>
