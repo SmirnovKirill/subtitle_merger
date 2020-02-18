@@ -595,11 +595,11 @@ public class SubtitleFilesTabController {
 
     @FXML
     private void upperPreviewClicked() {
-        Charset selectedEncoding = showInputFilePreview(filesInfo.getUpperFileInfo());
-        updateEncodingIfChanged(filesInfo.getUpperFileInfo(), selectedEncoding);
+        PreviewWithEncodingDialog.UserSelection userSelection = showInputSubtitlePreview(filesInfo.getUpperFileInfo());
+        updateSubtitlesAndEncodingIfChanged(filesInfo.getUpperFileInfo(), userSelection);
     }
 
-    private Charset showInputFilePreview(InputFileInfo fileInfo) {
+    private PreviewWithEncodingDialog.UserSelection showInputSubtitlePreview(InputFileInfo fileInfo) {
         String path = GuiUtils.getShortenedStringIfNecessary(
                 fileInfo.getPath().trim(),
                 0,
@@ -609,7 +609,13 @@ public class SubtitleFilesTabController {
         Stage dialogStage = new Stage();
 
         PreviewWithEncodingDialog subtitlePreviewDialog = new PreviewWithEncodingDialog();
-        subtitlePreviewDialog.initialize(fileInfo.getRawData(), fileInfo.getCharset(), path, dialogStage);
+        subtitlePreviewDialog.initialize(
+                fileInfo.getRawData(),
+                fileInfo.getEncoding(),
+                fileInfo.getSubtitles(),
+                path,
+                dialogStage
+        );
 
         dialogStage.setTitle("Subtitle preview");
         dialogStage.initModality(Modality.APPLICATION_MODAL);
@@ -622,26 +628,26 @@ public class SubtitleFilesTabController {
 
         dialogStage.showAndWait();
 
-        return subtitlePreviewDialog.getEncodingToReturn();
+        return subtitlePreviewDialog.getUserSelection();
     }
 
-    private void updateEncodingIfChanged(InputFileInfo fileInfo, Charset selectedCharset) {
-        if (Objects.equals(fileInfo.getCharset(), selectedCharset)) {
+    private void updateSubtitlesAndEncodingIfChanged(
+            InputFileInfo fileInfo,
+            PreviewWithEncodingDialog.UserSelection userSelection
+    ) {
+        if (Objects.equals(fileInfo.getEncoding(), userSelection.getEncoding())) {
             return;
         }
 
-        try {
-            Subtitles subtitles = Parser.fromSubRipText(
-                    new String(fileInfo.getRawData(), selectedCharset),
-                    null
-            );
-            fileInfo.setSubtitles(subtitles);
-            fileInfo.setIncorrectFileReason(null);
-        } catch (Parser.IncorrectFormatException e) {
-            fileInfo.setSubtitles(null);
+        fileInfo.setEncoding(userSelection.getEncoding());
+        fileInfo.setSubtitles(userSelection.getSubtitles());
+        if (userSelection.getSubtitles() == null) {
             fileInfo.setIncorrectFileReason(IncorrectInputFileReason.INCORRECT_SUBTITLE_FORMAT);
+        } else {
+            fileInfo.setIncorrectFileReason(null);
         }
-        fileInfo.setCharset(selectedCharset);
+
+        updateScene(fileInfo.getFileOrigin());
     }
 
     @FXML
@@ -688,8 +694,8 @@ public class SubtitleFilesTabController {
 
     @FXML
     private void lowerPreviewClicked() {
-        Charset selectedEncoding = showInputFilePreview(filesInfo.getLowerFileInfo());
-        updateEncodingIfChanged(filesInfo.getLowerFileInfo(), selectedEncoding);
+        PreviewWithEncodingDialog.UserSelection dialogResult = showInputSubtitlePreview(filesInfo.getLowerFileInfo());
+        updateSubtitlesAndEncodingIfChanged(filesInfo.getLowerFileInfo(), dialogResult);
     }
 
     @FXML
@@ -818,7 +824,7 @@ public class SubtitleFilesTabController {
         private byte[] rawData;
 
         @Setter
-        private Charset charset;
+        private Charset encoding;
 
         @Setter
         private Subtitles subtitles;
