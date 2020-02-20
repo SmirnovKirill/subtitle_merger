@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 <?import kirill.subtitlemerger.gui.core.custom_controls.MultiColorResultLabels?>
 <fx:root xmlns:fx="http://javafx.com/fxml" type="javafx.scene.layout.StackPane" prefHeight="600" prefWidth="900"
-         stylesheets="/gui/custom_controls/previewWithEncodingDialog.css"
+         stylesheets="/gui/custom_controls/subtitlePreviewWithEncoding.css"
 >
     <padding>
         <Insets top="20" right="20" bottom="20" left="20"/>

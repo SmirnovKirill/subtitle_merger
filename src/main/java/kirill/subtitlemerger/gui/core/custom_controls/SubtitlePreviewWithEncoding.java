@@ -8,14 +8,14 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import java.io.IOException;
 
 @CommonsLog
-public class PreviewWithEncodingDialog extends StackPane {
-    public PreviewWithEncodingDialog() {
+public class SubtitlePreviewWithEncoding extends StackPane {
+    public SubtitlePreviewWithEncoding() {
         this(null);
     }
 
-    public PreviewWithEncodingDialog(Object controller) {
+    public SubtitlePreviewWithEncoding(Object controller) {
         FXMLLoader fxmlLoader = new FXMLLoader(
-                getClass().getResource("/gui/custom_controls/previewWithEncodingDialog.fxml")
+                getClass().getResource("/gui/custom_controls/subtitlePreviewWithEncoding.fxml")
         );
         fxmlLoader.setRoot(this);
         fxmlLoader.setController(controller);

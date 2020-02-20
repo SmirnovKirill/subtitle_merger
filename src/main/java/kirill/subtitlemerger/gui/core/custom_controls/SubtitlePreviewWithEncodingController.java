@@ -23,7 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class PreviewWithEncodingDialogController {
+public class SubtitlePreviewWithEncodingController {
     private static final CharsetStringConverter CHARSET_STRING_CONVERTER = new CharsetStringConverter();
 
     @FXML
@@ -75,10 +75,6 @@ public class PreviewWithEncodingDialogController {
             String title,
             Stage dialogStage
     ) {
-        encodingComboBox.setConverter(CHARSET_STRING_CONVERTER);
-        encodingComboBox.getItems().setAll(GuiConstants.SUPPORTED_ENCODINGS);
-        listView.setSelectionModel(new NoSelectionModel<>());
-
         this.data = data;
         this.originalEncoding = originalEncoding;
         this.originalSubtitles = originalSubtitles;
@@ -88,54 +84,28 @@ public class PreviewWithEncodingDialogController {
         userSelection = new UserSelection(currentSubtitles, currentEncoding);
 
         titleLabel.setText(title);
+
+        encodingComboBox.setConverter(CHARSET_STRING_CONVERTER);
+        encodingComboBox.getItems().setAll(GuiConstants.SUPPORTED_ENCODINGS);
         encodingComboBox.getSelectionModel().select(originalEncoding);
-        showContent(true);
+
+        listView.setSelectionModel(new NoSelectionModel<>());
+
+        updateScene(true);
     }
 
-    private void showContent(boolean initialRun) {
+    private void updateScene(boolean initialRun) {
         listView.getItems().clear();
 
-        BackgroundTask<SubtitlesAndLiesToDisplay> task = new BackgroundTask<>() {
+        BackgroundTask<DataToDisplay> task = new BackgroundTask<>() {
             @Override
-            protected SubtitlesAndLiesToDisplay run() {
-                return getSubtitlesAndLinesToDisplay(data, currentEncoding);
+            protected DataToDisplay run() {
+                return getDataToDisplay(data, currentEncoding);
             }
 
             @Override
-            protected void onFinish(SubtitlesAndLiesToDisplay result) {
-                String success = null;
-                String error = null;
-                String warn = null;
-                if (result.isLinesTruncated()) {
-                    warn = "lines that are longer than 1000 symbols were truncated";
-                }
-
-                if (result.getSubtitles() == null) {
-                    listView.setDisable(true);
-                    listView.setItems(
-                            FXCollections.observableArrayList(
-                                    Collections.singletonList("Unfortunately, preview is unavailable")
-                            )
-                    );
-
-                    error = String.format(
-                            "This encoding (%s) doesn't fit or the file has an incorrect format",
-                            currentEncoding.name()
-                    );
-                } else {
-                    listView.setDisable(false);
-                    listView.setItems(result.getLinesToDisplay());
-
-                    if (!initialRun) {
-                        if (Objects.equals(currentEncoding, originalEncoding)) {
-                            success = "Encoding has been restored to the original value successfully";
-                        } else {
-                            success = "Encoding has been changed successfully";
-                        }
-                    }
-                }
-
-                resultLabels.update(new MultiPartResult(success, warn, error));
+            protected void onFinish(DataToDisplay result) {
+                showData(result, initialRun);
 
                 progressPane.setVisible(false);
                 mainPane.setDisable(false);
@@ -150,9 +120,7 @@ public class PreviewWithEncodingDialogController {
         task.start();
     }
 
-    private static SubtitlesAndLiesToDisplay getSubtitlesAndLinesToDisplay(
-            byte[] data, Charset encoding
-    ) {
+    private static DataToDisplay getDataToDisplay(byte[] data, Charset encoding) {
         String text = new String(data, encoding);
         try {
             Subtitles subtitles = Parser.fromSubRipText(text, null);
@@ -168,10 +136,46 @@ public class PreviewWithEncodingDialogController {
                 }
             }
 
-            return new SubtitlesAndLiesToDisplay(subtitles, FXCollections.observableArrayList(lines), linesTruncated);
+            return new DataToDisplay(subtitles, FXCollections.observableArrayList(lines), linesTruncated);
         } catch (Parser.IncorrectFormatException e) {
-            return new SubtitlesAndLiesToDisplay(null, FXCollections.emptyObservableList(), false);
+            return new DataToDisplay(null, FXCollections.emptyObservableList(), false);
         }
+    }
+
+    private void showData(DataToDisplay dataToDisplay, boolean initialRun) {
+        String success = null;
+        String error = null;
+        String warn = null;
+        if (dataToDisplay.isLinesTruncated()) {
+            warn = "lines that are longer than 1000 symbols were truncated";
+        }
+
+        if (dataToDisplay.getSubtitles() == null) {
+            listView.setDisable(true);
+            listView.setItems(
+                    FXCollections.observableArrayList(
+                            Collections.singletonList("Unfortunately, preview is unavailable")
+                    )
+            );
+
+            error = String.format(
+                    "This encoding (%s) doesn't fit or the file has an incorrect format",
+                    currentEncoding.name()
+            );
+        } else {
+            listView.setDisable(false);
+            listView.setItems(dataToDisplay.getLinesToDisplay());
+
+            if (!initialRun) {
+                if (Objects.equals(currentEncoding, originalEncoding)) {
+                    success = "Encoding has been restored to the original value successfully";
+                } else {
+                    success = "Encoding has been changed successfully";
+                }
+            }
+        }
+
+        resultLabels.update(new MultiPartResult(success, warn, error));
     }
 
     @FXML
@@ -183,7 +187,7 @@ public class PreviewWithEncodingDialogController {
         }
 
         currentEncoding = encoding;
-        showContent(false);
+        updateScene(false);
         saveButton.setDisable(Objects.equals(currentEncoding, originalEncoding));
     }
 
@@ -213,7 +217,7 @@ public class PreviewWithEncodingDialogController {
 
     @AllArgsConstructor
     @Getter
-    private static class SubtitlesAndLiesToDisplay {
+    private static class DataToDisplay {
         private Subtitles subtitles;
 
         private ObservableList<String> linesToDisplay;
