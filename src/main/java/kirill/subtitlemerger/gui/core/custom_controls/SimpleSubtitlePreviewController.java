@@ -108,6 +108,8 @@ public class SimpleSubtitlePreviewController {
         } else {
             resultLabels.clear();
         }
+
+        listView.setItems(processedData.getLinesToDisplay());
     }
 
     @FXML

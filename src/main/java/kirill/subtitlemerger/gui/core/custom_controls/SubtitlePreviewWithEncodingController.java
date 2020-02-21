@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+//todo refactor, make hierarchy maybe
 public class SubtitlePreviewWithEncodingController {
     private static final CharsetStringConverter CHARSET_STRING_CONVERTER = new CharsetStringConverter();
 

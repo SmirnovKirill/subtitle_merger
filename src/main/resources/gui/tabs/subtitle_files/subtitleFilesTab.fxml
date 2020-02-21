@@ -57,7 +57,7 @@
                   GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS">
                 <HBox alignment="CENTER" spacing="10" HBox.hgrow="ALWAYS">
                     <TextField fx:id="mergedPathField" HBox.hgrow="ALWAYS" promptText="not selected"/>
-                    <Button fx:id="mergedPreview" styleClass="image-button" disable="true">
+                    <Button fx:id="mergedPreview" onAction="#mergedPreviewClicked" styleClass="image-button" disable="true">
                         <graphic>
                             <ImageView fitHeight="14" fitWidth="21">
                                 <Image url="/gui/icons/eye.png"/>

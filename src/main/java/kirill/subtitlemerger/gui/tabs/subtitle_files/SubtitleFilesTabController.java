@@ -15,9 +15,7 @@ import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.core.GuiUtils;
 import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
-import kirill.subtitlemerger.gui.core.custom_controls.MultiColorResultLabels;
-import kirill.subtitlemerger.gui.core.custom_controls.SubtitlePreviewWithEncoding;
-import kirill.subtitlemerger.gui.core.custom_controls.SubtitlePreviewWithEncodingController;
+import kirill.subtitlemerger.gui.core.custom_controls.*;
 import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
 import kirill.subtitlemerger.logic.core.Merger;
 import kirill.subtitlemerger.logic.core.Parser;
@@ -103,7 +101,7 @@ public class SubtitleFilesTabController {
     public void initialize(Stage stage, GuiContext context) {
         this.stage = stage;
         this.settings = context.getSettings();
-        this.filesInfo = new FilesInfo(null, null, null);
+        this.filesInfo = new FilesInfo(null, null, null, null);
 
         GuiUtils.setTextFieldChangeListeners(
                 upperPathField,
@@ -140,6 +138,7 @@ public class SubtitleFilesTabController {
                 if (fileOrigin == FileOrigin.FILE_CHOOSER && inputFileInfo != null && inputFileInfo.getParent() != null) {
                     saveLastDirectoryInConfig(fileType.getExtendedFileType(), inputFileInfo.getParent(), settings);
                 }
+                filesInfo.setMergedSubtitles(null);
 
                 updateScene(fileOrigin);
 
@@ -311,7 +310,7 @@ public class SubtitleFilesTabController {
             updatePathFields();
         }
 
-        setPreviewButtonsDisabled();
+        setPreviewButtonsVisibility();
         setMergeButtonVisibility();
         showErrorsIfNecessary();
     }
@@ -345,7 +344,7 @@ public class SubtitleFilesTabController {
         );
     }
 
-    private void setPreviewButtonsDisabled() {
+    private void setPreviewButtonsVisibility() {
         upperPreview.setDisable(makePreviewDisabled(filesInfo.getUpperFileInfo()));
         lowerPreview.setDisable(makePreviewDisabled(filesInfo.getLowerFileInfo()));
         mergedPreview.setDisable(!filesInfo.upperFileOk() || !filesInfo.lowerFileOk());
@@ -647,6 +646,7 @@ public class SubtitleFilesTabController {
         } else {
             fileInfo.setIncorrectFileReason(null);
         }
+        filesInfo.setMergedSubtitles(null);
 
         updateScene(fileInfo.getFileOrigin());
     }
@@ -710,6 +710,60 @@ public class SubtitleFilesTabController {
     }
 
     @FXML
+    private void mergedPreviewClicked() {
+        clearState();
+
+        //todo refactor, logic is cluttered
+        BackgroundTask<Subtitles> task = new BackgroundTask<>() {
+            @Override
+            protected Subtitles run() {
+                if (filesInfo.getMergedSubtitles() != null) {
+                    return filesInfo.getMergedSubtitles();
+                }
+
+                updateMessage("merging subtitles...");
+
+                return Merger.mergeSubtitles(
+                        filesInfo.getUpperFileInfo().getSubtitles(),
+                        filesInfo.getLowerFileInfo().getSubtitles()
+                );
+            }
+
+            @Override
+            protected void onFinish(Subtitles subtitles) {
+                filesInfo.setMergedSubtitles(subtitles);
+
+                progressPane.setVisible(false);
+                mainPane.setDisable(false);
+
+                Stage dialogStage = new Stage();
+
+                SimpleSubtitlePreviewController dialogController = new SimpleSubtitlePreviewController();
+                SimpleSubtitlePreview subtitlePreviewDialog = new SimpleSubtitlePreview(dialogController);
+                dialogController.initialize(subtitles, dialogStage);
+
+                dialogStage.setTitle("Subtitle preview");
+                dialogStage.initModality(Modality.APPLICATION_MODAL);
+                dialogStage.initOwner(stage);
+                dialogStage.setResizable(false);
+
+                Scene scene = new Scene(subtitlePreviewDialog);
+                scene.getStylesheets().add("/gui/style.css");
+                dialogStage.setScene(scene);
+
+                dialogStage.showAndWait();
+            }
+        };
+
+        progressPane.setVisible(true);
+        mainPane.setDisable(true);
+        progressIndicator.progressProperty().bind(task.progressProperty());
+        progressLabel.textProperty().bind(task.messageProperty());
+
+        task.start();
+    }
+
+    @FXML
     private void mergedSubtitlesButtonClicked() {
         File file = getMergedFile(stage, settings).orElse(null);
         if (file == null) {
@@ -747,10 +801,16 @@ public class SubtitleFilesTabController {
             protected MultiPartResult run() {
                 updateMessage("merging subtitles...");
 
-                Subtitles result = Merger.mergeSubtitles(
-                        filesInfo.getUpperFileInfo().getSubtitles(),
-                        filesInfo.getLowerFileInfo().getSubtitles()
-                );
+                Subtitles result;
+
+                if (filesInfo.getMergedSubtitles() != null) {
+                    result = filesInfo.getMergedSubtitles();
+                } else {
+                    result = Merger.mergeSubtitles(
+                            filesInfo.getUpperFileInfo().getSubtitles(),
+                            filesInfo.getLowerFileInfo().getSubtitles()
+                    );
+                }
 
                 try {
                     FileUtils.writeStringToFile(
@@ -914,6 +974,8 @@ public class SubtitleFilesTabController {
         private InputFileInfo lowerFileInfo;
 
         private MergedFileInfo mergedFileInfo;
+
+        private Subtitles mergedSubtitles;
 
         boolean upperFileOk() {
             return inputFileOk(upperFileInfo);
