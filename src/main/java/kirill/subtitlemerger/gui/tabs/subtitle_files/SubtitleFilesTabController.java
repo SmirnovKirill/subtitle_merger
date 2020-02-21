@@ -614,7 +614,6 @@ public class SubtitleFilesTabController {
         dialogController.initialize(
                 fileInfo.getRawData(),
                 fileInfo.getEncoding(),
-                fileInfo.getSubtitles(),
                 path,
                 dialogStage
         );

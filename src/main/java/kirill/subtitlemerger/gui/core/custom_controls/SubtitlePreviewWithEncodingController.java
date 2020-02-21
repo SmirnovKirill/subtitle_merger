@@ -57,9 +57,9 @@ public class SubtitlePreviewWithEncodingController {
 
     private Charset originalEncoding;
 
-    private Subtitles originalSubtitles;
-
     private Charset currentEncoding;
+
+    private Subtitles originalSubtitles;
 
     private Subtitles currentSubtitles;
 
@@ -71,17 +71,13 @@ public class SubtitlePreviewWithEncodingController {
     public void initialize(
             byte[] data,
             Charset originalEncoding,
-            Subtitles originalSubtitles,
             String title,
             Stage dialogStage
     ) {
         this.data = data;
         this.originalEncoding = originalEncoding;
-        this.originalSubtitles = originalSubtitles;
         currentEncoding = originalEncoding;
-        currentSubtitles = originalSubtitles;
         this.dialogStage = dialogStage;
-        userSelection = new UserSelection(currentSubtitles, currentEncoding);
 
         titleLabel.setText(title);
 
@@ -91,24 +87,31 @@ public class SubtitlePreviewWithEncodingController {
 
         listView.setSelectionModel(new NoSelectionModel<>());
 
-        updateScene(true);
+        processDataAndUpdateScene(true);
+
+        userSelection = new UserSelection(currentSubtitles, currentEncoding);
     }
 
-    private void updateScene(boolean initialRun) {
+    private void processDataAndUpdateScene(boolean initialRun) {
         listView.getItems().clear();
 
-        BackgroundTask<DataToDisplay> task = new BackgroundTask<>() {
+        BackgroundTask<ProcessedData> task = new BackgroundTask<>() {
             @Override
-            protected DataToDisplay run() {
-                return getDataToDisplay(data, currentEncoding);
+            protected ProcessedData run() {
+                return getProcessedData(data, currentEncoding);
             }
 
             @Override
-            protected void onFinish(DataToDisplay result) {
-                showData(result, initialRun);
+            protected void onFinish(ProcessedData result) {
+                currentSubtitles = result.getSubtitles();
+                if (initialRun) {
+                    originalSubtitles = currentSubtitles;
+                }
 
                 progressPane.setVisible(false);
                 mainPane.setDisable(false);
+
+                updateScene(result, initialRun);
             }
         };
 
@@ -120,37 +123,38 @@ public class SubtitlePreviewWithEncodingController {
         task.start();
     }
 
-    private static DataToDisplay getDataToDisplay(byte[] data, Charset encoding) {
+    private static ProcessedData getProcessedData(byte[] data, Charset encoding) {
         String text = new String(data, encoding);
+        Subtitles subtitles;
         try {
-            Subtitles subtitles = Parser.fromSubRipText(text, null);
-
-            List<String> lines = new ArrayList<>();
-            boolean linesTruncated = false;
-            for (String line : LogicConstants.LINE_SEPARATOR_PATTERN.split(text)) {
-                if (line.length() > 1000) {
-                    lines.add(line.substring(0, 1000));
-                    linesTruncated = true;
-                } else {
-                    lines.add(line);
-                }
-            }
-
-            return new DataToDisplay(subtitles, FXCollections.observableArrayList(lines), linesTruncated);
+            subtitles = Parser.fromSubRipText(text, null);
         } catch (Parser.IncorrectFormatException e) {
-            return new DataToDisplay(null, FXCollections.emptyObservableList(), false);
+            return new ProcessedData(null, FXCollections.emptyObservableList(), false);
         }
+
+        List<String> lines = new ArrayList<>();
+        boolean linesTruncated = false;
+        for (String line : LogicConstants.LINE_SEPARATOR_PATTERN.split(text)) {
+            if (line.length() > 1000) {
+                lines.add(line.substring(0, 1000));
+                linesTruncated = true;
+            } else {
+                lines.add(line);
+            }
+        }
+
+        return new ProcessedData(subtitles, FXCollections.observableArrayList(lines), linesTruncated);
     }
 
-    private void showData(DataToDisplay dataToDisplay, boolean initialRun) {
+    private void updateScene(ProcessedData processedData, boolean initialRun) {
         String success = null;
         String error = null;
         String warn = null;
-        if (dataToDisplay.isLinesTruncated()) {
+        if (processedData.isLinesTruncated()) {
             warn = "lines that are longer than 1000 symbols were truncated";
         }
 
-        if (dataToDisplay.getSubtitles() == null) {
+        if (processedData.getSubtitles() == null) {
             listView.setDisable(true);
             listView.setItems(
                     FXCollections.observableArrayList(
@@ -164,7 +168,7 @@ public class SubtitlePreviewWithEncodingController {
             );
         } else {
             listView.setDisable(false);
-            listView.setItems(dataToDisplay.getLinesToDisplay());
+            listView.setItems(processedData.getLinesToDisplay());
 
             if (!initialRun) {
                 if (Objects.equals(currentEncoding, originalEncoding)) {
@@ -176,6 +180,8 @@ public class SubtitlePreviewWithEncodingController {
         }
 
         resultLabels.update(new MultiPartResult(success, warn, error));
+
+        saveButton.setDisable(Objects.equals(currentEncoding, originalEncoding));
     }
 
     @FXML
@@ -187,8 +193,7 @@ public class SubtitlePreviewWithEncodingController {
         }
 
         currentEncoding = encoding;
-        updateScene(false);
-        saveButton.setDisable(Objects.equals(currentEncoding, originalEncoding));
+        processDataAndUpdateScene(false);
     }
 
     @FXML
@@ -217,7 +222,7 @@ public class SubtitlePreviewWithEncodingController {
 
     @AllArgsConstructor
     @Getter
-    private static class DataToDisplay {
+    private static class ProcessedData {
         private Subtitles subtitles;
 
         private ObservableList<String> linesToDisplay;
