@@ -9,7 +9,7 @@ import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
 import org.apache.commons.lang3.StringUtils;
 
 
-public class MultiColorResultLabels extends HBox {
+public class MultiColorLabels extends HBox {
     private Label successLabel;
 
     private Label warnLabel;
@@ -18,7 +18,7 @@ public class MultiColorResultLabels extends HBox {
 
     private BooleanProperty wrapText;
 
-    public MultiColorResultLabels() {
+    public MultiColorLabels() {
         setVisible(false);
         setManaged(false);
 

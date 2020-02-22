@@ -31,7 +31,7 @@ public class SimpleSubtitlePreviewController {
     private Label lowerTitle;
 
     @FXML
-    private MultiColorResultLabels resultLabels;
+    private MultiColorLabels resultLabels;
 
     @FXML
     private ListView<String> listView;

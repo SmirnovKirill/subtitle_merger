@@ -13,7 +13,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.core.GuiUtils;
-import kirill.subtitlemerger.gui.core.custom_controls.MultiColorResultLabels;
+import kirill.subtitlemerger.gui.core.custom_controls.MultiColorLabels;
 import kirill.subtitlemerger.logic.utils.CacheMap;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -438,7 +438,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         GridPane.setMargin(getAllSizesPane, new Insets(3, 0, 0, 0));
         GridPane.setMargin(previewPane, new Insets(3, 0, 0, 0));
 
-        MultiColorResultLabels resultLabels = new MultiColorResultLabels();
+        MultiColorLabels resultLabels = new MultiColorLabels();
         resultLabels.setAlignment(Pos.CENTER);
         resultLabels.setManaged(false);
         resultLabels.setVisible(false);
@@ -497,7 +497,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         return result;
     }
 
-    private static void setResultLabels(GuiFileInfo fileInfo, MultiColorResultLabels resultLabels) {
+    private static void setResultLabels(GuiFileInfo fileInfo, MultiColorLabels resultLabels) {
         if (fileInfo.getResult() == null) {
             return;
         }

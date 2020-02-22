@@ -17,7 +17,7 @@ import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.core.GuiUtils;
 import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
-import kirill.subtitlemerger.gui.core.custom_controls.MultiColorResultLabels;
+import kirill.subtitlemerger.gui.core.custom_controls.MultiColorLabels;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.*;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiExternalSubtitleStream;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
@@ -84,7 +84,7 @@ public class RegularContentController {
     private TextField chosenDirectoryField;
 
     @FXML
-    private MultiColorResultLabels generalResult;
+    private MultiColorLabels generalResult;
 
     @FXML
     private Label selectedForMergeLabel;

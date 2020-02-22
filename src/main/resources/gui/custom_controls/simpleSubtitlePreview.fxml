@@ -3,7 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import kirill.subtitlemerger.gui.core.custom_controls.MultiColorResultLabels?>
+<?import kirill.subtitlemerger.gui.core.custom_controls.MultiColorLabels?>
 <fx:root xmlns:fx="http://javafx.com/fxml" type="javafx.scene.layout.StackPane" prefHeight="600" prefWidth="900"
          fx:controller="kirill.subtitlemerger.gui.core.custom_controls.SimpleSubtitlePreviewController"
          stylesheets="/gui/custom_controls/subtitlePreview.css"
@@ -25,7 +25,7 @@
             <Label text="&#8226; "/>
             <Label fx:id="lowerTitle"/>
         </HBox>
-        <MultiColorResultLabels fx:id="resultLabels"/>
+        <MultiColorLabels fx:id="resultLabels"/>
         <ListView fx:id="listView" focusTraversable="false" VBox.vgrow="ALWAYS"/>
         <HBox spacing="10" alignment="CENTER">
             <Button onAction="#okButtonClicked" text="OK"/>

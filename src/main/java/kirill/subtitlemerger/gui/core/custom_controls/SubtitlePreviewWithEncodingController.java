@@ -1,5 +1,7 @@
 package kirill.subtitlemerger.gui.core.custom_controls;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -34,7 +36,9 @@ public class SubtitlePreviewWithEncodingController {
     private ComboBox<Charset> encodingComboBox;
 
     @FXML
-    private MultiColorResultLabels resultLabels;
+    private MultiColorLabels resultLabels;
+
+    private BooleanProperty linesTruncated;
 
     @FXML
     private ListView<String> listView;
@@ -65,6 +69,22 @@ public class SubtitlePreviewWithEncodingController {
 
     @Getter
     private UserSelection userSelection;
+
+    public SubtitlePreviewWithEncodingController() {
+        linesTruncated = new SimpleBooleanProperty(false);
+    }
+
+    public boolean isLinesTruncated() {
+        return linesTruncated.get();
+    }
+
+    public BooleanProperty linesTruncatedProperty() {
+        return linesTruncated;
+    }
+
+    public void setLinesTruncated(boolean linesTruncated) {
+        this.linesTruncated.set(linesTruncated);
+    }
 
     public void initialize(
             byte[] data,
@@ -148,30 +168,28 @@ public class SubtitlePreviewWithEncodingController {
         listView.setDisable(processedData.getSubtitles() == null);
         listView.setItems(processedData.getLinesToDisplay());
 
-        String success = null;
-        String error = null;
-        String warn = null;
+        setLinesTruncated(processedData.isLinesTruncated());
 
-        if (processedData.isLinesTruncated()) {
-            warn = "lines that are longer than 1000 symbols were truncated";
-        }
-
+        MultiPartResult result = MultiPartResult.EMPTY;
         if (processedData.getSubtitles() == null) {
-            error = String.format(
-                    "This encoding (%s) doesn't fit or the file has an incorrect format",
-                    currentEncoding.name()
+            result = MultiPartResult.onlyError(
+                    String.format(
+                            "This encoding (%s) doesn't fit or the file has an incorrect format",
+                            currentEncoding.name()
+                    )
             );
         } else {
             if (!initialRun) {
                 if (Objects.equals(currentEncoding, originalEncoding)) {
-                    success = "Encoding has been restored to the original value successfully";
+                    result = MultiPartResult.onlySuccess(
+                            "Encoding has been restored to the original value successfully"
+                    );
                 } else {
-                    success = "Encoding has been changed successfully";
+                    result = MultiPartResult.onlySuccess("Encoding has been changed successfully");
                 }
             }
         }
-
-        resultLabels.update(new MultiPartResult(success, warn, error));
+        resultLabels.update(result);
 
         saveButton.setDisable(Objects.equals(currentEncoding, originalEncoding) || currentSubtitles == null);
     }

@@ -3,7 +3,8 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import kirill.subtitlemerger.gui.core.custom_controls.MultiColorResultLabels?>
+<?import kirill.subtitlemerger.gui.core.custom_controls.MultiColorLabels?>
+<?import kirill.subtitlemerger.gui.GuiConstants?>
 <fx:root xmlns:fx="http://javafx.com/fxml" type="javafx.scene.layout.StackPane" prefHeight="600" prefWidth="900"
          fx:controller="kirill.subtitlemerger.gui.core.custom_controls.SubtitlePreviewWithEncodingController"
          stylesheets="/gui/custom_controls/subtitlePreview.css"
@@ -23,7 +24,11 @@
             <Region HBox.hgrow="ALWAYS"/>
             <ComboBox fx:id="encodingComboBox" onAction="#encodingChanged"/>
         </HBox>
-        <MultiColorResultLabels fx:id="resultLabels"/>
+        <MultiColorLabels fx:id="resultLabels"/>
+        <Label visible="${controller.linesTruncated}" managed="${controller.linesTruncated}"
+               text="Lines that are longer than 1000 symbols were truncated">
+            <styleClass><GuiConstants fx:constant="LABEL_WARN_CLASS"/></styleClass>
+        </Label>
         <ListView fx:id="listView" focusTraversable="false" VBox.vgrow="ALWAYS"/>
         <HBox spacing="10" alignment="CENTER">
             <Button onAction="#cancelButtonClicked" text="Cancel"/>

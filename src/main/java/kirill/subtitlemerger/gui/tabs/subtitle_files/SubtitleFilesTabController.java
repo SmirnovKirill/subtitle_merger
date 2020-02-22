@@ -15,7 +15,7 @@ import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.core.GuiUtils;
 import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
-import kirill.subtitlemerger.gui.core.custom_controls.MultiColorResultLabels;
+import kirill.subtitlemerger.gui.core.custom_controls.MultiColorLabels;
 import kirill.subtitlemerger.gui.core.custom_controls.SimpleSubtitlePreview;
 import kirill.subtitlemerger.gui.core.custom_controls.SubtitlePreviewWithEncoding;
 import kirill.subtitlemerger.gui.core.custom_controls.SubtitlePreviewWithEncodingController;
@@ -90,7 +90,7 @@ public class SubtitleFilesTabController {
     private Label progressLabel;
 
     @FXML
-    private MultiColorResultLabels resultLabels;
+    private MultiColorLabels resultLabels;
 
     private FilesInfo filesInfo;
 

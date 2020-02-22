@@ -5,7 +5,7 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 <?import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles?>
-<?import kirill.subtitlemerger.gui.core.custom_controls.MultiColorResultLabels?>
+<?import kirill.subtitlemerger.gui.core.custom_controls.MultiColorLabels?>
 <StackPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
            fx:id="pane"
            fx:controller="kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController"
@@ -56,7 +56,7 @@
                 </Button>
             </HBox>
         </VBox>
-        <MultiColorResultLabels fx:id="generalResult" minHeight="40" maxHeight="40" alignment="CENTER"/>
+        <MultiColorLabels fx:id="generalResult" minHeight="40" maxHeight="40" alignment="CENTER"/>
         <VBox spacing="10" VBox.vgrow="ALWAYS">
             <HBox spacing="20"><Label fx:id="selectedForMergeLabel"/></HBox>
             <HBox spacing="10" alignment="CENTER_LEFT">
