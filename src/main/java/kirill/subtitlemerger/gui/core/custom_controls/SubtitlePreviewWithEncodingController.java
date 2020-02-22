@@ -18,10 +18,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 //todo refactor, make hierarchy maybe
 public class SubtitlePreviewWithEncodingController {
@@ -130,7 +127,7 @@ public class SubtitlePreviewWithEncodingController {
         try {
             subtitles = Parser.fromSubRipText(text, null);
         } catch (Parser.IncorrectFormatException e) {
-            return new ProcessedData(null, FXCollections.emptyObservableList(), false);
+            subtitles = null;
         }
 
         List<String> lines = new ArrayList<>();
@@ -148,29 +145,22 @@ public class SubtitlePreviewWithEncodingController {
     }
 
     private void updateScene(ProcessedData processedData, boolean initialRun) {
+        listView.setItems(processedData.getLinesToDisplay());
+
         String success = null;
         String error = null;
         String warn = null;
+
         if (processedData.isLinesTruncated()) {
             warn = "lines that are longer than 1000 symbols were truncated";
         }
 
         if (processedData.getSubtitles() == null) {
-            listView.setDisable(true);
-            listView.setItems(
-                    FXCollections.observableArrayList(
-                            Collections.singletonList("Unfortunately, preview is unavailable")
-                    )
-            );
-
             error = String.format(
                     "This encoding (%s) doesn't fit or the file has an incorrect format",
                     currentEncoding.name()
             );
         } else {
-            listView.setDisable(false);
-            listView.setItems(processedData.getLinesToDisplay());
-
             if (!initialRun) {
                 if (Objects.equals(currentEncoding, originalEncoding)) {
                     success = "Encoding has been restored to the original value successfully";

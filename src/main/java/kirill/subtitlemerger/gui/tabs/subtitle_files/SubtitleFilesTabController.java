@@ -15,7 +15,10 @@ import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.core.GuiUtils;
 import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
-import kirill.subtitlemerger.gui.core.custom_controls.*;
+import kirill.subtitlemerger.gui.core.custom_controls.MultiColorResultLabels;
+import kirill.subtitlemerger.gui.core.custom_controls.SimpleSubtitlePreview;
+import kirill.subtitlemerger.gui.core.custom_controls.SubtitlePreviewWithEncoding;
+import kirill.subtitlemerger.gui.core.custom_controls.SubtitlePreviewWithEncodingController;
 import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
 import kirill.subtitlemerger.logic.core.Merger;
 import kirill.subtitlemerger.logic.core.Parser;
@@ -608,9 +611,8 @@ public class SubtitleFilesTabController {
 
         Stage dialogStage = new Stage();
 
-        SubtitlePreviewWithEncodingController dialogController = new SubtitlePreviewWithEncodingController();
-        SubtitlePreviewWithEncoding subtitlePreviewDialog = new SubtitlePreviewWithEncoding(dialogController);
-        dialogController.initialize(
+        SubtitlePreviewWithEncoding subtitlePreviewDialog = new SubtitlePreviewWithEncoding();
+        subtitlePreviewDialog.getController().initialize(
                 fileInfo.getRawData(),
                 fileInfo.getEncoding(),
                 path,
@@ -628,7 +630,7 @@ public class SubtitleFilesTabController {
 
         dialogStage.showAndWait();
 
-        return dialogController.getUserSelection();
+        return subtitlePreviewDialog.getController().getUserSelection();
     }
 
     private void updateSubtitlesAndEncodingIfChanged(
@@ -738,9 +740,8 @@ public class SubtitleFilesTabController {
 
                 Stage dialogStage = new Stage();
 
-                SimpleSubtitlePreviewController dialogController = new SimpleSubtitlePreviewController();
-                SimpleSubtitlePreview subtitlePreviewDialog = new SimpleSubtitlePreview(dialogController);
-                dialogController.initialize(subtitles, dialogStage);
+                SimpleSubtitlePreview subtitlePreviewDialog = new SimpleSubtitlePreview();
+                subtitlePreviewDialog.getController().initialize(subtitles, dialogStage);
 
                 dialogStage.setTitle("Subtitle preview");
                 dialogStage.initModality(Modality.APPLICATION_MODAL);
