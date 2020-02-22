@@ -25,7 +25,10 @@ public class SimpleSubtitlePreviewController {
     private Pane mainPane;
 
     @FXML
-    private Label titleLabel;
+    private Label upperTitle;
+
+    @FXML
+    private Label lowerTitle;
 
     @FXML
     private MultiColorResultLabels resultLabels;
@@ -48,12 +51,15 @@ public class SimpleSubtitlePreviewController {
 
     public void initialize(
             Subtitles subtitles,
+            String upperTitle,
+            String lowerTitle,
             Stage dialogStage
     ) {
         this.subtitles = subtitles;
         this.dialogStage = dialogStage;
 
-        titleLabel.setText("");
+        this.upperTitle.setText(upperTitle);
+        this.lowerTitle.setText(lowerTitle);
         listView.setSelectionModel(new NoSelectionModel<>());
 
         processDataAndUpdateScene();

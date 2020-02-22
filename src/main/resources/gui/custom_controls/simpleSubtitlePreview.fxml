@@ -13,8 +13,17 @@
     </padding>
     <VBox fx:id="mainPane" spacing="10">
         <HBox>
-            <Label fx:id="titleLabel" alignment="CENTER" textAlignment="CENTER" wrapText="true" maxWidth="Infinity"
+            <Label alignment="CENTER" textAlignment="CENTER" wrapText="true" maxWidth="Infinity"
+                   text="This is the result of merging"
                    HBox.hgrow="ALWAYS"/>
+        </HBox>
+        <HBox alignment="CENTER_LEFT">
+            <Label text="&#8226; "/>
+            <Label fx:id="upperTitle"/>
+        </HBox>
+        <HBox alignment="CENTER_LEFT">
+            <Label text="&#8226; "/>
+            <Label fx:id="lowerTitle"/>
         </HBox>
         <MultiColorResultLabels fx:id="resultLabels"/>
         <ListView fx:id="listView" focusTraversable="false" VBox.vgrow="ALWAYS"/>

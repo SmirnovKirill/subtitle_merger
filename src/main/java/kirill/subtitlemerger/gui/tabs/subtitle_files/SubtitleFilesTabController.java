@@ -743,8 +743,20 @@ public class SubtitleFilesTabController {
 
                 Stage dialogStage = new Stage();
 
+                String upperTitle = "file " + GuiUtils.getShortenedStringIfNecessary(
+                        filesInfo.getUpperFileInfo().getPath().trim(),
+                        0,
+                        64
+                );
+
+                String lowerTitle = "file " + GuiUtils.getShortenedStringIfNecessary(
+                        filesInfo.getLowerFileInfo().getPath().trim(),
+                        0,
+                        64
+                );
+
                 SimpleSubtitlePreview subtitlePreviewDialog = new SimpleSubtitlePreview();
-                subtitlePreviewDialog.getController().initialize(subtitles, dialogStage);
+                subtitlePreviewDialog.getController().initialize(subtitles, upperTitle, lowerTitle, dialogStage);
 
                 dialogStage.setTitle("Subtitle preview");
                 dialogStage.initModality(Modality.APPLICATION_MODAL);
