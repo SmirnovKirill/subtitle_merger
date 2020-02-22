@@ -12,7 +12,7 @@ import kirill.subtitlemerger.gui.core.NoSelectionModel;
 import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
 import kirill.subtitlemerger.logic.LogicConstants;
-import kirill.subtitlemerger.logic.core.Writer;
+import kirill.subtitlemerger.logic.core.SubtitleWriter;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -86,7 +86,7 @@ public class SimpleSubtitlePreviewController {
     }
 
     private static ProcessedData getProcessedData(Subtitles subtitles) {
-        String subtitleText = Writer.toSubRipText(subtitles);
+        String subtitleText = SubtitleWriter.toSubRipText(subtitles);
 
         List<String> lines = new ArrayList<>();
         boolean linesTruncated = false;

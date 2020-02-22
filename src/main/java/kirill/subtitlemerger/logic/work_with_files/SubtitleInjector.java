@@ -1,7 +1,7 @@
 package kirill.subtitlemerger.logic.work_with_files;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
-import kirill.subtitlemerger.logic.core.Merger;
+import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffmpeg;
@@ -19,7 +19,7 @@ public class SubtitleInjector {
             FileInfo fileInfo,
             Ffmpeg ffmpeg
     ) throws FfmpegException {
-        Subtitles result = Merger.mergeSubtitles(upperSubtitles, lowerSubtitles);
+        Subtitles result = SubtitleMerger.mergeSubtitles(upperSubtitles, lowerSubtitles);
 
         LanguageAlpha3Code mainLanguage = getMergedSubtitlesMainLanguage(upperSubtitles, lowerSubtitles);
         String title = getMergedSubtitlesTitle(upperSubtitles, lowerSubtitles);

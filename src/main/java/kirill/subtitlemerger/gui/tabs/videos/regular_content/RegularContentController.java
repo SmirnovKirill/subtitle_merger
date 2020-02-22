@@ -23,7 +23,7 @@ import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.Gu
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles;
-import kirill.subtitlemerger.logic.core.Parser;
+import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.work_with_files.SubtitleInjector;
 import kirill.subtitlemerger.logic.work_with_files.entities.*;
@@ -800,7 +800,7 @@ public class RegularContentController {
         }
 
         try {
-            Subtitles subtitles = Parser.fromSubRipText(
+            Subtitles subtitles = SubtitleParser.fromSubRipText(
                     FileUtils.readFileToString(file, StandardCharsets.UTF_8),
                     null
             );
@@ -822,7 +822,7 @@ public class RegularContentController {
             guiFileInfo.setResultOnlySuccess("Subtitle file has been added to the list successfully");
         } catch (IOException e) {
             guiFileInfo.setResultOnlyError("Can't read the file");
-        } catch (Parser.IncorrectFormatException e) {
+        } catch (SubtitleParser.IncorrectFormatException e) {
             guiFileInfo.setResultOnlyError("Can't add the file because it has incorrect format");
         }
     }

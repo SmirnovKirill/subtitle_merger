@@ -20,9 +20,9 @@ import kirill.subtitlemerger.gui.core.custom_controls.SimpleSubtitlePreview;
 import kirill.subtitlemerger.gui.core.custom_controls.SubtitlePreviewWithEncoding;
 import kirill.subtitlemerger.gui.core.custom_controls.SubtitlePreviewWithEncodingController;
 import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
-import kirill.subtitlemerger.logic.core.Merger;
-import kirill.subtitlemerger.logic.core.Parser;
-import kirill.subtitlemerger.logic.core.Writer;
+import kirill.subtitlemerger.logic.core.SubtitleMerger;
+import kirill.subtitlemerger.logic.core.SubtitleParser;
+import kirill.subtitlemerger.logic.core.SubtitleWriter;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.utils.FileValidator;
 import lombok.AllArgsConstructor;
@@ -210,7 +210,7 @@ public class SubtitleFilesTabController {
         }
 
         try {
-            Subtitles subtitles = Parser.fromSubRipText(
+            Subtitles subtitles = SubtitleParser.fromSubRipText(
                     new String(validatorFileInfo.getContent(), StandardCharsets.UTF_8),
                     null
             );
@@ -228,7 +228,7 @@ public class SubtitleFilesTabController {
                             null
                     )
             );
-        } catch (Parser.IncorrectFormatException e) {
+        } catch (SubtitleParser.IncorrectFormatException e) {
             return Optional.of(
                     new InputFileInfo(
                             path,
@@ -725,7 +725,7 @@ public class SubtitleFilesTabController {
 
                 updateMessage("merging subtitles...");
 
-                return Merger.mergeSubtitles(
+                return SubtitleMerger.mergeSubtitles(
                         filesInfo.getUpperFileInfo().getSubtitles(),
                         filesInfo.getLowerFileInfo().getSubtitles()
                 );
@@ -807,7 +807,7 @@ public class SubtitleFilesTabController {
                 if (filesInfo.getMergedSubtitles() != null) {
                     result = filesInfo.getMergedSubtitles();
                 } else {
-                    result = Merger.mergeSubtitles(
+                    result = SubtitleMerger.mergeSubtitles(
                             filesInfo.getUpperFileInfo().getSubtitles(),
                             filesInfo.getLowerFileInfo().getSubtitles()
                     );
@@ -816,7 +816,7 @@ public class SubtitleFilesTabController {
                 try {
                     FileUtils.writeStringToFile(
                             filesInfo.getMergedFileInfo().getFile(),
-                            Writer.toSubRipText(result),
+                            SubtitleWriter.toSubRipText(result),
                             StandardCharsets.UTF_8
                     );
 

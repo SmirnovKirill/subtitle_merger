@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 import static java.util.stream.Collectors.toSet;
 
 @CommonsLog
-public class Merger {
+public class SubtitleMerger {
     public static Subtitles mergeSubtitles(Subtitles upperSubtitles, Subtitles lowerSubtitles) {
         List<ExtendedSubtitle> result = makeInitialMerge(upperSubtitles, lowerSubtitles);
         result = getExpandedSubtitles(result);

@@ -1,9 +1,9 @@
 package kirill.subtitlemerger.logic;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
-import kirill.subtitlemerger.logic.core.Merger;
-import kirill.subtitlemerger.logic.core.Parser;
-import kirill.subtitlemerger.logic.core.Writer;
+import kirill.subtitlemerger.logic.core.SubtitleMerger;
+import kirill.subtitlemerger.logic.core.SubtitleParser;
+import kirill.subtitlemerger.logic.core.SubtitleWriter;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
@@ -15,8 +15,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 public class LogicTest {
     @Test
-    public void testParseFromFileToSubtitles() throws IOException, Parser.IncorrectFormatException {
-        Subtitles subtitles = Parser.fromSubRipText(
+    public void testParseFromFileToSubtitles() throws IOException, SubtitleParser.IncorrectFormatException {
+        Subtitles subtitles = SubtitleParser.fromSubRipText(
                 IOUtils.toString(
                         LogicTest.class.getResourceAsStream("/MainTest/testParseFromFileToSubtitles/sub.srt"),
                         StandardCharsets.UTF_8
@@ -31,15 +31,15 @@ public class LogicTest {
     }
 
     @Test
-    public void testMerge() throws IOException, Parser.IncorrectFormatException {
-        Subtitles upperSubtitles = Parser.fromSubRipText(
+    public void testMerge() throws IOException, SubtitleParser.IncorrectFormatException {
+        Subtitles upperSubtitles = SubtitleParser.fromSubRipText(
                 IOUtils.toString(
                         LogicTest.class.getResourceAsStream("/MainTest/testMerged/upper.srt"),
                         StandardCharsets.UTF_8
                 ),
                 LanguageAlpha3Code.rus
         );
-        Subtitles lowerSubtitles = Parser.fromSubRipText(
+        Subtitles lowerSubtitles = SubtitleParser.fromSubRipText(
                 IOUtils.toString(
                         LogicTest.class.getResourceAsStream("/MainTest/testMerged/lower.srt"),
                         StandardCharsets.UTF_8
@@ -47,12 +47,12 @@ public class LogicTest {
                 LanguageAlpha3Code.eng
         );
 
-        Subtitles merged = Merger.mergeSubtitles(upperSubtitles, lowerSubtitles);
+        Subtitles merged = SubtitleMerger.mergeSubtitles(upperSubtitles, lowerSubtitles);
         String expected = IOUtils.toString(
                 LogicTest.class.getResourceAsStream("/MainTest/testMerged/result.srt"),
                 StandardCharsets.UTF_8
         );
 
-        assertThat(Writer.toSubRipText(merged)).isEqualTo(expected);
+        assertThat(SubtitleWriter.toSubRipText(merged)).isEqualTo(expected);
     }
 }

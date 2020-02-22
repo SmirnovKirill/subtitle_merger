@@ -1,7 +1,7 @@
 package kirill.subtitlemerger.logic.work_with_files.ffmpeg;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
-import kirill.subtitlemerger.logic.core.Writer;
+import kirill.subtitlemerger.logic.core.SubtitleWriter;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import lombok.extern.apachecommons.CommonsLog;
@@ -117,7 +117,7 @@ public class Ffmpeg {
         File outputTemp = new File(videoFile.getParentFile(), "temp_" + videoFile.getName());
 
         try {
-            FileUtils.writeStringToFile(TEMP_SUBTITLE_FILE, Writer.toSubRipText(subtitles), StandardCharsets.UTF_8);
+            FileUtils.writeStringToFile(TEMP_SUBTITLE_FILE, SubtitleWriter.toSubRipText(subtitles), StandardCharsets.UTF_8);
         } catch (IOException e) {
             log.warn("failed to write merged subtitles to the temp file: " + ExceptionUtils.getStackTrace(e));
             throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, null);

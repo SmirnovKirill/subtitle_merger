@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @CommonsLog
-public class Parser {
+public class SubtitleParser {
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("HH:mm:ss,SSS");
 
     public static Subtitles fromSubRipText(

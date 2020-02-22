@@ -12,7 +12,7 @@ import kirill.subtitlemerger.gui.core.NoSelectionModel;
 import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
 import kirill.subtitlemerger.logic.LogicConstants;
-import kirill.subtitlemerger.logic.core.Parser;
+import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -125,8 +125,8 @@ public class SubtitlePreviewWithEncodingController {
         String text = new String(data, encoding);
         Subtitles subtitles;
         try {
-            subtitles = Parser.fromSubRipText(text, null);
-        } catch (Parser.IncorrectFormatException e) {
+            subtitles = SubtitleParser.fromSubRipText(text, null);
+        } catch (SubtitleParser.IncorrectFormatException e) {
             subtitles = null;
         }
 
@@ -145,6 +145,7 @@ public class SubtitlePreviewWithEncodingController {
     }
 
     private void updateScene(ProcessedData processedData, boolean initialRun) {
+        listView.setDisable(processedData.getSubtitles() == null);
         listView.setItems(processedData.getLinesToDisplay());
 
         String success = null;
@@ -172,7 +173,7 @@ public class SubtitlePreviewWithEncodingController {
 
         resultLabels.update(new MultiPartResult(success, warn, error));
 
-        saveButton.setDisable(Objects.equals(currentEncoding, originalEncoding));
+        saveButton.setDisable(Objects.equals(currentEncoding, originalEncoding) || currentSubtitles == null);
     }
 
     @FXML

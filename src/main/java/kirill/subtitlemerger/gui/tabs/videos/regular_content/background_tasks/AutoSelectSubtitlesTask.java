@@ -8,7 +8,7 @@ import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFfmpegSubtitleStream;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
-import kirill.subtitlemerger.logic.core.Parser;
+import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStream;
@@ -202,7 +202,7 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
 
             try {
                 String subtitleText = ffmpeg.getSubtitlesText(stream.getFfmpegIndex(), file);
-                stream.setSubtitles(Parser.fromSubRipText(subtitleText, stream.getLanguage()));
+                stream.setSubtitles(SubtitleParser.fromSubRipText(subtitleText, stream.getLanguage()));
 
                 /*
                  * Have to call this in the JavaFX thread because this change can lead to updates on the screen.
@@ -217,7 +217,7 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
                 result = false;
                 Platform.runLater(() -> guiStream.setFailedToLoadReason(BackgroundTaskUtils.guiTextFrom(e)));
                 failedToLoadForFile++;
-            } catch (Parser.IncorrectFormatException e) {
+            } catch (SubtitleParser.IncorrectFormatException e) {
                 result = false;
                 Platform.runLater(() -> guiStream.setFailedToLoadReason("subtitles seem to have an incorrect format"));
                 failedToLoadForFile++;

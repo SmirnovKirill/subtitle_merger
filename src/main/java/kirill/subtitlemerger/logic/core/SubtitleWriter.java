@@ -5,7 +5,7 @@ import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-public class Writer {
+public class SubtitleWriter {
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("HH:mm:ss,SSS");
 
     public static String toSubRipText(Subtitles subtitles) {
