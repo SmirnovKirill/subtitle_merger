@@ -186,6 +186,7 @@ public class SubtitleFilesTabController {
         FileValidator.InputFileInfo validatorFileInfo = FileValidator.getInputFileInfo(
                 path,
                 Collections.singletonList("srt"),
+                false,
                 GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES * 1024 * 1024,
                 true
         ).orElse(null);
@@ -469,6 +470,8 @@ public class SubtitleFilesTabController {
                 return path + ": failed to get parent directory";
             case EXTENSION_IS_NOT_VALID:
                 return "File " + path + " has an incorrect extension";
+            case FILE_IS_EMPTY:
+                return "File " + path + " is empty";
             case FILE_IS_TOO_BIG:
                 return "File " + path + " is too big (>"
                         + GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)";
@@ -908,6 +911,8 @@ public class SubtitleFilesTabController {
                     return SubtitleFilesTabController.IncorrectInputFileReason.FAILED_TO_GET_PARENT_DIRECTORY;
                 case EXTENSION_IS_NOT_VALID:
                     return SubtitleFilesTabController.IncorrectInputFileReason.EXTENSION_IS_NOT_VALID;
+                case FILE_IS_EMPTY:
+                    return SubtitleFilesTabController.IncorrectInputFileReason.FILE_IS_EMPTY;
                 case FILE_IS_TOO_BIG:
                     return SubtitleFilesTabController.IncorrectInputFileReason.FILE_IS_TOO_BIG;
                 case FAILED_TO_READ_CONTENT:
@@ -925,6 +930,7 @@ public class SubtitleFilesTabController {
         FILE_DOES_NOT_EXIST,
         FAILED_TO_GET_PARENT_DIRECTORY,
         EXTENSION_IS_NOT_VALID,
+        FILE_IS_EMPTY,
         FILE_IS_TOO_BIG,
         FAILED_TO_READ_CONTENT,
         INCORRECT_SUBTITLE_FORMAT

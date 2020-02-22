@@ -19,6 +19,7 @@ public class FileValidator {
     public static Optional<InputFileInfo> getInputFileInfo(
             String path,
             Collection<String> allowedExtensions,
+            boolean allowEmpty,
             long maxAllowedSize,
             boolean loadContent
     ) {
@@ -80,6 +81,10 @@ public class FileValidator {
             return Optional.of(
                     new InputFileInfo(file, parent, IncorrectInputFileReason.EXTENSION_IS_NOT_VALID, null)
             );
+        }
+
+        if (!allowEmpty && file.length() == 0) {
+            return Optional.of(new InputFileInfo(file, parent, IncorrectInputFileReason.FILE_IS_EMPTY, null));
         }
 
         if (file.length() > maxAllowedSize) {
@@ -164,6 +169,7 @@ public class FileValidator {
         FILE_DOES_NOT_EXIST,
         FAILED_TO_GET_PARENT_DIRECTORY,
         EXTENSION_IS_NOT_VALID,
+        FILE_IS_EMPTY,
         FILE_IS_TOO_BIG,
         FAILED_TO_READ_CONTENT
     }
