@@ -440,8 +440,6 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
         MultiColorLabels resultLabels = new MultiColorLabels();
         resultLabels.setAlignment(Pos.CENTER);
-        resultLabels.setManaged(false);
-        resultLabels.setVisible(false);
         fileInfo.resultProperty().addListener(observable -> setResultLabels(fileInfo, resultLabels));
         setResultLabels(fileInfo, resultLabels);
 
@@ -503,8 +501,6 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         }
 
         resultLabels.set(fileInfo.getResult());
-        resultLabels.setVisible(!fileInfo.getResult().empty());
-        resultLabels.setManaged(!fileInfo.getResult().empty());
     }
 
     @FunctionalInterface

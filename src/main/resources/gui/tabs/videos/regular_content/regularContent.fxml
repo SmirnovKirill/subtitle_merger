@@ -56,7 +56,7 @@
                 </Button>
             </HBox>
         </VBox>
-        <MultiColorLabels fx:id="generalResult" minHeight="40" maxHeight="40" alignment="CENTER"/>
+        <MultiColorLabels fx:id="generalResult" minHeight="40" maxHeight="40" alignment="CENTER" alwaysManaged="true"/>
         <VBox spacing="10" VBox.vgrow="ALWAYS">
             <HBox spacing="20"><Label fx:id="selectedForMergeLabel"/></HBox>
             <HBox spacing="10" alignment="CENTER_LEFT">
@@ -64,7 +64,7 @@
                 <Region HBox.hgrow="ALWAYS"/>
                 <!-- To be able to use tooltip when button is disabled. -->
                 <HBox fx:id="autoSelectButtonWrapper" alignment="CENTER">
-                    <Button fx:id="autoSelectButton" onAction="#autoSelectButtonClicked"  text="Auto-select subtitles">
+                    <Button fx:id="autoSelectButton" onAction="#autoSelectButtonClicked" text="Auto-select subtitles">
                         <graphic>
                             <ImageView fitHeight="16" fitWidth="16">
                                 <Image url="/gui/icons/computer.png"/>

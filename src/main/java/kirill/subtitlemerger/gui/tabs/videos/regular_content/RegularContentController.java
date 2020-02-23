@@ -148,19 +148,48 @@ public class RegularContentController {
      */
     private GuiFileInfo lastProcessedFileInfo;
 
+    public boolean isAllSelected() {
+        return allSelected.get();
+    }
+
+    public BooleanProperty allSelectedProperty() {
+        return allSelected;
+    }
+
+    public void setAllSelected(boolean allSelected) {
+        this.allSelected.set(allSelected);
+    }
+
+    public int getSelected() {
+        return selected.get();
+    }
+
+    public IntegerProperty selectedProperty() {
+        return selected;
+    }
+
+    public void setSelected(int selected) {
+        this.selected.set(selected);
+    }
+
     public void initialize(Stage stage, GuiContext guiContext) {
         this.stage = stage;
         this.context = guiContext;
-        this.sortByGroup = new ToggleGroup();
-        this.sortDirectionGroup = new ToggleGroup();
-        this.allSelected = new SimpleBooleanProperty(false);
-        /*
-         * Set negative value so that value is definitely changed after loading files and invalidation listener is
-         * triggered.
-         */
-        this.selected = new SimpleIntegerProperty(-1);
-        this.allAvailableCount = new SimpleIntegerProperty(0);
-        this.tableWithFiles.initialize(
+        sortByGroup = new ToggleGroup();
+        sortDirectionGroup = new ToggleGroup();
+        allSelected = new SimpleBooleanProperty(false);
+        selected = new SimpleIntegerProperty(0);
+        allAvailableCount = new SimpleIntegerProperty(0);
+
+        setSelectedForMergeLabelText(getSelected());
+        setActionButtonsVisibility(getSelected());
+        selected.addListener(this::selectedCountChanged);
+
+        ContextMenu contextMenu = generateContextMenu(sortByGroup, sortDirectionGroup, guiContext.getSettings());
+        sortByGroup.selectedToggleProperty().addListener(this::sortByChanged);
+        sortDirectionGroup.selectedToggleProperty().addListener(this::sortDirectionChanged);
+
+        tableWithFiles.initialize(
                 allSelected,
                 selected,
                 allAvailableCount,
@@ -169,36 +198,23 @@ public class RegularContentController {
                 this::addExternalSubtitleFileClicked,
                 this::removeExternalSubtitleFileClicked
         );
-        this.tableWithFiles.setContextMenu(
-                generateContextMenu(
-                        this.sortByGroup,
-                        this.sortDirectionGroup,
-                        guiContext.getSettings()
-                )
-        );
-        this.selectedProperty().addListener(this::selectedCountChangeListener);
+        tableWithFiles.setContextMenu(contextMenu);
 
-        this.sortByGroup.selectedToggleProperty().addListener(this::sortByChanged);
-        this.sortDirectionGroup.selectedToggleProperty().addListener(this::sortDirectionChanged);
-        this.removeSelectedButton.disableProperty().bind(
-                selected.isEqualTo(0)
-        );
+        removeSelectedButton.disableProperty().bind(selected.isEqualTo(0));
     }
 
-    private void selectedCountChangeListener(Observable observable) {
-        setActionButtonsVisibility();
-
+    private void setSelectedForMergeLabelText(int selected) {
         selectedForMergeLabel.setText(
                 GuiUtils.getTextDependingOnTheCount(
-                        getSelected(),
+                        selected,
                         "1 video selected",
                         "%d videos selected"
                 )
         );
     }
 
-    private void setActionButtonsVisibility() {
-        if (getSelected() == 0) {
+    private void setActionButtonsVisibility(int selected) {
+        if (selected == 0) {
             String tooltipText = "no videos are selected for merge";
 
             autoSelectButton.setDisable(true);
@@ -219,6 +235,11 @@ public class RegularContentController {
             goButton.setDisable(false);
             Tooltip.install(goButtonWrapper, null);
         }
+    }
+
+    private void selectedCountChanged(Observable observable) {
+        setActionButtonsVisibility(getSelected());
+        setSelectedForMergeLabelText(getSelected());
     }
 
     @FXML
@@ -593,11 +614,7 @@ public class RegularContentController {
 
     @FXML
     private void backToSelectionClicked() {
-        /*
-         * Set negative value so that value is definitely changed after loading files and invalidation listener is
-         * triggered.
-         */
-        setSelected(-1);
+        setSelected(0);
 
         tableWithFiles.clearCache();
         tableWithFiles.setMode(null);
@@ -874,7 +891,7 @@ public class RegularContentController {
         fileInfo.getSubtitleStreams().remove(indexOfLastStream);
 
         guiFileInfo.getExternalSubtitleStreams().get(index).setFileName(null);
-        guiFileInfo.getExternalSubtitleStreams().get(index).setSize(-1);
+        guiFileInfo.getExternalSubtitleStreams().get(index).setSize(GuiSubtitleStream.UNKNOWN_SIZE);
         guiFileInfo.getExternalSubtitleStreams().get(index).setSelectedAsUpper(false);
         guiFileInfo.getExternalSubtitleStreams().get(index).setSelectedAsLower(false);
 
@@ -918,29 +935,5 @@ public class RegularContentController {
         );
 
         prepareAndStartBackgroundTask(task);
-    }
-
-    public boolean isAllSelected() {
-        return allSelected.get();
-    }
-
-    public BooleanProperty allSelectedProperty() {
-        return allSelected;
-    }
-
-    public void setAllSelected(boolean allSelected) {
-        this.allSelected.set(allSelected);
-    }
-
-    public int getSelected() {
-        return selected.get();
-    }
-
-    public IntegerProperty selectedProperty() {
-        return selected;
-    }
-
-    public void setSelected(int selected) {
-        this.selected.set(selected);
     }
 }

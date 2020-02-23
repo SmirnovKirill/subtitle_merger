@@ -1,5 +1,6 @@
 package kirill.subtitlemerger.gui.core.custom_controls;
 
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.control.Label;
@@ -18,11 +19,18 @@ public class MultiColorLabels extends HBox {
 
     private BooleanProperty wrapText;
 
-    public MultiColorLabels() {
-        setVisible(false);
-        setManaged(false);
+    private BooleanProperty alwaysManaged;
 
+    private BooleanProperty empty;
+
+    public MultiColorLabels() {
         wrapText = new SimpleBooleanProperty(false);
+        alwaysManaged = new SimpleBooleanProperty(false);
+        empty = new SimpleBooleanProperty(true);
+
+        setVisible(false);
+        managedProperty().bind(alwaysManaged.or(Bindings.not(empty)));
+
         successLabel = new Label();
         successLabel.getStyleClass().add(GuiConstants.LABEL_SUCCESS_CLASS);
         successLabel.wrapTextProperty().bind(wrapText);
@@ -48,6 +56,30 @@ public class MultiColorLabels extends HBox {
 
     public void setWrapText(boolean wrapText) {
         this.wrapText.set(wrapText);
+    }
+
+    public boolean isAlwaysManaged() {
+        return alwaysManaged.get();
+    }
+
+    public BooleanProperty alwaysManagedProperty() {
+        return alwaysManaged;
+    }
+
+    public void setAlwaysManaged(boolean alwaysManaged) {
+        this.alwaysManaged.set(alwaysManaged);
+    }
+
+    public boolean isEmpty() {
+        return empty.get();
+    }
+
+    public BooleanProperty emptyProperty() {
+        return empty;
+    }
+
+    public void setEmpty(boolean empty) {
+        this.empty.set(empty);
     }
 
     public void set(MultiPartResult multiPartResult) {
@@ -85,8 +117,8 @@ public class MultiColorLabels extends HBox {
         warnLabel.setText(warn);
         errorLabel.setText(error);
 
+        setEmpty(empty);
         setVisible(!empty);
-        setManaged(!empty);
     }
 
     public void clear() {
