@@ -457,6 +457,12 @@ class GuiSettings {
         missingSettings.remove(SettingType.FFPROBE_PATH);
     }
 
+    public void clearFfprobeFile() {
+        this.ffprobeFile = null;
+        preferences.remove(SettingType.FFPROBE_PATH.getSettingCode());
+        missingSettings.add(SettingType.FFPROBE_PATH);
+    }
+
     public void saveFfmpegFile(String rawValue) throws ConfigException {
         File ffmpegFile = getValidatedFfmpegFile(rawValue).orElse(null);
         if (ffmpegFile == null) {
@@ -466,6 +472,12 @@ class GuiSettings {
         this.ffmpegFile = ffmpegFile;
         preferences.put(SettingType.FFMPEG_PATH.getSettingCode(), ffmpegFile.getAbsolutePath());
         missingSettings.remove(SettingType.FFMPEG_PATH);
+    }
+
+    public void clearFfmpegFile() {
+        this.ffmpegFile= null;
+        preferences.remove(SettingType.FFMPEG_PATH.getSettingCode());
+        missingSettings.add(SettingType.FFMPEG_PATH);
     }
 
     public void saveUpperLanguage(String rawValue) throws ConfigException {
