@@ -256,8 +256,8 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
 
         String message = GuiUtils.getTextDependingOnTheCount(
                 failedToLoadForFile,
-                "Auto-select has failed because failed to load subtitle size",
-                "Auto-select has failed because failed to load %d subtitle sizes"
+                "Auto-select has failed because failed to load subtitles",
+                "Auto-select has failed because failed to load %d subtitles"
         );
 
         Platform.runLater(() -> fileInfo.setResultOnlyError(message));

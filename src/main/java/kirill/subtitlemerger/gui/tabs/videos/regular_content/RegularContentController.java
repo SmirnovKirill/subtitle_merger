@@ -99,10 +99,10 @@ public class RegularContentController {
     private Button autoSelectButton;
 
     @FXML
-    private Pane getAllSizesButtonWrapper;
+    private Pane loadAllSubtitlesButtonWrapper;
 
     @FXML
-    private Button getAllSizesButton;
+    private Button loadAllSubtitlesButton;
 
     @FXML
     private Pane goButtonWrapper;
@@ -220,8 +220,8 @@ public class RegularContentController {
             autoSelectButton.setDisable(true);
             Tooltip.install(autoSelectButtonWrapper, GuiUtils.generateTooltip(tooltipText));
 
-            getAllSizesButton.setDisable(true);
-            Tooltip.install(getAllSizesButtonWrapper, GuiUtils.generateTooltip(tooltipText));
+            loadAllSubtitlesButton.setDisable(true);
+            Tooltip.install(loadAllSubtitlesButtonWrapper, GuiUtils.generateTooltip(tooltipText));
 
             goButton.setDisable(true);
             Tooltip.install(goButtonWrapper, GuiUtils.generateTooltip(tooltipText));
@@ -229,8 +229,8 @@ public class RegularContentController {
             autoSelectButton.setDisable(false);
             Tooltip.install(autoSelectButtonWrapper, null);
 
-            getAllSizesButton.setDisable(false);
-            Tooltip.install(getAllSizesButtonWrapper, null);
+            loadAllSubtitlesButton.setDisable(false);
+            Tooltip.install(loadAllSubtitlesButtonWrapper, null);
 
             goButton.setDisable(false);
             Tooltip.install(goButtonWrapper, null);
@@ -269,7 +269,7 @@ public class RegularContentController {
     }
 
     @FXML
-    private void getAllSizesButtonClicked() {
+    private void loadAllSubtitlesClicked() {
         generalResult.clear();
         lastProcessedFileInfo = null;
 

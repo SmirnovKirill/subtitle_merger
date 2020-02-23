@@ -4,8 +4,8 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles?>
 <?import kirill.subtitlemerger.gui.core.custom_controls.MultiColorLabels?>
+<?import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles?>
 <StackPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
            fx:id="pane"
            fx:controller="kirill.subtitlemerger.gui.tabs.videos.regular_content.RegularContentController"
@@ -72,12 +72,12 @@
                         </graphic>
                     </Button>
                 </HBox>
-                <HBox fx:id="getAllSizesButtonWrapper" alignment="CENTER">
-                    <Button fx:id="getAllSizesButton" onAction="#getAllSizesButtonClicked"
-                            text="Get all subtitle sizes">
+                <HBox fx:id="loadAllSubtitlesButtonWrapper" alignment="CENTER">
+                    <Button fx:id="loadAllSubtitlesButton" onAction="#loadAllSubtitlesClicked"
+                            text="Load all subtitles">
                         <graphic>
                             <ImageView fitHeight="16" fitWidth="16">
-                                <Image url="/gui/icons/get.png"/>
+                                <Image url="/gui/icons/load.png"/>
                             </ImageView>
                         </graphic>
                     </Button>

@@ -181,8 +181,8 @@ public class LoadFilesAllSubtitlesTask extends BackgroundTask<LoadFilesAllSubtit
 
         String message = GuiUtils.getTextDependingOnTheCount(
                 failedToLoadForFile,
-                "Failed to load subtitle size",
-                "Failed to load %d subtitle sizes"
+                "Failed to load subtitles",
+                "Failed to load %d subtitles"
         );
 
         Platform.runLater(() -> fileInfo.setResultOnlyError(message));
@@ -194,33 +194,27 @@ public class LoadFilesAllSubtitlesTask extends BackgroundTask<LoadFilesAllSubtit
         String error = null;
 
         if (taskResult.getStreamToLoadCount() == 0) {
-            warn = "There are no subtitle sizes to load";
+            warn = "There are no subtitles to load";
         } else if (taskResult.getProcessedCount() == 0) {
             warn = "Task has been cancelled, nothing was loaded";
         } else if (taskResult.getLoadedSuccessfullyCount() == taskResult.getStreamToLoadCount()) {
             success = GuiUtils.getTextDependingOnTheCount(
                     taskResult.getLoadedSuccessfullyCount(),
-                    "Subtitle size has been loaded successfully",
-                    "All %d subtitle sizes have been loaded successfully"
+                    "Subtitles have been loaded successfully",
+                    "All %d subtitles have been loaded successfully"
             );
         } else if (taskResult.getFailedToLoadCount() == taskResult.getStreamToLoadCount()) {
             error = GuiUtils.getTextDependingOnTheCount(
                     taskResult.getFailedToLoadCount(),
-                    "Failed to load subtitle size",
-                    "Failed to load all %d subtitle sizes"
+                    "Failed to load subtitles",
+                    "Failed to load all %d subtitles"
             );
         } else {
             if (taskResult.getLoadedSuccessfullyCount() != 0) {
-                success = GuiUtils.getTextDependingOnTheCount(
+                success = String.format(
+                        "%d/%d subtitles have been loaded successfully",
                         taskResult.getLoadedSuccessfullyCount(),
-                        String.format(
-                                "1/%d subtitle sizes has been loaded successfully",
-                                taskResult.getStreamToLoadCount()
-                        ),
-                        String.format(
-                                "%%d/%d subtitle sizes have been loaded successfully",
-                                taskResult.getStreamToLoadCount()
-                        )
+                        taskResult.getStreamToLoadCount()
                 );
             }
 
@@ -229,11 +223,11 @@ public class LoadFilesAllSubtitlesTask extends BackgroundTask<LoadFilesAllSubtit
                     warn = GuiUtils.getTextDependingOnTheCount(
                             taskResult.getStreamToLoadCount() - taskResult.getProcessedCount(),
                             String.format(
-                                    "1/%d subtitle sizes' loading has been cancelled",
+                                    "1/%d subtitles' loadings has been cancelled",
                                     taskResult.getStreamToLoadCount()
                             ),
                             String.format(
-                                    "%%d/%d subtitle sizes' loading have been cancelled",
+                                    "%%d/%d subtitles' loadings have been cancelled",
                                     taskResult.getStreamToLoadCount()
                             )
                     );

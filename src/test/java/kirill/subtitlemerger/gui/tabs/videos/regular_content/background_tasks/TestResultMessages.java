@@ -298,7 +298,7 @@ public class TestResultMessages {
                                 0
                         )
                 )
-        ).isEqualTo(new MultiPartResult(null, "There are no subtitle sizes to load", null));
+        ).isEqualTo(new MultiPartResult(null, "There are no subtitles to load", null));
 
         assertThat(
                 LoadFilesAllSubtitlesTask.generateMultiPartResult(
@@ -320,7 +320,7 @@ public class TestResultMessages {
                                 0
                         )
                 )
-        ).isEqualTo(new MultiPartResult("Subtitle size has been loaded successfully", null, null));
+        ).isEqualTo(new MultiPartResult("Subtitles have been loaded successfully", null, null));
 
         assertThat(
                 LoadFilesAllSubtitlesTask.generateMultiPartResult(
@@ -333,7 +333,7 @@ public class TestResultMessages {
                 )
         ).isEqualTo(
                 new MultiPartResult(
-                        "All 2 subtitle sizes have been loaded successfully",
+                        "All 2 subtitles have been loaded successfully",
                         null,
                         null
                 )
@@ -348,7 +348,7 @@ public class TestResultMessages {
                                 1
                         )
                 )
-        ).isEqualTo(new MultiPartResult(null, null, "Failed to load subtitle size"));
+        ).isEqualTo(new MultiPartResult(null, null, "Failed to load subtitles"));
 
         assertThat(
                 LoadFilesAllSubtitlesTask.generateMultiPartResult(
@@ -359,7 +359,7 @@ public class TestResultMessages {
                                 2
                         )
                 )
-        ).isEqualTo(new MultiPartResult(null, null, "Failed to load all 2 subtitle sizes"));
+        ).isEqualTo(new MultiPartResult(null, null, "Failed to load all 2 subtitles"));
 
         assertThat(
                 LoadFilesAllSubtitlesTask.generateMultiPartResult(
@@ -372,7 +372,7 @@ public class TestResultMessages {
                 )
         ).isEqualTo(
                 new MultiPartResult(
-                        "1/3 subtitle sizes has been loaded successfully",
+                        "1/3 subtitles have been loaded successfully",
                         "1/3 cancelled",
                         "1/3 failed"
                 )
@@ -389,7 +389,7 @@ public class TestResultMessages {
                 )
         ).isEqualTo(
                 new MultiPartResult(
-                        "2/4 subtitle sizes have been loaded successfully",
+                        "2/4 subtitles have been loaded successfully",
                         "1/4 cancelled",
                         "1/4 failed"
                 )
@@ -407,7 +407,7 @@ public class TestResultMessages {
         ).isEqualTo(
                 new MultiPartResult(
                         null,
-                        "1/2 subtitle sizes' loading has been cancelled",
+                        "1/2 subtitles' loadings has been cancelled",
                         "1/2 failed"
                 )
         );
@@ -424,7 +424,7 @@ public class TestResultMessages {
         ).isEqualTo(
                 new MultiPartResult(
                         null,
-                        "2/3 subtitle sizes' loading have been cancelled",
+                        "2/3 subtitles' loadings have been cancelled",
                         "1/3 failed"
                 )
         );

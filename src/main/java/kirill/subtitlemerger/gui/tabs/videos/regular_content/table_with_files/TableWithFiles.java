@@ -307,13 +307,13 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
                 previewButton.visibleProperty().bind(stream.sizeProperty().isNotEqualTo(GuiSubtitleStream.UNKNOWN_SIZE));
                 previewButton.managedProperty().bind(stream.sizeProperty().isNotEqualTo(GuiSubtitleStream.UNKNOWN_SIZE));
 
-                Hyperlink getSizeLink = new Hyperlink("get size");
-                getSizeLink.setOnAction(event -> singleFileSubtitleSizeLoader.load(fileInfo, ffmpegStream.getFfmpegIndex()));
-                getSizeLink.visibleProperty().bind(stream.sizeProperty().isEqualTo(GuiSubtitleStream.UNKNOWN_SIZE));
-                getSizeLink.managedProperty().bind(stream.sizeProperty().isEqualTo(GuiSubtitleStream.UNKNOWN_SIZE));
+                Hyperlink loadSingleLink = new Hyperlink("load");
+                loadSingleLink.setOnAction(event -> singleFileSubtitleSizeLoader.load(fileInfo, ffmpegStream.getFfmpegIndex()));
+                loadSingleLink.visibleProperty().bind(stream.sizeProperty().isEqualTo(GuiSubtitleStream.UNKNOWN_SIZE));
+                loadSingleLink.managedProperty().bind(stream.sizeProperty().isEqualTo(GuiSubtitleStream.UNKNOWN_SIZE));
 
                 Region spacer = new Region();
-                sizePane.getChildren().addAll(sizeLabel, getSizeLink, errorImageLabel, spacer, previewButton);
+                sizePane.getChildren().addAll(sizeLabel, loadSingleLink, errorImageLabel, spacer, previewButton);
                 HBox.setHgrow(spacer, Priority.ALWAYS);
 
                 if (ffmpegStream.isExtra()) {
@@ -409,16 +409,16 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
         Pane hiddenAndAddPane = generateHiddenAndAddPane(fileInfo);
 
-        HBox getAllSizesPane = new HBox();
-        getAllSizesPane.setAlignment(Pos.CENTER);
+        HBox loadAllSizesPane = new HBox();
+        loadAllSizesPane.setAlignment(Pos.CENTER);
 
-        Hyperlink getAllSizes = new Hyperlink("get all sizes");
-        getAllSizes.setOnAction(event -> allFileSubtitleSizesLoader.load(fileInfo));
+        Hyperlink loadAllLink = new Hyperlink("load all subtitles");
+        loadAllLink.setOnAction(event -> allFileSubtitleSizesLoader.load(fileInfo));
 
-        getAllSizes.visibleProperty().bind(fileInfo.haveSubtitleSizesToLoadProperty());
-        getAllSizes.managedProperty().bind(fileInfo.haveSubtitleSizesToLoadProperty());
+        loadAllLink.visibleProperty().bind(fileInfo.haveSubtitleSizesToLoadProperty());
+        loadAllLink.managedProperty().bind(fileInfo.haveSubtitleSizesToLoadProperty());
 
-        getAllSizesPane.getChildren().add(getAllSizes);
+        loadAllSizesPane.getChildren().add(loadAllLink);
 
         HBox previewPane = new HBox();
         previewPane.setAlignment(Pos.CENTER);
@@ -431,11 +431,11 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         previewPane.getChildren().add(previewButton);
 
         result.add(hiddenAndAddPane, 0, fileInfo.getSubtitleStreams().size());
-        result.add(getAllSizesPane, 1, fileInfo.getSubtitleStreams().size());
+        result.add(loadAllSizesPane, 1, fileInfo.getSubtitleStreams().size());
         result.add(previewPane, 2, fileInfo.getSubtitleStreams().size());
 
         GridPane.setMargin(hiddenAndAddPane, new Insets(3, 0, 0, 0));
-        GridPane.setMargin(getAllSizesPane, new Insets(3, 0, 0, 0));
+        GridPane.setMargin(loadAllSizesPane, new Insets(3, 0, 0, 0));
         GridPane.setMargin(previewPane, new Insets(3, 0, 0, 0));
 
         MultiColorLabels resultLabels = new MultiColorLabels();

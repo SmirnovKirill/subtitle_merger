@@ -83,13 +83,13 @@ public class LoadSingleSubtitleTask extends BackgroundTask<LoadSingleSubtitleTas
 
         switch (taskResult.getStatus()) {
             case SUCCESS:
-                success = "Subtitle size has been loaded successfully";
+                success = "Subtitles have been loaded successfully";
                 break;
             case CANCELLED:
                 warn = "Task has been cancelled";
                 break;
             case ERROR:
-                error = "Failed to load subtitle size";
+                error = "Failed to load subtitles";
                 break;
             default:
                 throw new IllegalStateException();
