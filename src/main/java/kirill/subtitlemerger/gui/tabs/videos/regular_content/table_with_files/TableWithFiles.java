@@ -502,7 +502,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             return;
         }
 
-        resultLabels.update(fileInfo.getResult());
+        resultLabels.set(fileInfo.getResult());
         resultLabels.setVisible(!fileInfo.getResult().empty());
         resultLabels.setManaged(!fileInfo.getResult().empty());
     }

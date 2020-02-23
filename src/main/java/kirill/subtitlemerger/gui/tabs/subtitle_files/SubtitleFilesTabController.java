@@ -161,20 +161,16 @@ public class SubtitleFilesTabController {
     private static boolean pathNotChanged(String path, ExtendedFileType fileType, FilesInfo filesInfo) {
         String currentPath;
         if (fileType == ExtendedFileType.UPPER_SUBTITLES) {
-            currentPath = filesInfo.getUpperFileInfo() != null ? filesInfo.getUpperFileInfo().getPath() : null;
+            currentPath = filesInfo.getUpperFileInfo() != null ? filesInfo.getUpperFileInfo().getPath() : "";
         } else if (fileType == ExtendedFileType.LOWER_SUBTITLES) {
-            currentPath = filesInfo.getLowerFileInfo() != null ? filesInfo.getLowerFileInfo().getPath() : null;
+            currentPath = filesInfo.getLowerFileInfo() != null ? filesInfo.getLowerFileInfo().getPath() : "";
         } else if (fileType == ExtendedFileType.MERGED_SUBTITLES) {
-            currentPath = filesInfo.getMergedFileInfo() != null ? filesInfo.getMergedFileInfo().getPath() : null;
+            currentPath = filesInfo.getMergedFileInfo() != null ? filesInfo.getMergedFileInfo().getPath() : "";
         } else {
             throw new IllegalStateException();
         }
 
-        if (StringUtils.isBlank(path)) {
-            return currentPath == null;
-        } else {
-            return Objects.equals(path, currentPath);
-        }
+        return Objects.equals(path, currentPath);
     }
 
     private static Optional<InputFileInfo> getInputFileInfo(
@@ -421,7 +417,7 @@ public class SubtitleFilesTabController {
             index++;
         }
 
-        resultLabels.update(MultiPartResult.onlyError(errorMessage.toString()));
+        resultLabels.setOnlyError(errorMessage.toString());
     }
 
     private void showFileElementsAsIncorrect(ExtendedFileType fileType) {
@@ -455,7 +451,7 @@ public class SubtitleFilesTabController {
     }
 
     private static String getErrorText(String path, IncorrectInputFileReason reason) {
-        path = getShortenedPath(path.trim());
+        path = getShortenedPath(path);
 
         switch (reason) {
             case PATH_IS_TOO_LONG:
@@ -465,20 +461,20 @@ public class SubtitleFilesTabController {
             case IS_A_DIRECTORY:
                 return path + " is a directory, not a file";
             case FILE_DOES_NOT_EXIST:
-                return "File " + path + " doesn't exist";
+                return "File '" + path + "' doesn't exist";
             case FAILED_TO_GET_PARENT_DIRECTORY:
                 return path + ": failed to get parent directory";
             case EXTENSION_IS_NOT_VALID:
-                return "File " + path + " has an incorrect extension";
+                return "File '" + path + "' has an incorrect extension";
             case FILE_IS_EMPTY:
-                return "File " + path + " is empty";
+                return "File '" + path + "' is empty";
             case FILE_IS_TOO_BIG:
-                return "File " + path + " is too big (>"
+                return "File '" + path + "' is too big (>"
                         + GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)";
             case FAILED_TO_READ_CONTENT:
                 return path + ": failed to read the file";
             case INCORRECT_SUBTITLE_FORMAT:
-                return "File " + path + " has an incorrect subtitle format, it can happen if the file is not UTF-8-encoded"
+                return "File '" + path + "' has an incorrect subtitle format, it can happen if the file is not UTF-8-encoded"
                         + ", you can change the encoding pressing the preview button";
             default:
                 throw new IllegalStateException();
@@ -500,7 +496,7 @@ public class SubtitleFilesTabController {
             case IS_A_DIRECTORY:
                 return path + " is a directory, not a file";
             case EXTENSION_IS_NOT_VALID:
-                return "File " + path + " has an incorrect extension";
+                return "File '" + path + "' has an incorrect extension";
             default:
                 throw new IllegalStateException();
         }
@@ -519,7 +515,7 @@ public class SubtitleFilesTabController {
 
             if (!agreeToOverwrite(mergedFileInfo)) {
                 mergedPathField.setText(
-                        filesInfo.getMergedFileInfo() != null ? filesInfo.getMergedFileInfo().getPath() : null
+                        filesInfo.getMergedFileInfo() != null ? filesInfo.getMergedFileInfo().getPath() : ""
                 );
                 return;
             }
@@ -607,7 +603,7 @@ public class SubtitleFilesTabController {
 
     private SubtitlePreviewWithEncodingController.UserSelection showInputSubtitlePreview(InputFileInfo fileInfo) {
         String path = GuiUtils.getShortenedStringIfNecessary(
-                fileInfo.getPath().trim(),
+                fileInfo.getPath(),
                 0,
                 128
         );
@@ -660,6 +656,7 @@ public class SubtitleFilesTabController {
     private void upperChooseClicked() {
         File file = getInputFile(InputFileType.UPPER_SUBTITLES, stage, settings).orElse(null);
         if (file == null) {
+            clearState();
             return;
         }
 
@@ -708,6 +705,7 @@ public class SubtitleFilesTabController {
     private void lowerChooseClicked() {
         File file = getInputFile(InputFileType.LOWER_SUBTITLES, stage, settings).orElse(null);
         if (file == null) {
+            clearState();
             return;
         }
 
@@ -744,13 +742,13 @@ public class SubtitleFilesTabController {
                 Stage dialogStage = new Stage();
 
                 String upperTitle = "file " + GuiUtils.getShortenedStringIfNecessary(
-                        filesInfo.getUpperFileInfo().getPath().trim(),
+                        filesInfo.getUpperFileInfo().getPath(),
                         0,
                         64
                 );
 
                 String lowerTitle = "file " + GuiUtils.getShortenedStringIfNecessary(
-                        filesInfo.getLowerFileInfo().getPath().trim(),
+                        filesInfo.getLowerFileInfo().getPath(),
                         0,
                         64
                 );
@@ -848,7 +846,7 @@ public class SubtitleFilesTabController {
                 if (!StringUtils.isBlank(result.getError())) {
                     showFileElementsAsIncorrect(ExtendedFileType.MERGED_SUBTITLES);
                 }
-                resultLabels.update(result);
+                resultLabels.set(result);
 
                 progressPane.setVisible(false);
                 mainPane.setDisable(false);

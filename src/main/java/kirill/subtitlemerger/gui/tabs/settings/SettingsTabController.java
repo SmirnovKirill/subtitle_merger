@@ -13,11 +13,14 @@ import javafx.util.StringConverter;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
+import kirill.subtitlemerger.gui.core.GuiUtils;
+import kirill.subtitlemerger.gui.core.custom_controls.MultiColorLabels;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffprobe;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
@@ -31,10 +34,6 @@ public class SettingsTabController {
     public static final String MERGE_MODE_VIDEO_COPIES = "Copies of the videos";
 
     public static final String MERGE_MODE_SEPARATE_SUBTITLE_FILES = "Separate subtitle files";
-
-    private static final String UPDATE_FFPROBE_BUTTON_TEXT = "update path to ffprobe";
-
-    private static final String UPDATE_FFMPEG_BUTTON_TEXT = "update path to ffmpeg";
 
     private static final LanguageCodeStringConverter LANGUAGE_CODE_STRING_CONVERTER = new LanguageCodeStringConverter();
 
@@ -51,13 +50,13 @@ public class SettingsTabController {
     private Pane settingsPane;
 
     @FXML
-    private TextField ffprobeField;
+    private TextField ffprobePathField;
 
     @FXML
     private Button ffprobeSetButton;
 
     @FXML
-    private TextField ffmpegField;
+    private TextField ffmpegPathField;
 
     @FXML
     private Button ffmpegSetButton;
@@ -79,10 +78,18 @@ public class SettingsTabController {
     @FXML
     private CheckBox markMergedStreamAsDefaultCheckBox;
 
-    private BooleanProperty markStreamCheckBoxVisible = new SimpleBooleanProperty(false);
+    private BooleanProperty markStreamCheckBoxVisible;
 
     @FXML
-    private Label resultLabel;
+    private MultiColorLabels resultLabels;
+
+    private String ffprobeCurrentPath;
+
+    private String ffmpegCurrentPath;
+
+    public SettingsTabController() {
+        markStreamCheckBoxVisible = new SimpleBooleanProperty(false);
+    }
 
     public boolean isMarkStreamCheckBoxVisible() {
         return markStreamCheckBoxVisible.get();
@@ -101,10 +108,93 @@ public class SettingsTabController {
         this.context = context;
         this.settings = context.getSettings();
 
+        GuiUtils.setTextFieldChangeListeners(
+                ffprobePathField,
+                (path) -> processFfprobePath(path, FileOrigin.TEXT_FIELD)
+        );
+        GuiUtils.setTextFieldChangeListeners(
+                ffmpegPathField,
+                (path) -> processFfmpegPath(path, FileOrigin.TEXT_FIELD)
+        );
+        upperLanguageComboBox.getItems().setAll(LogicConstants.ALLOWED_LANGUAGE_CODES);
+        upperLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
+        lowerLanguageComboBox.getItems().setAll(LogicConstants.ALLOWED_LANGUAGE_CODES);
+        lowerLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
+
         setInitialValues();
         mergeModeToggleGroup.selectedToggleProperty().addListener(this::mergeModeChanged);
         markMergedStreamAsDefaultCheckBox.selectedProperty().addListener(this::markStreamAsDefaultChanged);
         context.workWithVideosInProgressProperty().addListener(this::workWithVideosProgressChanged);
+    }
+
+    private void processFfprobePath(String path, FileOrigin fileOrigin) {
+        if (Objects.equals(path, ffmpegCurrentPath)) {
+            if (fileOrigin == FileOrigin.FILE_CHOOSER) {
+                resultLabels.setOnlySuccess("Path to ffprobe has stayed the same");
+            }
+
+            return;
+        }
+
+        ffprobePathField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
+        ffprobeSetButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
+
+        boolean hadValueBefore = settings.getFfprobeFile() != null;
+
+        try {
+            settings.saveFfprobeFile(path);
+            context.setFfprobe(new Ffprobe(settings.getFfprobeFile()));
+
+            if (fileOrigin == FileOrigin.FILE_CHOOSER) {
+                ffprobePathField.setText(path);
+            }
+
+            if (hadValueBefore) {
+                resultLabels.setOnlySuccess("Path to ffprobe has been updated successfully");
+            } else {
+                resultLabels.setOnlySuccess("Path to ffprobe has been saved successfully");
+            }
+        } catch (GuiSettings.ConfigException | FfmpegException e) {
+            ffprobePathField.getStyleClass().add(GuiConstants.TEXT_FIELD_ERROR_CLASS);
+            ffprobeSetButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
+
+            resultLabels.setOnlyError("Incorrect path to ffprobe");
+        }
+    }
+
+    private void processFfmpegPath(String path, FileOrigin fileOrigin) {
+        if (Objects.equals(path, ffmpegCurrentPath)) {
+            if (fileOrigin == FileOrigin.FILE_CHOOSER) {
+                resultLabels.setOnlySuccess("Path to ffprobe has stayed the same");
+            }
+
+            return;
+        }
+
+        ffmpegPathField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
+        ffmpegSetButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
+
+        boolean hadValueBefore = settings.getFfmpegFile() != null;
+
+        try {
+            settings.saveFfmpegFile(path);
+            context.setFfmpeg(new Ffmpeg(settings.getFfmpegFile()));
+
+            if (fileOrigin == FileOrigin.FILE_CHOOSER) {
+                ffmpegPathField.setText(path);
+            }
+
+            if (hadValueBefore) {
+                resultLabels.setOnlySuccess("Path to ffmpeg has been updated successfully");
+            } else {
+                resultLabels.setOnlySuccess("Path to ffmpeg has been saved successfully");
+            }
+        } catch (GuiSettings.ConfigException | FfmpegException e) {
+            ffmpegPathField.getStyleClass().add(GuiConstants.TEXT_FIELD_ERROR_CLASS);
+            ffmpegSetButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
+
+            resultLabels.setOnlyError("Incorrect path to ffmpeg");
+        }
     }
 
     private void setInitialValues() {
@@ -123,26 +213,22 @@ public class SettingsTabController {
         File ffprobeFile = settings.getFfprobeFile();
 
         if (ffprobeFile != null) {
-            ffprobeField.setText(ffprobeFile.getAbsolutePath());
-            ffprobeSetButton.setText(UPDATE_FFPROBE_BUTTON_TEXT);
-        } else {
-            ffprobeSetButton.setText("choose path to ffprobe");
+            ffprobePathField.setText(ffprobeFile.getAbsolutePath());
         }
+
+        ffprobeCurrentPath = ffprobePathField.getText();
     }
 
     private void setFfmpegInitialValue() {
         File ffmpegFile = settings.getFfmpegFile();
         if (ffmpegFile != null) {
-            ffmpegField.setText(ffmpegFile.getAbsolutePath());
-            ffmpegSetButton.setText(UPDATE_FFMPEG_BUTTON_TEXT);
-        } else {
-            ffmpegSetButton.setText("choose path to ffmpeg");
+            ffmpegPathField.setText(ffmpegFile.getAbsolutePath());
         }
+
+        ffmpegCurrentPath = ffmpegPathField.getText();
     }
 
     private void setUpperSubtitlesInitialValue() {
-        upperLanguageComboBox.getItems().setAll(LogicConstants.ALLOWED_LANGUAGE_CODES);
-        upperLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
         LanguageAlpha3Code upperLanguage = settings.getUpperLanguage();
         if (upperLanguage != null) {
             upperLanguageComboBox.getSelectionModel().select(upperLanguage);
@@ -156,8 +242,6 @@ public class SettingsTabController {
     }
 
     private void setLowerSubtitlesInitialValue() {
-        lowerLanguageComboBox.getItems().setAll(LogicConstants.ALLOWED_LANGUAGE_CODES);
-        lowerLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
         LanguageAlpha3Code lowerLanguage = settings.getLowerLanguage();
         if (lowerLanguage != null) {
             lowerLanguageComboBox.getSelectionModel().select(lowerLanguage);
@@ -225,11 +309,11 @@ public class SettingsTabController {
             context.getSettings().saveMergeMode(mergeMode.toString());
             setMarkCheckBoxVisibility();
 
-            showSuccessMessage("Merge mode has been saved successfully");
+            resultLabels.setOnlySuccess("Merge mode has been saved successfully");
         } catch (GuiSettings.ConfigException e) {
             log.error("merge mode hasn't been saved: " + ExceptionUtils.getStackTrace(e));
 
-            showErrorMessage("Something bad has happened, merge mode hasn't been saved");
+            resultLabels.setOnlyError("Something bad has happened, merge mode hasn't been saved");
         }
     }
 
@@ -242,14 +326,14 @@ public class SettingsTabController {
             context.getSettings().saveMarkMergedStreamAsDefault(newValue.toString());
 
             if (newValue) {
-                showSuccessMessage("Flag has been set successfully");
+                resultLabels.setOnlySuccess("Flag has been set successfully");
             } else {
-                showSuccessMessage("Flag has been unset successfully");
+                resultLabels.setOnlySuccess("Flag has been unset successfully");
             }
         } catch (GuiSettings.ConfigException e) {
             log.error("failed to save mark stream as default flag: " + ExceptionUtils.getStackTrace(e));
 
-            showErrorMessage("Something bad has happened, flag value hasn't been saved");
+            resultLabels.setOnlyError("Something bad has happened, flag value hasn't been saved");
         }
     }
 
@@ -271,31 +355,11 @@ public class SettingsTabController {
     private void ffprobeFileButtonClicked() {
         File ffprobeFile = getFfprobeFile(stage, settings).orElse(null);
         if (ffprobeFile == null) {
-            clearResult();
+            clearState();
             return;
         }
 
-        if (Objects.equals(ffprobeFile, settings.getFfprobeFile())) {
-            showSuccessMessage("Path to ffprobe has stayed the same");
-            return;
-        }
-
-        boolean hadValueBefore = settings.getFfmpegFile() != null;
-
-        try {
-            settings.saveFfprobeFile(ffprobeFile.getAbsolutePath());
-            context.setFfprobe(new Ffprobe(settings.getFfprobeFile()));
-            ffprobeField.setText(ffprobeFile.getAbsolutePath());
-            ffprobeSetButton.setText(UPDATE_FFPROBE_BUTTON_TEXT);
-
-            if (hadValueBefore) {
-                showSuccessMessage("Path to ffprobe has been updated successfully");
-            } else {
-                showSuccessMessage("Path to ffprobe has been saved successfully");
-            }
-        } catch (GuiSettings.ConfigException | FfmpegException e) {
-            showErrorMessage("Incorrect path to ffprobe");
-        }
+        processFfprobePath(ffprobeFile.getAbsolutePath(), FileOrigin.FILE_CHOOSER);
     }
 
     private static Optional<File> getFfprobeFile(Stage stage, GuiSettings settings) {
@@ -317,58 +381,19 @@ public class SettingsTabController {
         return Optional.ofNullable(fileChooser.showOpenDialog(stage));
     }
 
-    private void clearResult() {
-        resultLabel.setText("");
-        resultLabel.getStyleClass().removeAll(GuiConstants.LABEL_SUCCESS_CLASS, GuiConstants.LABEL_ERROR_CLASS);
-    }
-
-    private void showSuccessMessage(String text) {
-        resultLabel.setText(text);
-
-        resultLabel.getStyleClass().remove(GuiConstants.LABEL_ERROR_CLASS);
-        if (!resultLabel.getStyleClass().contains(GuiConstants.LABEL_SUCCESS_CLASS)) {
-            resultLabel.getStyleClass().add(GuiConstants.LABEL_SUCCESS_CLASS);
-        }
-    }
-
-    private void showErrorMessage(String text) {
-        resultLabel.setText(text);
-
-        resultLabel.getStyleClass().remove(GuiConstants.LABEL_SUCCESS_CLASS);
-        if (!resultLabel.getStyleClass().contains(GuiConstants.LABEL_ERROR_CLASS)) {
-            resultLabel.getStyleClass().add(GuiConstants.LABEL_ERROR_CLASS);
-        }
+    private void clearState() {
+        resultLabels.clear();
     }
 
     @FXML
     private void ffmpegFileButtonClicked() {
         File ffmpegFile = getFfmpegFile(stage, settings).orElse(null);
         if (ffmpegFile == null) {
-            clearResult();
+            clearState();
             return;
         }
 
-        if (Objects.equals(ffmpegFile, settings.getFfmpegFile())) {
-            showSuccessMessage("Path to ffmpeg has stayed the same");
-            return;
-        }
-
-        boolean hadValueBefore = settings.getFfmpegFile() != null;
-
-        try {
-            settings.saveFfmpegFile(ffmpegFile.getAbsolutePath());
-            context.setFfmpeg(new Ffmpeg(settings.getFfmpegFile()));
-            ffmpegField.setText(ffmpegFile.getAbsolutePath());
-            ffmpegSetButton.setText(UPDATE_FFMPEG_BUTTON_TEXT);
-
-            if (hadValueBefore) {
-                showSuccessMessage("Path to ffmpeg has been updated successfully");
-            } else {
-                showSuccessMessage("Path to ffmpeg has been saved successfully");
-            }
-        } catch (GuiSettings.ConfigException | FfmpegException e) {
-            showErrorMessage("Incorrect path to ffmpeg");
-        }
+        processFfmpegPath(ffmpegFile.getAbsolutePath(), FileOrigin.FILE_CHOOSER);
     }
 
     private static Optional<File> getFfmpegFile(Stage stage, GuiSettings settings) {
@@ -399,7 +424,7 @@ public class SettingsTabController {
         }
 
         if (Objects.equals(value, settings.getLowerLanguage())) {
-            showErrorMessage("Languages have to be different, please choose another one");
+            resultLabels.setOnlyError("Languages have to be different, please choose another one");
             return;
         }
 
@@ -410,14 +435,14 @@ public class SettingsTabController {
             setSwapLanguagesButtonVisibility();
 
             if (hadValueBefore) {
-                showSuccessMessage("Language for upper subtitles has been updated successfully");
+                resultLabels.setOnlySuccess("Language for upper subtitles has been updated successfully");
             } else {
-                showSuccessMessage("Language for upper subtitles has been saved successfully");
+                resultLabels.setOnlySuccess("Language for upper subtitles has been saved successfully");
             }
         } catch (GuiSettings.ConfigException e) {
             log.error("language for upper subtitles has not been saved: " + ExceptionUtils.getStackTrace(e));
 
-            showErrorMessage("Something bad has happened, language hasn't been saved");
+            resultLabels.setOnlyError("Something bad has happened, language hasn't been saved");
         }
     }
 
@@ -433,11 +458,11 @@ public class SettingsTabController {
             settings.saveLowerLanguage(oldUpperLanguage.toString());
             lowerLanguageComboBox.getSelectionModel().select(oldUpperLanguage);
 
-            showSuccessMessage("Languages have been swapped successfully");
+            resultLabels.setOnlySuccess("Languages have been swapped successfully");
         } catch (GuiSettings.ConfigException e) {
             log.error("languages haven't been swapped: " + ExceptionUtils.getStackTrace(e));
 
-            showErrorMessage("Something bad has happened, languages haven't been swapped");
+            resultLabels.setOnlyError("Something bad has happened, languages haven't been swapped");
         }
     }
 
@@ -450,7 +475,7 @@ public class SettingsTabController {
         }
 
         if (Objects.equals(value, settings.getUpperLanguage())) {
-            showErrorMessage("Languages have to be different, please choose another one");
+            resultLabels.setOnlyError("Languages have to be different, please choose another one");
             return;
         }
 
@@ -461,14 +486,14 @@ public class SettingsTabController {
             setSwapLanguagesButtonVisibility();
 
             if (hadValueBefore) {
-                showSuccessMessage("Language for lower subtitles has been updated successfully");
+                resultLabels.setOnlySuccess("Language for lower subtitles has been updated successfully");
             } else {
-                showSuccessMessage("Language for lower subtitles has been saved successfully");
+                resultLabels.setOnlySuccess("Language for lower subtitles has been saved successfully");
             }
         } catch (GuiSettings.ConfigException e) {
             log.error("language for lower subtitles has not been saved: " + ExceptionUtils.getStackTrace(e));
 
-            showErrorMessage("Something bad has happened, language hasn't been saved");
+            resultLabels.setOnlyError("Something bad has happened, language hasn't been saved");
         }
     }
 
@@ -495,5 +520,10 @@ public class SettingsTabController {
             /* + 4 because every code is 3 symbol long. */
             return LanguageAlpha3Code.getByCode(rawCode.substring(leftBracketIndex + 1, leftBracketIndex + 4));
         }
+    }
+
+    private enum FileOrigin {
+        TEXT_FIELD,
+        FILE_CHOOSER
     }
 }

@@ -50,7 +50,7 @@ public class MultiColorLabels extends HBox {
         this.wrapText.set(wrapText);
     }
 
-    public void update(MultiPartResult multiPartResult) {
+    public void set(MultiPartResult multiPartResult) {
         String success = null;
         String warn = null;
         String error = null;
@@ -90,18 +90,18 @@ public class MultiColorLabels extends HBox {
     }
 
     public void clear() {
-        update(MultiPartResult.EMPTY);
+        set(MultiPartResult.EMPTY);
     }
 
     public void setOnlySuccess(String text) {
-        update(MultiPartResult.onlySuccess(text));
+        set(MultiPartResult.onlySuccess(text));
     }
 
     public void setOnlyWarn(String text) {
-        update(MultiPartResult.onlyWarn(text));
+        set(MultiPartResult.onlyWarn(text));
     }
 
     public void setOnlyError(String text) {
-        update(MultiPartResult.onlyError(text));
+        set(MultiPartResult.onlyError(text));
     }
 }

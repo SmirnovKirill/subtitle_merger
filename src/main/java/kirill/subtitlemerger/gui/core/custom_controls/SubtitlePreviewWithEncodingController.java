@@ -189,7 +189,7 @@ public class SubtitlePreviewWithEncodingController {
                 }
             }
         }
-        resultLabels.update(result);
+        resultLabels.set(result);
 
         saveButton.setDisable(Objects.equals(currentEncoding, originalEncoding) || currentSubtitles == null);
     }

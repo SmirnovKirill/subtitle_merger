@@ -10,7 +10,6 @@ import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.core.NoSelectionModel;
 import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
-import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.core.SubtitleWriter;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
@@ -110,7 +109,7 @@ public class SimpleSubtitlePreviewController {
 
     private void updateScene(ProcessedData processedData) {
         if (processedData.isLinesTruncated()) {
-            resultLabels.update(MultiPartResult.onlyWarn("lines that are longer than 1000 symbols were truncated"));
+            resultLabels.setOnlyWarn("lines that are longer than 1000 symbols were truncated");
         } else {
             resultLabels.clear();
         }

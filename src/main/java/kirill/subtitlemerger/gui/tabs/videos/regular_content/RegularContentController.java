@@ -232,7 +232,7 @@ public class RegularContentController {
                 context.getFfmpeg(),
                 context.getSettings(),
                 result -> {
-                    generalResult.update(AutoSelectSubtitlesTask.generateMultiPartResult(result));
+                    generalResult.set(AutoSelectSubtitlesTask.generateMultiPartResult(result));
                     stopProgress();
                 }
         );
@@ -256,7 +256,7 @@ public class RegularContentController {
                 filesInfo,
                 tableWithFiles.getItems(),
                 result -> {
-                    generalResult.update(LoadFilesAllSubtitlesTask.generateMultiPartResult(result));
+                    generalResult.set(LoadFilesAllSubtitlesTask.generateMultiPartResult(result));
                     stopProgress();
                 },
                 context.getFfmpeg()
@@ -730,7 +730,7 @@ public class RegularContentController {
                     filesInfo = result.getFilesInfo();
                     allGuiFilesInfo = result.getAllGuiFilesInfo();
                     updateTableContent(result.getGuiFilesToShowInfo(), tableWithFiles.getMode(), false);
-                    generalResult.update(AddFilesTask.generateMultiPartResult(result));
+                    generalResult.set(AddFilesTask.generateMultiPartResult(result));
                     stopProgress();
                 }
         );
@@ -911,7 +911,7 @@ public class RegularContentController {
                 GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo),
                 guiFileInfo,
                 (result) -> {
-                    generalResult.update(LoadSingleSubtitleTask.generateMultiPartResult(result));
+                    generalResult.set(LoadSingleSubtitleTask.generateMultiPartResult(result));
                     stopProgress();
                 },
                 context.getFfmpeg()
