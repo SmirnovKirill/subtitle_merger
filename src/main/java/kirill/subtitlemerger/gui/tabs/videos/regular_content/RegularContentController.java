@@ -28,18 +28,21 @@ import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.Gu
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
+import kirill.subtitlemerger.logic.utils.FileValidator;
 import kirill.subtitlemerger.logic.work_with_files.SubtitleInjector;
 import kirill.subtitlemerger.logic.work_with_files.entities.*;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -799,53 +802,66 @@ public class RegularContentController {
             return;
         }
 
-        try {
-            context.getSettings().saveLastDirectoryWithExternalSubtitles(file.getParent());
-        } catch (GuiSettings.ConfigException e) {
-            log.error(
-                    "failed to save last directory , file " + file.getAbsolutePath() + ": "
-                            + ExceptionUtils.getStackTrace(e)
-            );
-        }
-
         FileInfo fileInfo = GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo);
 
-        if (isDuplicate(file, fileInfo)) {
-            guiFileInfo.setResultOnlyError("This file is already added");
-            return;
+        GuiExternalSubtitleStream guiExternalSubtitleStream;
+        File otherFile;
+        if (CollectionUtils.isEmpty(fileInfo.getExternalSubtitleStreams())) {
+            otherFile = null;
+            guiExternalSubtitleStream = guiFileInfo.getExternalSubtitleStreams().get(0);
+        } else if (fileInfo.getExternalSubtitleStreams().size() == 1) {
+            otherFile = fileInfo.getExternalSubtitleStreams().get(0).getFile();
+            guiExternalSubtitleStream = guiFileInfo.getExternalSubtitleStreams().get(1);
+        } else {
+            log.error("unexpected amount of subtitle streams: " + fileInfo.getExternalSubtitleStreams().size());
+            throw new IllegalStateException();
         }
 
-        if (file.length() / 1024 / 1024 > GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES) {
-            guiFileInfo.setResultOnlyError("File is too big (>" + GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)");
-            return;
-        }
-
-        try {
-            Subtitles subtitles = SubtitleParser.fromSubRipText(
-                    FileUtils.readFileToString(file, StandardCharsets.UTF_8),
-                    null
-            );
-
-            GuiExternalSubtitleStream guiExternalSubtitleStream;
-            if (CollectionUtils.isEmpty(fileInfo.getExternalSubtitleStreams())) {
-                guiExternalSubtitleStream = guiFileInfo.getExternalSubtitleStreams().get(0);
-            } else if (fileInfo.getExternalSubtitleStreams().size() == 1) {
-                guiExternalSubtitleStream = guiFileInfo.getExternalSubtitleStreams().get(1);
-            } else {
-                log.error("unexpected amount of subtitle streams: " + fileInfo.getExternalSubtitleStreams().size());
-                throw new IllegalStateException();
+        //todo refactor, logic is cluttered
+        BackgroundTask<ExternalSubtitleFileInfo> task = new BackgroundTask<>() {
+            @Override
+            protected ExternalSubtitleFileInfo run() {
+                updateMessage("processing file " + file.getAbsolutePath() + "...");
+                return getInputFileInfo(file, otherFile).orElseThrow(IllegalStateException::new);
             }
 
-            guiExternalSubtitleStream.setFileName(file.getName());
-            guiExternalSubtitleStream.setSize(subtitles.getSize());
+            @Override
+            protected void onFinish(ExternalSubtitleFileInfo result) {
+                try {
+                    if (result.getParent() != null) {
+                        context.getSettings().saveLastDirectoryWithExternalSubtitles(file.getParent());
+                    }
+                } catch (GuiSettings.ConfigException e) {
+                    log.error(
+                            "failed to save last directory , file " + file.getAbsolutePath() + ": "
+                                    + ExceptionUtils.getStackTrace(e)
+                    );
+                }
 
-            fileInfo.getSubtitleStreams().add(new ExternalSubtitleStream(SubtitleCodec.SUBRIP, subtitles, file));
-            guiFileInfo.setResultOnlySuccess("Subtitle file has been added to the list successfully");
-        } catch (IOException e) {
-            guiFileInfo.setResultOnlyError("Can't read the file");
-        } catch (SubtitleParser.IncorrectFormatException e) {
-            guiFileInfo.setResultOnlyError("Can't add the file because it has incorrect format");
-        }
+                if (result.getIncorrectFileReason() != null) {
+                    if (result.getIncorrectFileReason() == IncorrectSubtitleFileReason.INCORRECT_SUBTITLE_FORMAT) {
+                       // guiExternalSubtitleStream.setFileName(file.getName());
+                        //guiExternalSubtitleStream.setSize((int) file.length());
+
+                        fileInfo.getSubtitleStreams().add(new ExternalSubtitleStream(SubtitleCodec.SUBRIP, result.getSubtitles(), file));
+                    }
+
+                    guiFileInfo.setResultOnlyError(getErrorText(file.getAbsolutePath(), result.getIncorrectFileReason()));
+                } else if (result.isDuplicate()) {
+                    guiFileInfo.setResultOnlyError("This has already been added");
+                } else {
+                    guiExternalSubtitleStream.setFileName(file.getName());
+                    guiExternalSubtitleStream.setSize((int) file.length());
+
+                    fileInfo.getSubtitleStreams().add(new ExternalSubtitleStream(SubtitleCodec.SUBRIP, result.getSubtitles(), file));
+                    guiFileInfo.setResultOnlySuccess("Subtitle file has been added to the list successfully");
+                }
+
+                stopProgress();
+            }
+        };
+
+        prepareAndStartBackgroundTask(task);
     }
 
     private Optional<File> getFile(GuiFileInfo fileInfo, Stage stage, GuiSettings settings) {
@@ -869,14 +885,87 @@ public class RegularContentController {
         return Optional.ofNullable(fileChooser.showOpenDialog(stage));
     }
 
-    private boolean isDuplicate(File file, FileInfo fileInfo) {
-        for (ExternalSubtitleStream externalSubtitleStream : fileInfo.getExternalSubtitleStreams()) {
-            if (Objects.equals(file, externalSubtitleStream.getFile())) {
-                return true;
-            }
+    private static Optional<ExternalSubtitleFileInfo> getInputFileInfo(File file, File otherSubtitleFile) {
+        FileValidator.InputFileInfo validatorFileInfo = FileValidator.getInputFileInfo(
+                file.getAbsolutePath(),
+                Collections.singletonList("srt"),
+                false,
+                GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES * 1024 * 1024,
+                true
+        ).orElseThrow(IllegalStateException::new);
+
+        if (validatorFileInfo.getIncorrectFileReason() != null) {
+            return Optional.of(
+                    new ExternalSubtitleFileInfo(
+                            validatorFileInfo.getFile(),
+                            validatorFileInfo.getParent(),
+                            false,
+                            validatorFileInfo.getContent(),
+                            null,
+                            ExternalSubtitleFileInfo.from(validatorFileInfo.getIncorrectFileReason())
+                    )
+            );
         }
 
-        return false;
+        try {
+            Subtitles subtitles = SubtitleParser.fromSubRipText(
+                    new String(validatorFileInfo.getContent(), StandardCharsets.UTF_8),
+                    null
+            );
+
+            return Optional.of(
+                    new ExternalSubtitleFileInfo(
+                            validatorFileInfo.getFile(),
+                            validatorFileInfo.getParent(),
+                            Objects.equals(file, otherSubtitleFile),
+                            validatorFileInfo.getContent(),
+                            subtitles,
+                            null
+                    )
+            );
+        } catch (SubtitleParser.IncorrectFormatException e) {
+            return Optional.of(
+                    new ExternalSubtitleFileInfo(
+                            validatorFileInfo.getFile(),
+                            validatorFileInfo.getParent(),
+                            false,
+                            validatorFileInfo.getContent(),
+                            null,
+                            IncorrectSubtitleFileReason.INCORRECT_SUBTITLE_FORMAT
+                    )
+            );
+        }
+    }
+
+    private static String getErrorText(String path, IncorrectSubtitleFileReason reason) {
+        path = GuiUtils.getShortenedStringIfNecessary(path, 20, 40);
+
+        switch (reason) {
+            case PATH_IS_TOO_LONG:
+                return "File path is too long";
+            case INVALID_PATH:
+                return "File path is invalid";
+            case IS_A_DIRECTORY:
+                return path + " is a directory, not a file";
+            case FILE_DOES_NOT_EXIST:
+                return "File '" + path + "' doesn't exist";
+            case FAILED_TO_GET_PARENT_DIRECTORY:
+                return path + ": failed to get parent directory";
+            case EXTENSION_IS_NOT_VALID:
+                return "File '" + path + "' has an incorrect extension";
+            case FILE_IS_EMPTY:
+                return "File '" + path + "' is empty";
+            case FILE_IS_TOO_BIG:
+                return "File '" + path + "' is too big (>"
+                        + GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)";
+            case FAILED_TO_READ_CONTENT:
+                return path + ": failed to read the file";
+            case INCORRECT_SUBTITLE_FORMAT:
+                return "File '" + path + "' has an incorrect subtitle format, it can happen if the file is not UTF-8-encoded"
+                        + ", you can change the encoding pressing the preview button";
+            default:
+                throw new IllegalStateException();
+        }
     }
 
     private void removeExternalSubtitleFileClicked(int index, GuiFileInfo guiFileInfo) {
@@ -979,5 +1068,63 @@ public class RegularContentController {
         );
 
         prepareAndStartBackgroundTask(task);
+    }
+
+    //todo merge with the same file in subtitle files tab controller
+    @AllArgsConstructor
+    @Getter
+    private static class ExternalSubtitleFileInfo {
+        private File file;
+
+        private File parent;
+
+        @Setter
+        private boolean isDuplicate;
+
+        private byte[] rawData;
+
+        @Setter
+        private Subtitles subtitles;
+
+        @Setter
+        private IncorrectSubtitleFileReason incorrectFileReason;
+
+        static IncorrectSubtitleFileReason from(FileValidator.IncorrectInputFileReason reason) {
+            switch (reason) {
+                case PATH_IS_TOO_LONG:
+                    return IncorrectSubtitleFileReason.PATH_IS_TOO_LONG;
+                case INVALID_PATH:
+                    return IncorrectSubtitleFileReason.INVALID_PATH;
+                case IS_A_DIRECTORY:
+                    return IncorrectSubtitleFileReason.IS_A_DIRECTORY;
+                case FILE_DOES_NOT_EXIST:
+                    return IncorrectSubtitleFileReason.FILE_DOES_NOT_EXIST;
+                case FAILED_TO_GET_PARENT_DIRECTORY:
+                    return IncorrectSubtitleFileReason.FAILED_TO_GET_PARENT_DIRECTORY;
+                case EXTENSION_IS_NOT_VALID:
+                    return IncorrectSubtitleFileReason.EXTENSION_IS_NOT_VALID;
+                case FILE_IS_EMPTY:
+                    return IncorrectSubtitleFileReason.FILE_IS_EMPTY;
+                case FILE_IS_TOO_BIG:
+                    return IncorrectSubtitleFileReason.FILE_IS_TOO_BIG;
+                case FAILED_TO_READ_CONTENT:
+                    return IncorrectSubtitleFileReason.FAILED_TO_READ_CONTENT;
+                default:
+                    throw new IllegalStateException();
+            }
+        }
+    }
+
+    private enum IncorrectSubtitleFileReason {
+        PATH_IS_TOO_LONG,
+        INVALID_PATH,
+        IS_A_DIRECTORY,
+        FILE_DOES_NOT_EXIST,
+        FAILED_TO_GET_PARENT_DIRECTORY,
+        EXTENSION_IS_NOT_VALID,
+        FILE_IS_EMPTY,
+        FILE_IS_TOO_BIG,
+        FAILED_TO_READ_CONTENT,
+        INCORRECT_SUBTITLE_FORMAT
     }
 }

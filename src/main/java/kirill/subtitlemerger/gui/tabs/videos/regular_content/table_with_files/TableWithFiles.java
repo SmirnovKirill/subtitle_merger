@@ -7,6 +7,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -405,6 +406,13 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
                 radios.managedProperty().bind(bindingForRadioCellVisibility);
             }
 
+            if (stream instanceof GuiExternalSubtitleStream) {
+                GuiExternalSubtitleStream externalStream = (GuiExternalSubtitleStream) stream;
+
+                setRadiosVisibility(radios, externalStream.isCorrectFormat());
+                externalStream.correctFormatProperty().addListener((observable, oldValue, newValue) -> setRadiosVisibility(radios, newValue));
+            }
+
             result.add(radios, 2, streamIndex);
 
             GridPane.setMargin(radios, new Insets(0, 0, bottomMargin, 0));
@@ -460,6 +468,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         GridPane.setMargin(previewPane, new Insets(3, 0, 0, 0));
 
         MultiColorLabels resultLabels = new MultiColorLabels();
+        resultLabels.setWrapText(true);
         resultLabels.setAlignment(Pos.CENTER);
         fileInfo.resultProperty().addListener(observable -> setResultLabels(fileInfo, resultLabels));
         setResultLabels(fileInfo, resultLabels);
@@ -473,6 +482,18 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         GridPane.setMargin(resultLabels, new Insets(10, 0, 0, 0));
 
         return result;
+    }
+
+    private void setRadiosVisibility(HBox radios, boolean formatCorrect) {
+        for (Node node : radios.getChildren()) {
+            node.setDisable(!formatCorrect);
+        }
+
+        if (formatCorrect) {
+            Tooltip.install(radios, null);
+        } else {
+            Tooltip.install(radios, GuiUtils.generateTooltip("Subtitle file has an incorrect format"));
+        }
     }
 
     private Pane generateHiddenAndAddPane(GuiFileInfo fileInfo) {
