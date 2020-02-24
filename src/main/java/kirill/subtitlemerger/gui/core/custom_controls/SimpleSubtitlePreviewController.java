@@ -24,10 +24,19 @@ public class SimpleSubtitlePreviewController {
     private Pane mainPane;
 
     @FXML
-    private Label upperTitle;
+    private Pane singleSubtitlesPane;
 
     @FXML
-    private Label lowerTitle;
+    private Label singleSubtitlesTitle;
+
+    @FXML
+    private Pane mergedSubtitlesPane;
+
+    @FXML
+    private Label mergedUpperTitle;
+
+    @FXML
+    private Label mergedLowerTitle;
 
     @FXML
     private MultiColorLabels resultLabels;
@@ -48,7 +57,23 @@ public class SimpleSubtitlePreviewController {
 
     private Stage dialogStage;
 
-    public void initialize(
+    public void initializeSingleSubtitles(
+            Subtitles subtitles,
+            String title,
+            Stage dialogStage
+    ) {
+        this.subtitles = subtitles;
+        this.dialogStage = dialogStage;
+
+        singleSubtitlesPane.setVisible(true);
+        singleSubtitlesPane.setManaged(true);
+        singleSubtitlesTitle.setText(title);
+        listView.setSelectionModel(new NoSelectionModel<>());
+
+        processDataAndUpdateScene();
+    }
+
+    public void initializeMergedSubtitles(
             Subtitles subtitles,
             String upperTitle,
             String lowerTitle,
@@ -57,8 +82,10 @@ public class SimpleSubtitlePreviewController {
         this.subtitles = subtitles;
         this.dialogStage = dialogStage;
 
-        this.upperTitle.setText(upperTitle);
-        this.lowerTitle.setText(lowerTitle);
+        mergedSubtitlesPane.setVisible(true);
+        mergedSubtitlesPane.setManaged(true);
+        mergedUpperTitle.setText(upperTitle);
+        mergedLowerTitle.setText(lowerTitle);
         listView.setSelectionModel(new NoSelectionModel<>());
 
         processDataAndUpdateScene();

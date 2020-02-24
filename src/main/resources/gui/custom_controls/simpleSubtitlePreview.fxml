@@ -12,19 +12,29 @@
         <Insets top="20" right="20" bottom="20" left="20"/>
     </padding>
     <VBox fx:id="mainPane" spacing="10">
-        <HBox>
-            <Label alignment="CENTER" textAlignment="CENTER" wrapText="true" maxWidth="Infinity"
-                   text="This is the result of merging"
-                   HBox.hgrow="ALWAYS"/>
-        </HBox>
-        <HBox alignment="CENTER_LEFT">
-            <Label text="&#8226; "/>
-            <Label fx:id="upperTitle"/>
-        </HBox>
-        <HBox alignment="CENTER_LEFT">
-            <Label text="&#8226; "/>
-            <Label fx:id="lowerTitle"/>
-        </HBox>
+        <StackPane>
+            <VBox fx:id="singleSubtitlesPane" visible="false" managed="false">
+                <HBox>
+                    <Label fx:id="singleSubtitlesTitle" alignment="CENTER" textAlignment="CENTER" wrapText="true"
+                           maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                </HBox>
+            </VBox>
+            <VBox fx:id="mergedSubtitlesPane" visible="false" managed="false">
+                <HBox>
+                    <Label alignment="CENTER" textAlignment="CENTER" wrapText="true" maxWidth="Infinity"
+                           text="This is the result of merging"
+                           HBox.hgrow="ALWAYS"/>
+                </HBox>
+                <HBox alignment="CENTER_LEFT">
+                    <Label text="&#8226; "/>
+                    <Label fx:id="mergedUpperTitle"/>
+                </HBox>
+                <HBox alignment="CENTER_LEFT">
+                    <Label text="&#8226; "/>
+                    <Label fx:id="mergedLowerTitle"/>
+                </HBox>
+            </VBox>
+        </StackPane>
         <MultiColorLabels fx:id="resultLabels"/>
         <ListView fx:id="listView" focusTraversable="false" VBox.vgrow="ALWAYS"/>
         <HBox spacing="10" alignment="CENTER">

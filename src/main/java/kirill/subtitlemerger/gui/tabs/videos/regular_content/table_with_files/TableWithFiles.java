@@ -51,6 +51,8 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
     private RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler;
 
+    private FfmpegStreamPreviewHandler ffmpegStreamPreviewHandler;
+
     @Getter
     @Setter
     private Mode mode;
@@ -79,7 +81,8 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             AllFileSubtitleSizesLoader allFileSubtitleSizesLoader,
             SingleFileSubtitleSizeLoader singleFileSubtitleSizeLoader,
             AddExternalSubtitleFileHandler addExternalSubtitleFileHandler,
-            RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler
+            RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler,
+            FfmpegStreamPreviewHandler ffmpegStreamPreviewHandler
 
     ) {
         this.allSelected = allSelected;
@@ -89,6 +92,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         this.singleFileSubtitleSizeLoader = singleFileSubtitleSizeLoader;
         this.addExternalSubtitleFileHandler = addExternalSubtitleFileHandler;
         this.removeExternalSubtitleFileHandler = removeExternalSubtitleFileHandler;
+        this.ffmpegStreamPreviewHandler = ffmpegStreamPreviewHandler;
 
         TableColumn<GuiFileInfo, ?> selectedColumn = getColumns().get(0);
         CheckBox selectAllCheckBox = new CheckBox();
@@ -304,6 +308,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
                         15,
                         10
                 );
+                previewButton.setOnAction(event -> ffmpegStreamPreviewHandler.showPreview(ffmpegStream.getFfmpegIndex(), fileInfo));
                 previewButton.visibleProperty().bind(stream.sizeProperty().isNotEqualTo(GuiSubtitleStream.UNKNOWN_SIZE));
                 previewButton.managedProperty().bind(stream.sizeProperty().isNotEqualTo(GuiSubtitleStream.UNKNOWN_SIZE));
 
@@ -422,6 +427,22 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
         HBox previewPane = new HBox();
         previewPane.setAlignment(Pos.CENTER);
+
+        //todo rewrite
+        if (CollectionUtils.isEmpty(fileInfo.getFfmpegSubtitleStreams())) {
+            BooleanBinding previewVisibleBinding = fileInfo.getExternalSubtitleStreams().get(0).fileNameProperty().isNotEmpty()
+                    .and(fileInfo.getExternalSubtitleStreams().get(1).fileNameProperty().isNotEmpty());
+
+            previewPane.visibleProperty().bind(previewVisibleBinding);
+            previewPane.managedProperty().bind(previewVisibleBinding);
+        } else if (fileInfo.getFfmpegSubtitleStreams().size() == 1) {
+            BooleanBinding previewVisibleBinding = fileInfo.getExternalSubtitleStreams().get(0).fileNameProperty().isNotEmpty()
+                    .or(fileInfo.getExternalSubtitleStreams().get(1).fileNameProperty().isNotEmpty());
+
+            previewPane.visibleProperty().bind(previewVisibleBinding);
+            previewPane.managedProperty().bind(previewVisibleBinding);
+        }
+
         Button previewButton = GuiUtils.createImageButton(
                 "result",
                 "/gui/icons/eye.png",
@@ -521,6 +542,11 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
     @FunctionalInterface
     public interface RemoveExternalSubtitleFileHandler {
         void buttonClicked(int index, GuiFileInfo guiFileInfo);
+    }
+
+    @FunctionalInterface
+    public interface FfmpegStreamPreviewHandler {
+        void showPreview(int ffmpegIndex, GuiFileInfo guiFileInfo);
     }
 
     @AllArgsConstructor

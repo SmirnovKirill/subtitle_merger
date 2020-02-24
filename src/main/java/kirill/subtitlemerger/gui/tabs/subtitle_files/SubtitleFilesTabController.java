@@ -754,7 +754,7 @@ public class SubtitleFilesTabController {
                 );
 
                 SimpleSubtitlePreview subtitlePreviewDialog = new SimpleSubtitlePreview();
-                subtitlePreviewDialog.getController().initialize(subtitles, upperTitle, lowerTitle, dialogStage);
+                subtitlePreviewDialog.getController().initializeMergedSubtitles(subtitles, upperTitle, lowerTitle, dialogStage);
 
                 dialogStage.setTitle("Subtitle preview");
                 dialogStage.initModality(Modality.APPLICATION_MODAL);

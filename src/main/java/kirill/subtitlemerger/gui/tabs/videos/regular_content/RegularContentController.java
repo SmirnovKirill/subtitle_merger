@@ -7,10 +7,12 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
@@ -18,6 +20,7 @@ import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.core.GuiUtils;
 import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.core.custom_controls.MultiColorLabels;
+import kirill.subtitlemerger.gui.core.custom_controls.SimpleSubtitlePreview;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.*;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiExternalSubtitleStream;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
@@ -196,7 +199,8 @@ public class RegularContentController {
                 this::loadAllFileSubtitleSizes,
                 this::loadSingleFileSubtitleSize,
                 this::addExternalSubtitleFileClicked,
-                this::removeExternalSubtitleFileClicked
+                this::removeExternalSubtitleFileClicked,
+                this::showFfmpegStreamPreview
         );
         tableWithFiles.setContextMenu(contextMenu);
 
@@ -896,6 +900,46 @@ public class RegularContentController {
         guiFileInfo.getExternalSubtitleStreams().get(index).setSelectedAsLower(false);
 
         guiFileInfo.setResultOnlySuccess("Subtitle file has been removed from the list successfully");
+    }
+
+    private void showFfmpegStreamPreview(int ffmpegIndex, GuiFileInfo guiFileInfo) {
+        generalResult.clear();
+        clearLastProcessedResult();
+
+        Stage dialogStage = new Stage();
+
+        FileInfo fileInfo = GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo);
+
+        FfmpegSubtitleStream stream = fileInfo.getFfmpegSubtitleStreams().stream()
+                .filter(currentStream -> currentStream.getFfmpegIndex() == ffmpegIndex)
+                .findFirst().orElseThrow(IllegalStateException::new);
+
+        SimpleSubtitlePreview subtitlePreviewDialog = new SimpleSubtitlePreview();
+
+        //todo make a method for titles
+        String fullTitle = stream.getLanguage() != null
+                ? stream.getLanguage().toString().toUpperCase()
+                : "UNKNOWN LANGUAGE";
+
+        fullTitle += (StringUtils.isBlank(stream.getTitle()) ? "" : " " + stream.getTitle());
+
+        fullTitle = GuiUtils.getShortenedStringIfNecessary(
+                guiFileInfo.getFullPath(),
+                0,
+                128
+        ) + ", " + fullTitle;
+        subtitlePreviewDialog.getController().initializeSingleSubtitles(stream.getSubtitles(), fullTitle, dialogStage);
+
+        dialogStage.setTitle("Subtitle preview");
+        dialogStage.initModality(Modality.APPLICATION_MODAL);
+        dialogStage.initOwner(stage);
+        dialogStage.setResizable(false);
+
+        Scene scene = new Scene(subtitlePreviewDialog);
+        scene.getStylesheets().add("/gui/style.css");
+        dialogStage.setScene(scene);
+
+        dialogStage.showAndWait();
     }
 
     private void loadAllFileSubtitleSizes(GuiFileInfo guiFileInfo) {
