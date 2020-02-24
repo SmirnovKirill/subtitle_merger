@@ -4,6 +4,7 @@ import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.scene.control.ProgressIndicator;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 /*
  * To see the explanation on why this class has been created please read the comment in the BackgroundTask class
@@ -24,7 +25,10 @@ final class BackgroundTaskRunner<T> extends Task<Void> {
          */
 
         setOnFailed(event -> {
-            log.error("task has failed, shouldn't happen");
+            log.error(
+                    "task has failed, shouldn't happen: "
+                            + ExceptionUtils.getStackTrace(event.getSource().getException())
+            );
             throw new IllegalStateException();
         });
 

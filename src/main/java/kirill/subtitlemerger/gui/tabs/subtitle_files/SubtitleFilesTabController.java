@@ -197,7 +197,7 @@ public class SubtitleFilesTabController {
                             validatorFileInfo.getFile(),
                             validatorFileInfo.getParent(),
                             fileOrigin,
-                            false,
+                            isDuplicate(path, validatorFileInfo.getFile(), fileType, filesInfo),
                             validatorFileInfo.getContent(),
                             null,
                             null,
@@ -218,7 +218,7 @@ public class SubtitleFilesTabController {
                             validatorFileInfo.getFile(),
                             validatorFileInfo.getParent(),
                             fileOrigin,
-                            isDuplicate(validatorFileInfo.getFile(), fileType, filesInfo),
+                            isDuplicate(path, validatorFileInfo.getFile(), fileType, filesInfo),
                             validatorFileInfo.getContent(),
                             StandardCharsets.UTF_8,
                             subtitles,
@@ -232,7 +232,7 @@ public class SubtitleFilesTabController {
                             validatorFileInfo.getFile(),
                             validatorFileInfo.getParent(),
                             fileOrigin,
-                            false,
+                            isDuplicate(path, validatorFileInfo.getFile(), fileType, filesInfo),
                             validatorFileInfo.getContent(),
                             StandardCharsets.UTF_8,
                             null,
@@ -242,13 +242,31 @@ public class SubtitleFilesTabController {
         }
     }
 
-    private static boolean isDuplicate(File file, InputFileType fileType, FilesInfo filesInfo) {
+    private static boolean isDuplicate(String path, File file, InputFileType fileType, FilesInfo filesInfo) {
+        String otherPath;
+        File otherFile;
         if (fileType == InputFileType.UPPER_SUBTITLES) {
-            return filesInfo.getLowerFileInfo() != null && Objects.equals(file, filesInfo.getLowerFileInfo().getFile());
+            if (filesInfo.getLowerFileInfo() == null) {
+                return false;
+            }
+
+            otherPath = filesInfo.getLowerFileInfo().getPath();
+            otherFile = filesInfo.getLowerFileInfo().getFile();
         } else if (fileType == InputFileType.LOWER_SUBTITLES) {
-            return filesInfo.getUpperFileInfo() != null && Objects.equals(file, filesInfo.getUpperFileInfo().getFile());
+            if (filesInfo.getUpperFileInfo() == null) {
+                return false;
+            }
+
+            otherPath = filesInfo.getUpperFileInfo().getPath();
+            otherFile = filesInfo.getUpperFileInfo().getFile();
         } else {
             throw new IllegalStateException();
+        }
+
+        if (otherFile != null) {
+            return Objects.equals(file, otherFile);
+        } else {
+            return Objects.equals(path, otherPath);
         }
     }
 
@@ -374,10 +392,10 @@ public class SubtitleFilesTabController {
         if (upperFileInfo != null && (upperFileInfo.isDuplicate || upperFileInfo.getIncorrectFileReason() != null)) {
             showFileElementsAsIncorrect(ExtendedFileType.UPPER_SUBTITLES);
 
-            if (upperFileInfo.getIncorrectFileReason() != null) {
-                errorMessageParts.add(getErrorText(upperFileInfo.getPath(), upperFileInfo.getIncorrectFileReason()));
-            } else if (upperFileInfo.isDuplicate()) {
+            if (upperFileInfo.getFile() != null && upperFileInfo.isDuplicate()) {
                 errorMessageParts.add("You have already selected this file for the lower subtitles");
+            } else if (upperFileInfo.getIncorrectFileReason() != null) {
+                errorMessageParts.add(getErrorText(upperFileInfo.getPath(), upperFileInfo.getIncorrectFileReason()));
             }
         }
 
@@ -385,10 +403,10 @@ public class SubtitleFilesTabController {
         if (lowerFileInfo != null && (lowerFileInfo.isDuplicate || lowerFileInfo.getIncorrectFileReason() != null)) {
             showFileElementsAsIncorrect(ExtendedFileType.LOWER_SUBTITLES);
 
-            if (lowerFileInfo.getIncorrectFileReason() != null) {
-                errorMessageParts.add(getErrorText(lowerFileInfo.getPath(), lowerFileInfo.getIncorrectFileReason()));
-            } else if (lowerFileInfo.isDuplicate()) {
+            if (lowerFileInfo.getFile() != null && lowerFileInfo.isDuplicate()) {
                 errorMessageParts.add("You have already selected this file for the upper subtitles");
+            } else if (lowerFileInfo.getIncorrectFileReason() != null) {
+                errorMessageParts.add(getErrorText(lowerFileInfo.getPath(), lowerFileInfo.getIncorrectFileReason()));
             }
         }
 
