@@ -414,12 +414,11 @@ public class SettingsTabController {
             return Optional.empty();
         }
 
-        String parentPath = new File(path).getParent();
-        if (StringUtils.isBlank(parentPath)) {
+        File parent = new File(path).getParentFile();
+        if (parent == null) {
             return Optional.empty();
         }
 
-        File parent = new File(parentPath);
         if (parent.isDirectory()) {
             return Optional.of(parent);
         }

@@ -54,8 +54,8 @@ public class FileValidator {
             );
         }
 
-        String parentPath = file.getParent();
-        if (StringUtils.isBlank(parentPath)) {
+        File parent = file.getParentFile();
+        if (parent == null || !parent.isDirectory()) {
             return Optional.of(
                     new InputFileInfo(
                             file,
@@ -63,16 +63,6 @@ public class FileValidator {
                             IncorrectInputFileReason.FAILED_TO_GET_PARENT_DIRECTORY,
                             null
                     )
-            );
-        }
-
-        File parent = new File(parentPath);
-        if (!parent.exists() || !parent.isDirectory()) {
-            new InputFileInfo(
-                    file,
-                    null,
-                    IncorrectInputFileReason.FAILED_TO_GET_PARENT_DIRECTORY,
-                    null
             );
         }
 
@@ -129,13 +119,9 @@ public class FileValidator {
             return Optional.of(new OutputFileInfo(file, null, IncorrectOutputFileReason.IS_A_DIRECTORY));
         }
 
-        String parentPath = file.getParent();
-        File parent = null;
-        if (!StringUtils.isBlank(parentPath)) {
-            parent = new File(parentPath);
-            if (!parent.exists() || !parent.isDirectory()) {
-                parent = null;
-            }
+        File parent = file.getParentFile();
+        if (parent != null && !parent.isDirectory()) {
+            parent = null;
         }
 
         if (!allowNonExistent && !file.exists()) {
