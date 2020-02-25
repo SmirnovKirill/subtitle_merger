@@ -2,14 +2,15 @@ package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
 import javafx.application.Platform;
 import javafx.scene.control.ProgressBar;
-import kirill.subtitlemerger.gui.core.GuiUtils;
 import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFfmpegSubtitleStream;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
+import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import lombok.AllArgsConstructor;
@@ -19,7 +20,7 @@ import java.util.function.Consumer;
 
 @AllArgsConstructor
 public class LoadSingleSubtitleTask extends BackgroundTask<LoadSingleSubtitleTask.Result> {
-    private int ffmpegIndex;
+    private String streamId;
 
     private FileInfo fileInfo;
 
@@ -33,9 +34,8 @@ public class LoadSingleSubtitleTask extends BackgroundTask<LoadSingleSubtitleTas
     protected Result run() {
         updateProgress(ProgressBar.INDETERMINATE_PROGRESS, ProgressBar.INDETERMINATE_PROGRESS);
 
-        FfmpegSubtitleStream stream = fileInfo.getFfmpegSubtitleStreams().stream()
-                .filter(currentStream -> currentStream.getFfmpegIndex() == ffmpegIndex)
-                .findFirst().orElseThrow(IllegalStateException::new);
+        FfmpegSubtitleStream stream = SubtitleStream.getById(streamId, fileInfo.getFfmpegSubtitleStreams());
+        GuiFfmpegSubtitleStream guiStream = GuiSubtitleStream.getById(streamId, guiFileInfo.getFfmpegSubtitleStreams());
         updateMessage(
                 LoadFilesAllSubtitlesTask.getUpdateMessage(
                         1,
@@ -43,11 +43,6 @@ public class LoadSingleSubtitleTask extends BackgroundTask<LoadSingleSubtitleTas
                         stream,
                         fileInfo.getFile()
                 )
-        );
-
-        GuiFfmpegSubtitleStream guiStream = GuiUtils.findMatchingGuiStream(
-                stream.getUniqueId(),
-                guiFileInfo.getFfmpegSubtitleStreams()
         );
 
         setCancellationPossible(true);

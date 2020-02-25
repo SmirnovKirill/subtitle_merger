@@ -7,6 +7,7 @@ import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFfmpegSubtitleStream;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
@@ -74,8 +75,8 @@ public class LoadFilesAllSubtitlesTask extends BackgroundTask<LoadFilesAllSubtit
                         )
                 );
 
-                GuiFfmpegSubtitleStream guiStream = GuiUtils.findMatchingGuiStream(
-                        stream.getUniqueId(),
+                GuiFfmpegSubtitleStream guiStream = GuiSubtitleStream.getById(
+                        stream.getId(),
                         guiFileInfo.getFfmpegSubtitleStreams()
                 );
                 try {

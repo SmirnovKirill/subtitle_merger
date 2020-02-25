@@ -14,8 +14,8 @@ public class GuiExternalSubtitleStream extends GuiSubtitleStream {
 
     private BooleanProperty correctFormat;
 
-    public GuiExternalSubtitleStream(int index) {
-        super(GuiSubtitleStream.UNKNOWN_SIZE, false, false);
+    public GuiExternalSubtitleStream(String id, int index) {
+        super(id, GuiSubtitleStream.UNKNOWN_SIZE, false, false);
 
         this.index = index;
         this.fileName = new SimpleStringProperty(null);
@@ -47,7 +47,7 @@ public class GuiExternalSubtitleStream extends GuiSubtitleStream {
     }
 
     @Override
-    public String getUniqueId() {
-        return getFileName();
+    public void setId(String id) {
+        super.setId(id);
     }
 }

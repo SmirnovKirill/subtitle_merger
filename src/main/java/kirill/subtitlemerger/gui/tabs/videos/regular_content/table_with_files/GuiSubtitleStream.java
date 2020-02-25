@@ -4,14 +4,19 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import kirill.subtitlemerger.logic.work_with_files.entities.ExternalSubtitleStream;
-import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 public abstract class GuiSubtitleStream {
     public static final int UNKNOWN_SIZE = -1;
+
+    @Getter
+    @Setter(value = AccessLevel.PROTECTED)
+    private String id;
 
     private IntegerProperty size;
 
@@ -20,10 +25,12 @@ public abstract class GuiSubtitleStream {
     private BooleanProperty selectedAsLower;
 
     public GuiSubtitleStream(
+            String id,
             Integer size,
             boolean selectedAsUpper,
             boolean selectedAsLower
     ) {
+        this.id = id;
         this.size = new SimpleIntegerProperty(size != null ? size : UNKNOWN_SIZE);
         this.selectedAsUpper = new SimpleBooleanProperty(selectedAsUpper);
         this.selectedAsLower = new SimpleBooleanProperty(selectedAsLower);
@@ -65,5 +72,9 @@ public abstract class GuiSubtitleStream {
         this.selectedAsLower.set(selectedAsLower);
     }
 
-    public abstract String getUniqueId();
+    public static <T extends GuiSubtitleStream> T getById(String id, List<T> guiStreams) {
+        return guiStreams.stream()
+                .filter(stream -> Objects.equals(stream.getId(), id))
+                .findFirst().orElseThrow(IllegalStateException::new);
+    }
 }

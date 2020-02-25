@@ -8,6 +8,7 @@ import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFfmpegSubtitleStream;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
+import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
@@ -112,13 +113,13 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
                     matchingLowerSubtitles.sort(STREAM_COMPARATOR);
                 }
 
-                GuiUtils.findMatchingGuiStream(
-                        matchingUpperSubtitles.get(0).getUniqueId(),
+                GuiSubtitleStream.getById(
+                        matchingUpperSubtitles.get(0).getId(),
                         guiFileInfo.getSubtitleStreams()
                 ).setSelectedAsUpper(true);
 
-                GuiUtils.findMatchingGuiStream(
-                        matchingLowerSubtitles.get(0).getUniqueId(),
+                GuiSubtitleStream.getById(
+                        matchingLowerSubtitles.get(0).getId(),
                         guiFileInfo.getSubtitleStreams()
                 ).setSelectedAsLower(true);
 
@@ -195,8 +196,8 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
                 continue;
             }
 
-            GuiFfmpegSubtitleStream guiStream = GuiUtils.findMatchingGuiStream(
-                    stream.getUniqueId(),
+            GuiFfmpegSubtitleStream guiStream = GuiSubtitleStream.getById(
+                    stream.getId(),
                     fileInfo.getFfmpegSubtitleStreams()
             );
 

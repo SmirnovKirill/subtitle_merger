@@ -11,16 +11,16 @@ import java.util.Objects;
 @AllArgsConstructor
 @Getter
 public abstract class SubtitleStream {
+    private String id;
+
     private SubtitleCodec codec;
 
     @Setter
     private Subtitles subtitles;
 
-    public abstract String getUniqueId();
-
-    public static SubtitleStream getByUniqueId(String id, List<SubtitleStream> allSubtitleStreams) {
+    public static <T extends SubtitleStream> T getById(String id, List<T> allSubtitleStreams) {
         return allSubtitleStreams.stream()
-                .filter(stream -> Objects.equals(stream.getUniqueId(), id))
+                .filter(stream -> Objects.equals(stream.getId(), id))
                 .findFirst().orElseThrow(IllegalAccessError::new);
     }
 }

@@ -211,7 +211,7 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
         }
 
         for (int i = 0; i < 2; i++) {
-            subtitleStreams.add(new GuiExternalSubtitleStream(i));
+            subtitleStreams.add(new GuiExternalSubtitleStream(null, i));
         }
 
         GuiFileInfo result = new GuiFileInfo(
@@ -235,7 +235,7 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
                 }
 
                 for (GuiSubtitleStream currentStream : result.getSubtitleStreams()) {
-                    if (Objects.equals(currentStream.getUniqueId(), stream.getUniqueId())) {
+                    if (Objects.equals(currentStream.getId(), stream.getId())) {
                         currentStream.setSelectedAsLower(false);
                     } else {
                         currentStream.setSelectedAsUpper(false);
@@ -249,7 +249,7 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
                 }
 
                 for (GuiSubtitleStream currentStream : result.getSubtitleStreams()) {
-                    if (Objects.equals(currentStream.getUniqueId(), stream.getUniqueId())) {
+                    if (Objects.equals(currentStream.getId(), stream.getId())) {
                         currentStream.setSelectedAsUpper(false);
                     } else {
                         currentStream.setSelectedAsLower(false);
@@ -263,10 +263,10 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
 
     private static GuiFfmpegSubtitleStream from(FfmpegSubtitleStream subtitleStream, GuiSettings guiSettings) {
         return new GuiFfmpegSubtitleStream(
+                subtitleStream.getId(),
                 subtitleStream.getSubtitles() != null ? subtitleStream.getSubtitles().getSize() : null,
                 false,
                 false,
-                subtitleStream.getFfmpegIndex(),
                 guiTextFrom(subtitleStream.getUnavailabilityReason()),
                 null,
                 subtitleStream.getLanguage() != null ? subtitleStream.getLanguage().toString() : "unknown",

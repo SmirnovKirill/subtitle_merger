@@ -21,6 +21,7 @@ import kirill.subtitlemerger.gui.core.GuiUtils;
 import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.core.custom_controls.MultiColorLabels;
 import kirill.subtitlemerger.gui.core.custom_controls.SimpleSubtitlePreview;
+import kirill.subtitlemerger.gui.core.custom_controls.SubtitlePreviewWithEncoding;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.*;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiExternalSubtitleStream;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
@@ -34,7 +35,6 @@ import kirill.subtitlemerger.logic.work_with_files.entities.*;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -203,7 +203,8 @@ public class RegularContentController {
                 this::loadSingleFileSubtitleSize,
                 this::addExternalSubtitleFileClicked,
                 this::removeExternalSubtitleFileClicked,
-                this::showFfmpegStreamPreview
+                this::showFfmpegStreamPreview,
+                this::showExternalFilePreview
         );
         tableWithFiles.setContextMenu(contextMenu);
 
@@ -301,16 +302,16 @@ public class RegularContentController {
         GuiSubtitleStream guiUpperSubtitles = guiFileInfo.getSubtitleStreams().stream()
                 .filter(GuiSubtitleStream::isSelectedAsUpper)
                 .findFirst().orElseThrow(IllegalStateException::new);
-        SubtitleStream upperSubtitles = SubtitleStream.getByUniqueId(
-                guiUpperSubtitles.getUniqueId(),
+        SubtitleStream upperSubtitles = SubtitleStream.getById(
+                guiUpperSubtitles.getId(),
                 fileInfo.getSubtitleStreams()
         );
 
         GuiSubtitleStream guiLowerSubtitles = guiFileInfo.getSubtitleStreams().stream()
                 .filter(GuiSubtitleStream::isSelectedAsLower)
                 .findFirst().orElseThrow(IllegalStateException::new);
-        SubtitleStream lowerSubtitles = SubtitleStream.getByUniqueId(
-                guiLowerSubtitles.getUniqueId(),
+        SubtitleStream lowerSubtitles = SubtitleStream.getById(
+                guiLowerSubtitles.getId(),
                 fileInfo.getSubtitleStreams()
         );
 
@@ -838,23 +839,33 @@ public class RegularContentController {
                     );
                 }
 
-                if (result.getIncorrectFileReason() != null) {
-                    if (result.getIncorrectFileReason() == IncorrectSubtitleFileReason.INCORRECT_SUBTITLE_FORMAT) {
-                       // guiExternalSubtitleStream.setFileName(file.getName());
-                        //guiExternalSubtitleStream.setSize((int) file.length());
-
-                        fileInfo.getSubtitleStreams().add(new ExternalSubtitleStream(SubtitleCodec.SUBRIP, result.getSubtitles(), file));
-                    }
-
-                    guiFileInfo.setResultOnlyError(getErrorText(file.getAbsolutePath(), result.getIncorrectFileReason()));
-                } else if (result.isDuplicate()) {
-                    guiFileInfo.setResultOnlyError("This has already been added");
+                if (result.getFile() != null && result.isDuplicate) {
+                    guiFileInfo.setResultOnlyError("This file has already been added");
+                } else if (result.getIncorrectFileReason() != null) {
+                    guiFileInfo.setResultOnlyError(getErrorText(result.getIncorrectFileReason()));
                 } else {
+                    ExternalSubtitleStream externalSubtitleStream = new ExternalSubtitleStream(
+                            SubtitleCodec.SUBRIP,
+                            result.getSubtitles(),
+                            file,
+                            result.getRawData(),
+                            StandardCharsets.UTF_8
+                    );
+
+                    fileInfo.getSubtitleStreams().add(externalSubtitleStream);
+
+                    guiExternalSubtitleStream.setId(externalSubtitleStream.getId());
                     guiExternalSubtitleStream.setFileName(file.getName());
                     guiExternalSubtitleStream.setSize((int) file.length());
+                    guiExternalSubtitleStream.setCorrectFormat(result.getSubtitles() != null);
 
-                    fileInfo.getSubtitleStreams().add(new ExternalSubtitleStream(SubtitleCodec.SUBRIP, result.getSubtitles(), file));
-                    guiFileInfo.setResultOnlySuccess("Subtitle file has been added to the list successfully");
+                    if (result.getSubtitles() != null) {
+                        guiFileInfo.setResultOnlySuccess("Subtitle file has been added to the list successfully");
+                    } else {
+                        guiFileInfo.setResultOnlyWarn(
+                                "File was added but it has an incorrect subtitle format, you can try and change the encoding pressing the preview button"
+                        );
+                    }
                 }
 
                 stopProgress();
@@ -899,76 +910,62 @@ public class RegularContentController {
                     new ExternalSubtitleFileInfo(
                             validatorFileInfo.getFile(),
                             validatorFileInfo.getParent(),
-                            false,
+                            Objects.equals(file, otherSubtitleFile),
                             validatorFileInfo.getContent(),
                             null,
-                            ExternalSubtitleFileInfo.from(validatorFileInfo.getIncorrectFileReason())
+                            validatorFileInfo.getIncorrectFileReason()
                     )
             );
         }
 
+        Subtitles subtitles;
         try {
-            Subtitles subtitles = SubtitleParser.fromSubRipText(
+            subtitles = SubtitleParser.fromSubRipText(
                     new String(validatorFileInfo.getContent(), StandardCharsets.UTF_8),
                     null
             );
-
-            return Optional.of(
-                    new ExternalSubtitleFileInfo(
-                            validatorFileInfo.getFile(),
-                            validatorFileInfo.getParent(),
-                            Objects.equals(file, otherSubtitleFile),
-                            validatorFileInfo.getContent(),
-                            subtitles,
-                            null
-                    )
-            );
         } catch (SubtitleParser.IncorrectFormatException e) {
-            return Optional.of(
-                    new ExternalSubtitleFileInfo(
-                            validatorFileInfo.getFile(),
-                            validatorFileInfo.getParent(),
-                            false,
-                            validatorFileInfo.getContent(),
-                            null,
-                            IncorrectSubtitleFileReason.INCORRECT_SUBTITLE_FORMAT
-                    )
-            );
+            subtitles = null;
         }
+
+        return Optional.of(
+                new ExternalSubtitleFileInfo(
+                        validatorFileInfo.getFile(),
+                        validatorFileInfo.getParent(),
+                        Objects.equals(file, otherSubtitleFile),
+                        validatorFileInfo.getContent(),
+                        subtitles,
+                        null
+                )
+        );
     }
 
-    private static String getErrorText(String path, IncorrectSubtitleFileReason reason) {
-        path = GuiUtils.getShortenedStringIfNecessary(path, 20, 40);
-
+    private static String getErrorText(FileValidator.IncorrectInputFileReason reason) {
         switch (reason) {
             case PATH_IS_TOO_LONG:
                 return "File path is too long";
             case INVALID_PATH:
                 return "File path is invalid";
             case IS_A_DIRECTORY:
-                return path + " is a directory, not a file";
+                return "Is a directory, not a file";
             case FILE_DOES_NOT_EXIST:
-                return "File '" + path + "' doesn't exist";
+                return "File doesn't exist";
             case FAILED_TO_GET_PARENT_DIRECTORY:
-                return path + ": failed to get parent directory";
+                return "Failed to get parent directory for the file";
             case EXTENSION_IS_NOT_VALID:
-                return "File '" + path + "' has an incorrect extension";
+                return "File has an incorrect extension";
             case FILE_IS_EMPTY:
-                return "File '" + path + "' is empty";
+                return "File is empty";
             case FILE_IS_TOO_BIG:
-                return "File '" + path + "' is too big (>"
-                        + GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)";
+                return "File is too big (>" + GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)";
             case FAILED_TO_READ_CONTENT:
-                return path + ": failed to read the file";
-            case INCORRECT_SUBTITLE_FORMAT:
-                return "File '" + path + "' has an incorrect subtitle format, it can happen if the file is not UTF-8-encoded"
-                        + ", you can change the encoding pressing the preview button";
+                return "Failed to read the file";
             default:
                 throw new IllegalStateException();
         }
     }
 
-    private void removeExternalSubtitleFileClicked(int index, GuiFileInfo guiFileInfo) {
+    private void removeExternalSubtitleFileClicked(String streamId, GuiFileInfo guiFileInfo) {
         generalResult.clear();
         clearLastProcessedResult();
         guiFileInfo.clearResult();
@@ -976,32 +973,30 @@ public class RegularContentController {
 
         FileInfo fileInfo = GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo);
 
-        int indexOfLastStream = fileInfo.getSubtitleStreams().size() - 1;
-        if (!(fileInfo.getSubtitleStreams().get(indexOfLastStream) instanceof ExternalSubtitleStream)) {
-            log.error("last stream is not external, that shouldn't happen");
-            throw new IllegalStateException();
-        }
-        fileInfo.getSubtitleStreams().remove(indexOfLastStream);
+        fileInfo.getSubtitleStreams().removeIf(stream -> Objects.equals(stream.getId(), streamId));
 
-        guiFileInfo.getExternalSubtitleStreams().get(index).setFileName(null);
-        guiFileInfo.getExternalSubtitleStreams().get(index).setSize(GuiSubtitleStream.UNKNOWN_SIZE);
-        guiFileInfo.getExternalSubtitleStreams().get(index).setSelectedAsUpper(false);
-        guiFileInfo.getExternalSubtitleStreams().get(index).setSelectedAsLower(false);
+        GuiExternalSubtitleStream guiSubtitleStream = GuiSubtitleStream.getById(streamId, guiFileInfo.getExternalSubtitleStreams());
+
+        guiSubtitleStream.setId(null);
+        guiSubtitleStream.setFileName(null);
+        guiSubtitleStream.setSize(GuiSubtitleStream.UNKNOWN_SIZE);
+        guiSubtitleStream.setSelectedAsUpper(false);
+        guiSubtitleStream.setSelectedAsLower(false);
 
         guiFileInfo.setResultOnlySuccess("Subtitle file has been removed from the list successfully");
     }
 
-    private void showFfmpegStreamPreview(int ffmpegIndex, GuiFileInfo guiFileInfo) {
+    private void showFfmpegStreamPreview(String streamId, GuiFileInfo guiFileInfo) {
         generalResult.clear();
         clearLastProcessedResult();
+        guiFileInfo.clearResult();
+        lastProcessedFileInfo = guiFileInfo;
 
         Stage dialogStage = new Stage();
 
         FileInfo fileInfo = GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo);
 
-        FfmpegSubtitleStream stream = fileInfo.getFfmpegSubtitleStreams().stream()
-                .filter(currentStream -> currentStream.getFfmpegIndex() == ffmpegIndex)
-                .findFirst().orElseThrow(IllegalStateException::new);
+        FfmpegSubtitleStream stream = SubtitleStream.getById(streamId, fileInfo.getFfmpegSubtitleStreams());
 
         SimpleSubtitlePreview subtitlePreviewDialog = new SimpleSubtitlePreview();
 
@@ -1031,6 +1026,45 @@ public class RegularContentController {
         dialogStage.showAndWait();
     }
 
+    private void showExternalFilePreview(String streamId, GuiFileInfo guiFileInfo) {
+        generalResult.clear();
+        clearLastProcessedResult();
+        guiFileInfo.clearResult();
+        lastProcessedFileInfo = guiFileInfo;
+
+        FileInfo fileInfo = GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo);
+        ExternalSubtitleStream subtitleStream = SubtitleStream.getById(streamId, fileInfo.getExternalSubtitleStreams());
+
+        String path = GuiUtils.getShortenedStringIfNecessary(
+                fileInfo.getFile().getAbsolutePath(),
+                0,
+                128
+        );
+
+        Stage dialogStage = new Stage();
+
+        SubtitlePreviewWithEncoding subtitlePreviewDialog = new SubtitlePreviewWithEncoding();
+        subtitlePreviewDialog.getController().initialize(
+                subtitleStream.getRawData(),
+                subtitleStream.getEncoding(),
+                path,
+                dialogStage
+        );
+
+        dialogStage.setTitle("Subtitle preview");
+        dialogStage.initModality(Modality.APPLICATION_MODAL);
+        dialogStage.initOwner(stage);
+        dialogStage.setResizable(false);
+
+        Scene scene = new Scene(subtitlePreviewDialog);
+        scene.getStylesheets().add("/gui/style.css");
+        dialogStage.setScene(scene);
+
+        dialogStage.showAndWait();
+
+        //todo
+    }
+
     private void loadAllFileSubtitleSizes(GuiFileInfo guiFileInfo) {
         generalResult.clear();
         clearLastProcessedResult();
@@ -1050,14 +1084,14 @@ public class RegularContentController {
         prepareAndStartBackgroundTask(task);
     }
 
-    private void loadSingleFileSubtitleSize(GuiFileInfo guiFileInfo, int ffmpegIndex) {
+    private void loadSingleFileSubtitleSize(GuiFileInfo guiFileInfo, String streamId) {
         generalResult.clear();
         clearLastProcessedResult();
         guiFileInfo.clearResult();
         lastProcessedFileInfo = guiFileInfo;
 
         LoadSingleSubtitleTask task = new LoadSingleSubtitleTask(
-                ffmpegIndex,
+                streamId,
                 GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo),
                 guiFileInfo,
                 (result) -> {
@@ -1070,7 +1104,6 @@ public class RegularContentController {
         prepareAndStartBackgroundTask(task);
     }
 
-    //todo merge with the same file in subtitle files tab controller
     @AllArgsConstructor
     @Getter
     private static class ExternalSubtitleFileInfo {
@@ -1078,53 +1111,12 @@ public class RegularContentController {
 
         private File parent;
 
-        @Setter
         private boolean isDuplicate;
 
         private byte[] rawData;
 
-        @Setter
         private Subtitles subtitles;
 
-        @Setter
-        private IncorrectSubtitleFileReason incorrectFileReason;
-
-        static IncorrectSubtitleFileReason from(FileValidator.IncorrectInputFileReason reason) {
-            switch (reason) {
-                case PATH_IS_TOO_LONG:
-                    return IncorrectSubtitleFileReason.PATH_IS_TOO_LONG;
-                case INVALID_PATH:
-                    return IncorrectSubtitleFileReason.INVALID_PATH;
-                case IS_A_DIRECTORY:
-                    return IncorrectSubtitleFileReason.IS_A_DIRECTORY;
-                case FILE_DOES_NOT_EXIST:
-                    return IncorrectSubtitleFileReason.FILE_DOES_NOT_EXIST;
-                case FAILED_TO_GET_PARENT_DIRECTORY:
-                    return IncorrectSubtitleFileReason.FAILED_TO_GET_PARENT_DIRECTORY;
-                case EXTENSION_IS_NOT_VALID:
-                    return IncorrectSubtitleFileReason.EXTENSION_IS_NOT_VALID;
-                case FILE_IS_EMPTY:
-                    return IncorrectSubtitleFileReason.FILE_IS_EMPTY;
-                case FILE_IS_TOO_BIG:
-                    return IncorrectSubtitleFileReason.FILE_IS_TOO_BIG;
-                case FAILED_TO_READ_CONTENT:
-                    return IncorrectSubtitleFileReason.FAILED_TO_READ_CONTENT;
-                default:
-                    throw new IllegalStateException();
-            }
-        }
-    }
-
-    private enum IncorrectSubtitleFileReason {
-        PATH_IS_TOO_LONG,
-        INVALID_PATH,
-        IS_A_DIRECTORY,
-        FILE_DOES_NOT_EXIST,
-        FAILED_TO_GET_PARENT_DIRECTORY,
-        EXTENSION_IS_NOT_VALID,
-        FILE_IS_EMPTY,
-        FILE_IS_TOO_BIG,
-        FAILED_TO_READ_CONTENT,
-        INCORRECT_SUBTITLE_FORMAT
+        private FileValidator.IncorrectInputFileReason incorrectFileReason;
     }
 }

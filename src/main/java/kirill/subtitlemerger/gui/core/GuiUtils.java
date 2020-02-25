@@ -9,7 +9,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.util.Duration;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import lombok.extern.apachecommons.CommonsLog;
 
@@ -142,12 +141,6 @@ public class GuiUtils {
     public static FileInfo findMatchingFileInfo(GuiFileInfo guiFileInfo, List<FileInfo> filesInfo) {
         return filesInfo.stream()
                 .filter(fileInfo -> Objects.equals(fileInfo.getFile().getAbsolutePath(), guiFileInfo.getFullPath()))
-                .findFirst().orElseThrow(IllegalStateException::new);
-    }
-
-    public static <T extends GuiSubtitleStream> T findMatchingGuiStream(String id, List<T> guiStreams) {
-        return guiStreams.stream()
-                .filter(stream -> Objects.equals(stream.getUniqueId(), id))
                 .findFirst().orElseThrow(IllegalStateException::new);
     }
 }

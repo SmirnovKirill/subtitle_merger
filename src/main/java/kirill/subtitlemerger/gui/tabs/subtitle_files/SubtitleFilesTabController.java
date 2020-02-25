@@ -389,7 +389,7 @@ public class SubtitleFilesTabController {
         List<String> errorMessageParts = new ArrayList<>();
 
         InputFileInfo upperFileInfo = filesInfo.getUpperFileInfo();
-        if (upperFileInfo != null && (upperFileInfo.isDuplicate || upperFileInfo.getIncorrectFileReason() != null)) {
+        if (upperFileInfo != null && (upperFileInfo.isDuplicate() || upperFileInfo.getIncorrectFileReason() != null)) {
             showFileElementsAsIncorrect(ExtendedFileType.UPPER_SUBTITLES);
 
             if (upperFileInfo.getFile() != null && upperFileInfo.isDuplicate()) {
@@ -400,7 +400,7 @@ public class SubtitleFilesTabController {
         }
 
         InputFileInfo lowerFileInfo = filesInfo.getLowerFileInfo();
-        if (lowerFileInfo != null && (lowerFileInfo.isDuplicate || lowerFileInfo.getIncorrectFileReason() != null)) {
+        if (lowerFileInfo != null && (lowerFileInfo.isDuplicate() || lowerFileInfo.getIncorrectFileReason() != null)) {
             showFileElementsAsIncorrect(ExtendedFileType.LOWER_SUBTITLES);
 
             if (lowerFileInfo.getFile() != null && lowerFileInfo.isDuplicate()) {

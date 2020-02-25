@@ -34,18 +34,13 @@ public class FfmpegSubtitleStream extends SubtitleStream {
             String title,
             boolean defaultDisposition
     ) {
-        super(codec, subtitles);
+        super("ffmpeg-" + ffmpegIndex, codec, subtitles);
 
         this.ffmpegIndex = ffmpegIndex;
         this.unavailabilityReason = unavailabilityReason;
         this.language = language;
         this.title = title;
         this.defaultDisposition = defaultDisposition;
-    }
-
-    @Override
-    public String getUniqueId() {
-        return ffmpegIndex + "";
     }
 
     public enum UnavailabilityReason {

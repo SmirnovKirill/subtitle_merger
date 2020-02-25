@@ -54,6 +54,8 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
     private FfmpegStreamPreviewHandler ffmpegStreamPreviewHandler;
 
+    private ExternalFilePreviewHandler externalFilePreviewHandler;
+
     @Getter
     @Setter
     private Mode mode;
@@ -83,7 +85,8 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             SingleFileSubtitleSizeLoader singleFileSubtitleSizeLoader,
             AddExternalSubtitleFileHandler addExternalSubtitleFileHandler,
             RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler,
-            FfmpegStreamPreviewHandler ffmpegStreamPreviewHandler
+            FfmpegStreamPreviewHandler ffmpegStreamPreviewHandler,
+            ExternalFilePreviewHandler externalFilePreviewHandler
 
     ) {
         this.allSelected = allSelected;
@@ -94,6 +97,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         this.addExternalSubtitleFileHandler = addExternalSubtitleFileHandler;
         this.removeExternalSubtitleFileHandler = removeExternalSubtitleFileHandler;
         this.ffmpegStreamPreviewHandler = ffmpegStreamPreviewHandler;
+        this.externalFilePreviewHandler = externalFilePreviewHandler;
 
         TableColumn<GuiFileInfo, ?> selectedColumn = getColumns().get(0);
         CheckBox selectAllCheckBox = new CheckBox();
@@ -309,12 +313,12 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
                         15,
                         10
                 );
-                previewButton.setOnAction(event -> ffmpegStreamPreviewHandler.showPreview(ffmpegStream.getFfmpegIndex(), fileInfo));
+                previewButton.setOnAction(event -> ffmpegStreamPreviewHandler.showPreview(ffmpegStream.getId(), fileInfo));
                 previewButton.visibleProperty().bind(stream.sizeProperty().isNotEqualTo(GuiSubtitleStream.UNKNOWN_SIZE));
                 previewButton.managedProperty().bind(stream.sizeProperty().isNotEqualTo(GuiSubtitleStream.UNKNOWN_SIZE));
 
                 Hyperlink loadSingleLink = new Hyperlink("load");
-                loadSingleLink.setOnAction(event -> singleFileSubtitleSizeLoader.load(fileInfo, ffmpegStream.getFfmpegIndex()));
+                loadSingleLink.setOnAction(event -> singleFileSubtitleSizeLoader.load(fileInfo, ffmpegStream.getId()));
                 loadSingleLink.visibleProperty().bind(stream.sizeProperty().isEqualTo(GuiSubtitleStream.UNKNOWN_SIZE));
                 loadSingleLink.managedProperty().bind(stream.sizeProperty().isEqualTo(GuiSubtitleStream.UNKNOWN_SIZE));
 
@@ -363,10 +367,14 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
                 imageView.setFitHeight(imageView.getFitWidth());
                 removeButton.setGraphic(imageView);
 
-                removeButton.setOnAction(event -> removeExternalSubtitleFileHandler.buttonClicked(externalStream.getIndex(), fileInfo));
+                removeButton.setOnAction(event -> removeExternalSubtitleFileHandler.buttonClicked(externalStream.getId(), fileInfo));
 
                 fileNameAndRemove.getChildren().addAll(fileName, new Region(), removeButton);
                 HBox.setHgrow(fileNameAndRemove.getChildren().get(1), Priority.ALWAYS);
+
+                HBox sizePane = new HBox();
+                sizePane.setAlignment(Pos.CENTER_LEFT);
+                sizePane.setSpacing(5);
 
                 Label sizeLabel = new Label();
                 sizeLabel.textProperty().bind(sizeBinding);
@@ -378,11 +386,25 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
                 sizeLabel.visibleProperty().bind(externalFileUsed);
                 sizeLabel.managedProperty().bind(externalFileUsed);
 
+                Button previewButton = GuiUtils.createImageButton(
+                        "",
+                        "/gui/icons/eye.png",
+                        15,
+                        10
+                );
+                previewButton.setOnAction(event -> externalFilePreviewHandler.buttonClicked(stream.getId(), fileInfo));
+                previewButton.visibleProperty().bind(externalFileUsed);
+                previewButton.managedProperty().bind(externalFileUsed);
+
+                Region spacer = new Region();
+                sizePane.getChildren().addAll(sizeLabel, spacer, previewButton);
+                HBox.setHgrow(spacer, Priority.ALWAYS);
+
                 result.add(fileNameAndRemove, 0, streamIndex);
-                result.add(sizeLabel, 1, streamIndex);
+                result.add(sizePane, 1, streamIndex);
 
                 GridPane.setMargin(fileNameAndRemove, new Insets(0, 0, bottomMargin, 0));
-                GridPane.setMargin(sizeLabel, new Insets(0, 0, bottomMargin, 0));
+                GridPane.setMargin(sizePane, new Insets(0, 0, bottomMargin, 0));
 
                 bindingForRadioCellVisibility = externalFileUsed;
             } else {
@@ -552,7 +574,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
     @FunctionalInterface
     public interface SingleFileSubtitleSizeLoader {
-        void load(GuiFileInfo guiFileInfo, int ffmpegIndex);
+        void load(GuiFileInfo guiFileInfo, String streamId);
     }
 
     @FunctionalInterface
@@ -562,12 +584,17 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
     @FunctionalInterface
     public interface RemoveExternalSubtitleFileHandler {
-        void buttonClicked(int index, GuiFileInfo guiFileInfo);
+        void buttonClicked(String streamId, GuiFileInfo guiFileInfo);
     }
 
     @FunctionalInterface
     public interface FfmpegStreamPreviewHandler {
-        void showPreview(int ffmpegIndex, GuiFileInfo guiFileInfo);
+        void showPreview(String streamId, GuiFileInfo guiFileInfo);
+    }
+
+    @FunctionalInterface
+    public interface ExternalFilePreviewHandler {
+        void buttonClicked(String streamId, GuiFileInfo guiFileInfo);
     }
 
     @AllArgsConstructor
