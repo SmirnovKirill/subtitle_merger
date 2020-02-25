@@ -458,21 +458,6 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         HBox previewPane = new HBox();
         previewPane.setAlignment(Pos.CENTER);
 
-        //todo rewrite
-        if (CollectionUtils.isEmpty(fileInfo.getFfmpegSubtitleStreams())) {
-            BooleanBinding previewVisibleBinding = fileInfo.getExternalSubtitleStreams().get(0).fileNameProperty().isNotEmpty()
-                    .and(fileInfo.getExternalSubtitleStreams().get(1).fileNameProperty().isNotEmpty());
-
-            previewPane.visibleProperty().bind(previewVisibleBinding);
-            previewPane.managedProperty().bind(previewVisibleBinding);
-        } else if (fileInfo.getFfmpegSubtitleStreams().size() == 1) {
-            BooleanBinding previewVisibleBinding = fileInfo.getExternalSubtitleStreams().get(0).fileNameProperty().isNotEmpty()
-                    .or(fileInfo.getExternalSubtitleStreams().get(1).fileNameProperty().isNotEmpty());
-
-            previewPane.visibleProperty().bind(previewVisibleBinding);
-            previewPane.managedProperty().bind(previewVisibleBinding);
-        }
-
         Button previewButton = GuiUtils.createImageButton(
                 "result",
                 "/gui/icons/eye.png",
@@ -480,6 +465,11 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
                 10
         );
         previewPane.getChildren().add(previewButton);
+
+        setPreviewPaneState(fileInfo, previewPane);
+
+        fileInfo.streamToSelectFromCountProperty().addListener(observable -> setPreviewPaneState(fileInfo, previewPane));
+        fileInfo.selectedStreamCountProperty().addListener(observable -> setPreviewPaneState(fileInfo, previewPane));
 
         result.add(hiddenAndAddPane, 0, fileInfo.getSubtitleStreams().size());
         result.add(loadAllSizesPane, 1, fileInfo.getSubtitleStreams().size());
@@ -504,6 +494,27 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         GridPane.setMargin(resultLabels, new Insets(10, 0, 0, 0));
 
         return result;
+    }
+
+    private static void setPreviewPaneState(
+            GuiFileInfo fileInfo,
+            HBox previewPane
+    ) {
+        if (fileInfo.getStreamToSelectFromCount() >= 2) {
+            previewPane.setVisible(true);
+            previewPane.setManaged(true);
+
+            if (fileInfo.getSelectedStreamCount() == 2) {
+                previewPane.getChildren().get(0).setDisable(false);
+                Tooltip.install(previewPane, null);
+            } else {
+                previewPane.getChildren().get(0).setDisable(true);
+                Tooltip.install(previewPane, GuiUtils.generateTooltip("Please select subtitles to merge first"));
+            }
+        } else {
+            previewPane.setVisible(false);
+            previewPane.setManaged(false);
+        }
     }
 
     private void setRadiosVisibility(HBox radios, boolean formatCorrect) {

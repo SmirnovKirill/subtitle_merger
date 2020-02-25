@@ -806,14 +806,14 @@ public class RegularContentController {
 
         FileInfo fileInfo = GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo);
 
-        GuiExternalSubtitleStream guiExternalSubtitleStream;
+        int externalSubtitleStreamIndex;
         File otherFile;
         if (CollectionUtils.isEmpty(fileInfo.getExternalSubtitleStreams())) {
             otherFile = null;
-            guiExternalSubtitleStream = guiFileInfo.getExternalSubtitleStreams().get(0);
+            externalSubtitleStreamIndex = 0;
         } else if (fileInfo.getExternalSubtitleStreams().size() == 1) {
             otherFile = fileInfo.getExternalSubtitleStreams().get(0).getFile();
-            guiExternalSubtitleStream = guiFileInfo.getExternalSubtitleStreams().get(1);
+            externalSubtitleStreamIndex = 1;
         } else {
             log.error("unexpected amount of subtitle streams: " + fileInfo.getExternalSubtitleStreams().size());
             throw new IllegalStateException();
@@ -855,10 +855,13 @@ public class RegularContentController {
 
                     fileInfo.getSubtitleStreams().add(externalSubtitleStream);
 
-                    guiExternalSubtitleStream.setId(externalSubtitleStream.getId());
-                    guiExternalSubtitleStream.setFileName(file.getName());
-                    guiExternalSubtitleStream.setSize((int) file.length());
-                    guiExternalSubtitleStream.setCorrectFormat(result.getSubtitles() != null);
+                    guiFileInfo.setExternalSubtitleStream(
+                            externalSubtitleStreamIndex,
+                            externalSubtitleStream.getId(),
+                            file.getName(),
+                            (int) file.length(),
+                            result.getSubtitles() != null
+                    );
 
                     if (result.getSubtitles() != null) {
                         guiFileInfo.setResultOnlySuccess("Subtitle file has been added to the list successfully");
@@ -975,14 +978,7 @@ public class RegularContentController {
         FileInfo fileInfo = GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo);
 
         fileInfo.getSubtitleStreams().removeIf(stream -> Objects.equals(stream.getId(), streamId));
-
-        GuiExternalSubtitleStream guiSubtitleStream = GuiSubtitleStream.getById(streamId, guiFileInfo.getExternalSubtitleStreams());
-
-        guiSubtitleStream.setId(null);
-        guiSubtitleStream.setFileName(null);
-        guiSubtitleStream.setSize(GuiSubtitleStream.UNKNOWN_SIZE);
-        guiSubtitleStream.setSelectedAsUpper(false);
-        guiSubtitleStream.setSelectedAsLower(false);
+        guiFileInfo.unsetExternalSubtitleStream(streamId);
 
         guiFileInfo.setResultOnlySuccess("Subtitle file has been removed from the list successfully");
     }
