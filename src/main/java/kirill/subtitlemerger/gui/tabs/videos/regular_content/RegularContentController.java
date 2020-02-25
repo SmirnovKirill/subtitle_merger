@@ -22,6 +22,7 @@ import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.core.custom_controls.MultiColorLabels;
 import kirill.subtitlemerger.gui.core.custom_controls.SimpleSubtitlePreview;
 import kirill.subtitlemerger.gui.core.custom_controls.SubtitlePreviewWithEncoding;
+import kirill.subtitlemerger.gui.core.custom_controls.SubtitlePreviewWithEncodingController;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.*;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiExternalSubtitleStream;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
@@ -1034,9 +1035,10 @@ public class RegularContentController {
 
         FileInfo fileInfo = GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo);
         ExternalSubtitleStream subtitleStream = SubtitleStream.getById(streamId, fileInfo.getExternalSubtitleStreams());
+        GuiExternalSubtitleStream guiSubtitleStream = GuiSubtitleStream.getById(streamId, guiFileInfo.getExternalSubtitleStreams());
 
         String path = GuiUtils.getShortenedStringIfNecessary(
-                fileInfo.getFile().getAbsolutePath(),
+                subtitleStream.getFile().getAbsolutePath(),
                 0,
                 128
         );
@@ -1062,7 +1064,15 @@ public class RegularContentController {
 
         dialogStage.showAndWait();
 
-        //todo
+        SubtitlePreviewWithEncodingController.UserSelection userSelection = subtitlePreviewDialog.getController().getUserSelection();
+
+        if (Objects.equals(subtitleStream.getEncoding(), userSelection.getEncoding())) {
+            return;
+        }
+
+        subtitleStream.setEncoding(userSelection.getEncoding());
+        subtitleStream.setSubtitles(userSelection.getSubtitles());
+        guiSubtitleStream.setCorrectFormat(userSelection.getSubtitles() != null);
     }
 
     private void loadAllFileSubtitleSizes(GuiFileInfo guiFileInfo) {
