@@ -236,16 +236,12 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
             FfmpegSubtitleStream subtitleStream,
             File file
     ) {
-        String language = subtitleStream.getLanguage() != null
-                ? subtitleStream.getLanguage().toString().toUpperCase()
-                : "UNKNOWN LANGUAGE";
-
         String progressPrefix = allSubtitleCount > 1
                 ? (processedCount + 1) + "/" + allSubtitleCount + " "
                 : "";
 
         return progressPrefix + "getting subtitle "
-                + language
+                + GuiUtils.languageToString(subtitleStream.getLanguage()).toUpperCase()
                 + (StringUtils.isBlank(subtitleStream.getTitle()) ? "" : " " + subtitleStream.getTitle())
                 + " in " + file.getName();
     }

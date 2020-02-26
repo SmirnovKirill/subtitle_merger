@@ -161,16 +161,12 @@ public class LoadFilesAllSubtitlesTask extends BackgroundTask<LoadFilesAllSubtit
             FfmpegSubtitleStream subtitleStream,
             File file
     ) {
-        String language = subtitleStream.getLanguage() != null
-                ? subtitleStream.getLanguage().toString().toUpperCase()
-                : "UNKNOWN LANGUAGE";
-
         String progressPrefix = streamToLoadCount > 1
                 ? String.format("%d/%d ", processedCount + 1, streamToLoadCount)
                 : "";
 
         return progressPrefix + "getting subtitle "
-                + language
+                + GuiUtils.languageToString(subtitleStream.getLanguage()).toUpperCase()
                 + (StringUtils.isBlank(subtitleStream.getTitle()) ? "" : " " + subtitleStream.getTitle())
                 + " in " + file.getName();
     }

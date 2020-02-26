@@ -1003,19 +1003,11 @@ public class RegularContentController {
 
         SimpleSubtitlePreview subtitlePreviewDialog = new SimpleSubtitlePreview();
 
-        //todo make a method for titles
-        String fullTitle = stream.getLanguage() != null
-                ? stream.getLanguage().toString().toUpperCase()
-                : "UNKNOWN LANGUAGE";
-
-        fullTitle += (StringUtils.isBlank(stream.getTitle()) ? "" : " " + stream.getTitle());
-
-        fullTitle = GuiUtils.getShortenedStringIfNecessary(
-                guiFileInfo.getFullPath(),
-                0,
-                128
-        ) + ", " + fullTitle;
-        subtitlePreviewDialog.getController().initializeSingleSubtitles(stream.getSubtitles(), fullTitle, dialogStage);
+        subtitlePreviewDialog.getController().initializeSingleSubtitles(
+                stream.getSubtitles(),
+                getStreamTitleForPreview(fileInfo, stream),
+                dialogStage
+        );
 
         dialogStage.setTitle("Subtitle preview");
         dialogStage.initModality(Modality.APPLICATION_MODAL);
@@ -1029,6 +1021,44 @@ public class RegularContentController {
         dialogStage.showAndWait();
     }
 
+    private static String getStreamTitleForPreview(FileInfo fileInfo, SubtitleStream stream) {
+        if (stream instanceof ExternalSubtitleStream) {
+            ExternalSubtitleStream externalStream = (ExternalSubtitleStream) stream;
+
+            return GuiUtils.getShortenedStringIfNecessary(
+                    externalStream.getFile().getAbsolutePath(),
+                    0,
+                    128
+            );
+        } else if (stream instanceof FfmpegSubtitleStream) {
+            FfmpegSubtitleStream ffmpegStream = (FfmpegSubtitleStream) stream;
+
+            String videoFilePath = GuiUtils.getShortenedStringIfNecessary(
+                    fileInfo.getFile().getName(),
+                    0,
+                    128
+            );
+
+            String language = GuiUtils.languageToString(ffmpegStream.getLanguage()).toUpperCase();
+
+            String streamTitle = "";
+            if (!StringUtils.isBlank(ffmpegStream.getTitle())) {
+                streamTitle += String.format(
+                        " (%s)",
+                        GuiUtils.getShortenedStringIfNecessary(
+                                ffmpegStream.getTitle(),
+                                20,
+                                0
+                        )
+                );
+            };
+
+            return videoFilePath + ", " + language + streamTitle;
+        } else {
+            throw new IllegalStateException();
+        }
+    }
+
     private void showExternalFilePreview(String streamId, GuiFileInfo guiFileInfo) {
         generalResult.clear();
         clearLastProcessedResult();
@@ -1039,19 +1069,13 @@ public class RegularContentController {
         ExternalSubtitleStream subtitleStream = SubtitleStream.getById(streamId, fileInfo.getExternalSubtitleStreams());
         GuiExternalSubtitleStream guiSubtitleStream = GuiSubtitleStream.getById(streamId, guiFileInfo.getExternalSubtitleStreams());
 
-        String path = GuiUtils.getShortenedStringIfNecessary(
-                subtitleStream.getFile().getAbsolutePath(),
-                0,
-                128
-        );
-
         Stage dialogStage = new Stage();
 
         SubtitlePreviewWithEncoding subtitlePreviewDialog = new SubtitlePreviewWithEncoding();
         subtitlePreviewDialog.getController().initialize(
                 subtitleStream.getRawData(),
                 subtitleStream.getEncoding(),
-                path,
+                getStreamTitleForPreview(fileInfo, subtitleStream),
                 dialogStage
         );
 
@@ -1162,20 +1186,13 @@ public class RegularContentController {
 
                 Stage dialogStage = new Stage();
 
-               /* String upperTitle = "file " + GuiUtils.getShortenedStringIfNecessary(
-                        filesInfo.getUpperFileInfo().getPath(),
-                        0,
-                        64
-                );
-
-                String lowerTitle = "file " + GuiUtils.getShortenedStringIfNecessary(
-                        filesInfo.getLowerFileInfo().getPath(),
-                        0,
-                        64
-                );*/
-
                 SimpleSubtitlePreview subtitlePreviewDialog = new SimpleSubtitlePreview();
-                subtitlePreviewDialog.getController().initializeMergedSubtitles(mergedSubtitleInfo.getSubtitles(), "1", "2", dialogStage);
+                subtitlePreviewDialog.getController().initializeMergedSubtitles(
+                        mergedSubtitleInfo.getSubtitles(),
+                        getStreamTitleForPreview(fileInfo, upperStream),
+                        getStreamTitleForPreview(fileInfo, lowerStream),
+                        dialogStage
+                );
 
                 dialogStage.setTitle("Subtitle preview");
                 dialogStage.initModality(Modality.APPLICATION_MODAL);

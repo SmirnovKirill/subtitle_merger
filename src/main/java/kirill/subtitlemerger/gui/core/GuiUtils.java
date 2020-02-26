@@ -1,5 +1,6 @@
 package kirill.subtitlemerger.gui.core;
 
+import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.beans.property.StringProperty;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
@@ -142,5 +143,9 @@ public class GuiUtils {
         return filesInfo.stream()
                 .filter(fileInfo -> Objects.equals(fileInfo.getFile().getAbsolutePath(), guiFileInfo.getFullPath()))
                 .findFirst().orElseThrow(IllegalStateException::new);
+    }
+
+    public static String languageToString(LanguageAlpha3Code language) {
+        return language != null ? language.toString() : "unknown language";
     }
 }
