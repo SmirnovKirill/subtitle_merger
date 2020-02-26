@@ -28,6 +28,7 @@ import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.Gu
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles;
+import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.utils.FileValidator;
@@ -42,6 +43,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
@@ -205,7 +207,8 @@ public class RegularContentController {
                 this::addExternalSubtitleFileClicked,
                 this::removeExternalSubtitleFileClicked,
                 this::showFfmpegStreamPreview,
-                this::showExternalFilePreview
+                this::showExternalFilePreview,
+                this::showMergedPreview
         );
         tableWithFiles.setContextMenu(contextMenu);
 
@@ -1072,6 +1075,122 @@ public class RegularContentController {
         subtitleStream.setEncoding(userSelection.getEncoding());
         subtitleStream.setSubtitles(userSelection.getSubtitles());
         guiSubtitleStream.setCorrectFormat(userSelection.getSubtitles() != null);
+    }
+
+    private void showMergedPreview(GuiFileInfo guiFileInfo) {
+        generalResult.clear();
+        clearLastProcessedResult();
+        guiFileInfo.clearResult();
+        lastProcessedFileInfo = guiFileInfo;
+
+        FileInfo fileInfo = GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo);
+
+        GuiSubtitleStream guiUpperStream = guiFileInfo.getSubtitleStreams().stream()
+                .filter(GuiSubtitleStream::isSelectedAsUpper)
+                .findFirst().orElseThrow(IllegalStateException::new);
+        SubtitleStream upperStream = SubtitleStream.getById(guiUpperStream.getId(), fileInfo.getSubtitleStreams());
+        Charset upperStreamEncoding;
+        if (upperStream instanceof FfmpegSubtitleStream) {
+            upperStreamEncoding = StandardCharsets.UTF_8;
+        } else if (upperStream instanceof ExternalSubtitleStream) {
+            upperStreamEncoding = ((ExternalSubtitleStream) upperStream).getEncoding();
+        } else {
+            throw new IllegalStateException();
+        }
+
+        GuiSubtitleStream guiLowerStream = guiFileInfo.getSubtitleStreams().stream()
+                .filter(GuiSubtitleStream::isSelectedAsLower)
+                .findFirst().orElseThrow(IllegalStateException::new);
+        SubtitleStream lowerStream = SubtitleStream.getById(guiLowerStream.getId(), fileInfo.getSubtitleStreams());
+        Charset lowerStreamEncoding;
+        if (lowerStream instanceof FfmpegSubtitleStream) {
+            lowerStreamEncoding = StandardCharsets.UTF_8;
+        } else if (lowerStream instanceof ExternalSubtitleStream) {
+            lowerStreamEncoding = ((ExternalSubtitleStream) lowerStream).getEncoding();
+        } else {
+            throw new IllegalStateException();
+        }
+
+        BackgroundTask<MergedSubtitleInfo> task = new BackgroundTask<>() {
+            @Override
+            protected MergedSubtitleInfo run() {
+                if (fileInfo.getMergedSubtitleInfo() != null) {
+                    boolean matches = true;
+
+                    if (!Objects.equals(fileInfo.getMergedSubtitleInfo().getUpperStreamId(), upperStream.getId())) {
+                        matches = false;
+                    }
+
+                    if (!Objects.equals(fileInfo.getMergedSubtitleInfo().getUpperStreamEncoding(), upperStreamEncoding)) {
+                        matches = false;
+                    }
+
+                    if (!Objects.equals(fileInfo.getMergedSubtitleInfo().getLowerStreamId(), lowerStream.getId())) {
+                        matches = false;
+                    }
+
+                    if (!Objects.equals(fileInfo.getMergedSubtitleInfo().getLowerStreamEncoding(), lowerStreamEncoding)) {
+                        matches = false;
+                    }
+
+                    if (matches) {
+                        return fileInfo.getMergedSubtitleInfo();
+                    }
+                }
+
+                updateMessage("merging subtitles...");
+
+                Subtitles merged = SubtitleMerger.mergeSubtitles(
+                        upperStream.getSubtitles(),
+                        lowerStream.getSubtitles()
+                );
+
+                return new MergedSubtitleInfo(
+                        merged,
+                        upperStream.getId(),
+                        upperStreamEncoding,
+                        lowerStream.getId(),
+                        lowerStreamEncoding
+                );
+            }
+
+            @Override
+            protected void onFinish(MergedSubtitleInfo mergedSubtitleInfo) {
+                fileInfo.setMergedSubtitleInfo(mergedSubtitleInfo);
+
+                stopProgress();
+
+                Stage dialogStage = new Stage();
+
+               /* String upperTitle = "file " + GuiUtils.getShortenedStringIfNecessary(
+                        filesInfo.getUpperFileInfo().getPath(),
+                        0,
+                        64
+                );
+
+                String lowerTitle = "file " + GuiUtils.getShortenedStringIfNecessary(
+                        filesInfo.getLowerFileInfo().getPath(),
+                        0,
+                        64
+                );*/
+
+                SimpleSubtitlePreview subtitlePreviewDialog = new SimpleSubtitlePreview();
+                subtitlePreviewDialog.getController().initializeMergedSubtitles(mergedSubtitleInfo.getSubtitles(), "1", "2", dialogStage);
+
+                dialogStage.setTitle("Subtitle preview");
+                dialogStage.initModality(Modality.APPLICATION_MODAL);
+                dialogStage.initOwner(stage);
+                dialogStage.setResizable(false);
+
+                Scene scene = new Scene(subtitlePreviewDialog);
+                scene.getStylesheets().add("/gui/style.css");
+                dialogStage.setScene(scene);
+
+                dialogStage.showAndWait();
+            }
+        };
+
+        prepareAndStartBackgroundTask(task);
     }
 
     private void loadAllFileSubtitleSizes(GuiFileInfo guiFileInfo) {

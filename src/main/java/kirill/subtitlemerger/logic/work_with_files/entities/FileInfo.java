@@ -1,7 +1,9 @@
 package kirill.subtitlemerger.logic.work_with_files.entities;
 
+import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.joda.time.LocalDateTime;
 
@@ -28,6 +30,9 @@ class FileInfo {
 
     private VideoFormat videoContainer;
 
+    @Setter
+    private MergedSubtitleInfo mergedSubtitleInfo;
+
     private List<SubtitleStream> subtitleStreams;
 
     public FileInfo(
@@ -37,10 +42,11 @@ class FileInfo {
             List<SubtitleStream> subtitleStreams
     ) {
         this.file = file;
-        this.lastModified = new LocalDateTime(file.lastModified());
-        this.size = file.length();
+        lastModified = new LocalDateTime(file.lastModified());
+        size = file.length();
         this.unavailabilityReason = unavailabilityReason;
         this.videoContainer = videoContainer;
+        mergedSubtitleInfo = null;
         this.subtitleStreams = subtitleStreams;
     }
 

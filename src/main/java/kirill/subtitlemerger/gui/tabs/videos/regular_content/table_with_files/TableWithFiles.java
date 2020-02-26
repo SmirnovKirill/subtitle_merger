@@ -55,6 +55,8 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
     private ExternalFilePreviewHandler externalFilePreviewHandler;
 
+    private MergedPreviewHandler mergedPreviewHandler;
+
     @Getter
     @Setter
     private Mode mode;
@@ -85,7 +87,8 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             AddExternalSubtitleFileHandler addExternalSubtitleFileHandler,
             RemoveExternalSubtitleFileHandler removeExternalSubtitleFileHandler,
             FfmpegStreamPreviewHandler ffmpegStreamPreviewHandler,
-            ExternalFilePreviewHandler externalFilePreviewHandler
+            ExternalFilePreviewHandler externalFilePreviewHandler,
+            MergedPreviewHandler mergedPreviewHandler
 
     ) {
         this.allSelected = allSelected;
@@ -97,6 +100,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         this.removeExternalSubtitleFileHandler = removeExternalSubtitleFileHandler;
         this.ffmpegStreamPreviewHandler = ffmpegStreamPreviewHandler;
         this.externalFilePreviewHandler = externalFilePreviewHandler;
+        this.mergedPreviewHandler = mergedPreviewHandler;
 
         TableColumn<GuiFileInfo, ?> selectedColumn = getColumns().get(0);
         CheckBox selectAllCheckBox = new CheckBox();
@@ -260,6 +264,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
                 15,
                 10
         );
+        previewButton.setOnAction(event -> mergedPreviewHandler.showPreview(fileInfo));
         previewPane.getChildren().add(previewButton);
 
         BooleanBinding showExtra = Bindings.not(fileInfo.someSubtitlesHiddenProperty());
@@ -404,7 +409,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
                         15,
                         10
                 );
-                previewButton.setOnAction(event -> externalFilePreviewHandler.buttonClicked(stream.getId(), fileInfo));
+                previewButton.setOnAction(event -> externalFilePreviewHandler.showPreview(stream.getId(), fileInfo));
                 previewButton.visibleProperty().bind(externalFileUsed);
                 previewButton.managedProperty().bind(externalFileUsed);
 
@@ -558,16 +563,25 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             }
         }
 
-        boolean upperSelected = fileInfo.getSubtitleStreams().stream().anyMatch(GuiSubtitleStream::isSelectedAsUpper);
-        boolean lowerSelected = fileInfo.getSubtitleStreams().stream().anyMatch(GuiSubtitleStream::isSelectedAsLower);
+        GuiSubtitleStream upperStream = fileInfo.getSubtitleStreams().stream()
+                .filter(GuiSubtitleStream::isSelectedAsUpper)
+                .findFirst().orElse(null);
+        GuiSubtitleStream lowerStream = fileInfo.getSubtitleStreams().stream()
+                .filter(GuiSubtitleStream::isSelectedAsLower)
+                .findFirst().orElse(null);
 
         if (selectFromCount >= 2) {
             previewPane.setVisible(true);
             previewPane.setManaged(true);
 
-            if (upperSelected && lowerSelected) {
-                previewPane.getChildren().get(0).setDisable(false);
-                Tooltip.install(previewPane, null);
+            if (upperStream != null && lowerStream != null) {
+                if (upperStream.getSize() == GuiSubtitleStream.UNKNOWN_SIZE || lowerStream.getSize() == GuiSubtitleStream.UNKNOWN_SIZE) {
+                    previewPane.getChildren().get(0).setDisable(true);
+                    Tooltip.install(previewPane, GuiUtils.generateTooltip("Please load selected subtitles first"));
+                } else {
+                    previewPane.getChildren().get(0).setDisable(false);
+                    Tooltip.install(previewPane, null);
+                }
             } else {
                 previewPane.getChildren().get(0).setDisable(true);
                 Tooltip.install(previewPane, GuiUtils.generateTooltip("Please select subtitles to merge first"));
@@ -666,7 +680,12 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
     @FunctionalInterface
     public interface ExternalFilePreviewHandler {
-        void buttonClicked(String streamId, GuiFileInfo guiFileInfo);
+        void showPreview(String streamId, GuiFileInfo guiFileInfo);
+    }
+
+    @FunctionalInterface
+    public interface MergedPreviewHandler {
+        void showPreview(GuiFileInfo guiFileInfo);
     }
 
     @AllArgsConstructor
