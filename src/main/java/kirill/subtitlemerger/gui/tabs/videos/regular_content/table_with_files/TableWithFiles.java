@@ -25,8 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @CommonsLog
 public class TableWithFiles extends TableView<GuiFileInfo> {
@@ -252,7 +251,20 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             return result;
         }
 
+        HBox previewPane = new HBox();
+        previewPane.setAlignment(Pos.CENTER);
+
+        Button previewButton = GuiUtils.createImageButton(
+                "result",
+                "/gui/icons/eye.png",
+                15,
+                10
+        );
+        previewPane.getChildren().add(previewButton);
+
         BooleanBinding showExtra = Bindings.not(fileInfo.someSubtitlesHiddenProperty());
+
+        List<Pane> radioPanes = new ArrayList<>();
 
         int bottomMargin = 2;
 
@@ -307,7 +319,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
                                 .otherwise(knownSizeBinding)
                 );
 
-                Button previewButton = GuiUtils.createImageButton(
+                previewButton = GuiUtils.createImageButton(
                         "",
                         "/gui/icons/eye.png",
                         15,
@@ -367,7 +379,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
                 imageView.setFitHeight(imageView.getFitWidth());
                 removeButton.setGraphic(imageView);
 
-                removeButton.setOnAction(event -> removeExternalSubtitleFileHandler.buttonClicked(externalStream.getId(), fileInfo));
+                removeButton.setOnAction(event -> removeExternalSubtitleFileHandler.buttonClicked(externalStream.getId(), fileInfo, () -> updateFileNode(fileInfo, radioPanes, previewPane)));
 
                 fileNameAndRemove.getChildren().addAll(fileName, new Region(), removeButton);
                 HBox.setHgrow(fileNameAndRemove.getChildren().get(1), Priority.ALWAYS);
@@ -386,7 +398,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
                 sizeLabel.visibleProperty().bind(externalFileUsed);
                 sizeLabel.managedProperty().bind(externalFileUsed);
 
-                Button previewButton = GuiUtils.createImageButton(
+                previewButton = GuiUtils.createImageButton(
                         "",
                         "/gui/icons/eye.png",
                         15,
@@ -416,12 +428,14 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             radios.setAlignment(Pos.CENTER);
 
             RadioButton upper = new RadioButton("upper");
-            upper.selectedProperty().bindBidirectional(stream.selectedAsUpperProperty());
+            upper.setOnAction(event -> upperStreamClicked(upper, stream.getId(), fileInfo, radioPanes, previewPane));
 
             RadioButton lower = new RadioButton("lower");
-            lower.selectedProperty().bindBidirectional(stream.selectedAsLowerProperty());
+            lower.setOnAction(event -> lowerStreamClicked(lower, stream.getId(), fileInfo, radioPanes, previewPane));
 
             radios.getChildren().addAll(upper, lower);
+
+            radioPanes.add(radios);
 
             if (bindingForRadioCellVisibility != null) {
                 radios.visibleProperty().bind(bindingForRadioCellVisibility);
@@ -442,7 +456,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
             streamIndex++;
         }
 
-        Pane hiddenAndAddPane = generateHiddenAndAddPane(fileInfo);
+        Pane hiddenAndAddPane = generateHiddenAndAddPane(fileInfo, radioPanes, previewPane);
 
         HBox loadAllSizesPane = new HBox();
         loadAllSizesPane.setAlignment(Pos.CENTER);
@@ -454,22 +468,6 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         loadAllLink.managedProperty().bind(fileInfo.haveSubtitleSizesToLoadProperty());
 
         loadAllSizesPane.getChildren().add(loadAllLink);
-
-        HBox previewPane = new HBox();
-        previewPane.setAlignment(Pos.CENTER);
-
-        Button previewButton = GuiUtils.createImageButton(
-                "result",
-                "/gui/icons/eye.png",
-                15,
-                10
-        );
-        previewPane.getChildren().add(previewButton);
-
-        setPreviewPaneState(fileInfo, previewPane);
-
-        fileInfo.streamToSelectFromCountProperty().addListener(observable -> setPreviewPaneState(fileInfo, previewPane));
-        fileInfo.selectedStreamCountProperty().addListener(observable -> setPreviewPaneState(fileInfo, previewPane));
 
         result.add(hiddenAndAddPane, 0, fileInfo.getSubtitleStreams().size());
         result.add(loadAllSizesPane, 1, fileInfo.getSubtitleStreams().size());
@@ -493,18 +491,81 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         GridPane.setColumnSpan(resultLabels, 3);
         GridPane.setMargin(resultLabels, new Insets(10, 0, 0, 0));
 
+        updateFileNode(fileInfo, radioPanes, previewPane);
+
         return result;
+    }
+
+    private static void upperStreamClicked(RadioButton radioButton, String streamId, GuiFileInfo fileInfo, List<Pane> radioPanes, HBox previewPane) {
+        if (radioButton.isSelected()) {
+            for (GuiSubtitleStream currentStream : fileInfo.getSubtitleStreams()) {
+                if (Objects.equals(currentStream.getId(), streamId)) {
+                    currentStream.setSelectedAsUpper(true);
+                    currentStream.setSelectedAsLower(false);
+                } else {
+                    currentStream.setSelectedAsUpper(false);
+                }
+            }
+        } else {
+            GuiSubtitleStream stream = GuiSubtitleStream.getById(streamId, fileInfo.getSubtitleStreams());
+            stream.setSelectedAsUpper(false);
+        }
+
+        updateFileNode(fileInfo, radioPanes, previewPane);
+    }
+
+    private static void lowerStreamClicked(RadioButton radioButton, String streamId, GuiFileInfo fileInfo, List<Pane> radioPanes, HBox previewPane) {
+        if (radioButton.isSelected()) {
+            for (GuiSubtitleStream currentStream : fileInfo.getSubtitleStreams()) {
+                if (Objects.equals(currentStream.getId(), streamId)) {
+                    currentStream.setSelectedAsLower(true);
+                    currentStream.setSelectedAsUpper(false);
+                } else {
+                    currentStream.setSelectedAsLower(false);
+                }
+            }
+        } else {
+            GuiSubtitleStream stream = GuiSubtitleStream.getById(streamId, fileInfo.getSubtitleStreams());
+            stream.setSelectedAsLower(false);
+        }
+
+        updateFileNode(fileInfo, radioPanes, previewPane);
+    }
+
+    private static void updateFileNode(GuiFileInfo fileInfo, List<Pane> radioPanes, HBox previewPane) {
+        setPreviewPaneState(fileInfo, previewPane);
+
+        int i = 0;
+        for (Pane radioPane : radioPanes) {
+            RadioButton upper = (RadioButton) radioPane.getChildren().get(0);
+            RadioButton lower = (RadioButton) radioPane.getChildren().get(1);
+
+            upper.setSelected(fileInfo.getSubtitleStreams().get(i).isSelectedAsUpper());
+            lower.setSelected(fileInfo.getSubtitleStreams().get(i).isSelectedAsLower());
+
+            i++;
+        }
     }
 
     private static void setPreviewPaneState(
             GuiFileInfo fileInfo,
             HBox previewPane
     ) {
-        if (fileInfo.getStreamToSelectFromCount() >= 2) {
+        int selectFromCount = fileInfo.getFfmpegSubtitleStreams().size();
+        for (GuiExternalSubtitleStream stream : fileInfo.getExternalSubtitleStreams()) {
+            if (!StringUtils.isBlank(stream.getFileName())) {
+                selectFromCount += 1;
+            }
+        }
+
+        boolean upperSelected = fileInfo.getSubtitleStreams().stream().anyMatch(GuiSubtitleStream::isSelectedAsUpper);
+        boolean lowerSelected = fileInfo.getSubtitleStreams().stream().anyMatch(GuiSubtitleStream::isSelectedAsLower);
+
+        if (selectFromCount >= 2) {
             previewPane.setVisible(true);
             previewPane.setManaged(true);
 
-            if (fileInfo.getSelectedStreamCount() == 2) {
+            if (upperSelected && lowerSelected) {
                 previewPane.getChildren().get(0).setDisable(false);
                 Tooltip.install(previewPane, null);
             } else {
@@ -529,7 +590,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
         }
     }
 
-    private Pane generateHiddenAndAddPane(GuiFileInfo fileInfo) {
+    private Pane generateHiddenAndAddPane(GuiFileInfo fileInfo, List<Pane> radioPanes, HBox previewPane) {
         HBox result = new HBox();
 
         result.setAlignment(Pos.CENTER_LEFT);
@@ -557,7 +618,7 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
                 9,
                 9
         );
-        button.setOnAction((event -> addExternalSubtitleFileHandler.buttonClicked(fileInfo)));
+        button.setOnAction((event -> addExternalSubtitleFileHandler.buttonClicked(fileInfo, () -> updateFileNode(fileInfo, radioPanes, previewPane))));
 
         BooleanBinding canAddMoreFiles = fileInfo.getExternalSubtitleStreams().get(0).fileNameProperty().isEmpty()
                 .or(fileInfo.getExternalSubtitleStreams().get(1).fileNameProperty().isEmpty());
@@ -590,12 +651,12 @@ public class TableWithFiles extends TableView<GuiFileInfo> {
 
     @FunctionalInterface
     public interface AddExternalSubtitleFileHandler {
-        void buttonClicked(GuiFileInfo guiFileInfo);
+        void buttonClicked(GuiFileInfo guiFileInfo, Runnable onFinish);
     }
 
     @FunctionalInterface
     public interface RemoveExternalSubtitleFileHandler {
-        void buttonClicked(String streamId, GuiFileInfo guiFileInfo);
+        void buttonClicked(String streamId, GuiFileInfo guiFileInfo, Runnable onFinish);
     }
 
     @FunctionalInterface

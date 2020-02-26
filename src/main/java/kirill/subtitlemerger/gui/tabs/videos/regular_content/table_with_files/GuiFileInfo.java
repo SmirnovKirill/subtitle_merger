@@ -1,6 +1,9 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files;
 
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -32,10 +35,6 @@ public class GuiFileInfo {
     @Getter(AccessLevel.NONE)
     private BooleanProperty someSubtitlesHidden;
 
-    private IntegerProperty streamToSelectFromCount;
-
-    private IntegerProperty selectedStreamCount;
-
     @Getter(AccessLevel.NONE)
     private ObjectProperty<MultiPartResult> result;
 
@@ -62,9 +61,6 @@ public class GuiFileInfo {
         this.haveSubtitleSizesToLoad = new SimpleBooleanProperty(haveSubtitleSizesToLoad);
         this.subtitleToHideCount = subtitleToHideCount;
         this.someSubtitlesHidden = new SimpleBooleanProperty(someSubtitlesHidden);
-        /* -2 because there are always 2 empty external streams. */
-        this.streamToSelectFromCount = new SimpleIntegerProperty(subtitleStreams.size() - 2);
-        this.selectedStreamCount = new SimpleIntegerProperty(0);
         this.result = new SimpleObjectProperty<>();
         this.subtitleStreams = subtitleStreams;
     }
@@ -103,30 +99,6 @@ public class GuiFileInfo {
 
     public void setSomeSubtitlesHidden(boolean someSubtitlesHidden) {
         this.someSubtitlesHidden.set(someSubtitlesHidden);
-    }
-
-    public int getStreamToSelectFromCount() {
-        return streamToSelectFromCount.get();
-    }
-
-    public IntegerProperty streamToSelectFromCountProperty() {
-        return streamToSelectFromCount;
-    }
-
-    public void setStreamToSelectFromCount(int streamToSelectFromCount) {
-        this.streamToSelectFromCount.set(streamToSelectFromCount);
-    }
-
-    public int getSelectedStreamCount() {
-        return selectedStreamCount.get();
-    }
-
-    public IntegerProperty selectedStreamCountProperty() {
-        return selectedStreamCount;
-    }
-
-    public void setSelectedStreamCount(int selectedStreamCount) {
-        this.selectedStreamCount.set(selectedStreamCount);
     }
 
     public MultiPartResult getResult() {
@@ -178,8 +150,6 @@ public class GuiFileInfo {
         stream.setFileName(filename);
         stream.setSize(size);
         stream.setCorrectFormat(correctFormat);
-
-        setStreamToSelectFromCount(getStreamToSelectFromCount() + 1);
     }
 
     public void unsetExternalSubtitleStream(String id) {
@@ -189,7 +159,5 @@ public class GuiFileInfo {
         stream.setFileName(null);
         stream.setSize(GuiSubtitleStream.UNKNOWN_SIZE);
         stream.setCorrectFormat(false);
-
-        setStreamToSelectFromCount(getStreamToSelectFromCount() - 1);
     }
 }

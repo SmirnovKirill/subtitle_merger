@@ -793,7 +793,7 @@ public class RegularContentController {
         return subtitlesWithOtherLanguage;
     }
 
-    private void addExternalSubtitleFileClicked(GuiFileInfo guiFileInfo) {
+    private void addExternalSubtitleFileClicked(GuiFileInfo guiFileInfo, Runnable onFinish) {
         generalResult.clear();
         clearLastProcessedResult();
         guiFileInfo.clearResult();
@@ -872,6 +872,7 @@ public class RegularContentController {
                     }
                 }
 
+                onFinish.run();
                 stopProgress();
             }
         };
@@ -969,7 +970,7 @@ public class RegularContentController {
         }
     }
 
-    private void removeExternalSubtitleFileClicked(String streamId, GuiFileInfo guiFileInfo) {
+    private void removeExternalSubtitleFileClicked(String streamId, GuiFileInfo guiFileInfo, Runnable onFinish) {
         generalResult.clear();
         clearLastProcessedResult();
         guiFileInfo.clearResult();
@@ -979,6 +980,8 @@ public class RegularContentController {
 
         fileInfo.getSubtitleStreams().removeIf(stream -> Objects.equals(stream.getId(), streamId));
         guiFileInfo.unsetExternalSubtitleStream(streamId);
+
+        onFinish.run();
 
         guiFileInfo.setResultOnlySuccess("Subtitle file has been removed from the list successfully");
     }

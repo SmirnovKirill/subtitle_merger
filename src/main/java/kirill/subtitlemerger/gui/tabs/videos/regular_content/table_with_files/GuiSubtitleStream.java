@@ -1,8 +1,6 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files;
 
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -20,9 +18,12 @@ public abstract class GuiSubtitleStream {
 
     private IntegerProperty size;
 
-    private BooleanProperty selectedAsUpper;
+    @Getter
+    @Setter
+    private boolean selectedAsUpper;
 
-    private BooleanProperty selectedAsLower;
+    @Getter
+    @Setter  private boolean selectedAsLower;
 
     public GuiSubtitleStream(
             String id,
@@ -32,8 +33,8 @@ public abstract class GuiSubtitleStream {
     ) {
         this.id = id;
         this.size = new SimpleIntegerProperty(size != null ? size : UNKNOWN_SIZE);
-        this.selectedAsUpper = new SimpleBooleanProperty(selectedAsUpper);
-        this.selectedAsLower = new SimpleBooleanProperty(selectedAsLower);
+        this.selectedAsUpper = selectedAsUpper;
+        this.selectedAsLower = selectedAsLower;
     }
 
     public int getSize() {
@@ -46,30 +47,6 @@ public abstract class GuiSubtitleStream {
 
     public void setSize(int size) {
         this.size.set(size);
-    }
-
-    public boolean isSelectedAsUpper() {
-        return selectedAsUpper.get();
-    }
-
-    public BooleanProperty selectedAsUpperProperty() {
-        return selectedAsUpper;
-    }
-
-    public void setSelectedAsUpper(boolean selectedAsUpper) {
-        this.selectedAsUpper.set(selectedAsUpper);
-    }
-
-    public boolean isSelectedAsLower() {
-        return selectedAsLower.get();
-    }
-
-    public BooleanProperty selectedAsLowerProperty() {
-        return selectedAsLower;
-    }
-
-    public void setSelectedAsLower(boolean selectedAsLower) {
-        this.selectedAsLower.set(selectedAsLower);
     }
 
     public static <T extends GuiSubtitleStream> T getById(String id, List<T> guiStreams) {

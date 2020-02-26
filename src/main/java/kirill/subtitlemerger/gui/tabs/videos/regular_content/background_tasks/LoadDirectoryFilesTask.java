@@ -21,7 +21,10 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -226,37 +229,6 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
                 RegularContentController.getSubtitleCanBeHiddenCount(fileInfo, guiSettings) != 0,
                 subtitleStreams
         );
-
-        //todo move probably
-        for (GuiSubtitleStream stream : result.getSubtitleStreams()) {
-            stream.selectedAsUpperProperty().addListener((observableValue, oldValue, newValue) -> {
-                if (!Boolean.TRUE.equals(newValue)) {
-                    return;
-                }
-
-                for (GuiSubtitleStream currentStream : result.getSubtitleStreams()) {
-                    if (Objects.equals(currentStream.getId(), stream.getId())) {
-                        currentStream.setSelectedAsLower(false);
-                    } else {
-                        currentStream.setSelectedAsUpper(false);
-                    }
-                }
-            });
-
-            stream.selectedAsLowerProperty().addListener((observableValue, oldValue, newValue) -> {
-                if (!Boolean.TRUE.equals(newValue)) {
-                    return;
-                }
-
-                for (GuiSubtitleStream currentStream : result.getSubtitleStreams()) {
-                    if (Objects.equals(currentStream.getId(), stream.getId())) {
-                        currentStream.setSelectedAsUpper(false);
-                    } else {
-                        currentStream.setSelectedAsLower(false);
-                    }
-                }
-            });
-        }
 
         return result;
     }
