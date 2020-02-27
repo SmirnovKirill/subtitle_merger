@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import kirill.subtitlemerger.gui.core.custom_controls.MultiColorLabels?>
+<?import kirill.subtitlemerger.gui.utils.custom_controls.MultiColorLabels?>
 <?import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles?>
 <StackPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
            fx:id="pane"

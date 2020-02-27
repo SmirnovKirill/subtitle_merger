@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.gui.core.custom_controls;
+package kirill.subtitlemerger.gui.utils.custom_controls.previews;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -8,8 +8,9 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
-import kirill.subtitlemerger.gui.core.NoSelectionModel;
-import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
+import kirill.subtitlemerger.gui.utils.NoSelectionModel;
+import kirill.subtitlemerger.gui.utils.background_tasks.BackgroundTask;
+import kirill.subtitlemerger.gui.utils.custom_controls.MultiColorLabels;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.core.SubtitleWriter;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;

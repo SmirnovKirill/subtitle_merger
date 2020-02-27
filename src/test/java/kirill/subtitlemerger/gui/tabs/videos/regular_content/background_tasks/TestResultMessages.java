@@ -1,6 +1,6 @@
 package kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks;
 
-import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
+import kirill.subtitlemerger.gui.utils.MultiPartResult;
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;

@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.logic.work_with_files.entities;
+package kirill.subtitlemerger.logic.work_with_files.ffmpeg;
 
 import java.util.Optional;
 

@@ -1,6 +1,5 @@
-package kirill.subtitlemerger.gui.core;
+package kirill.subtitlemerger.gui.utils;
 
-import kirill.subtitlemerger.gui.core.GuiUtils;
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;

@@ -3,9 +3,9 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import kirill.subtitlemerger.gui.core.custom_controls.MultiColorLabels?>
+<?import kirill.subtitlemerger.gui.utils.custom_controls.MultiColorLabels?>
 <fx:root xmlns:fx="http://javafx.com/fxml" type="javafx.scene.layout.StackPane" prefHeight="600" prefWidth="900"
-         fx:controller="kirill.subtitlemerger.gui.core.custom_controls.SimpleSubtitlePreviewController"
+         fx:controller="kirill.subtitlemerger.gui.utils.custom_controls.previews.SimpleSubtitlePreviewController"
          stylesheets="/gui/custom_controls/subtitlePreview.css"
 >
     <padding>

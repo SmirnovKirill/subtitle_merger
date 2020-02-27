@@ -1,6 +1,6 @@
 package kirill.subtitlemerger.logic.work_with_files.entities;
 
-import kirill.subtitlemerger.logic.core.entities.Subtitles;
+import kirill.subtitlemerger.logic.work_with_files.ffmpeg.VideoFormat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;

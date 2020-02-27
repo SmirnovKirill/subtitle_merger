@@ -23,7 +23,7 @@ public class LogicConstants {
                 .filter(code -> code != LanguageAlpha3Code.undefined)
                 .filter(code -> code.getUsage() != LanguageAlpha3Code.Usage.TERMINOLOGY)
                 /*
-                 * The title for this code is way to long and doesn't fit to the combobox so I think it's simpler
+                 * The title for this code is way too long and doesn't fit to the combobox so I think it's easier
                  * just to remove it, nobody will use it anyway.
                  */
                 .filter(code -> code != LanguageAlpha3Code.inc)

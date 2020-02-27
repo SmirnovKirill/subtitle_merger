@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.gui.core;
+package kirill.subtitlemerger.gui.utils;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

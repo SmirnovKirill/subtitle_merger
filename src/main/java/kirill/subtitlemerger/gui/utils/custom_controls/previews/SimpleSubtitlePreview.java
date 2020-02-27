@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.gui.core.custom_controls;
+package kirill.subtitlemerger.gui.utils.custom_controls.previews;
 
 import javafx.fxml.FXMLLoader;
 import javafx.scene.layout.StackPane;
@@ -10,13 +10,13 @@ import java.io.IOException;
 import java.util.Objects;
 
 @CommonsLog
-public class SubtitlePreviewWithEncoding extends StackPane {
+public class SimpleSubtitlePreview extends StackPane {
     @Getter
-    SubtitlePreviewWithEncodingController controller;
+    private SimpleSubtitlePreviewController controller;
 
-    public SubtitlePreviewWithEncoding() {
+    public SimpleSubtitlePreview() {
         FXMLLoader fxmlLoader = new FXMLLoader(
-                getClass().getResource("/gui/custom_controls/subtitlePreviewWithEncoding.fxml")
+                getClass().getResource("/gui/custom_controls/simpleSubtitlePreview.fxml")
         );
         fxmlLoader.setRoot(this);
         try {

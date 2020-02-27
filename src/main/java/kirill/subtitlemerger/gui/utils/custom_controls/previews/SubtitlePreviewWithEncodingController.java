@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.gui.core.custom_controls;
+package kirill.subtitlemerger.gui.utils.custom_controls.previews;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -10,9 +10,10 @@ import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import kirill.subtitlemerger.gui.GuiConstants;
-import kirill.subtitlemerger.gui.core.NoSelectionModel;
-import kirill.subtitlemerger.gui.core.background_tasks.BackgroundTask;
-import kirill.subtitlemerger.gui.core.entities.MultiPartResult;
+import kirill.subtitlemerger.gui.utils.NoSelectionModel;
+import kirill.subtitlemerger.gui.utils.background_tasks.BackgroundTask;
+import kirill.subtitlemerger.gui.utils.MultiPartResult;
+import kirill.subtitlemerger.gui.utils.custom_controls.MultiColorLabels;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;

@@ -2,6 +2,7 @@ package kirill.subtitlemerger.logic.work_with_files.entities;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
+import kirill.subtitlemerger.logic.work_with_files.ffmpeg.SubtitleCodec;
 import lombok.Getter;
 
 @Getter

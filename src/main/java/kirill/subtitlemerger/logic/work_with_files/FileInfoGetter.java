@@ -4,6 +4,8 @@ import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.logic.work_with_files.entities.*;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffprobe;
+import kirill.subtitlemerger.logic.work_with_files.ffmpeg.SubtitleCodec;
+import kirill.subtitlemerger.logic.work_with_files.ffmpeg.VideoFormat;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.json.JsonFfprobeFileInfo;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.json.JsonStream;
 import lombok.extern.apachecommons.CommonsLog;
