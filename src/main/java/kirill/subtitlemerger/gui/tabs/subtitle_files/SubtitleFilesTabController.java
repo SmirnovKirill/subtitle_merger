@@ -7,6 +7,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -14,12 +15,12 @@ import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
+import kirill.subtitlemerger.gui.utils.MultiPartResult;
 import kirill.subtitlemerger.gui.utils.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.utils.custom_controls.MultiColorLabels;
-import kirill.subtitlemerger.gui.utils.custom_controls.previews.SimpleSubtitlePreview;
+import kirill.subtitlemerger.gui.utils.custom_controls.previews.SimpleSubtitlePreviewController;
 import kirill.subtitlemerger.gui.utils.custom_controls.previews.SubtitlePreviewWithEncoding;
 import kirill.subtitlemerger.gui.utils.custom_controls.previews.SubtitlePreviewWithEncodingController;
-import kirill.subtitlemerger.gui.utils.MultiPartResult;
 import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.core.SubtitleWriter;
@@ -771,15 +772,17 @@ public class SubtitleFilesTabController {
                         64
                 );
 
-                SimpleSubtitlePreview subtitlePreviewDialog = new SimpleSubtitlePreview();
-                subtitlePreviewDialog.getController().initializeMergedSubtitles(subtitles, upperTitle, lowerTitle, dialogStage);
+                GuiUtils.NodeAndController<StackPane, SimpleSubtitlePreviewController> nodeAndController = GuiUtils.loadNodeAndController(
+                        "/gui/custom_controls/simpleSubtitlePreview.fxml"
+                );
+                nodeAndController.getController().initializeMergedSubtitles(subtitles, upperTitle, lowerTitle, dialogStage);
 
                 dialogStage.setTitle("Subtitle preview");
                 dialogStage.initModality(Modality.APPLICATION_MODAL);
                 dialogStage.initOwner(stage);
                 dialogStage.setResizable(false);
 
-                Scene scene = new Scene(subtitlePreviewDialog);
+                Scene scene = new Scene(nodeAndController.getNode());
                 scene.getStylesheets().add("/gui/style.css");
                 dialogStage.setScene(scene);
 

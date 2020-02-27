@@ -12,6 +12,8 @@ import javafx.scene.input.KeyCode;
 import javafx.util.Duration;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -173,5 +175,38 @@ public class GuiUtils {
             log.error("controller has an incorrect class");
             throw new IllegalStateException();
         }
+    }
+
+    public static <T, S> NodeAndController<T, S> loadNodeAndController(String path) {
+        FXMLLoader fxmlLoader = new FXMLLoader(GuiUtils.class.getResource(path));
+
+        T node;
+        try {
+            node = fxmlLoader.load();
+        } catch (IOException e) {
+            log.error("failed to load fxml " + path + ": " + ExceptionUtils.getStackTrace(e));
+            throw new IllegalStateException();
+        }
+
+        S controller;
+        try {
+            controller = Objects.requireNonNull(fxmlLoader.getController());
+        } catch (NullPointerException e) {
+            log.error("controller is not set");
+            throw new IllegalStateException();
+        } catch (ClassCastException e) {
+            log.error("controller has an incorrect class");
+            throw new IllegalStateException();
+        }
+
+        return new NodeAndController<>(node, controller);
+    }
+
+    @AllArgsConstructor
+    @Getter
+    public static class NodeAndController<T, S> {
+        private T node;
+
+        private S controller;
     }
 }

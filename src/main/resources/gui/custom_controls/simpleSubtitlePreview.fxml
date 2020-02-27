@@ -4,9 +4,9 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import kirill.subtitlemerger.gui.utils.custom_controls.MultiColorLabels?>
-<fx:root xmlns:fx="http://javafx.com/fxml" type="javafx.scene.layout.StackPane" prefHeight="600" prefWidth="900"
-         fx:controller="kirill.subtitlemerger.gui.utils.custom_controls.previews.SimpleSubtitlePreviewController"
-         stylesheets="/gui/custom_controls/subtitlePreview.css"
+<StackPane xmlns:fx="http://javafx.com/fxml" prefHeight="600" prefWidth="900"
+           fx:controller="kirill.subtitlemerger.gui.utils.custom_controls.previews.SimpleSubtitlePreviewController"
+           stylesheets="/gui/custom_controls/subtitlePreview.css"
 >
     <padding>
         <Insets top="20" right="20" bottom="20" left="20"/>
@@ -45,4 +45,4 @@
         <ProgressIndicator fx:id="progressIndicator"/>
         <Label fx:id="progressLabel"/>
     </VBox>
-</fx:root>
+</StackPane>
