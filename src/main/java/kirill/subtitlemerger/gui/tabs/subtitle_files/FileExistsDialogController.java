@@ -1,19 +1,15 @@
 package kirill.subtitlemerger.gui.tabs.subtitle_files;
 
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-
-import java.io.IOException;
 
 @CommonsLog
-public class FileExistsDialog extends VBox {
+public class FileExistsDialogController extends VBox {
     @FXML
     private Label firstLineLabel;
 
@@ -28,20 +24,6 @@ public class FileExistsDialog extends VBox {
 
     @Getter
     private boolean agreeToOverwrite;
-
-    FileExistsDialog() {
-        FXMLLoader fxmlLoader = new FXMLLoader(
-                getClass().getResource("/gui/tabs/subtitle_files/fileExistsDialog.fxml")
-        );
-        fxmlLoader.setRoot(this);
-        fxmlLoader.setController(this);
-        try {
-            fxmlLoader.load();
-        } catch (IOException e) {
-            log.error("failed to load fxml: " + ExceptionUtils.getStackTrace(e));
-            throw new IllegalStateException();
-        }
-    }
 
     public void initialize(
             String fileName,

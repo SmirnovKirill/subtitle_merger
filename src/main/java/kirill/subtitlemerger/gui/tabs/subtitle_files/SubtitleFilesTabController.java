@@ -7,7 +7,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -16,10 +15,10 @@ import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.MultiPartResult;
+import kirill.subtitlemerger.gui.utils.NodeAndController;
 import kirill.subtitlemerger.gui.utils.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.utils.custom_controls.MultiColorLabels;
 import kirill.subtitlemerger.gui.utils.custom_controls.previews.SimpleSubtitlePreviewController;
-import kirill.subtitlemerger.gui.utils.custom_controls.previews.SubtitlePreviewWithEncoding;
 import kirill.subtitlemerger.gui.utils.custom_controls.previews.SubtitlePreviewWithEncodingController;
 import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
@@ -594,8 +593,10 @@ public class SubtitleFilesTabController {
             );
         }
 
-        FileExistsDialog fileExistsDialog = new FileExistsDialog();
-        fileExistsDialog.initialize(fileName, parentName, dialogStage);
+        NodeAndController<Pane, FileExistsDialogController> nodeAndController = GuiUtils.loadNodeAndController(
+                "/gui/tabs/subtitle_files/fileExistsDialog.fxml"
+        );
+        nodeAndController.getController().initialize(fileName, parentName, dialogStage);
 
         //todo set stage parameters in the same manner everywhere
         dialogStage.setTitle("File exists!");
@@ -603,7 +604,7 @@ public class SubtitleFilesTabController {
         dialogStage.initOwner(stage);
         dialogStage.setResizable(false);
 
-        Scene scene = new Scene(fileExistsDialog);
+        Scene scene = new Scene(nodeAndController.getNode());
         scene.getStylesheets().add("/gui/style.css");
         dialogStage.setScene(scene);
 
@@ -611,7 +612,7 @@ public class SubtitleFilesTabController {
 
         agreeToOverwriteInProgress = false;
 
-        return fileExistsDialog.isAgreeToOverwrite();
+        return nodeAndController.getController().isAgreeToOverwrite();
     }
 
     @FXML
@@ -629,8 +630,11 @@ public class SubtitleFilesTabController {
 
         Stage dialogStage = new Stage();
 
-        SubtitlePreviewWithEncoding subtitlePreviewDialog = new SubtitlePreviewWithEncoding();
-        subtitlePreviewDialog.getController().initialize(
+        NodeAndController<Pane, SubtitlePreviewWithEncodingController> nodeAndController = GuiUtils.loadNodeAndController(
+                "/gui/custom_controls/subtitlePreviewWithEncoding.fxml"
+        );
+
+        nodeAndController.getController().initialize(
                 fileInfo.getRawData(),
                 fileInfo.getEncoding(),
                 path,
@@ -642,13 +646,13 @@ public class SubtitleFilesTabController {
         dialogStage.initOwner(stage);
         dialogStage.setResizable(false);
 
-        Scene scene = new Scene(subtitlePreviewDialog);
+        Scene scene = new Scene(nodeAndController.getNode());
         scene.getStylesheets().add("/gui/style.css");
         dialogStage.setScene(scene);
 
         dialogStage.showAndWait();
 
-        return subtitlePreviewDialog.getController().getUserSelection();
+        return nodeAndController.getController().getUserSelection();
     }
 
     private void updateSubtitlesAndEncodingIfChanged(
@@ -772,7 +776,7 @@ public class SubtitleFilesTabController {
                         64
                 );
 
-                GuiUtils.NodeAndController<StackPane, SimpleSubtitlePreviewController> nodeAndController = GuiUtils.loadNodeAndController(
+                NodeAndController<Pane, SimpleSubtitlePreviewController> nodeAndController = GuiUtils.loadNodeAndController(
                         "/gui/custom_controls/simpleSubtitlePreview.fxml"
                 );
                 nodeAndController.getController().initializeMergedSubtitles(subtitles, upperTitle, lowerTitle, dialogStage);

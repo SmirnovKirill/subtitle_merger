@@ -1,16 +1,16 @@
 package kirill.subtitlemerger.gui;
 
 import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.control.TabPane;
 import javafx.scene.image.Image;
+import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.tabs.TabPaneController;
+import kirill.subtitlemerger.gui.utils.GuiUtils;
+import kirill.subtitlemerger.gui.utils.NodeAndController;
 import lombok.extern.apachecommons.CommonsLog;
 
 import java.awt.*;
-import java.io.IOException;
 
 @CommonsLog
 public class GuiLauncher extends Application {
@@ -19,16 +19,14 @@ public class GuiLauncher extends Application {
     }
 
     @Override
-    public void start(Stage stage) throws IOException {
-        GuiContext guiContext = new GuiContext();
+    public void start(Stage stage) {
+        NodeAndController<Pane, TabPaneController> nodeAndController = GuiUtils.loadNodeAndController(
+                "/gui/tabs/tabPane.fxml"
+        );
 
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/tabs/tabPane.fxml"));
+        nodeAndController.getController().initialize(stage, new GuiContext());
 
-        TabPane tabPane = loader.load();
-        TabPaneController tabPaneController = loader.getController();
-        tabPaneController.initialize(stage, guiContext);
-
-        Scene scene = new Scene(tabPane);
+        Scene scene = new Scene(nodeAndController.getNode());
         scene.getStylesheets().add("/gui/style.css");
         stage.setScene(scene);
 

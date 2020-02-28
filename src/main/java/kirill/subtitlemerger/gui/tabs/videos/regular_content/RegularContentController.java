@@ -17,17 +17,17 @@ import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
-import kirill.subtitlemerger.gui.utils.GuiUtils;
-import kirill.subtitlemerger.gui.utils.background_tasks.BackgroundTask;
-import kirill.subtitlemerger.gui.utils.custom_controls.MultiColorLabels;
-import kirill.subtitlemerger.gui.utils.custom_controls.previews.SimpleSubtitlePreview;
-import kirill.subtitlemerger.gui.utils.custom_controls.previews.SubtitlePreviewWithEncoding;
-import kirill.subtitlemerger.gui.utils.custom_controls.previews.SubtitlePreviewWithEncodingController;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.background_tasks.*;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiExternalSubtitleStream;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.TableWithFiles;
+import kirill.subtitlemerger.gui.utils.GuiUtils;
+import kirill.subtitlemerger.gui.utils.NodeAndController;
+import kirill.subtitlemerger.gui.utils.background_tasks.BackgroundTask;
+import kirill.subtitlemerger.gui.utils.custom_controls.MultiColorLabels;
+import kirill.subtitlemerger.gui.utils.custom_controls.previews.SimpleSubtitlePreviewController;
+import kirill.subtitlemerger.gui.utils.custom_controls.previews.SubtitlePreviewWithEncodingController;
 import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
@@ -1002,9 +1002,11 @@ public class RegularContentController {
 
         FfmpegSubtitleStream stream = SubtitleStream.getById(streamId, fileInfo.getFfmpegSubtitleStreams());
 
-        SimpleSubtitlePreview subtitlePreviewDialog = new SimpleSubtitlePreview();
+        NodeAndController<Pane, SimpleSubtitlePreviewController> nodeAndController = GuiUtils.loadNodeAndController(
+                "/gui/custom_controls/simpleSubtitlePreview.fxml"
+        );
 
-        subtitlePreviewDialog.getController().initializeSingleSubtitles(
+        nodeAndController.getController().initializeSingleSubtitles(
                 stream.getSubtitles(),
                 getStreamTitleForPreview(fileInfo, stream),
                 dialogStage
@@ -1015,7 +1017,7 @@ public class RegularContentController {
         dialogStage.initOwner(stage);
         dialogStage.setResizable(false);
 
-        Scene scene = new Scene(subtitlePreviewDialog);
+        Scene scene = new Scene(nodeAndController.getNode());
         scene.getStylesheets().add("/gui/style.css");
         dialogStage.setScene(scene);
 
@@ -1072,8 +1074,11 @@ public class RegularContentController {
 
         Stage dialogStage = new Stage();
 
-        SubtitlePreviewWithEncoding subtitlePreviewDialog = new SubtitlePreviewWithEncoding();
-        subtitlePreviewDialog.getController().initialize(
+        NodeAndController<Pane, SubtitlePreviewWithEncodingController> nodeAndController = GuiUtils.loadNodeAndController(
+                "/gui/custom_controls/subtitlePreviewWithEncoding.fxml"
+        );
+
+        nodeAndController.getController().initialize(
                 subtitleStream.getRawData(),
                 subtitleStream.getEncoding(),
                 getStreamTitleForPreview(fileInfo, subtitleStream),
@@ -1085,13 +1090,13 @@ public class RegularContentController {
         dialogStage.initOwner(stage);
         dialogStage.setResizable(false);
 
-        Scene scene = new Scene(subtitlePreviewDialog);
+        Scene scene = new Scene(nodeAndController.getNode());
         scene.getStylesheets().add("/gui/style.css");
         dialogStage.setScene(scene);
 
         dialogStage.showAndWait();
 
-        SubtitlePreviewWithEncodingController.UserSelection userSelection = subtitlePreviewDialog.getController().getUserSelection();
+        SubtitlePreviewWithEncodingController.UserSelection userSelection = nodeAndController.getController().getUserSelection();
 
         if (Objects.equals(subtitleStream.getEncoding(), userSelection.getEncoding())) {
             return;
@@ -1187,8 +1192,11 @@ public class RegularContentController {
 
                 Stage dialogStage = new Stage();
 
-                SimpleSubtitlePreview subtitlePreviewDialog = new SimpleSubtitlePreview();
-                subtitlePreviewDialog.getController().initializeMergedSubtitles(
+                NodeAndController<Pane, SimpleSubtitlePreviewController> nodeAndController = GuiUtils.loadNodeAndController(
+                        "/gui/custom_controls/simpleSubtitlePreview.fxml"
+                );
+
+                nodeAndController.getController().initializeMergedSubtitles(
                         mergedSubtitleInfo.getSubtitles(),
                         getStreamTitleForPreview(fileInfo, upperStream),
                         getStreamTitleForPreview(fileInfo, lowerStream),
@@ -1200,7 +1208,7 @@ public class RegularContentController {
                 dialogStage.initOwner(stage);
                 dialogStage.setResizable(false);
 
-                Scene scene = new Scene(subtitlePreviewDialog);
+                Scene scene = new Scene(nodeAndController.getNode());
                 scene.getStylesheets().add("/gui/style.css");
                 dialogStage.setScene(scene);
 
