@@ -7,11 +7,11 @@
 <?import kirill.subtitlemerger.gui.utils.custom_controls.MultiColorLabels?>
 <?import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles?>
 <StackPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-           fx:id="pane"
+           fx:id="contentPane"
            fx:controller="kirill.subtitlemerger.gui.application_specific.videos_tab.ContentPaneController"
            stylesheets="/gui/application_specific/videos_tab/contentPane.css"
 >
-    <VBox fx:id="resultPane" visible="false">
+    <VBox fx:id="mainPane">
         <VBox spacing="5">
             <Hyperlink onAction="#backToSelectionClicked" text="back to selection" styleClass="back-link"/>
             <HBox fx:id="chosenDirectoryPane" spacing="10" alignment="CENTER_LEFT">

@@ -5,12 +5,12 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
-import kirill.subtitlemerger.gui.utils.entities.NoSelectionModel;
 import kirill.subtitlemerger.gui.utils.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.utils.custom_controls.MultiColorLabels;
+import kirill.subtitlemerger.gui.utils.entities.ControllerWithProgress;
+import kirill.subtitlemerger.gui.utils.entities.NoSelectionModel;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.core.SubtitleWriter;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
@@ -20,10 +20,7 @@ import lombok.Getter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SimpleSubtitlePreviewController {
-    @FXML
-    private Pane mainPane;
-
+public class SimpleSubtitlePreviewController extends ControllerWithProgress {
     @FXML
     private Pane singleSubtitlesPane;
 
@@ -44,15 +41,6 @@ public class SimpleSubtitlePreviewController {
 
     @FXML
     private ListView<String> listView;
-
-    @FXML
-    private Pane progressPane;
-
-    @FXML
-    private ProgressIndicator progressIndicator;
-
-    @FXML
-    private Label progressLabel;
 
     private Subtitles subtitles;
 
@@ -103,19 +91,13 @@ public class SimpleSubtitlePreviewController {
 
             @Override
             protected void onFinish(ProcessedData result) {
-                progressPane.setVisible(false);
-                mainPane.setDisable(false);
+                stopProgress();
 
                 updateScene(result);
             }
         };
 
-        progressPane.setVisible(true);
-        mainPane.setDisable(true);
-        progressIndicator.progressProperty().bind(task.progressProperty());
-        progressLabel.textProperty().bind(task.messageProperty());
-
-        task.start();
+        startBackgroundTask(task);
     }
 
     private static ProcessedData getProcessedData(Subtitles subtitles) {

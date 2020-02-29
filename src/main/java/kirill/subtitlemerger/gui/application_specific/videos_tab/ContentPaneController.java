@@ -22,6 +22,7 @@ import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_file
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
+import kirill.subtitlemerger.gui.utils.entities.ControllerWithProgress;
 import kirill.subtitlemerger.gui.utils.entities.NodeAndController;
 import kirill.subtitlemerger.gui.utils.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.utils.custom_controls.MultiColorLabels;
@@ -53,7 +54,7 @@ import java.util.Optional;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
 @CommonsLog
-public class ContentPaneController {
+public class ContentPaneController extends ControllerWithProgress {
     private static final String SORT_BY_NAME_TEXT = "By _Name";
 
     private static final String SORT_BY_MODIFICATION_TIME_TEXT = "By _Modification Time";
@@ -65,19 +66,7 @@ public class ContentPaneController {
     private static final String SORT_DESCENDING_TEXT = "_Descending";
 
     @FXML
-    private Pane pane;
-
-    @FXML
-    private Pane progressPane;
-
-    @FXML
-    private ProgressIndicator progressIndicator;
-
-    @FXML
-    private Label progressLabel;
-
-    @FXML
-    private Pane resultPane;
+    private Pane contentPane;
 
     @FXML
     private Pane chosenDirectoryPane;
@@ -121,14 +110,9 @@ public class ContentPaneController {
     @FXML
     private Button removeSelectedButton;
 
-    @FXML
-    private Pane cancelTaskPane;
-
     private ToggleGroup sortByGroup;
 
     private ToggleGroup sortDirectionGroup;
-
-    private BackgroundTask<?> currentTask;
 
     private File directory;
 
@@ -271,14 +255,7 @@ public class ContentPaneController {
                 }
         );
 
-        prepareAndStartBackgroundTask(task);
-    }
-
-    private void prepareAndStartBackgroundTask(BackgroundTask<?> task) {
-        currentTask = task;
-        showProgress(task);
-        cancelTaskPane.visibleProperty().bind(task.cancellationPossibleProperty());
-        task.start();
+        startBackgroundTask(task);
     }
 
     @FXML
@@ -296,7 +273,7 @@ public class ContentPaneController {
                 context.getFfmpeg()
         );
 
-        prepareAndStartBackgroundTask(task);
+        startBackgroundTask(task);
     }
 
     @FXML
@@ -364,7 +341,7 @@ public class ContentPaneController {
                 }
         );
 
-        prepareAndStartBackgroundTask(task);
+        startBackgroundTask(task);
     }
 
     private void clearLastProcessedResult() {
@@ -392,20 +369,6 @@ public class ContentPaneController {
         tableWithFiles.setMode(mode);
         tableWithFiles.setItems(FXCollections.observableArrayList(guiFilesToShowInfo));
         setAllSelected(allAvailableCount.get() > 0 && getSelected() == allAvailableCount.get());
-    }
-
-    private void stopProgress() {
-        progressPane.setVisible(false);
-        resultPane.setDisable(false);
-    }
-
-    private void showProgress(BackgroundTask<?> task) {
-        progressPane.setVisible(true);
-        resultPane.setVisible(true);
-        resultPane.setDisable(true);
-
-        progressIndicator.progressProperty().bind(task.progressProperty());
-        progressLabel.textProperty().bind(task.messageProperty());
     }
 
     private void sortDirectionChanged(Observable observable) {
@@ -441,7 +404,7 @@ public class ContentPaneController {
         );
 
 
-        prepareAndStartBackgroundTask(task);
+        startBackgroundTask(task);
     }
 
     private static ContextMenu generateContextMenu(
@@ -500,22 +463,12 @@ public class ContentPaneController {
         return result;
     }
 
-    @FXML
-    private void cancelTaskClicked() {
-        if (currentTask == null) {
-            log.error("task is null, that shouldn't happen");
-            return;
-        }
-
-        currentTask.cancel();
-    }
-
     public void show() {
-        pane.setVisible(true);
+        contentPane.setVisible(true);
     }
 
     public void hide() {
-        pane.setVisible(false);
+        contentPane.setVisible(false);
     }
 
     void handleChosenFiles(List<File> files) {
@@ -551,7 +504,7 @@ public class ContentPaneController {
                 }
         );
 
-        prepareAndStartBackgroundTask(task);
+        startBackgroundTask(task);
     }
 
     void handleChosenDirectory(File directory) {
@@ -588,7 +541,7 @@ public class ContentPaneController {
                 }
         );
 
-        prepareAndStartBackgroundTask(task);
+        startBackgroundTask(task);
     }
 
     private static List<File> getFiles(Stage stage, GuiSettings settings) {
@@ -646,7 +599,7 @@ public class ContentPaneController {
                 }
         );
 
-        prepareAndStartBackgroundTask(task);
+        startBackgroundTask(task);
     }
 
     @FXML
@@ -676,7 +629,7 @@ public class ContentPaneController {
                 }
         );
 
-        prepareAndStartBackgroundTask(task);
+        startBackgroundTask(task);
     }
 
     @FXML
@@ -706,7 +659,7 @@ public class ContentPaneController {
                 }
         );
 
-        prepareAndStartBackgroundTask(task);
+        startBackgroundTask(task);
     }
 
     @FXML
@@ -742,7 +695,7 @@ public class ContentPaneController {
                 }
         );
 
-        prepareAndStartBackgroundTask(task);
+        startBackgroundTask(task);
     }
 
     public static boolean isExtra(FfmpegSubtitleStream subtitleStream, GuiSettings guiSettings) {
@@ -858,7 +811,7 @@ public class ContentPaneController {
             }
         };
 
-        prepareAndStartBackgroundTask(task);
+        startBackgroundTask(task);
     }
 
     private Optional<File> getFile(GuiFileInfo fileInfo, Stage stage, GuiSettings settings) {
@@ -1193,7 +1146,7 @@ public class ContentPaneController {
             }
         };
 
-        prepareAndStartBackgroundTask(task);
+        startBackgroundTask(task);
     }
 
     private void loadAllFileSubtitleSizes(GuiFileInfo guiFileInfo) {
@@ -1212,7 +1165,7 @@ public class ContentPaneController {
                 context.getFfmpeg()
         );
 
-        prepareAndStartBackgroundTask(task);
+        startBackgroundTask(task);
     }
 
     private void loadSingleFileSubtitleSize(GuiFileInfo guiFileInfo, String streamId) {
@@ -1232,7 +1185,7 @@ public class ContentPaneController {
                 context.getFfmpeg()
         );
 
-        prepareAndStartBackgroundTask(task);
+        startBackgroundTask(task);
     }
 
     @AllArgsConstructor

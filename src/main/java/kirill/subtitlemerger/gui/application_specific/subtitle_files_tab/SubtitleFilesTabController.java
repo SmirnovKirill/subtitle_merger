@@ -3,8 +3,6 @@ package kirill.subtitlemerger.gui.application_specific.subtitle_files_tab;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.stage.FileChooser;
@@ -13,13 +11,14 @@ import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
-import kirill.subtitlemerger.gui.utils.GuiUtils;
-import kirill.subtitlemerger.gui.utils.entities.MultiPartResult;
-import kirill.subtitlemerger.gui.utils.entities.NodeAndController;
-import kirill.subtitlemerger.gui.utils.background_tasks.BackgroundTask;
-import kirill.subtitlemerger.gui.utils.custom_controls.MultiColorLabels;
 import kirill.subtitlemerger.gui.application_specific.previews.SimpleSubtitlePreviewController;
 import kirill.subtitlemerger.gui.application_specific.previews.SubtitlePreviewWithEncodingController;
+import kirill.subtitlemerger.gui.utils.GuiUtils;
+import kirill.subtitlemerger.gui.utils.background_tasks.BackgroundTask;
+import kirill.subtitlemerger.gui.utils.custom_controls.MultiColorLabels;
+import kirill.subtitlemerger.gui.utils.entities.ControllerWithProgress;
+import kirill.subtitlemerger.gui.utils.entities.MultiPartResult;
+import kirill.subtitlemerger.gui.utils.entities.NodeAndController;
 import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.core.SubtitleWriter;
@@ -42,13 +41,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @CommonsLog
-public class SubtitleFilesTabController {
+public class SubtitleFilesTabController extends ControllerWithProgress {
     private Stage stage;
 
     private GuiSettings settings;
-
-    @FXML
-    private Pane mainPane;
 
     @FXML
     private Button upperChooseButton;
@@ -79,15 +75,6 @@ public class SubtitleFilesTabController {
 
     @FXML
     private Button mergeButton;
-
-    @FXML
-    private Pane progressPane;
-
-    @FXML
-    private ProgressIndicator progressIndicator;
-
-    @FXML
-    private Label progressLabel;
 
     @FXML
     private MultiColorLabels resultLabels;
@@ -143,19 +130,13 @@ public class SubtitleFilesTabController {
                 }
                 filesInfo.setMergedSubtitles(null);
 
-                updateScene(fileOrigin);
+                stopProgress();
 
-                progressPane.setVisible(false);
-                mainPane.setDisable(false);
+                updateScene(fileOrigin);
             }
         };
 
-        progressPane.setVisible(true);
-        mainPane.setDisable(true);
-        progressIndicator.progressProperty().bind(task.progressProperty());
-        progressLabel.textProperty().bind(task.messageProperty());
-
-        task.start();
+        startBackgroundTask(task);
     }
 
     private static boolean pathNotChanged(String path, ExtendedFileType fileType, FilesInfo filesInfo) {
@@ -759,8 +740,7 @@ public class SubtitleFilesTabController {
             protected void onFinish(Subtitles subtitles) {
                 filesInfo.setMergedSubtitles(subtitles);
 
-                progressPane.setVisible(false);
-                mainPane.setDisable(false);
+                stopProgress();
 
                 Stage dialogStage = new Stage();
 
@@ -794,12 +774,7 @@ public class SubtitleFilesTabController {
             }
         };
 
-        progressPane.setVisible(true);
-        mainPane.setDisable(true);
-        progressIndicator.progressProperty().bind(task.progressProperty());
-        progressLabel.textProperty().bind(task.messageProperty());
-
-        task.start();
+        startBackgroundTask(task);
     }
 
     @FXML
@@ -873,17 +848,11 @@ public class SubtitleFilesTabController {
                 }
                 resultLabels.set(result);
 
-                progressPane.setVisible(false);
-                mainPane.setDisable(false);
+                stopProgress();
             }
         };
 
-        progressPane.setVisible(true);
-        mainPane.setDisable(true);
-        progressIndicator.progressProperty().bind(task.progressProperty());
-        progressLabel.textProperty().bind(task.messageProperty());
-
-        task.start();
+        startBackgroundTask(task);
     }
 
     @AllArgsConstructor

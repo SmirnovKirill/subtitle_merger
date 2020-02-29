@@ -20,34 +20,27 @@ public class VideosTabController {
     @FXML
     private ContentPaneController contentPaneController;
 
-    private ActivePane activePane;
-
     private MainPaneController mainPaneController;
 
     public void initialize(MainPaneController mainPaneController, Stage stage, GuiContext context) {
-        activePane = haveMissingSettings(context.getSettings()) ? ActivePane.MISSING_SETTINGS : ActivePane.CHOICE;
         this.mainPaneController = mainPaneController;
 
         this.missingSettingsPaneController.initialize(this, context);
         this.choicePaneController.initialize(this, contentPaneController, stage, context);
         this.contentPaneController.initialize(this, stage, context);
 
-        showActivePane();
-
         context.getSettings().getMissingSettings().addListener((InvalidationListener) observable -> {
-            if (haveMissingSettings(context.getSettings())) {
-                activePane = ActivePane.MISSING_SETTINGS;
-            }
-
-            showActivePane();
+            setActivePane(haveMissingSettings(context.getSettings()) ? ActivePane.MISSING_SETTINGS : ActivePane.CHOICE);
         });
+
+        setActivePane(haveMissingSettings(context.getSettings()) ? ActivePane.MISSING_SETTINGS : ActivePane.CHOICE);
     }
 
     private static boolean haveMissingSettings(GuiSettings settings) {
         return !CollectionUtils.isEmpty(settings.getMissingSettings());
     }
 
-    private void showActivePane() {
+    void setActivePane(ActivePane activePane) {
         if (activePane == ActivePane.MISSING_SETTINGS) {
             missingSettingsPaneController.show();
             choicePaneController.hide();
@@ -63,12 +56,6 @@ public class VideosTabController {
         } else {
             throw new IllegalStateException();
         }
-    }
-
-    void setActivePane(ActivePane activePane) {
-        this.activePane = activePane;
-
-        showActivePane();
     }
 
     void openSettingsTab() {

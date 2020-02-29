@@ -5,15 +5,18 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.layout.Pane;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import kirill.subtitlemerger.gui.GuiConstants;
-import kirill.subtitlemerger.gui.utils.entities.NoSelectionModel;
 import kirill.subtitlemerger.gui.utils.background_tasks.BackgroundTask;
-import kirill.subtitlemerger.gui.utils.entities.MultiPartResult;
 import kirill.subtitlemerger.gui.utils.custom_controls.MultiColorLabels;
+import kirill.subtitlemerger.gui.utils.entities.ControllerWithProgress;
+import kirill.subtitlemerger.gui.utils.entities.MultiPartResult;
+import kirill.subtitlemerger.gui.utils.entities.NoSelectionModel;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
@@ -21,14 +24,13 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 //todo refactor, make hierarchy maybe
-public class SubtitlePreviewWithEncodingController {
+public class SubtitlePreviewWithEncodingController extends ControllerWithProgress {
     private static final CharsetStringConverter CHARSET_STRING_CONVERTER = new CharsetStringConverter();
-
-    @FXML
-    private Pane mainPane;
 
     @FXML
     private Label titleLabel;
@@ -46,15 +48,6 @@ public class SubtitlePreviewWithEncodingController {
 
     @FXML
     private Button saveButton;
-
-    @FXML
-    private Pane progressPane;
-
-    @FXML
-    private ProgressIndicator progressIndicator;
-
-    @FXML
-    private Label progressLabel;
 
     private byte[] data;
 
@@ -127,19 +120,13 @@ public class SubtitlePreviewWithEncodingController {
                     originalSubtitles = currentSubtitles;
                 }
 
-                progressPane.setVisible(false);
-                mainPane.setDisable(false);
+                stopProgress();
 
                 updateScene(result, initialRun);
             }
         };
 
-        progressPane.setVisible(true);
-        mainPane.setDisable(true);
-        progressIndicator.progressProperty().bind(task.progressProperty());
-        progressLabel.textProperty().bind(task.messageProperty());
-
-        task.start();
+        startBackgroundTask(task);
     }
 
     private static ProcessedData getProcessedData(byte[] data, Charset encoding) {
