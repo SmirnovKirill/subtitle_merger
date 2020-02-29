@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import kirill.subtitlemerger.gui.utils.custom_controls.MultiColorLabels?>
+<?import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles?>
+<StackPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+           fx:id="pane"
+           fx:controller="kirill.subtitlemerger.gui.application_specific.videos_tab.ContentPaneController"
+           stylesheets="/gui/application_specific/videos_tab/contentPane.css"
+>
+    <VBox fx:id="resultPane" visible="false">
+        <VBox spacing="5">
+            <Hyperlink onAction="#backToSelectionClicked" text="back to selection" styleClass="back-link"/>
+            <HBox fx:id="chosenDirectoryPane" spacing="10" alignment="CENTER_LEFT">
+                <TextField fx:id="chosenDirectoryField" editable="false" HBox.hgrow="ALWAYS"/>
+                <Button onAction="#refreshButtonClicked">
+                    <graphic>
+                        <ImageView fitHeight="16" fitWidth="16">
+                            <Image url="/gui/icons/refresh.png"/>
+                        </ImageView>
+                    </graphic>
+                </Button>
+            </HBox>
+        </VBox>
+        <MultiColorLabels fx:id="generalResult" minHeight="40" maxHeight="40" alignment="CENTER" alwaysManaged="true"/>
+        <VBox spacing="10" VBox.vgrow="ALWAYS">
+            <HBox spacing="20"><Label fx:id="selectedForMergeLabel"/></HBox>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <CheckBox fx:id="hideUnavailableCheckbox" onAction="#hideUnavailableClicked" text="hide unavailable"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <!-- To be able to use tooltip when button is disabled. -->
+                <HBox fx:id="autoSelectButtonWrapper" alignment="CENTER">
+                    <Button fx:id="autoSelectButton" onAction="#autoSelectButtonClicked" text="Auto-select subtitles">
+                        <graphic>
+                            <ImageView fitHeight="16" fitWidth="16">
+                                <Image url="/gui/icons/computer.png"/>
+                            </ImageView>
+                        </graphic>
+                    </Button>
+                </HBox>
+                <HBox fx:id="loadAllSubtitlesButtonWrapper" alignment="CENTER">
+                    <Button fx:id="loadAllSubtitlesButton" onAction="#loadAllSubtitlesClicked"
+                            text="Load all subtitles">
+                        <graphic>
+                            <ImageView fitHeight="16" fitWidth="16">
+                                <Image url="/gui/icons/load.png"/>
+                            </ImageView>
+                        </graphic>
+                    </Button>
+                </HBox>
+                <HBox fx:id="goButtonWrapper" alignment="CENTER">
+                    <Button fx:id="goButton" onAction="#goButtonClicked" text="Go!">
+                        <graphic>
+                            <ImageView fitHeight="16" fitWidth="16">
+                                <Image url="/gui/icons/go.png"/>
+                            </ImageView>
+                        </graphic>
+                    </Button>
+                </HBox>
+            </HBox>
+            <TableWithFiles fx:id="tableWithFiles" VBox.vgrow="ALWAYS">
+                <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
+                <columns>
+                    <TableColumn sortable="false" reorderable="false" minWidth="26" maxWidth="26" resizable="false">
+                    </TableColumn>
+                    <TableColumn sortable="false" reorderable="false" minWidth="200">
+                        <text>file</text>
+                    </TableColumn>
+                    <TableColumn sortable="false" reorderable="false" minWidth="425">
+                        <text>subtitles</text>
+                    </TableColumn>
+                </columns>
+            </TableWithFiles>
+            <HBox fx:id="addRemoveFilesPane" alignment="CENTER_RIGHT" spacing="10">
+                <Button fx:id="removeSelectedButton" onAction="#removeButtonClicked" text="Remove selected"/>
+                <Button onAction="#addButtonClicked" text="Add files"/>
+            </HBox>
+        </VBox>
+    </VBox>
+    <VBox fx:id="progressPane" spacing="10" alignment="CENTER" visible="false">
+        <ProgressIndicator fx:id="progressIndicator"/>
+        <Label fx:id="progressLabel"/>
+        <HBox fx:id="cancelTaskPane" alignment="CENTER">
+            <Label text="Please be patient, this may take a while depending on the size. If you want to cancel the task click "/>
+            <Hyperlink text="here" onAction="#cancelTaskClicked">
+                <padding>
+                    <Insets/>
+                </padding>
+            </Hyperlink>
+            <Label text="."/>
+        </HBox>
+    </VBox>
+</StackPane>

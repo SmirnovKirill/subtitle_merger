@@ -5,9 +5,9 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
-import kirill.subtitlemerger.gui.tabs.TabPaneController;
+import kirill.subtitlemerger.gui.application_specific.MainPaneController;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
-import kirill.subtitlemerger.gui.utils.NodeAndController;
+import kirill.subtitlemerger.gui.utils.entities.NodeAndController;
 import lombok.extern.apachecommons.CommonsLog;
 
 import java.awt.*;
@@ -20,8 +20,8 @@ public class GuiLauncher extends Application {
 
     @Override
     public void start(Stage stage) {
-        NodeAndController<Pane, TabPaneController> nodeAndController = GuiUtils.loadNodeAndController(
-                "/gui/tabs/tabPane.fxml"
+        NodeAndController<Pane, MainPaneController> nodeAndController = GuiUtils.loadNodeAndController(
+                "/gui/application_specific/mainPane.fxml"
         );
 
         nodeAndController.getController().initialize(stage, new GuiContext());

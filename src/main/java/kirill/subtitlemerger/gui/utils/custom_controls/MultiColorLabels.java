@@ -6,7 +6,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import kirill.subtitlemerger.gui.GuiConstants;
-import kirill.subtitlemerger.gui.utils.MultiPartResult;
+import kirill.subtitlemerger.gui.utils.entities.MultiPartResult;
 import org.apache.commons.lang3.StringUtils;
 
 

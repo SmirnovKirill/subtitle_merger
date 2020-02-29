@@ -11,7 +11,8 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.util.Duration;
-import kirill.subtitlemerger.gui.tabs.videos.regular_content.table_with_files.GuiFileInfo;
+import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFileInfo;
+import kirill.subtitlemerger.gui.utils.entities.NodeAndController;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -151,6 +152,20 @@ public class GuiUtils {
 
     public static String languageToString(LanguageAlpha3Code language) {
         return language != null ? language.toString() : "unknown language";
+    }
+
+    public static void initializeCustomControl(String path, Object root) {
+        FXMLLoader fxmlLoader = new FXMLLoader(GuiUtils.class.getResource(path));
+
+        fxmlLoader.setRoot(root);
+        fxmlLoader.setController(root);
+
+        try {
+            fxmlLoader.load();
+        } catch (IOException e) {
+            log.error("failed to load fxml " + path + ": " + ExceptionUtils.getStackTrace(e));
+            throw new IllegalStateException();
+        }
     }
 
     public static <T extends Node, S> NodeAndController<T, S> loadNodeAndController(String path) {
