@@ -144,6 +144,7 @@ public class GuiUtils {
         }
     }
 
+    //todo move
     public static FileInfo findMatchingFileInfo(GuiFileInfo guiFileInfo, List<FileInfo> filesInfo) {
         return filesInfo.stream()
                 .filter(fileInfo -> Objects.equals(fileInfo.getFile().getAbsolutePath(), guiFileInfo.getFullPath()))
@@ -191,5 +192,10 @@ public class GuiUtils {
         }
 
         return new NodeAndController<>(node, controller);
+    }
+
+    public static void setVisibleAndManaged(Node node, boolean value) {
+        node.setVisible(value);
+        node.setManaged(value);
     }
 }

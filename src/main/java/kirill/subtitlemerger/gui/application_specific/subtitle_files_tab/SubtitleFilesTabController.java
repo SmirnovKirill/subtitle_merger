@@ -11,12 +11,10 @@ import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
-import kirill.subtitlemerger.gui.application_specific.previews.SimpleSubtitlePreviewController;
-import kirill.subtitlemerger.gui.application_specific.previews.SubtitlePreviewWithEncodingController;
+import kirill.subtitlemerger.gui.application_specific.AbstractController;
+import kirill.subtitlemerger.gui.application_specific.SubtitlePreviewController;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
-import kirill.subtitlemerger.gui.utils.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.utils.custom_controls.MultiColorLabels;
-import kirill.subtitlemerger.gui.utils.entities.ControllerWithProgress;
 import kirill.subtitlemerger.gui.utils.entities.MultiPartResult;
 import kirill.subtitlemerger.gui.utils.entities.NodeAndController;
 import kirill.subtitlemerger.logic.core.SubtitleMerger;
@@ -41,7 +39,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @CommonsLog
-public class SubtitleFilesTabController extends ControllerWithProgress {
+public class SubtitleFilesTabController extends AbstractController {
     private Stage stage;
 
     private GuiSettings settings;
@@ -112,31 +110,24 @@ public class SubtitleFilesTabController extends ControllerWithProgress {
             return;
         }
 
-        //todo refactor, logic is cluttered
-        BackgroundTask<Optional<InputFileInfo>> task = new BackgroundTask<>() {
-            @Override
-            protected Optional<InputFileInfo> run() {
-                updateMessage("processing file " + path + "...");
-                return getInputFileInfo(path, fileType, fileOrigin, filesInfo);
-            }
+        startLongTask(
+                (taskManager) -> {
+                    taskManager.updateMessage("processing file " + path + "...");
+                    return getInputFileInfo(path, fileType, fileOrigin, filesInfo);
+                },
+                result -> {
+                    InputFileInfo inputFileInfo = result.orElse(null);
+                    updateFilesInfo(inputFileInfo, fileType, filesInfo);
+                    markOtherFileNotDuplicate(fileType, filesInfo);
+                    if (fileOrigin == FileOrigin.FILE_CHOOSER && inputFileInfo != null && inputFileInfo.getParent() != null) {
+                        saveLastDirectoryInConfig(fileType.getExtendedFileType(), inputFileInfo.getParent(), settings);
+                    }
+                    filesInfo.setMergedSubtitles(null);
 
-            @Override
-            protected void onFinish(Optional<InputFileInfo> result) {
-                InputFileInfo inputFileInfo = result.orElse(null);
-                updateFilesInfo(inputFileInfo, fileType, filesInfo);
-                markOtherFileNotDuplicate(fileType, filesInfo);
-                if (fileOrigin == FileOrigin.FILE_CHOOSER && inputFileInfo != null && inputFileInfo.getParent() != null) {
-                    saveLastDirectoryInConfig(fileType.getExtendedFileType(), inputFileInfo.getParent(), settings);
-                }
-                filesInfo.setMergedSubtitles(null);
-
-                stopProgress();
-
-                updateScene(fileOrigin);
-            }
-        };
-
-        startBackgroundTask(task);
+                    updateScene(fileOrigin);
+                },
+                false
+        );
     }
 
     private static boolean pathNotChanged(String path, ExtendedFileType fileType, FilesInfo filesInfo) {
@@ -598,11 +589,11 @@ public class SubtitleFilesTabController extends ControllerWithProgress {
 
     @FXML
     private void upperPreviewClicked() {
-        SubtitlePreviewWithEncodingController.UserSelection userSelection = showInputSubtitlePreview(filesInfo.getUpperFileInfo());
+        SubtitlePreviewController.UserSelection userSelection = showInputSubtitlePreview(filesInfo.getUpperFileInfo());
         updateSubtitlesAndEncodingIfChanged(filesInfo.getUpperFileInfo(), userSelection);
     }
 
-    private SubtitlePreviewWithEncodingController.UserSelection showInputSubtitlePreview(InputFileInfo fileInfo) {
+    private SubtitlePreviewController.UserSelection showInputSubtitlePreview(InputFileInfo fileInfo) {
         String path = GuiUtils.getShortenedStringIfNecessary(
                 fileInfo.getPath(),
                 0,
@@ -611,11 +602,11 @@ public class SubtitleFilesTabController extends ControllerWithProgress {
 
         Stage dialogStage = new Stage();
 
-        NodeAndController<Pane, SubtitlePreviewWithEncodingController> nodeAndController = GuiUtils.loadNodeAndController(
-                "/gui/application_specific/previews/subtitlePreviewWithEncoding.fxml"
+        NodeAndController<Pane, SubtitlePreviewController> nodeAndController = GuiUtils.loadNodeAndController(
+                "/gui/application_specific/subtitlePreview.fxml"
         );
 
-        nodeAndController.getController().initialize(
+        nodeAndController.getController().initializeWithEncoding(
                 fileInfo.getRawData(),
                 fileInfo.getEncoding(),
                 path,
@@ -638,7 +629,7 @@ public class SubtitleFilesTabController extends ControllerWithProgress {
 
     private void updateSubtitlesAndEncodingIfChanged(
             InputFileInfo fileInfo,
-            SubtitlePreviewWithEncodingController.UserSelection userSelection
+            SubtitlePreviewController.UserSelection userSelection
     ) {
         if (Objects.equals(fileInfo.getEncoding(), userSelection.getEncoding())) {
             return;
@@ -701,7 +692,7 @@ public class SubtitleFilesTabController extends ControllerWithProgress {
 
     @FXML
     private void lowerPreviewClicked() {
-        SubtitlePreviewWithEncodingController.UserSelection dialogResult = showInputSubtitlePreview(filesInfo.getLowerFileInfo());
+        SubtitlePreviewController.UserSelection dialogResult = showInputSubtitlePreview(filesInfo.getLowerFileInfo());
         updateSubtitlesAndEncodingIfChanged(filesInfo.getLowerFileInfo(), dialogResult);
     }
 
@@ -720,61 +711,54 @@ public class SubtitleFilesTabController extends ControllerWithProgress {
     private void mergedPreviewClicked() {
         clearState();
 
-        //todo refactor, logic is cluttered
-        BackgroundTask<Subtitles> task = new BackgroundTask<>() {
-            @Override
-            protected Subtitles run() {
-                if (filesInfo.getMergedSubtitles() != null) {
-                    return filesInfo.getMergedSubtitles();
-                }
+        startLongTask(
+                (taskManager) -> {
+                    if (filesInfo.getMergedSubtitles() != null) {
+                        return filesInfo.getMergedSubtitles();
+                    }
 
-                updateMessage("merging subtitles...");
+                    taskManager.updateMessage("merging subtitles...");
 
-                return SubtitleMerger.mergeSubtitles(
-                        filesInfo.getUpperFileInfo().getSubtitles(),
-                        filesInfo.getLowerFileInfo().getSubtitles()
-                );
-            }
+                    return SubtitleMerger.mergeSubtitles(
+                            filesInfo.getUpperFileInfo().getSubtitles(),
+                            filesInfo.getLowerFileInfo().getSubtitles()
+                    );
+                },
+                subtitles -> {
+                    filesInfo.setMergedSubtitles(subtitles);
 
-            @Override
-            protected void onFinish(Subtitles subtitles) {
-                filesInfo.setMergedSubtitles(subtitles);
+                    Stage dialogStage = new Stage();
 
-                stopProgress();
+                    String upperTitle = "file " + GuiUtils.getShortenedStringIfNecessary(
+                            filesInfo.getUpperFileInfo().getPath(),
+                            0,
+                            64
+                    );
 
-                Stage dialogStage = new Stage();
+                    String lowerTitle = "file " + GuiUtils.getShortenedStringIfNecessary(
+                            filesInfo.getLowerFileInfo().getPath(),
+                            0,
+                            64
+                    );
 
-                String upperTitle = "file " + GuiUtils.getShortenedStringIfNecessary(
-                        filesInfo.getUpperFileInfo().getPath(),
-                        0,
-                        64
-                );
+                    NodeAndController<Pane, SubtitlePreviewController> nodeAndController = GuiUtils.loadNodeAndController(
+                            "/gui/application_specific/subtitlePreview.fxml"
+                    );
+                    nodeAndController.getController().initializeMerged(subtitles, upperTitle, lowerTitle, dialogStage);
 
-                String lowerTitle = "file " + GuiUtils.getShortenedStringIfNecessary(
-                        filesInfo.getLowerFileInfo().getPath(),
-                        0,
-                        64
-                );
+                    dialogStage.setTitle("Subtitle preview");
+                    dialogStage.initModality(Modality.APPLICATION_MODAL);
+                    dialogStage.initOwner(stage);
+                    dialogStage.setResizable(false);
 
-                NodeAndController<Pane, SimpleSubtitlePreviewController> nodeAndController = GuiUtils.loadNodeAndController(
-                        "/gui/application_specific/previews/simpleSubtitlePreview.fxml"
-                );
-                nodeAndController.getController().initializeMergedSubtitles(subtitles, upperTitle, lowerTitle, dialogStage);
+                    Scene scene = new Scene(nodeAndController.getNode());
+                    scene.getStylesheets().add("/gui/style.css");
+                    dialogStage.setScene(scene);
 
-                dialogStage.setTitle("Subtitle preview");
-                dialogStage.initModality(Modality.APPLICATION_MODAL);
-                dialogStage.initOwner(stage);
-                dialogStage.setResizable(false);
-
-                Scene scene = new Scene(nodeAndController.getNode());
-                scene.getStylesheets().add("/gui/style.css");
-                dialogStage.setScene(scene);
-
-                dialogStage.showAndWait();
-            }
-        };
-
-        startBackgroundTask(task);
+                    dialogStage.showAndWait();
+                },
+                false
+        );
     }
 
     @FXML
@@ -809,50 +793,43 @@ public class SubtitleFilesTabController extends ControllerWithProgress {
     private void mergeButtonClicked() {
         clearState();
 
-        //todo refactor, logic is cluttered
-        BackgroundTask<MultiPartResult> task = new BackgroundTask<>() {
-            @Override
-            protected MultiPartResult run() {
-                updateMessage("merging subtitles...");
+        startLongTask(
+                (taskManager) -> {
+                    taskManager.updateMessage("merging subtitles...");
 
-                Subtitles result;
+                    Subtitles result;
 
-                if (filesInfo.getMergedSubtitles() != null) {
-                    result = filesInfo.getMergedSubtitles();
-                } else {
-                    result = SubtitleMerger.mergeSubtitles(
-                            filesInfo.getUpperFileInfo().getSubtitles(),
-                            filesInfo.getLowerFileInfo().getSubtitles()
-                    );
-                }
+                    if (filesInfo.getMergedSubtitles() != null) {
+                        result = filesInfo.getMergedSubtitles();
+                    } else {
+                        result = SubtitleMerger.mergeSubtitles(
+                                filesInfo.getUpperFileInfo().getSubtitles(),
+                                filesInfo.getLowerFileInfo().getSubtitles()
+                        );
+                    }
 
-                try {
-                    FileUtils.writeStringToFile(
-                            filesInfo.getMergedFileInfo().getFile(),
-                            SubtitleWriter.toSubRipText(result),
-                            StandardCharsets.UTF_8
-                    );
+                    try {
+                        FileUtils.writeStringToFile(
+                                filesInfo.getMergedFileInfo().getFile(),
+                                SubtitleWriter.toSubRipText(result),
+                                StandardCharsets.UTF_8
+                        );
 
-                    return MultiPartResult.onlySuccess("Subtitles have been merged successfully!");
-                } catch (IOException e) {
-                    return MultiPartResult.onlyError(
-                            "Can't merge subtitles:" + System.lineSeparator() + "\u2022 can't write to this file"
-                    );
-                }
-            }
-
-            @Override
-            protected void onFinish(MultiPartResult result) {
-                if (!StringUtils.isBlank(result.getError())) {
-                    showFileElementsAsIncorrect(ExtendedFileType.MERGED_SUBTITLES);
-                }
-                resultLabels.set(result);
-
-                stopProgress();
-            }
-        };
-
-        startBackgroundTask(task);
+                        return MultiPartResult.onlySuccess("Subtitles have been merged successfully!");
+                    } catch (IOException e) {
+                        return MultiPartResult.onlyError(
+                                "Can't merge subtitles:" + System.lineSeparator() + "\u2022 can't write to this file"
+                        );
+                    }
+                },
+                result -> {
+                    if (!StringUtils.isBlank(result.getError())) {
+                        showFileElementsAsIncorrect(ExtendedFileType.MERGED_SUBTITLES);
+                    }
+                    resultLabels.set(result);
+                },
+                false
+        );
     }
 
     @AllArgsConstructor

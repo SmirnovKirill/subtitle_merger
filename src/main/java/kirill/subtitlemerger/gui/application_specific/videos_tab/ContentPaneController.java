@@ -16,18 +16,17 @@ import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
+import kirill.subtitlemerger.gui.application_specific.AbstractController;
+import kirill.subtitlemerger.gui.application_specific.SubtitlePreviewController;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.background_tasks.*;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiExternalSubtitleStream;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
-import kirill.subtitlemerger.gui.utils.entities.ControllerWithProgress;
-import kirill.subtitlemerger.gui.utils.entities.NodeAndController;
 import kirill.subtitlemerger.gui.utils.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.utils.custom_controls.MultiColorLabels;
-import kirill.subtitlemerger.gui.application_specific.previews.SimpleSubtitlePreviewController;
-import kirill.subtitlemerger.gui.application_specific.previews.SubtitlePreviewWithEncodingController;
+import kirill.subtitlemerger.gui.utils.entities.NodeAndController;
 import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
@@ -54,7 +53,7 @@ import java.util.Optional;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
 @CommonsLog
-public class ContentPaneController extends ControllerWithProgress {
+public class ContentPaneController extends AbstractController {
     private static final String SORT_BY_NAME_TEXT = "By _Name";
 
     private static final String SORT_BY_MODIFICATION_TIME_TEXT = "By _Modification Time";
@@ -255,7 +254,7 @@ public class ContentPaneController extends ControllerWithProgress {
                 }
         );
 
-        startBackgroundTask(task);
+       //todo restore startBackgroundTask(task);
     }
 
     @FXML
@@ -273,7 +272,7 @@ public class ContentPaneController extends ControllerWithProgress {
                 context.getFfmpeg()
         );
 
-        startBackgroundTask(task);
+        //todo restore  startBackgroundTask(task);
     }
 
     @FXML
@@ -341,7 +340,7 @@ public class ContentPaneController extends ControllerWithProgress {
                 }
         );
 
-        startBackgroundTask(task);
+        //todo restore startBackgroundTask(task);
     }
 
     private void clearLastProcessedResult() {
@@ -404,7 +403,7 @@ public class ContentPaneController extends ControllerWithProgress {
         );
 
 
-        startBackgroundTask(task);
+        //todo restore  startBackgroundTask(task);
     }
 
     private static ContextMenu generateContextMenu(
@@ -504,7 +503,7 @@ public class ContentPaneController extends ControllerWithProgress {
                 }
         );
 
-        startBackgroundTask(task);
+        //todo restore   startBackgroundTask(task);
     }
 
     void handleChosenDirectory(File directory) {
@@ -541,7 +540,7 @@ public class ContentPaneController extends ControllerWithProgress {
                 }
         );
 
-        startBackgroundTask(task);
+        //todo restore  startBackgroundTask(task);
     }
 
     private static List<File> getFiles(Stage stage, GuiSettings settings) {
@@ -599,7 +598,7 @@ public class ContentPaneController extends ControllerWithProgress {
                 }
         );
 
-        startBackgroundTask(task);
+        //todo restore   startBackgroundTask(task);
     }
 
     @FXML
@@ -629,7 +628,7 @@ public class ContentPaneController extends ControllerWithProgress {
                 }
         );
 
-        startBackgroundTask(task);
+        //todo restore startBackgroundTask(task);
     }
 
     @FXML
@@ -659,7 +658,7 @@ public class ContentPaneController extends ControllerWithProgress {
                 }
         );
 
-        startBackgroundTask(task);
+        //todo restore  startBackgroundTask(task);
     }
 
     @FXML
@@ -695,7 +694,7 @@ public class ContentPaneController extends ControllerWithProgress {
                 }
         );
 
-        startBackgroundTask(task);
+        //todo restore  startBackgroundTask(task);
     }
 
     public static boolean isExtra(FfmpegSubtitleStream subtitleStream, GuiSettings guiSettings) {
@@ -811,7 +810,7 @@ public class ContentPaneController extends ControllerWithProgress {
             }
         };
 
-        startBackgroundTask(task);
+        //todo restore   startBackgroundTask(task);
     }
 
     private Optional<File> getFile(GuiFileInfo fileInfo, Stage stage, GuiSettings settings) {
@@ -932,11 +931,11 @@ public class ContentPaneController extends ControllerWithProgress {
 
         FfmpegSubtitleStream stream = SubtitleStream.getById(streamId, fileInfo.getFfmpegSubtitleStreams());
 
-        NodeAndController<Pane, SimpleSubtitlePreviewController> nodeAndController = GuiUtils.loadNodeAndController(
-                "/gui/application_specific/previews/simpleSubtitlePreview.fxml"
+        NodeAndController<Pane, SubtitlePreviewController> nodeAndController = GuiUtils.loadNodeAndController(
+                "/gui/application_specific/subtitlePreview.fxml"
         );
 
-        nodeAndController.getController().initializeSingleSubtitles(
+        nodeAndController.getController().initializeSimple(
                 stream.getSubtitles(),
                 getStreamTitleForPreview(fileInfo, stream),
                 dialogStage
@@ -1004,11 +1003,11 @@ public class ContentPaneController extends ControllerWithProgress {
 
         Stage dialogStage = new Stage();
 
-        NodeAndController<Pane, SubtitlePreviewWithEncodingController> nodeAndController = GuiUtils.loadNodeAndController(
-                "/gui/application_specific/previews/subtitlePreviewWithEncoding.fxml"
+        NodeAndController<Pane, SubtitlePreviewController> nodeAndController = GuiUtils.loadNodeAndController(
+                "/gui/application_specific/subtitlePreview.fxml"
         );
 
-        nodeAndController.getController().initialize(
+        nodeAndController.getController().initializeWithEncoding(
                 subtitleStream.getRawData(),
                 subtitleStream.getEncoding(),
                 getStreamTitleForPreview(fileInfo, subtitleStream),
@@ -1026,7 +1025,7 @@ public class ContentPaneController extends ControllerWithProgress {
 
         dialogStage.showAndWait();
 
-        SubtitlePreviewWithEncodingController.UserSelection userSelection = nodeAndController.getController().getUserSelection();
+        SubtitlePreviewController.UserSelection userSelection = nodeAndController.getController().getUserSelection();
 
         if (Objects.equals(subtitleStream.getEncoding(), userSelection.getEncoding())) {
             return;
@@ -1122,11 +1121,11 @@ public class ContentPaneController extends ControllerWithProgress {
 
                 Stage dialogStage = new Stage();
 
-                NodeAndController<Pane, SimpleSubtitlePreviewController> nodeAndController = GuiUtils.loadNodeAndController(
-                        "/gui/application_specific/previews/simpleSubtitlePreview.fxml"
+                NodeAndController<Pane, SubtitlePreviewController> nodeAndController = GuiUtils.loadNodeAndController(
+                        "/gui/application_specific/subtitlePreview.fxml"
                 );
 
-                nodeAndController.getController().initializeMergedSubtitles(
+                nodeAndController.getController().initializeMerged(
                         mergedSubtitleInfo.getSubtitles(),
                         getStreamTitleForPreview(fileInfo, upperStream),
                         getStreamTitleForPreview(fileInfo, lowerStream),
@@ -1146,7 +1145,7 @@ public class ContentPaneController extends ControllerWithProgress {
             }
         };
 
-        startBackgroundTask(task);
+        //todo restore startBackgroundTask(task);
     }
 
     private void loadAllFileSubtitleSizes(GuiFileInfo guiFileInfo) {
@@ -1165,7 +1164,7 @@ public class ContentPaneController extends ControllerWithProgress {
                 context.getFfmpeg()
         );
 
-        startBackgroundTask(task);
+        //todo restore  startBackgroundTask(task);
     }
 
     private void loadSingleFileSubtitleSize(GuiFileInfo guiFileInfo, String streamId) {
@@ -1185,7 +1184,7 @@ public class ContentPaneController extends ControllerWithProgress {
                 context.getFfmpeg()
         );
 
-        startBackgroundTask(task);
+        //todo restore startBackgroundTask(task);
     }
 
     @AllArgsConstructor
