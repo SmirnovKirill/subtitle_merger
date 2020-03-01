@@ -2,45 +2,41 @@ package kirill.subtitlemerger.gui.application_specific.videos_tab.background_tas
 
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ProgressIndicator;
-import kirill.subtitlemerger.gui.utils.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFileInfo;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public class RemoveFilesTask extends BackgroundTask<RemoveFilesTask.Result> {
+public class RemoveFilesTask implements BackgroundRunner<RemoveFilesTask.Result> {
     private List<FileInfo> filesInfo;
 
     private List<GuiFileInfo> allGuiFilesInfo;
 
     private List<GuiFileInfo> displayedGuiFilesInfo;
 
-    private Consumer<Result> onFinish;
-
     public RemoveFilesTask(
             List<FileInfo> filesInfo,
             List<GuiFileInfo> allGuiFilesInfo,
-            List<GuiFileInfo> displayedGuiFilesInfo,
-            Consumer<Result> onFinish
+            List<GuiFileInfo> displayedGuiFilesInfo
     ) {
         this.filesInfo = filesInfo;
         this.allGuiFilesInfo = allGuiFilesInfo;
         this.displayedGuiFilesInfo = new ArrayList<>(displayedGuiFilesInfo);
-        this.onFinish = onFinish;
     }
 
     @Override
-    protected Result run() {
-        List<String> selectedPaths = getPathsOfFilesToRemove(displayedGuiFilesInfo, this);
+    public Result run(BackgroundRunnerManager runnerManager) {
+        List<String> selectedPaths = getPathsOfFilesToRemove(displayedGuiFilesInfo, runnerManager);
         int originalSize = filesInfo.size();
 
-        updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
-        updateMessage("removing files...");
+        runnerManager.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
+        runnerManager.updateMessage("removing files...");
 
         filesInfo.removeIf(fileInfo -> selectedPaths.contains(fileInfo.getFile().getAbsolutePath()));
         allGuiFilesInfo.removeIf(fileInfo -> selectedPaths.contains(fileInfo.getFullPath()));
@@ -56,20 +52,15 @@ public class RemoveFilesTask extends BackgroundTask<RemoveFilesTask.Result> {
 
     private static List<String> getPathsOfFilesToRemove(
             List<GuiFileInfo> displayedGuiFilesInfo,
-            RemoveFilesTask task
+            BackgroundRunnerManager runnerManager
     ) {
-        task.updateProgress(ProgressBar.INDETERMINATE_PROGRESS, ProgressBar.INDETERMINATE_PROGRESS);
-        task.updateMessage("getting list of files to remove...");
+        runnerManager.updateProgress(ProgressBar.INDETERMINATE_PROGRESS, ProgressBar.INDETERMINATE_PROGRESS);
+        runnerManager.updateMessage("getting list of files to remove...");
 
         return displayedGuiFilesInfo.stream()
                 .filter(GuiFileInfo::isSelected)
                 .map(GuiFileInfo::getFullPath)
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    protected void onFinish(Result result) {
-        onFinish.accept(result);
     }
 
     @AllArgsConstructor

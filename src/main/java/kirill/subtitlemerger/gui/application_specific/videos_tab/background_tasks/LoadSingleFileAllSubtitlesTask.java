@@ -2,10 +2,11 @@ package kirill.subtitlemerger.gui.application_specific.videos_tab.background_tas
 
 import javafx.application.Platform;
 import javafx.scene.control.ProgressBar;
-import kirill.subtitlemerger.gui.utils.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFfmpegSubtitleStream;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiSubtitleStream;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
@@ -14,21 +15,17 @@ import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import lombok.AllArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 
-import java.util.function.Consumer;
-
 @AllArgsConstructor
-public class LoadSingleFileAllSubtitlesTask extends BackgroundTask<LoadFilesAllSubtitlesTask.Result> {
+public class LoadSingleFileAllSubtitlesTask implements BackgroundRunner<LoadFilesAllSubtitlesTask.Result> {
     private FileInfo fileInfo;
 
     private GuiFileInfo guiFileInfo;
 
-    private Consumer<LoadFilesAllSubtitlesTask.Result> onFinish;
-
     private Ffmpeg ffmpeg;
 
     @Override
-    protected LoadFilesAllSubtitlesTask.Result run() {
-        updateProgress(ProgressBar.INDETERMINATE_PROGRESS, ProgressBar.INDETERMINATE_PROGRESS);
+    public LoadFilesAllSubtitlesTask.Result run(BackgroundRunnerManager runnerManager) {
+        runnerManager.updateProgress(ProgressBar.INDETERMINATE_PROGRESS, ProgressBar.INDETERMINATE_PROGRESS);
 
         LoadFilesAllSubtitlesTask.Result result = new LoadFilesAllSubtitlesTask.Result(
                 getStreamToLoadCount(fileInfo),
@@ -37,9 +34,9 @@ public class LoadSingleFileAllSubtitlesTask extends BackgroundTask<LoadFilesAllS
                 0
         );
 
-        setCancellationPossible(true);
+        runnerManager.setCancellationPossible(true);
         for (FfmpegSubtitleStream stream : fileInfo.getFfmpegSubtitleStreams()) {
-            if (super.isCancelled()) {
+            if (runnerManager.isCancelled()) {
                 return result;
             }
 
@@ -47,7 +44,7 @@ public class LoadSingleFileAllSubtitlesTask extends BackgroundTask<LoadFilesAllS
                 continue;
             }
 
-            updateMessage(
+            runnerManager.updateMessage(
                     LoadFilesAllSubtitlesTask.getUpdateMessage(
                             result.getStreamToLoadCount(),
                             result.getProcessedCount(),
@@ -108,11 +105,6 @@ public class LoadSingleFileAllSubtitlesTask extends BackgroundTask<LoadFilesAllS
         }
 
         return result;
-    }
-
-    @Override
-    protected void onFinish(LoadFilesAllSubtitlesTask.Result result) {
-        this.onFinish.accept(result);
     }
 }
 

@@ -2,11 +2,12 @@ package kirill.subtitlemerger.gui.application_specific.videos_tab.background_tas
 
 import javafx.application.Platform;
 import javafx.scene.control.ProgressBar;
-import kirill.subtitlemerger.gui.utils.background_tasks.BackgroundTask;
-import kirill.subtitlemerger.gui.utils.entities.MultiPartResult;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFfmpegSubtitleStream;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiSubtitleStream;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
+import kirill.subtitlemerger.gui.utils.entities.MultiPartResult;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
@@ -16,27 +17,23 @@ import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.util.function.Consumer;
-
 @AllArgsConstructor
-public class LoadSingleSubtitleTask extends BackgroundTask<LoadSingleSubtitleTask.Result> {
+public class LoadSingleSubtitleTask implements BackgroundRunner<LoadSingleSubtitleTask.Result> {
     private String streamId;
 
     private FileInfo fileInfo;
 
     private GuiFileInfo guiFileInfo;
 
-    private Consumer<Result> onFinish;
-
     private Ffmpeg ffmpeg;
 
     @Override
-    protected Result run() {
-        updateProgress(ProgressBar.INDETERMINATE_PROGRESS, ProgressBar.INDETERMINATE_PROGRESS);
+    public Result run(BackgroundRunnerManager runnerManager) {
+        runnerManager.updateProgress(ProgressBar.INDETERMINATE_PROGRESS, ProgressBar.INDETERMINATE_PROGRESS);
 
         FfmpegSubtitleStream stream = SubtitleStream.getById(streamId, fileInfo.getFfmpegSubtitleStreams());
         GuiFfmpegSubtitleStream guiStream = GuiSubtitleStream.getById(streamId, guiFileInfo.getFfmpegSubtitleStreams());
-        updateMessage(
+        runnerManager.updateMessage(
                 LoadFilesAllSubtitlesTask.getUpdateMessage(
                         1,
                         0,
@@ -45,7 +42,7 @@ public class LoadSingleSubtitleTask extends BackgroundTask<LoadSingleSubtitleTas
                 )
         );
 
-        setCancellationPossible(true);
+        runnerManager.setCancellationPossible(true);
         try {
             String subtitleText = ffmpeg.getSubtitlesText(stream.getFfmpegIndex(), fileInfo.getFile());
             stream.setSubtitles(SubtitleParser.fromSubRipText(subtitleText, stream.getLanguage()));
@@ -91,11 +88,6 @@ public class LoadSingleSubtitleTask extends BackgroundTask<LoadSingleSubtitleTas
         }
 
         return new MultiPartResult(success, warn, error);
-    }
-
-    @Override
-    protected void onFinish(Result result) {
-        this.onFinish.accept(result);
     }
 
     @AllArgsConstructor

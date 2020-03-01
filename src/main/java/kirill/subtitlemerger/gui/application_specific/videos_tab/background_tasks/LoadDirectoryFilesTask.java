@@ -3,12 +3,13 @@ package kirill.subtitlemerger.gui.application_specific.videos_tab.background_tas
 import javafx.scene.control.ProgressIndicator;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
-import kirill.subtitlemerger.gui.utils.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.ContentPaneController;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiExternalSubtitleStream;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFfmpegSubtitleStream;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiSubtitleStream;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.work_with_files.FileInfoGetter;
 import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
@@ -25,11 +26,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @CommonsLog
-public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTask.Result> {
+public class LoadDirectoryFilesTask implements BackgroundRunner<LoadDirectoryFilesTask.Result> {
     private File directory;
 
     private GuiSettings.SortBy sortBy;
@@ -38,49 +38,45 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
 
     private GuiContext guiContext;
 
-    private Consumer<Result> onFinish;
-
     public LoadDirectoryFilesTask(
             File directory,
             GuiSettings.SortBy sortBy,
             GuiSettings.SortDirection sortDirection,
-            GuiContext guiContext,
-            Consumer<Result> onFinish
+            GuiContext guiContext
     ) {
         this.directory = directory;
         this.sortBy = sortBy;
         this.sortDirection = sortDirection;
         this.guiContext = guiContext;
-        this.onFinish = onFinish;
     }
 
     @Override
-    protected Result run() {
-        List<File> files = getDirectoryFiles(directory, this);
-        List<FileInfo> filesInfo = getFilesInfo(files, guiContext.getFfprobe(), this);
+    public Result run(BackgroundRunnerManager runnerManager) {
+        List<File> files = getDirectoryFiles(directory, runnerManager);
+        List<FileInfo> filesInfo = getFilesInfo(files, guiContext.getFfprobe(), runnerManager);
         List<GuiFileInfo> allGuiFilesInfo = convert(
                 filesInfo,
                 false,
                 false,
-                this,
+                runnerManager,
                 guiContext.getSettings()
         );
 
-        boolean hideUnavailable = shouldHideUnavailable(filesInfo, this);
+        boolean hideUnavailable = shouldHideUnavailable(filesInfo, runnerManager);
         List<GuiFileInfo> guiFilesToShowInfo = getFilesInfoToShow(
                 allGuiFilesInfo,
                 hideUnavailable,
                 sortBy,
                 sortDirection,
-                this
+                runnerManager
         );
 
         return new Result(filesInfo, allGuiFilesInfo, guiFilesToShowInfo, hideUnavailable);
     }
 
-    private static List<File> getDirectoryFiles(File directory, LoadDirectoryFilesTask task) {
-        task.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
-        task.updateMessage("getting file list...");
+    private static List<File> getDirectoryFiles(File directory, BackgroundRunnerManager runnerManager) {
+        runnerManager.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
+        runnerManager.updateMessage("getting file list...");
 
         File[] directoryFiles = directory.listFiles();
 
@@ -97,17 +93,17 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
             boolean hideUnavailable,
             GuiSettings.SortBy sortBy,
             GuiSettings.SortDirection sortDirection,
-            BackgroundTask task
+            BackgroundRunnerManager runnerManager
     ) {
-        task.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
+        runnerManager.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
 
         List<GuiFileInfo> result = new ArrayList<>(allFilesInfo);
         if (hideUnavailable) {
-            task.updateMessage("filtering unavailable...");
+            runnerManager.updateMessage("filtering unavailable...");
             result.removeIf(fileInfo -> !StringUtils.isBlank(fileInfo.getUnavailabilityReason()));
         }
 
-        task.updateMessage("sorting file list...");
+        runnerManager.updateMessage("sorting file list...");
 
         Comparator<GuiFileInfo> comparator;
         switch (sortBy) {
@@ -133,14 +129,14 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
         return result;
     }
 
-    static List<FileInfo> getFilesInfo(List<File> files, Ffprobe ffprobe, BackgroundTask<?> task) {
+    static List<FileInfo> getFilesInfo(List<File> files, Ffprobe ffprobe, BackgroundRunnerManager runnerManager) {
         List<FileInfo> result = new ArrayList<>();
 
-        task.updateProgress(0, files.size());
+        runnerManager.updateProgress(0, files.size());
 
         int i = 0;
         for (File file : files) {
-            task.updateMessage("getting file info " + file.getName() + "...");
+            runnerManager.updateMessage("getting file info " + file.getName() + "...");
 
             if (file.isFile() && file.exists()) {
                 result.add(
@@ -153,7 +149,7 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
                 );
             }
 
-            task.updateProgress(i + 1, files.size());
+            runnerManager.updateProgress(i + 1, files.size());
             i++;
         }
 
@@ -164,9 +160,9 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
      * Set "hide unavailable" checkbox by default if there is at least one available video. Otherwise it should
      * not be checked because the user will see just an empty file list which isn't very user friendly.
      */
-    static boolean shouldHideUnavailable(List<FileInfo> filesInfo, BackgroundTask<?> task) {
-        task.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
-        task.updateMessage("calculating whether to hide unavailable files by default...");
+    static boolean shouldHideUnavailable(List<FileInfo> filesInfo, BackgroundRunnerManager runnerManager) {
+        runnerManager.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
+        runnerManager.updateMessage("calculating whether to hide unavailable files by default...");
 
         return filesInfo.stream().anyMatch(fileInfo -> fileInfo.getUnavailabilityReason() == null);
     }
@@ -175,15 +171,15 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
             List<FileInfo> filesInfo,
             boolean showFullFileName,
             boolean selectByDefault,
-            BackgroundTask<?> task,
+            BackgroundRunnerManager runnerManager,
             GuiSettings guiSettings
     ) {
-        task.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
+        runnerManager.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
 
         List<GuiFileInfo> result = new ArrayList<>();
 
         for (FileInfo fileInfo : filesInfo) {
-            task.updateMessage("creating object for " + fileInfo.getFile().getName() + "...");
+            runnerManager.updateMessage("creating object for " + fileInfo.getFile().getName() + "...");
 
             result.add(
                     from(
@@ -280,11 +276,6 @@ public class LoadDirectoryFilesTask extends BackgroundTask<LoadDirectoryFilesTas
             default:
                 throw new IllegalStateException();
         }
-    }
-
-    @Override
-    protected void onFinish(Result result) {
-        onFinish.accept(result);
     }
 
     @AllArgsConstructor

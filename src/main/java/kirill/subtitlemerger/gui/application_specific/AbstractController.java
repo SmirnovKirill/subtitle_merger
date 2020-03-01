@@ -4,10 +4,9 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.Pane;
-import kirill.subtitlemerger.gui.utils.background_tasks.BackgroundTask;
-import kirill.subtitlemerger.gui.utils.background_tasks.BackgroundThreadProcessor;
-import kirill.subtitlemerger.gui.utils.background_tasks.MainThreadProcessor;
-import kirill.subtitlemerger.gui.utils.background_tasks.TaskManager;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerCallback;
+import kirill.subtitlemerger.gui.utils.background.HelperTask;
 import lombok.extern.apachecommons.CommonsLog;
 
 @CommonsLog
@@ -27,42 +26,30 @@ public abstract class AbstractController {
     @FXML
     private Pane cancelTaskPane;
 
-    private BackgroundTask<?> currentTask;
+    private HelperTask<?> currentTask;
 
-    protected <T> void startLongTask(
-            BackgroundThreadProcessor<T> backgroundThreadProcessor,
-            MainThreadProcessor<T> mainThreadProcessor,
-            boolean canCancel
+    protected <T> void runInBackground(
+            BackgroundRunner<T> backgroundTask,
+            BackgroundRunnerCallback<T> taskCallback
     ) {
-        TaskManager taskManager = new TaskManager(canCancel);
-
-        BackgroundTask<T> task = new BackgroundTask<T>() {
-            @Override
-            protected T run() {
-                return backgroundThreadProcessor.process(taskManager);
-            }
-
-            @Override
-            protected void onFinish(T backgroundThreadResult) {
-                stopProgress();
-                mainThreadProcessor.process(backgroundThreadResult);
-            }
-        };
-        taskManager.setTask(task);
+        HelperTask<T> task = new HelperTask<>(backgroundTask, taskCallback, this::stopProgress);
 
         mainPane.setDisable(true);
         progressPane.setVisible(true);
         progressIndicator.progressProperty().bind(task.progressProperty());
         progressLabel.textProperty().bind(task.messageProperty());
         if (cancelTaskPane != null) {
-            cancelTaskPane.visibleProperty().bind(task.cancellationPossibleProperty());
+            cancelTaskPane.visibleProperty().bind(task.getBackgroundRunnerManager().cancellationPossibleProperty());
         }
 
         currentTask = task;
-        task.start();
+
+        Thread thread = new Thread(task);
+        thread.setDaemon(true);
+        thread.start();
     }
 
-    protected void stopProgress() {
+    private void stopProgress() {
         progressPane.setVisible(false);
         mainPane.setDisable(false);
     }

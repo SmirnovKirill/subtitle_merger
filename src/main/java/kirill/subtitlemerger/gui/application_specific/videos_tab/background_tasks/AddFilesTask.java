@@ -3,10 +3,11 @@ package kirill.subtitlemerger.gui.application_specific.videos_tab.background_tas
 import javafx.scene.control.ProgressIndicator;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
-import kirill.subtitlemerger.gui.utils.GuiUtils;
-import kirill.subtitlemerger.gui.utils.background_tasks.BackgroundTask;
-import kirill.subtitlemerger.gui.utils.entities.MultiPartResult;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFileInfo;
+import kirill.subtitlemerger.gui.utils.GuiUtils;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
+import kirill.subtitlemerger.gui.utils.entities.MultiPartResult;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,9 +16,8 @@ import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Consumer;
 
-public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
+public class AddFilesTask implements BackgroundRunner<AddFilesTask.Result> {
     private List<FileInfo> filesInfo;
 
     private List<File> filesToAdd;
@@ -32,8 +32,6 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
 
     private GuiContext guiContext;
 
-    private Consumer<Result> onFinish;
-
     public AddFilesTask(
             List<FileInfo> filesInfo,
             List<File> filesToAdd,
@@ -41,8 +39,7 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
             boolean hideUnavailable,
             GuiSettings.SortBy sortBy,
             GuiSettings.SortDirection sortDirection,
-            GuiContext guiContext,
-            Consumer<Result> onFinish
+            GuiContext guiContext
     ) {
         this.filesInfo = filesInfo;
         this.filesToAdd = filesToAdd;
@@ -51,19 +48,18 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
         this.sortBy = sortBy;
         this.sortDirection = sortDirection;
         this.guiContext = guiContext;
-        this.onFinish = onFinish;
     }
 
     @Override
-    protected Result run() {
-        List<FileInfo> filesToAddInfo = LoadDirectoryFilesTask.getFilesInfo(filesToAdd, guiContext.getFfprobe(), this);
+    public Result run(BackgroundRunnerManager runnerManager) {
+        List<FileInfo> filesToAddInfo = LoadDirectoryFilesTask.getFilesInfo(filesToAdd, guiContext.getFfprobe(), runnerManager);
         int allFilesToAdd = filesToAddInfo.size();
-        removeAlreadyAdded(filesToAddInfo, filesInfo, this);
+        removeAlreadyAdded(filesToAddInfo, filesInfo, runnerManager);
         List<GuiFileInfo> guiFilesToAddInfo = LoadDirectoryFilesTask.convert(
                 filesToAddInfo,
                 true,
                 true,
-                this,
+                runnerManager,
                 guiContext.getSettings()
         );
         filesInfo.addAll(filesToAddInfo);
@@ -74,7 +70,7 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
                 hideUnavailable,
                 sortBy,
                 sortDirection,
-                this
+                runnerManager
         );
 
         return new Result(allFilesToAdd, filesToAddInfo.size(), filesInfo, allGuiFilesInfo, guiFilesToShowInfo);
@@ -83,10 +79,10 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
     private static void removeAlreadyAdded(
             List<FileInfo> filesToAddInfo,
             List<FileInfo> allFilesInfo,
-            AddFilesTask task
+            BackgroundRunnerManager runnerManager
     ) {
-        task.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
-        task.updateMessage("removing already added files...");
+        runnerManager.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
+        runnerManager.updateMessage("removing already added files...");
 
         Iterator<FileInfo> iterator = filesToAddInfo.iterator();
 
@@ -129,11 +125,6 @@ public class AddFilesTask extends BackgroundTask<AddFilesTask.Result> {
         }
 
         return new MultiPartResult(success, null, null);
-    }
-
-    @Override
-    protected void onFinish(Result result) {
-        this.onFinish.accept(result);
     }
 
     @AllArgsConstructor

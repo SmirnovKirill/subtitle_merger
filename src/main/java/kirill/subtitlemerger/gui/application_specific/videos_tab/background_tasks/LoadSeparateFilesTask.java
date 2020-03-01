@@ -2,17 +2,17 @@ package kirill.subtitlemerger.gui.application_specific.videos_tab.background_tas
 
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
-import kirill.subtitlemerger.gui.utils.background_tasks.BackgroundTask;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFileInfo;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.io.File;
 import java.util.List;
-import java.util.function.Consumer;
 
-public class LoadSeparateFilesTask extends BackgroundTask<LoadSeparateFilesTask.Result> {
+public class LoadSeparateFilesTask implements BackgroundRunner<LoadSeparateFilesTask.Result> {
     private List<File> files;
 
     private GuiSettings.SortBy sortBy;
@@ -21,48 +21,39 @@ public class LoadSeparateFilesTask extends BackgroundTask<LoadSeparateFilesTask.
 
     private GuiContext guiContext;
 
-    private Consumer<Result> onFinish;
-
     public LoadSeparateFilesTask(
             List<File> files,
             GuiSettings.SortBy sortBy,
             GuiSettings.SortDirection sortDirection,
-            GuiContext guiContext,
-            Consumer<Result> onFinish
+            GuiContext guiContext
     ) {
         this.files = files;
         this.sortBy = sortBy;
         this.sortDirection = sortDirection;
         this.guiContext = guiContext;
-        this.onFinish = onFinish;
     }
 
     @Override
-    protected Result run() {
-        List<FileInfo> filesInfo = LoadDirectoryFilesTask.getFilesInfo(files, guiContext.getFfprobe(), this);
+    public Result run(BackgroundRunnerManager runnerManager) {
+        List<FileInfo> filesInfo = LoadDirectoryFilesTask.getFilesInfo(files, guiContext.getFfprobe(), runnerManager);
         List<GuiFileInfo> allGuiFilesInfo = LoadDirectoryFilesTask.convert(
                 filesInfo,
                 true,
                 true,
-                this,
+                runnerManager,
                 guiContext.getSettings()
         );
 
-        boolean hideUnavailable = LoadDirectoryFilesTask.shouldHideUnavailable(filesInfo, this);
+        boolean hideUnavailable = LoadDirectoryFilesTask.shouldHideUnavailable(filesInfo, runnerManager);
         List<GuiFileInfo> guiFilesToShowInfo = LoadDirectoryFilesTask.getFilesInfoToShow(
                 allGuiFilesInfo,
                 hideUnavailable,
                 sortBy,
                 sortDirection,
-                this
+                runnerManager
         );
 
         return new Result(filesInfo, allGuiFilesInfo, guiFilesToShowInfo, hideUnavailable);
-    }
-
-    @Override
-    protected void onFinish(Result result) {
-        onFinish.accept(result);
     }
 
     @AllArgsConstructor

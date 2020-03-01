@@ -2,12 +2,13 @@ package kirill.subtitlemerger.gui.application_specific.videos_tab.background_tas
 
 import javafx.application.Platform;
 import javafx.scene.control.ProgressBar;
-import kirill.subtitlemerger.gui.utils.GuiUtils;
-import kirill.subtitlemerger.gui.utils.background_tasks.BackgroundTask;
-import kirill.subtitlemerger.gui.utils.entities.MultiPartResult;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFfmpegSubtitleStream;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiSubtitleStream;
+import kirill.subtitlemerger.gui.utils.GuiUtils;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
+import kirill.subtitlemerger.gui.utils.entities.MultiPartResult;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
@@ -21,34 +22,31 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @AllArgsConstructor
-public class LoadFilesAllSubtitlesTask extends BackgroundTask<LoadFilesAllSubtitlesTask.Result> {
+public class LoadFilesAllSubtitlesTask implements BackgroundRunner<LoadFilesAllSubtitlesTask.Result> {
     private List<FileInfo> allFilesInfo;
 
     private List<GuiFileInfo> displayedGuiFilesInfo;
 
-    private Consumer<Result> onFinish;
-
     private Ffmpeg ffmpeg;
 
     @Override
-    protected Result run() {
-        BackgroundTaskUtils.clearFileInfoResults(displayedGuiFilesInfo, this);
-        List<GuiFileInfo> guiFilesInfoToWorkWith = getGuiFilesInfoToWorkWith(displayedGuiFilesInfo, this);
+    public Result run(BackgroundRunnerManager runnerManager) {
+        BackgroundTaskUtils.clearFileInfoResults(displayedGuiFilesInfo, runnerManager);
+        List<GuiFileInfo> guiFilesInfoToWorkWith = getGuiFilesInfoToWorkWith(displayedGuiFilesInfo, runnerManager);
 
-        updateProgress(ProgressBar.INDETERMINATE_PROGRESS, ProgressBar.INDETERMINATE_PROGRESS);
+        runnerManager.updateProgress(ProgressBar.INDETERMINATE_PROGRESS, ProgressBar.INDETERMINATE_PROGRESS);
 
         Result result = new Result(
-                getStreamToLoadCount(guiFilesInfoToWorkWith, allFilesInfo, this),
+                getStreamToLoadCount(guiFilesInfoToWorkWith, allFilesInfo, runnerManager),
                 0,
                 0,
                 0
         );
 
-        setCancellationPossible(true);
+        runnerManager.setCancellationPossible(true);
         for (GuiFileInfo guiFileInfo : guiFilesInfoToWorkWith) {
             FileInfo fileInfo = GuiUtils.findMatchingFileInfo(guiFileInfo, allFilesInfo);
             if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
@@ -58,7 +56,7 @@ public class LoadFilesAllSubtitlesTask extends BackgroundTask<LoadFilesAllSubtit
             int failedToLoadForFile = 0;
 
             for (FfmpegSubtitleStream stream : fileInfo.getFfmpegSubtitleStreams()) {
-                if (super.isCancelled()) {
+                if (runnerManager.isCancelled()) {
                     return result;
                 }
 
@@ -66,7 +64,7 @@ public class LoadFilesAllSubtitlesTask extends BackgroundTask<LoadFilesAllSubtit
                     continue;
                 }
 
-                updateMessage(
+                runnerManager.updateMessage(
                         getUpdateMessage(
                                 result.getStreamToLoadCount(),
                                 result.getProcessedCount(),
@@ -121,10 +119,10 @@ public class LoadFilesAllSubtitlesTask extends BackgroundTask<LoadFilesAllSubtit
 
     private static List<GuiFileInfo> getGuiFilesInfoToWorkWith(
             List<GuiFileInfo> displayedGuiFilesInfo,
-            LoadFilesAllSubtitlesTask task
+            BackgroundRunnerManager runnerManager
     ) {
-        task.updateProgress(ProgressBar.INDETERMINATE_PROGRESS, ProgressBar.INDETERMINATE_PROGRESS);
-        task.updateMessage("getting list of files to work with...");
+        runnerManager.updateProgress(ProgressBar.INDETERMINATE_PROGRESS, ProgressBar.INDETERMINATE_PROGRESS);
+        runnerManager.updateMessage("getting list of files to work with...");
 
         return displayedGuiFilesInfo.stream().filter(GuiFileInfo::isSelected).collect(Collectors.toList());
     }
@@ -132,10 +130,10 @@ public class LoadFilesAllSubtitlesTask extends BackgroundTask<LoadFilesAllSubtit
     private static int getStreamToLoadCount(
             List<GuiFileInfo> guiFilesToWorkWith,
             List<FileInfo> allFiles,
-            LoadFilesAllSubtitlesTask task
+            BackgroundRunnerManager runnerManager
     ) {
-        task.updateProgress(ProgressBar.INDETERMINATE_PROGRESS, ProgressBar.INDETERMINATE_PROGRESS);
-        task.updateMessage("calculating number of subtitles to load...");
+        runnerManager.updateProgress(ProgressBar.INDETERMINATE_PROGRESS, ProgressBar.INDETERMINATE_PROGRESS);
+        runnerManager.updateMessage("calculating number of subtitles to load...");
 
         int result = 0;
 
@@ -247,11 +245,6 @@ public class LoadFilesAllSubtitlesTask extends BackgroundTask<LoadFilesAllSubtit
         }
 
         return new MultiPartResult(success, warn, error);
-    }
-
-    @Override
-    protected void onFinish(Result result) {
-        onFinish.accept(result);
     }
 
     @AllArgsConstructor

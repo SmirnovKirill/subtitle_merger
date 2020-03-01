@@ -14,8 +14,8 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
-import kirill.subtitlemerger.gui.utils.background_tasks.BackgroundThreadProcessor;
-import kirill.subtitlemerger.gui.utils.background_tasks.MainThreadProcessor;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerCallback;
 import kirill.subtitlemerger.gui.utils.custom_controls.MultiColorLabels;
 import kirill.subtitlemerger.gui.utils.entities.MultiPartResult;
 import kirill.subtitlemerger.gui.utils.entities.NoSelectionModel;
@@ -109,7 +109,7 @@ public class SubtitlePreviewController extends AbstractController {
         listView.setSelectionModel(new NoSelectionModel<>());
         GuiUtils.setVisibleAndManaged(cancelSavePane, false);
 
-        processDataAndUpdateScene(true);
+        getPreviewInfoAndUpdateScene(true);
     }
 
     public void initializeMerged(
@@ -130,7 +130,7 @@ public class SubtitlePreviewController extends AbstractController {
         listView.setSelectionModel(new NoSelectionModel<>());
         GuiUtils.setVisibleAndManaged(cancelSavePane, false);
 
-        processDataAndUpdateScene(true);
+        getPreviewInfoAndUpdateScene(true);
     }
 
     public void initializeWithEncoding(
@@ -154,36 +154,36 @@ public class SubtitlePreviewController extends AbstractController {
         listView.setSelectionModel(new NoSelectionModel<>());
         GuiUtils.setVisibleAndManaged(okPane, false);
 
-        processDataAndUpdateScene(true);
+        getPreviewInfoAndUpdateScene(true);
     }
 
-    private void processDataAndUpdateScene(boolean initialRun) {
+    private void getPreviewInfoAndUpdateScene(boolean initialRun) {
         listView.getItems().clear();
 
-        BackgroundThreadProcessor<ProcessedData> backgroundThreadProcessor = taskManager -> {
+        BackgroundRunner<PreviewInfo> backgroundRunner = runnerManager -> {
             if (mode == Mode.WITH_ENCODING) {
-                return getProcessedData(data, currentEncoding);
+                return getPreviewInfo(data, currentEncoding);
             } else {
-                return getProcessedData(originalSubtitles, null);
+                return getPreviewInfo(originalSubtitles, null);
             }
         };
 
-        MainThreadProcessor<ProcessedData> mainThreadProcessor = processedData -> {
+        BackgroundRunnerCallback<PreviewInfo> callback = previewInfo -> {
             if (mode == Mode.WITH_ENCODING) {
                 if (initialRun) {
                     originalSubtitles = currentSubtitles;
                     userSelection = new UserSelection(currentSubtitles, currentEncoding);
                 }
-                currentSubtitles = processedData.getSubtitles();
+                currentSubtitles = previewInfo.getSubtitles();
             }
 
-            updateScene(processedData, initialRun);
+            updateScene(previewInfo, initialRun);
         };
 
-        startLongTask(backgroundThreadProcessor, mainThreadProcessor, false);
+        runInBackground(backgroundRunner, callback);
     }
 
-    private static ProcessedData getProcessedData(byte[] data, Charset encoding) {
+    private static PreviewInfo getPreviewInfo(byte[] data, Charset encoding) {
         String text = new String(data, encoding);
         Subtitles subtitles;
         try {
@@ -192,10 +192,10 @@ public class SubtitlePreviewController extends AbstractController {
             subtitles = null;
         }
 
-        return getProcessedData(subtitles, text);
+        return getPreviewInfo(subtitles, text);
     }
 
-    private static ProcessedData getProcessedData(Subtitles subtitles, String subtitleText) {
+    private static PreviewInfo getPreviewInfo(Subtitles subtitles, String subtitleText) {
         if (subtitleText == null) {
             subtitleText = SubtitleWriter.toSubRipText(subtitles);
         }
@@ -211,18 +211,18 @@ public class SubtitlePreviewController extends AbstractController {
             }
         }
 
-        return new ProcessedData(subtitles, FXCollections.observableArrayList(lines), linesTruncated);
+        return new PreviewInfo(subtitles, FXCollections.observableArrayList(lines), linesTruncated);
     }
 
-    private void updateScene(ProcessedData processedData, boolean initialRun) {
-        setLinesTruncated(processedData.isLinesTruncated());
+    private void updateScene(PreviewInfo previewInfo, boolean initialRun) {
+        setLinesTruncated(previewInfo.isLinesTruncated());
 
-        listView.setDisable(processedData.getSubtitles() == null);
-        listView.setItems(processedData.getLinesToDisplay());
+        listView.setDisable(previewInfo.getSubtitles() == null);
+        listView.setItems(previewInfo.getLinesToDisplay());
 
         if (mode == Mode.WITH_ENCODING) {
             MultiPartResult result = MultiPartResult.EMPTY;
-            if (processedData.getSubtitles() == null) {
+            if (previewInfo.getSubtitles() == null) {
                 result = MultiPartResult.onlyError(
                         String.format(
                                 "This encoding (%s) doesn't fit or the file has an incorrect format",
@@ -275,7 +275,7 @@ public class SubtitlePreviewController extends AbstractController {
         }
 
         currentEncoding = encoding;
-        processDataAndUpdateScene(false);
+        getPreviewInfoAndUpdateScene(false);
     }
 
     @FXML
@@ -295,16 +295,6 @@ public class SubtitlePreviewController extends AbstractController {
         dialogStage.close();
     }
 
-    @AllArgsConstructor
-    @Getter
-    private static class ProcessedData {
-        private Subtitles subtitles;
-
-        private ObservableList<String> linesToDisplay;
-
-        private boolean linesTruncated;
-    }
-
     private static class CharsetStringConverter extends StringConverter<Charset> {
         @Override
         public String toString(Charset charset) {
@@ -317,6 +307,12 @@ public class SubtitlePreviewController extends AbstractController {
         }
     }
 
+    private enum Mode {
+        SIMPLE,
+        WITH_ENCODING,
+        MERGED
+    }
+
     @AllArgsConstructor
     @Getter
     public static class UserSelection {
@@ -325,9 +321,13 @@ public class SubtitlePreviewController extends AbstractController {
         private Charset encoding;
     }
 
-    private enum Mode {
-        SIMPLE,
-        WITH_ENCODING,
-        MERGED
+    @AllArgsConstructor
+    @Getter
+    private static class PreviewInfo {
+        private Subtitles subtitles;
+
+        private ObservableList<String> linesToDisplay;
+
+        private boolean linesTruncated;
     }
 }

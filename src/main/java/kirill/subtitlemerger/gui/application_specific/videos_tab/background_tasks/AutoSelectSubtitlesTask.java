@@ -3,12 +3,13 @@ package kirill.subtitlemerger.gui.application_specific.videos_tab.background_tas
 import javafx.application.Platform;
 import javafx.scene.control.ProgressIndicator;
 import kirill.subtitlemerger.gui.GuiSettings;
-import kirill.subtitlemerger.gui.utils.GuiUtils;
-import kirill.subtitlemerger.gui.utils.background_tasks.BackgroundTask;
-import kirill.subtitlemerger.gui.utils.entities.MultiPartResult;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFfmpegSubtitleStream;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiSubtitleStream;
+import kirill.subtitlemerger.gui.utils.GuiUtils;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
+import kirill.subtitlemerger.gui.utils.entities.MultiPartResult;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
@@ -25,10 +26,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesTask.Result> {
+public class AutoSelectSubtitlesTask implements BackgroundRunner<AutoSelectSubtitlesTask.Result> {
     private static final Comparator<? super SubtitleStream> STREAM_COMPARATOR = Comparator.comparing(
             (SubtitleStream stream) -> stream.getSubtitles().getSize()
     ).reversed();
@@ -41,27 +41,23 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
 
     private GuiSettings guiSettings;
 
-    private Consumer<Result> onFinish;
-
     public AutoSelectSubtitlesTask(
             List<FileInfo> allFilesInfo,
             List<GuiFileInfo> displayedGuiFilesInfo,
             Ffmpeg ffmpeg,
-            GuiSettings guiSettings,
-            Consumer<Result> onFinish
+            GuiSettings guiSettings
     ) {
         this.allFilesInfo = allFilesInfo;
         this.displayedGuiFilesInfo = displayedGuiFilesInfo;
         this.ffmpeg = ffmpeg;
         this.guiSettings = guiSettings;
-        this.onFinish = onFinish;
     }
 
     @Override
-    protected Result run() {
-        BackgroundTaskUtils.clearFileInfoResults(displayedGuiFilesInfo, this);
+    public Result run(BackgroundRunnerManager runnerManager) {
+        BackgroundTaskUtils.clearFileInfoResults(displayedGuiFilesInfo, runnerManager);
 
-        List<GuiFileInfo> guiFilesInfoToWorkWith = getGuiFilesInfoToWorkWith(displayedGuiFilesInfo, this);
+        List<GuiFileInfo> guiFilesInfoToWorkWith = getGuiFilesInfoToWorkWith(displayedGuiFilesInfo, runnerManager);
 
         Result result = new Result(
                 guiFilesInfoToWorkWith.size(),
@@ -71,9 +67,9 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
                 0
         );
 
-        setCancellationPossible(true);
+        runnerManager.setCancellationPossible(true);
         for (GuiFileInfo guiFileInfo : guiFilesInfoToWorkWith) {
-            if (super.isCancelled()) {
+            if (runnerManager.isCancelled()) {
                 return result;
             }
 
@@ -98,7 +94,8 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
                         matchingUpperSubtitles,
                         matchingLowerSubtitles,
                         guiFileInfo,
-                        result
+                        result,
+                        runnerManager
                 );
                 if (!loadedSuccessfully) {
                     result.setFailedCount(result.getFailedCount() + 1);
@@ -141,10 +138,10 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
 
     private static List<GuiFileInfo> getGuiFilesInfoToWorkWith(
             List<GuiFileInfo> displayedGuiFilesInfo,
-            AutoSelectSubtitlesTask task
+            BackgroundRunnerManager runnerManager
     ) {
-        task.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
-        task.updateMessage("getting list of files to work with...");
+        runnerManager.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
+        runnerManager.updateMessage("getting list of files to work with...");
 
         return displayedGuiFilesInfo.stream().filter(GuiFileInfo::isSelected).collect(Collectors.toList());
     }
@@ -168,7 +165,8 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
             List<FfmpegSubtitleStream> upperSubtitleStreams,
             List<FfmpegSubtitleStream> lowerSubtitleStreams,
             GuiFileInfo fileInfo,
-            Result taskResult
+            Result taskResult,
+            BackgroundRunnerManager runnerManager
     ) throws FfmpegException {
         boolean result = true;
 
@@ -183,7 +181,7 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
         int failedToLoadForFile = 0;
 
         for (FfmpegSubtitleStream stream : subtitlesToLoad) {
-            updateMessage(
+            runnerManager.updateMessage(
                     getUpdateMessage(
                             taskResult.getProcessedCount(),
                             taskResult.getAllFileCount(),
@@ -342,11 +340,6 @@ public class AutoSelectSubtitlesTask extends BackgroundTask<AutoSelectSubtitlesT
         }
 
         return new MultiPartResult(success, warn, error);
-    }
-
-    @Override
-    protected void onFinish(Result result) {
-        onFinish.accept(result);
     }
 
     @AllArgsConstructor
