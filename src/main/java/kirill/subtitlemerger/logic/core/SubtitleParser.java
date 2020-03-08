@@ -84,12 +84,7 @@ public class SubtitleParser {
             result.add(currentSubtitle);
         }
 
-        List<LanguageAlpha3Code> languages = new ArrayList<>();
-        if (language != null) {
-            languages.add(language);
-        }
-
-        return new Subtitles(result, languages);
+        return new Subtitles(result, language);
     }
 
     private static LocalTime getFromTime(String currentLine) throws IncorrectFormatException {

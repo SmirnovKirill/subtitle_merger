@@ -1,7 +1,9 @@
 package kirill.subtitlemerger.logic.work_with_files;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
-import kirill.subtitlemerger.logic.work_with_files.entities.*;
+import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
+import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
+import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleOption;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffprobe;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.SubtitleCodec;
@@ -38,11 +40,11 @@ public class FileInfoGetter {
 
         String extension = FilenameUtils.getExtension(file.getName());
         if (StringUtils.isBlank(extension)) {
-            return new FileInfo(file, NO_EXTENSION, null, null);
+            return new FileInfo(file, null, NO_EXTENSION, null, null);
         }
 
         if (!allowedVideoExtensions.contains(extension.toLowerCase())) {
-            return new FileInfo(file, NOT_ALLOWED_EXTENSION, null, null);
+            return new FileInfo(file, null, NOT_ALLOWED_EXTENSION, null, null);
         }
 
         String mimeType;
@@ -53,36 +55,36 @@ public class FileInfoGetter {
                     + ExceptionUtils.getStackTrace(e)
             );
 
-            return new FileInfo(file, FAILED_TO_GET_MIME_TYPE, null, null);
+            return new FileInfo(file, null, FAILED_TO_GET_MIME_TYPE, null, null);
         }
 
         if (!allowedVideoMimeTypes.contains(mimeType)) {
-            return new FileInfo(file, NOT_ALLOWED_MIME_TYPE, null, null);
+            return new FileInfo(file, null, NOT_ALLOWED_MIME_TYPE, null, null);
         }
 
         JsonFfprobeFileInfo ffprobeInfo;
         try {
             ffprobeInfo = ffprobe.getFileInfo(file);
         } catch (FfmpegException e) {
-            return new FileInfo(file, FAILED_TO_GET_FFPROBE_INFO, null, null);
+            return new FileInfo(file, null, FAILED_TO_GET_FFPROBE_INFO, null, null);
         } catch (Exception e) {
             log.warn("failed to get ffprobe info for file " + file.getAbsolutePath() + ": "
                     + ExceptionUtils.getStackTrace(e)
             );
 
-            return new FileInfo(file, FAILED_TO_GET_FFPROBE_INFO, null, null);
+            return new FileInfo(file, null, FAILED_TO_GET_FFPROBE_INFO, null, null);
         }
 
         VideoFormat videoFormat = VideoFormat.from(ffprobeInfo.getFormat().getFormatName()).orElse(null);
         if (videoFormat == null) {
-            return new FileInfo(file, NOT_ALLOWED_CONTAINER, null, null);
+            return new FileInfo(file, null, NOT_ALLOWED_CONTAINER, null, null);
         }
 
-        return new FileInfo(file, null, videoFormat, getStreamsWithoutSubtitles(ffprobeInfo));
+        return new FileInfo(file, videoFormat, null, getSubtitleOptions(ffprobeInfo), null);
     }
 
-    private static List<SubtitleStream> getStreamsWithoutSubtitles(JsonFfprobeFileInfo ffprobeInfo) {
-        List<SubtitleStream> result = new ArrayList<>();
+    private static List<SubtitleOption> getSubtitleOptions(JsonFfprobeFileInfo ffprobeInfo) {
+        List<SubtitleOption> result = new ArrayList<>();
 
         for (JsonStream stream : ffprobeInfo.getStreams()) {
             if (!"subtitle".equals(stream.getCodecType())) {
@@ -90,27 +92,20 @@ public class FileInfoGetter {
             }
 
             SubtitleCodec codec = SubtitleCodec.from(stream.getCodecName()).orElse(null);
-            if (codec == null) {
-                result.add(
-                        new FfmpegSubtitleStream(
-                                null,
-                                null,
-                                stream.getIndex(),
-                                FfmpegSubtitleStream.UnavailabilityReason.NOT_ALLOWED_CODEC,
-                                getLanguage(stream).orElse(null),
-                                getTitle(stream).orElse(null),
-                                isDefaultDisposition(stream)
-                        )
-                );
-                continue;
+
+            SubtitleOption.UnavailabilityReason unavailabilityReason = null;
+            if (codec != SubtitleCodec.SUBRIP) {
+                unavailabilityReason = SubtitleOption.UnavailabilityReason.NOT_ALLOWED_CODEC;
             }
 
             result.add(
                     new FfmpegSubtitleStream(
-                            codec,
-                            null,
                             stream.getIndex(),
                             null,
+                            unavailabilityReason,
+                            false,
+                            false,
+                            codec,
                             getLanguage(stream).orElse(null),
                             getTitle(stream).orElse(null),
                             isDefaultDisposition(stream)
@@ -134,9 +129,8 @@ public class FileInfoGetter {
         /*
          * https://www.ffmpeg.org/ffmpeg-formats.html#matroska says:
          * The language can be either the 3 letters bibliographic ISO-639-2 (ISO 639-2/B) form (like "fre" for French),
-         * or a language code mixed with a country code for specialities in languages
-         * (like "fre-ca" for Canadian French).
-         * So we can split by the hyphen and use the first part as an ISO-639 code.
+         * or a language code mixed with a country code for specialities in languages (like "fre-ca" for Canadian
+         * French). So we can split by the hyphen and use the first part as an ISO-639 code.
          */
         languageRaw = languageRaw.split("-")[0];
 

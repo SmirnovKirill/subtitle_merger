@@ -4,7 +4,9 @@ import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.logic.core.SubtitleWriter;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
+import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -61,7 +63,7 @@ public class Ffmpeg {
     /*
      * Synchronized because we use one temporary file with subtitles.
      */
-    public synchronized String getSubtitlesText(int streamIndex, File videoFile) throws FfmpegException {
+    public synchronized String getSubtitleText(int ffmpegStreamIndex, File videoFile) throws FfmpegException {
         String consoleOutput;
         try {
             /*
@@ -74,7 +76,7 @@ public class Ffmpeg {
                     "-i",
                     videoFile.getAbsolutePath(),
                     "-map",
-                    "0:" + streamIndex,
+                    "0:" + ffmpegStreamIndex,
                     TEMP_SUBTITLE_FILE.getAbsolutePath()
             );
 
@@ -106,18 +108,21 @@ public class Ffmpeg {
             String title,
             LanguageAlpha3Code mainLanguage,
             boolean makeDefault,
-            List<FfmpegSubtitleStream> ffmpegSubtitleStreams,
-            File videoFile
+            FileInfo fileInfo
     ) throws FfmpegException {
         /*
          * Ffmpeg can't add subtitles on the fly. So we need to add subtitles to some temporary file
          * and then rename it. Later we'll also check that the size of the new file is bigger than the size of the
          * original one because it's important not to spoil the original video file, it may be valuable.
          */
-        File outputTemp = new File(videoFile.getParentFile(), "temp_" + videoFile.getName());
+        File outputTemp = new File(fileInfo.getFile().getParentFile(), "temp_" + fileInfo.getFile().getName());
 
         try {
-            FileUtils.writeStringToFile(TEMP_SUBTITLE_FILE, SubtitleWriter.toSubRipText(subtitles), StandardCharsets.UTF_8);
+            FileUtils.writeStringToFile(
+                    TEMP_SUBTITLE_FILE,
+                    SubtitleWriter.toSubRipText(subtitles),
+                    StandardCharsets.UTF_8
+            );
         } catch (IOException e) {
             log.warn("failed to write merged subtitles to the temp file: " + ExceptionUtils.getStackTrace(e));
             throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, null);
@@ -130,8 +135,7 @@ public class Ffmpeg {
                         title,
                         mainLanguage,
                         makeDefault,
-                        ffmpegSubtitleStreams,
-                        videoFile,
+                        fileInfo,
                         outputTemp
                 );
 
@@ -147,12 +151,12 @@ public class Ffmpeg {
                 throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, e.getConsoleOutput());
             }
 
-            if (outputTemp.length() <= videoFile.length()) {
+            if (outputTemp.length() <= fileInfo.getFile().length()) {
                 log.error("resulting file size is less than the original one");
                 throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, consoleOutput);
             }
 
-            overwriteOriginalVideo(outputTemp, videoFile, consoleOutput);
+            overwriteOriginalVideo(outputTemp, fileInfo.getFile(), consoleOutput);
         } finally {
             if (outputTemp.exists() && !outputTemp.delete()) {
                 log.warn("failed to delete temp video file " + outputTemp.getAbsolutePath());
@@ -164,13 +168,12 @@ public class Ffmpeg {
             String title,
             LanguageAlpha3Code mainLanguage,
             boolean makeDefault,
-            List<FfmpegSubtitleStream> ffmpegSubtitleStreams,
-            File videoFile,
+            FileInfo fileInfo,
             File outputTemp
     ) {
         List<String> result = new ArrayList<>();
 
-        int newStreamIndex = ffmpegSubtitleStreams.size();
+        int newStreamIndex = fileInfo.getNewFfmpegStreamIndex();
 
         result.add(ffmpegFile.getAbsolutePath());
         result.add("-y");
@@ -182,7 +185,7 @@ public class Ffmpeg {
          */
         result.add("-copy_unknown");
 
-        result.addAll(Arrays.asList("-i", videoFile.getAbsolutePath()));
+        result.addAll(Arrays.asList("-i", fileInfo.getFile().getAbsolutePath()));
         result.addAll(Arrays.asList("-i", Ffmpeg.TEMP_SUBTITLE_FILE.getAbsolutePath()));
         result.addAll(Arrays.asList("-c", "copy"));
 
@@ -199,11 +202,14 @@ public class Ffmpeg {
         result.addAll(Arrays.asList("-metadata:s:s:" + newStreamIndex, "title=" + title));
 
         if (makeDefault) {
-            for (FfmpegSubtitleStream subtitleStream : ffmpegSubtitleStreams) {
-                if (subtitleStream.isDefaultDisposition()) {
-                    result.addAll(Arrays.asList("-disposition:" + subtitleStream.getFfmpegIndex(), "0"));
+            if (!CollectionUtils.isEmpty(fileInfo.getFfmpegSubtitleStreams())) {
+                for (FfmpegSubtitleStream ffmpegStream : fileInfo.getFfmpegSubtitleStreams()) {
+                    if (ffmpegStream.isDefaultDisposition()) {
+                        result.addAll(Arrays.asList("-disposition:" + ffmpegStream.getFfmpegIndex(), "0"));
+                    }
                 }
             }
+
             result.addAll(Arrays.asList("-disposition:s:" + newStreamIndex, "default"));
         }
 

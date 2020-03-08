@@ -11,11 +11,11 @@ import java.nio.charset.Charset;
 public class MergedSubtitleInfo {
     private Subtitles subtitles;
 
-    private String upperStreamId;
+    private String upperOptionId;
 
-    private Charset upperStreamEncoding;
+    private Charset upperEncoding;
 
-    private String lowerStreamId;
+    private String lowerOptionId;
 
-    private Charset lowerStreamEncoding;
+    private Charset lowerEncoding;
 }

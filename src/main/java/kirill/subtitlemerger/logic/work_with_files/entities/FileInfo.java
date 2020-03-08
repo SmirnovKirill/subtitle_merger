@@ -15,12 +15,13 @@ import java.util.stream.Collectors;
 @Getter
 public
 class FileInfo {
-    //todo check all file related invocations
     private File file;
 
     private LocalDateTime lastModified;
 
     private long size;
+
+    private VideoFormat videoContainer;
 
     /**
      * We will keep track of all files from the selected directory even if they can't be used for subtitle merging
@@ -28,52 +29,61 @@ class FileInfo {
      */
     private UnavailabilityReason unavailabilityReason;
 
-    private VideoFormat videoContainer;
+    private List<SubtitleOption> subtitleOptions;
 
     @Setter
     private MergedSubtitleInfo mergedSubtitleInfo;
 
-    private List<SubtitleStream> subtitleStreams;
-
     public FileInfo(
             File file,
-            UnavailabilityReason unavailabilityReason,
             VideoFormat videoContainer,
-            List<SubtitleStream> subtitleStreams
+            UnavailabilityReason unavailabilityReason,
+            List<SubtitleOption> subtitleOptions,
+            MergedSubtitleInfo mergedSubtitleInfo
     ) {
         this.file = file;
         lastModified = new LocalDateTime(file.lastModified());
         size = file.length();
-        this.unavailabilityReason = unavailabilityReason;
         this.videoContainer = videoContainer;
-        mergedSubtitleInfo = null;
-        this.subtitleStreams = subtitleStreams;
+        this.unavailabilityReason = unavailabilityReason;
+        this.subtitleOptions = subtitleOptions;
+        this.mergedSubtitleInfo = mergedSubtitleInfo;
+    }
+
+    public boolean haveSubtitlesToLoad() {
+        if (CollectionUtils.isEmpty(subtitleOptions)) {
+            return false;
+        }
+
+        return subtitleOptions.stream().anyMatch(option -> option.getSubtitles() == null);
     }
 
     public List<FfmpegSubtitleStream> getFfmpegSubtitleStreams() {
-        return subtitleStreams.stream()
-                .filter(stream -> stream instanceof FfmpegSubtitleStream)
+        if (subtitleOptions == null) {
+            return null;
+        }
+
+        return subtitleOptions.stream()
+                .filter(option -> option instanceof FfmpegSubtitleStream)
                 .map(FfmpegSubtitleStream.class::cast)
                 .collect(Collectors.toList());
     }
 
-    public List<ExternalSubtitleStream> getExternalSubtitleStreams() {
-        return subtitleStreams.stream()
-                .filter(stream -> stream instanceof ExternalSubtitleStream)
-                .map(ExternalSubtitleStream.class::cast)
+    public List<FileWithSubtitles> getFilesWithSubtitles() {
+        if (subtitleOptions == null) {
+            return null;
+        }
+
+        return subtitleOptions.stream()
+                .filter(option -> option instanceof FileWithSubtitles)
+                .map(FileWithSubtitles.class::cast)
                 .collect(Collectors.toList());
     }
 
-    public boolean haveSubtitlesToLoad() {
-        if (CollectionUtils.isEmpty(subtitleStreams)) {
-            return false;
-        }
-
-        return subtitleStreams.stream().anyMatch(stream -> stream.getSubtitles() == null);
+    public int getNewFfmpegStreamIndex() {
+        return getFfmpegSubtitleStreams().size();
     }
 
-    @AllArgsConstructor
-    @Getter
     public enum UnavailabilityReason {
         NO_EXTENSION,
         NOT_ALLOWED_EXTENSION,

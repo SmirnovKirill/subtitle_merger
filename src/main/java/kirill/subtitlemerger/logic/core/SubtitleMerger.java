@@ -8,7 +8,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.joda.time.LocalTime;
 
 import java.util.*;
@@ -298,15 +298,12 @@ public class SubtitleMerger {
             );
         }
 
-        List<LanguageAlpha3Code> languages = new ArrayList<>();
-        if (!CollectionUtils.isEmpty(upper.getLanguages())) {
-            languages.addAll(upper.getLanguages());
-        }
-        if (!CollectionUtils.isEmpty(lower.getLanguages())) {
-            languages.addAll(lower.getLanguages());
-        }
+        LanguageAlpha3Code mainLanguage = ObjectUtils.firstNonNull(
+                upper.getLanguage(),
+                lower.getLanguage()
+        );
 
-        return new Subtitles(subtitles, languages);
+        return new Subtitles(subtitles, mainLanguage);
     }
 
     @AllArgsConstructor

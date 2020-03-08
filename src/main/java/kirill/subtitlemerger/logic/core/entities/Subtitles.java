@@ -12,13 +12,13 @@ import java.util.List;
 public class Subtitles {
     private List<Subtitle> subtitles;
 
-    private List<LanguageAlpha3Code> languages;
+    private LanguageAlpha3Code language;
 
     private int size;
 
-    public Subtitles(List<Subtitle> subtitles, List<LanguageAlpha3Code> languages) {
+    public Subtitles(List<Subtitle> subtitles, LanguageAlpha3Code language) {
         this.subtitles = subtitles;
-        this.languages = languages;
+        this.language = language;
         this.size = SubtitleWriter.toSubRipText(this).getBytes().length;;
     }
 }
