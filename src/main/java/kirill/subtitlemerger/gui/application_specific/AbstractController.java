@@ -33,6 +33,7 @@ public abstract class AbstractController {
             BackgroundRunnerCallback<T> taskCallback
     ) {
         HelperTask<T> task = new HelperTask<>(backgroundTask, taskCallback, this::stopProgress);
+        currentTask = task;
 
         mainPane.setDisable(true);
         progressPane.setVisible(true);
@@ -41,8 +42,6 @@ public abstract class AbstractController {
         if (cancelTaskPane != null) {
             cancelTaskPane.visibleProperty().bind(task.getBackgroundRunnerManager().cancellationPossibleProperty());
         }
-
-        currentTask = task;
 
         Thread thread = new Thread(task);
         thread.setDaemon(true);

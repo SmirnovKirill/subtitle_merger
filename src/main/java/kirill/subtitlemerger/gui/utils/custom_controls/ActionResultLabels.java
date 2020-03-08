@@ -6,11 +6,11 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import kirill.subtitlemerger.gui.GuiConstants;
-import kirill.subtitlemerger.gui.utils.entities.MultiPartResult;
+import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import org.apache.commons.lang3.StringUtils;
 
 
-public class MultiColorLabels extends HBox {
+public class ActionResultLabels extends HBox {
     private Label successLabel;
 
     private Label warnLabel;
@@ -23,7 +23,7 @@ public class MultiColorLabels extends HBox {
 
     private BooleanProperty empty;
 
-    public MultiColorLabels() {
+    public ActionResultLabels() {
         wrapText = new SimpleBooleanProperty(false);
         alwaysManaged = new SimpleBooleanProperty(false);
         empty = new SimpleBooleanProperty(true);
@@ -82,7 +82,7 @@ public class MultiColorLabels extends HBox {
         this.empty.set(empty);
     }
 
-    public void set(MultiPartResult multiPartResult) {
+    public void set(ActionResult multiPartResult) {
         String success = null;
         String warn = null;
         String error = null;
@@ -122,18 +122,18 @@ public class MultiColorLabels extends HBox {
     }
 
     public void clear() {
-        set(MultiPartResult.EMPTY);
+        set(ActionResult.NO_RESULT);
     }
 
     public void setOnlySuccess(String text) {
-        set(MultiPartResult.onlySuccess(text));
+        set(ActionResult.onlySuccess(text));
     }
 
     public void setOnlyWarn(String text) {
-        set(MultiPartResult.onlyWarn(text));
+        set(ActionResult.onlyWarn(text));
     }
 
     public void setOnlyError(String text) {
-        set(MultiPartResult.onlyError(text));
+        set(ActionResult.onlyError(text));
     }
 }

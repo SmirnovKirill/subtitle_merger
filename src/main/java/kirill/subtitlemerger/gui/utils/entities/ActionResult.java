@@ -10,8 +10,8 @@ import org.apache.commons.lang3.StringUtils;
 @Getter
 @EqualsAndHashCode
 @ToString
-public class MultiPartResult {
-    public static final MultiPartResult EMPTY = new MultiPartResult(null, null, null);
+public class ActionResult {
+    public static final ActionResult NO_RESULT = new ActionResult(null, null, null);
 
     private String success;
 
@@ -19,16 +19,16 @@ public class MultiPartResult {
 
     private String error;
 
-    public static MultiPartResult onlySuccess(String text) {
-        return new MultiPartResult(text, null, null);
+    public static ActionResult onlySuccess(String text) {
+        return new ActionResult(text, null, null);
     }
 
-    public static MultiPartResult onlyWarn(String text) {
-        return new MultiPartResult(null, text, null);
+    public static ActionResult onlyWarn(String text) {
+        return new ActionResult(null, text, null);
     }
 
-    public static MultiPartResult onlyError(String text) {
-        return new MultiPartResult(null, null, text);
+    public static ActionResult onlyError(String text) {
+        return new ActionResult(null, null, text);
     }
 
     public boolean empty() {

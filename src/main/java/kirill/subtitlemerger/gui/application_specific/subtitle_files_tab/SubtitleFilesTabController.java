@@ -16,8 +16,8 @@ import kirill.subtitlemerger.gui.application_specific.SubtitlePreviewController;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerCallback;
-import kirill.subtitlemerger.gui.utils.custom_controls.MultiColorLabels;
-import kirill.subtitlemerger.gui.utils.entities.MultiPartResult;
+import kirill.subtitlemerger.gui.utils.custom_controls.ActionResultLabels;
+import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import kirill.subtitlemerger.gui.utils.entities.NodeAndController;
 import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
@@ -77,7 +77,7 @@ public class SubtitleFilesTabController extends AbstractController {
     private Button mergeButton;
 
     @FXML
-    private MultiColorLabels resultLabels;
+    private ActionResultLabels actionResultLabels;
 
     private FilesInfo filesInfo;
 
@@ -314,7 +314,7 @@ public class SubtitleFilesTabController extends AbstractController {
         mergedPathField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
         mergedChooseButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
 
-        resultLabels.clear();
+        actionResultLabels.clear();
     }
 
     private void updatePathFields() {
@@ -408,7 +408,7 @@ public class SubtitleFilesTabController extends AbstractController {
             index++;
         }
 
-        resultLabels.setOnlyError(errorMessage.toString());
+        actionResultLabels.setOnlyError(errorMessage.toString());
     }
 
     private void showFileElementsAsIncorrect(ExtendedFileType fileType) {
@@ -595,12 +595,6 @@ public class SubtitleFilesTabController extends AbstractController {
     }
 
     private SubtitlePreviewController.UserSelection showInputSubtitlePreview(InputFileInfo fileInfo) {
-        String path = GuiUtils.getShortenedStringIfNecessary(
-                fileInfo.getPath(),
-                0,
-                128
-        );
-
         Stage dialogStage = new Stage();
 
         NodeAndController<Pane, SubtitlePreviewController> nodeAndController = GuiUtils.loadNodeAndController(
@@ -610,7 +604,7 @@ public class SubtitleFilesTabController extends AbstractController {
         nodeAndController.getController().initializeWithEncoding(
                 fileInfo.getRawData(),
                 fileInfo.getEncoding(),
-                path,
+                fileInfo.getPath(),
                 dialogStage
         );
 
@@ -794,7 +788,7 @@ public class SubtitleFilesTabController extends AbstractController {
     private void mergeButtonClicked() {
         clearState();
 
-        BackgroundRunner<MultiPartResult> backgroundRunner = runnerManager -> {
+        BackgroundRunner<ActionResult> backgroundRunner = runnerManager -> {
             Subtitles mergedSubtitles;
 
             if (filesInfo.getMergedSubtitles() != null) {
@@ -815,19 +809,19 @@ public class SubtitleFilesTabController extends AbstractController {
                         StandardCharsets.UTF_8
                 );
 
-                return MultiPartResult.onlySuccess("Subtitles have been merged successfully!");
+                return ActionResult.onlySuccess("Subtitles have been merged successfully!");
             } catch (IOException e) {
-                return MultiPartResult.onlyError(
+                return ActionResult.onlyError(
                         "Can't merge subtitles:" + System.lineSeparator() + "\u2022 can't write to this file"
                 );
             }
         };
 
-        BackgroundRunnerCallback<MultiPartResult> callback = result -> {
-            if (!StringUtils.isBlank(result.getError())) {
+        BackgroundRunnerCallback<ActionResult> callback = actionResult -> {
+            if (!StringUtils.isBlank(actionResult.getError())) {
                 showFileElementsAsIncorrect(ExtendedFileType.MERGED_SUBTITLES);
             }
-            resultLabels.set(result);
+            actionResultLabels.set(actionResult);
         };
 
         runInBackground(backgroundRunner, callback);

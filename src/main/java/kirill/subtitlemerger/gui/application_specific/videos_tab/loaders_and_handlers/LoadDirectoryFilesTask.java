@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.gui.application_specific.videos_tab.background_tasks;
+package kirill.subtitlemerger.gui.application_specific.videos_tab.loaders_and_handlers;
 
 import javafx.scene.control.ProgressIndicator;
 import kirill.subtitlemerger.gui.GuiContext;
@@ -7,7 +7,6 @@ import kirill.subtitlemerger.gui.application_specific.videos_tab.ContentPaneCont
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiExternalSubtitleStream;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFfmpegSubtitleStream;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFileInfo;
-import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.logic.LogicConstants;
@@ -203,7 +202,7 @@ public class LoadDirectoryFilesTask implements BackgroundRunner<LoadDirectoryFil
         String pathToDisplay = showFullFileName ? fileInfo.getFile().getAbsolutePath() : fileInfo.getFile().getName();
 
         List<GuiSubtitleStream> subtitleStreams = new ArrayList<>();
-        if (!CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
+        if (!CollectionUtils.isEmpty(fileInfo.getFfmpegSubtitleStreams())) {
             subtitleStreams = fileInfo.getFfmpegSubtitleStreams().stream()
                     .map(subtitleStream -> from(subtitleStream, guiSettings))
                     .collect(Collectors.toList());
@@ -253,29 +252,6 @@ public class LoadDirectoryFilesTask implements BackgroundRunner<LoadDirectoryFil
         }
 
         throw new IllegalStateException();
-    }
-
-    private static String guiTextFrom(FileInfo.UnavailabilityReason unavailabilityReason) {
-        if (unavailabilityReason == null) {
-            return "";
-        }
-
-        switch (unavailabilityReason) {
-            case NO_EXTENSION:
-                return "file has no extension";
-            case NOT_ALLOWED_EXTENSION:
-                return "file has a not allowed extension";
-            case FAILED_TO_GET_MIME_TYPE:
-                return "failed to get the mime type";
-            case NOT_ALLOWED_MIME_TYPE:
-                return "file has a mime type that is not allowed";
-            case FAILED_TO_GET_FFPROBE_INFO:
-                return "failed to get video info with the ffprobe";
-            case NOT_ALLOWED_CONTAINER:
-                return "video has a format that is not allowed";
-            default:
-                throw new IllegalStateException();
-        }
     }
 
     @AllArgsConstructor

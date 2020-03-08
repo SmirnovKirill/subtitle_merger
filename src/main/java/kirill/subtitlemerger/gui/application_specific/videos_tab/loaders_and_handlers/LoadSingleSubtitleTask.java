@@ -1,17 +1,15 @@
-package kirill.subtitlemerger.gui.application_specific.videos_tab.background_tasks;
+package kirill.subtitlemerger.gui.application_specific.videos_tab.loaders_and_handlers;
 
 import javafx.application.Platform;
 import javafx.scene.control.ProgressBar;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFfmpegSubtitleStream;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFileInfo;
-import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
-import kirill.subtitlemerger.gui.utils.entities.MultiPartResult;
+import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
-import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import lombok.AllArgsConstructor;
@@ -31,7 +29,7 @@ public class LoadSingleSubtitleTask implements BackgroundRunner<LoadSingleSubtit
     public Result run(BackgroundRunnerManager runnerManager) {
         runnerManager.updateProgress(ProgressBar.INDETERMINATE_PROGRESS, ProgressBar.INDETERMINATE_PROGRESS);
 
-        FfmpegSubtitleStream stream = SubtitleStream.getById(streamId, fileInfo.getFfmpegSubtitleStreams());
+        FfmpegSubtitleStream stream = FfmpegSubtitleStream.getById(streamId, fileInfo.getFfmpegSubtitleStreams());
         GuiFfmpegSubtitleStream guiStream = GuiSubtitleStream.getById(streamId, guiFileInfo.getFfmpegSubtitleStreams());
         runnerManager.updateMessage(
                 LoadFilesAllSubtitlesTask.getUpdateMessage(
@@ -68,7 +66,7 @@ public class LoadSingleSubtitleTask implements BackgroundRunner<LoadSingleSubtit
         }
     }
 
-    public static MultiPartResult generateMultiPartResult(Result taskResult) {
+    public static ActionResult generateMultiPartResult(Result taskResult) {
         String success = null;
         String warn = null;
         String error = null;
@@ -87,7 +85,7 @@ public class LoadSingleSubtitleTask implements BackgroundRunner<LoadSingleSubtit
                 throw new IllegalStateException();
         }
 
-        return new MultiPartResult(success, warn, error);
+        return new ActionResult(success, warn, error);
     }
 
     @AllArgsConstructor

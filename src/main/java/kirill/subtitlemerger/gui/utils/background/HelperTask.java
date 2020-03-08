@@ -7,6 +7,10 @@ import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
+/*
+ * This class was created basically just to give access to the updateProgress and updateMessage methods. Otherwise
+ * we could have just used an anonymous class in the AbstractController.
+ */
 @CommonsLog
 public class HelperTask<T> extends Task<Void> {
     @Getter

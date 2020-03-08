@@ -20,6 +20,10 @@ public class GuiConstants {
 
     public static final String LABEL_ERROR_CLASS = "label-error";
 
+    public static final String PANE_UNAVAILABLE_CLASS = "pane-unavailable";
+
+    public static final String PANE_ERROR_CLASS = "pane-error";
+
     public static final List<Charset> SUPPORTED_ENCODINGS = Arrays.asList(
             StandardCharsets.UTF_8,
             Charset.forName("IBM00858"),

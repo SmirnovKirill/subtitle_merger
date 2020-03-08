@@ -1,14 +1,13 @@
-package kirill.subtitlemerger.gui.application_specific.videos_tab.background_tasks;
+package kirill.subtitlemerger.gui.application_specific.videos_tab.loaders_and_handlers;
 
 import javafx.application.Platform;
 import javafx.scene.control.ProgressBar;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFfmpegSubtitleStream;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFileInfo;
-import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
-import kirill.subtitlemerger.gui.utils.entities.MultiPartResult;
+import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
@@ -49,7 +48,7 @@ public class LoadFilesAllSubtitlesTask implements BackgroundRunner<LoadFilesAllS
         runnerManager.setCancellationPossible(true);
         for (GuiFileInfo guiFileInfo : guiFilesInfoToWorkWith) {
             FileInfo fileInfo = GuiUtils.findMatchingFileInfo(guiFileInfo, allFilesInfo);
-            if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
+            if (CollectionUtils.isEmpty(fileInfo.getFfmpegSubtitleStreams())) {
                 continue;
             }
 
@@ -139,7 +138,7 @@ public class LoadFilesAllSubtitlesTask implements BackgroundRunner<LoadFilesAllS
 
         for (GuiFileInfo guiFileToWorkWith : guiFilesToWorkWith) {
             FileInfo fileToWorkWith = GuiUtils.findMatchingFileInfo(guiFileToWorkWith, allFiles);
-            if (!CollectionUtils.isEmpty(fileToWorkWith.getSubtitleStreams())) {
+            if (!CollectionUtils.isEmpty(fileToWorkWith.getFfmpegSubtitleStreams())) {
                 for (FfmpegSubtitleStream stream : fileToWorkWith.getFfmpegSubtitleStreams()) {
                     if (stream.getUnavailabilityReason() != null || stream.getSubtitles() != null) {
                         continue;
@@ -181,70 +180,6 @@ public class LoadFilesAllSubtitlesTask implements BackgroundRunner<LoadFilesAllS
         );
 
         Platform.runLater(() -> fileInfo.setResultOnlyError(message));
-    }
-
-    public static MultiPartResult generateMultiPartResult(Result taskResult) {
-        String success = null;
-        String warn = null;
-        String error = null;
-
-        if (taskResult.getStreamToLoadCount() == 0) {
-            warn = "There are no subtitles to load";
-        } else if (taskResult.getProcessedCount() == 0) {
-            warn = "Task has been cancelled, nothing was loaded";
-        } else if (taskResult.getLoadedSuccessfullyCount() == taskResult.getStreamToLoadCount()) {
-            success = GuiUtils.getTextDependingOnTheCount(
-                    taskResult.getLoadedSuccessfullyCount(),
-                    "Subtitles have been loaded successfully",
-                    "All %d subtitles have been loaded successfully"
-            );
-        } else if (taskResult.getFailedToLoadCount() == taskResult.getStreamToLoadCount()) {
-            error = GuiUtils.getTextDependingOnTheCount(
-                    taskResult.getFailedToLoadCount(),
-                    "Failed to load subtitles",
-                    "Failed to load all %d subtitles"
-            );
-        } else {
-            if (taskResult.getLoadedSuccessfullyCount() != 0) {
-                success = String.format(
-                        "%d/%d subtitles have been loaded successfully",
-                        taskResult.getLoadedSuccessfullyCount(),
-                        taskResult.getStreamToLoadCount()
-                );
-            }
-
-            if (taskResult.getProcessedCount() != taskResult.getStreamToLoadCount()) {
-                if (taskResult.getLoadedSuccessfullyCount() == 0) {
-                    warn = GuiUtils.getTextDependingOnTheCount(
-                            taskResult.getStreamToLoadCount() - taskResult.getProcessedCount(),
-                            String.format(
-                                    "1/%d subtitles' loadings has been cancelled",
-                                    taskResult.getStreamToLoadCount()
-                            ),
-                            String.format(
-                                    "%%d/%d subtitles' loadings have been cancelled",
-                                    taskResult.getStreamToLoadCount()
-                            )
-                    );
-                } else {
-                    warn = String.format(
-                            "%d/%d cancelled",
-                            taskResult.getStreamToLoadCount() - taskResult.getProcessedCount(),
-                            taskResult.getStreamToLoadCount()
-                    );
-                }
-            }
-
-            if (taskResult.getFailedToLoadCount() != 0) {
-                error = String.format(
-                        "%d/%d failed",
-                        taskResult.getFailedToLoadCount(),
-                        taskResult.getStreamToLoadCount()
-                );
-            }
-        }
-
-        return new MultiPartResult(success, warn, error);
     }
 
     @AllArgsConstructor

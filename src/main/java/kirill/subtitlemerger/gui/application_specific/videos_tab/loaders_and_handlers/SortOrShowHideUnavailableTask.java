@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.gui.application_specific.videos_tab.background_tasks;
+package kirill.subtitlemerger.gui.application_specific.videos_tab.loaders_and_handlers;
 
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFileInfo;

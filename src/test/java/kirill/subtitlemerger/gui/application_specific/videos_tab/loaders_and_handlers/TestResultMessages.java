@@ -1,6 +1,6 @@
-package kirill.subtitlemerger.gui.application_specific.videos_tab.background_tasks;
+package kirill.subtitlemerger.gui.application_specific.videos_tab.loaders_and_handlers;
 
-import kirill.subtitlemerger.gui.utils.entities.MultiPartResult;
+import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -12,24 +12,24 @@ public class TestResultMessages {
     public void testAddFiles() {
         assertThat(
                 AddFilesTask.generateMultiPartResult(getMockedAddFilesResult(1, 0))
-        ).isEqualTo(new MultiPartResult("File has been added already", null, null));
+        ).isEqualTo(new ActionResult("File has been added already", null, null));
 
         assertThat(
                 AddFilesTask.generateMultiPartResult(getMockedAddFilesResult(2, 0))
-        ).isEqualTo(new MultiPartResult("All 2 files have been added already", null, null));
+        ).isEqualTo(new ActionResult("All 2 files have been added already", null, null));
 
         assertThat(
                 AddFilesTask.generateMultiPartResult(getMockedAddFilesResult(1, 1))
-        ).isEqualTo(new MultiPartResult("File has been added successfully", null, null));
+        ).isEqualTo(new ActionResult("File has been added successfully", null, null));
 
         assertThat(
                 AddFilesTask.generateMultiPartResult(getMockedAddFilesResult(2, 2))
-        ).isEqualTo(new MultiPartResult("All 2 files have been added successfully", null, null));
+        ).isEqualTo(new ActionResult("All 2 files have been added successfully", null, null));
 
         assertThat(
                 AddFilesTask.generateMultiPartResult(getMockedAddFilesResult(2, 1))
         ).isEqualTo(
-                new MultiPartResult(
+                new ActionResult(
                         "1/2 files has been added successfully, 1/2 added before",
                         null,
                         null
@@ -39,7 +39,7 @@ public class TestResultMessages {
         assertThat(
                 AddFilesTask.generateMultiPartResult(getMockedAddFilesResult(3, 2))
         ).isEqualTo(
-                new MultiPartResult(
+                new ActionResult(
                         "2/3 files have been added successfully, 1/3 added before",
                         null,
                         null
@@ -68,7 +68,7 @@ public class TestResultMessages {
                                 0
                         )
                 )
-        ).isEqualTo(new MultiPartResult(null, "Task has been cancelled, nothing was done", null));
+        ).isEqualTo(new ActionResult(null, "Task has been cancelled, nothing was done", null));
 
         assertThat(
                 AutoSelectSubtitlesTask.generateMultiPartResult(
@@ -81,7 +81,7 @@ public class TestResultMessages {
                         )
                 )
         ).isEqualTo(
-                new MultiPartResult(
+                new ActionResult(
                         "Auto-selection has finished successfully for the file",
                         null,
                         null
@@ -99,7 +99,7 @@ public class TestResultMessages {
                         )
                 )
         ).isEqualTo(
-                new MultiPartResult(
+                new ActionResult(
                         "Auto-selection has finished successfully for all 2 files",
                         null,
                         null
@@ -116,7 +116,7 @@ public class TestResultMessages {
                                 0
                         )
                 )
-        ).isEqualTo(new MultiPartResult(null, "Auto-selection is not possible for the file", null));
+        ).isEqualTo(new ActionResult(null, "Auto-selection is not possible for the file", null));
 
         assertThat(
                 AutoSelectSubtitlesTask.generateMultiPartResult(
@@ -129,7 +129,7 @@ public class TestResultMessages {
                         )
                 )
         ).isEqualTo(
-                new MultiPartResult(null, "Auto-selection is not possible for all 2 files", null)
+                new ActionResult(null, "Auto-selection is not possible for all 2 files", null)
         );
 
         assertThat(
@@ -143,7 +143,7 @@ public class TestResultMessages {
                         )
                 )
         ).isEqualTo(
-                new MultiPartResult(null, null, "Failed to perform auto-selection for the file")
+                new ActionResult(null, null, "Failed to perform auto-selection for the file")
         );
 
         assertThat(
@@ -157,7 +157,7 @@ public class TestResultMessages {
                         )
                 )
         ).isEqualTo(
-                new MultiPartResult(null, null, "Failed to perform auto-selection for all 2 files")
+                new ActionResult(null, null, "Failed to perform auto-selection for all 2 files")
         );
 
         assertThat(
@@ -171,7 +171,7 @@ public class TestResultMessages {
                         )
                 )
         ).isEqualTo(
-                new MultiPartResult(
+                new ActionResult(
                         "Auto-selection has finished for 1/4 files successfully",
                         "cancelled for 1/4, not possible for 1/4",
                         "failed for 1/4"
@@ -189,7 +189,7 @@ public class TestResultMessages {
                         )
                 )
         ).isEqualTo(
-                new MultiPartResult(
+                new ActionResult(
                         "Auto-selection has finished for 2/5 files successfully",
                         "cancelled for 1/5, not possible for 1/5",
                         "failed for 1/5"
@@ -207,7 +207,7 @@ public class TestResultMessages {
                         )
                 )
         ).isEqualTo(
-                new MultiPartResult(
+                new ActionResult(
                         null,
                         "Auto-selection has been cancelled for 1/3 files, not possible for 1/3",
                         "failed for 1/3"
@@ -225,7 +225,7 @@ public class TestResultMessages {
                         )
                 )
         ).isEqualTo(
-                new MultiPartResult(
+                new ActionResult(
                         null,
                         "Auto-selection has been cancelled for 2/4 files, not possible for 1/4",
                         "failed for 1/4"
@@ -243,7 +243,7 @@ public class TestResultMessages {
                         )
                 )
         ).isEqualTo(
-                new MultiPartResult(
+                new ActionResult(
                         null,
                         "Auto-selection is not possible for 1/2 files",
                         "failed for 1/2"
@@ -261,7 +261,7 @@ public class TestResultMessages {
                         )
                 )
         ).isEqualTo(
-                new MultiPartResult(
+                new ActionResult(
                         null,
                         "Auto-selection is not possible for 2/3 files",
                         "failed for 1/3"
@@ -298,7 +298,7 @@ public class TestResultMessages {
                                 0
                         )
                 )
-        ).isEqualTo(new MultiPartResult(null, "There are no subtitles to load", null));
+        ).isEqualTo(new ActionResult(null, "There are no subtitles to load", null));
 
         assertThat(
                 LoadFilesAllSubtitlesTask.generateMultiPartResult(
@@ -309,7 +309,7 @@ public class TestResultMessages {
                                 0
                         )
                 )
-        ).isEqualTo(new MultiPartResult(null, "Task has been cancelled, nothing was loaded", null));
+        ).isEqualTo(new ActionResult(null, "Task has been cancelled, nothing was loaded", null));
 
         assertThat(
                 LoadFilesAllSubtitlesTask.generateMultiPartResult(
@@ -320,7 +320,7 @@ public class TestResultMessages {
                                 0
                         )
                 )
-        ).isEqualTo(new MultiPartResult("Subtitles have been loaded successfully", null, null));
+        ).isEqualTo(new ActionResult("Subtitles have been loaded successfully", null, null));
 
         assertThat(
                 LoadFilesAllSubtitlesTask.generateMultiPartResult(
@@ -332,7 +332,7 @@ public class TestResultMessages {
                         )
                 )
         ).isEqualTo(
-                new MultiPartResult(
+                new ActionResult(
                         "All 2 subtitles have been loaded successfully",
                         null,
                         null
@@ -348,7 +348,7 @@ public class TestResultMessages {
                                 1
                         )
                 )
-        ).isEqualTo(new MultiPartResult(null, null, "Failed to load subtitles"));
+        ).isEqualTo(new ActionResult(null, null, "Failed to load subtitles"));
 
         assertThat(
                 LoadFilesAllSubtitlesTask.generateMultiPartResult(
@@ -359,7 +359,7 @@ public class TestResultMessages {
                                 2
                         )
                 )
-        ).isEqualTo(new MultiPartResult(null, null, "Failed to load all 2 subtitles"));
+        ).isEqualTo(new ActionResult(null, null, "Failed to load all 2 subtitles"));
 
         assertThat(
                 LoadFilesAllSubtitlesTask.generateMultiPartResult(
@@ -371,7 +371,7 @@ public class TestResultMessages {
                         )
                 )
         ).isEqualTo(
-                new MultiPartResult(
+                new ActionResult(
                         "1/3 subtitles have been loaded successfully",
                         "1/3 cancelled",
                         "1/3 failed"
@@ -388,7 +388,7 @@ public class TestResultMessages {
                         )
                 )
         ).isEqualTo(
-                new MultiPartResult(
+                new ActionResult(
                         "2/4 subtitles have been loaded successfully",
                         "1/4 cancelled",
                         "1/4 failed"
@@ -405,7 +405,7 @@ public class TestResultMessages {
                         )
                 )
         ).isEqualTo(
-                new MultiPartResult(
+                new ActionResult(
                         null,
                         "1/2 subtitles' loadings has been cancelled",
                         "1/2 failed"
@@ -422,7 +422,7 @@ public class TestResultMessages {
                         )
                 )
         ).isEqualTo(
-                new MultiPartResult(
+                new ActionResult(
                         null,
                         "2/3 subtitles' loadings have been cancelled",
                         "1/3 failed"

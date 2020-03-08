@@ -1,10 +1,9 @@
-package kirill.subtitlemerger.gui.application_specific.videos_tab.background_tasks;
+package kirill.subtitlemerger.gui.application_specific.videos_tab.loaders_and_handlers;
 
 import javafx.application.Platform;
 import javafx.scene.control.ProgressBar;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFfmpegSubtitleStream;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFileInfo;
-import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiSubtitleStream;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
@@ -94,7 +93,7 @@ public class LoadSingleFileAllSubtitlesTask implements BackgroundRunner<LoadFile
     private static int getStreamToLoadCount(FileInfo fileInfo) {
         int result = 0;
 
-        if (!CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
+        if (!CollectionUtils.isEmpty(fileInfo.getFfmpegSubtitleStreams())) {
             for (FfmpegSubtitleStream stream : fileInfo.getFfmpegSubtitleStreams()) {
                 if (stream.getUnavailabilityReason() != null || stream.getSubtitles() != null) {
                     continue;

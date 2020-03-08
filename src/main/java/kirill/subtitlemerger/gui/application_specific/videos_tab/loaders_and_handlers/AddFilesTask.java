@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.gui.application_specific.videos_tab.background_tasks;
+package kirill.subtitlemerger.gui.application_specific.videos_tab.loaders_and_handlers;
 
 import javafx.scene.control.ProgressIndicator;
 import kirill.subtitlemerger.gui.GuiContext;
@@ -7,7 +7,7 @@ import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_file
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
-import kirill.subtitlemerger.gui.utils.entities.MultiPartResult;
+import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -97,7 +97,7 @@ public class AddFilesTask implements BackgroundRunner<AddFilesTask.Result> {
         }
     }
 
-    public static MultiPartResult generateMultiPartResult(Result taskResult) {
+    public static ActionResult generateMultiPartResult(Result taskResult) {
         String success;
 
         int filesToAdd = taskResult.getFilesToAddCount();
@@ -124,7 +124,7 @@ public class AddFilesTask implements BackgroundRunner<AddFilesTask.Result> {
             success += (filesToAdd - actuallyAdded) + "/" + filesToAdd + " added before";
         }
 
-        return new MultiPartResult(success, null, null);
+        return new ActionResult(success, null, null);
     }
 
     @AllArgsConstructor

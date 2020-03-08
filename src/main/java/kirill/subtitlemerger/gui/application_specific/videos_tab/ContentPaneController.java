@@ -1,10 +1,7 @@
 package kirill.subtitlemerger.gui.application_specific.videos_tab;
 
 import javafx.beans.Observable;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
@@ -18,15 +15,16 @@ import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.application_specific.AbstractController;
 import kirill.subtitlemerger.gui.application_specific.SubtitlePreviewController;
-import kirill.subtitlemerger.gui.application_specific.videos_tab.background_tasks.*;
+import kirill.subtitlemerger.gui.application_specific.videos_tab.loaders_and_handlers.*;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiExternalSubtitleStream;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFileInfo;
-import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiSubtitleStream;
+import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
+import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableSubtitleOption;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerCallback;
-import kirill.subtitlemerger.gui.utils.custom_controls.MultiColorLabels;
+import kirill.subtitlemerger.gui.utils.custom_controls.ActionResultLabels;
 import kirill.subtitlemerger.gui.utils.entities.NodeAndController;
 import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
@@ -35,7 +33,6 @@ import kirill.subtitlemerger.logic.utils.FileValidator;
 import kirill.subtitlemerger.logic.work_with_files.SubtitleInjector;
 import kirill.subtitlemerger.logic.work_with_files.entities.*;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
-import kirill.subtitlemerger.logic.work_with_files.ffmpeg.SubtitleCodec;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
@@ -55,16 +52,6 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
 @CommonsLog
 public class ContentPaneController extends AbstractController {
-    private static final String SORT_BY_NAME_TEXT = "By _Name";
-
-    private static final String SORT_BY_MODIFICATION_TIME_TEXT = "By _Modification Time";
-
-    private static final String SORT_BY_SIZE_TEXT = "By _Size";
-
-    private static final String SORT_ASCENDING_TEXT = "_Ascending";
-
-    private static final String SORT_DESCENDING_TEXT = "_Descending";
-
     @FXML
     private Pane contentPane;
 
@@ -75,10 +62,10 @@ public class ContentPaneController extends AbstractController {
     private TextField chosenDirectoryField;
 
     @FXML
-    private MultiColorLabels generalResult;
+    private ActionResultLabels generalResult;
 
     @FXML
-    private Label selectedForMergeLabel;
+    private Label selectedLabel;
 
     @FXML
     private CheckBox hideUnavailableCheckbox;
@@ -110,21 +97,11 @@ public class ContentPaneController extends AbstractController {
     @FXML
     private Button removeSelectedButton;
 
-    private ToggleGroup sortByGroup;
-
-    private ToggleGroup sortDirectionGroup;
-
     private File directory;
 
     private List<FileInfo> filesInfo;
 
-    private List<GuiFileInfo> allGuiFilesInfo;
-
-    private BooleanProperty allSelected;
-
-    private IntegerProperty selected;
-
-    private IntegerProperty allAvailableCount;
+    private List<TableFileInfo> allTableFilesInfo;
 
     /*
      * Before performing a one-file operation it is better to clean the result of the previous one-file operation, it
@@ -132,7 +109,7 @@ public class ContentPaneController extends AbstractController {
      * files and it's unacceptable for generally fast one-file operations. So we will keep track of the last processed
      * file to clear its result very fast when starting next one-file operation.
      */
-    private GuiFileInfo lastProcessedFileInfo;
+    private TableFileInfo lastProcessedFileInfo;
 
     private VideosTabController videosTabController;
 
@@ -140,73 +117,25 @@ public class ContentPaneController extends AbstractController {
 
     private GuiContext context;
 
-    public boolean isAllSelected() {
-        return allSelected.get();
-    }
-
-    public BooleanProperty allSelectedProperty() {
-        return allSelected;
-    }
-
-    public void setAllSelected(boolean allSelected) {
-        this.allSelected.set(allSelected);
-    }
-
-    public int getSelected() {
-        return selected.get();
-    }
-
-    public IntegerProperty selectedProperty() {
-        return selected;
-    }
-
-    public void setSelected(int selected) {
-        this.selected.set(selected);
-    }
-
-    public void initialize(VideosTabController videosTabController, Stage stage, GuiContext guiContext) {
-        sortByGroup = new ToggleGroup();
-        sortDirectionGroup = new ToggleGroup();
-        allSelected = new SimpleBooleanProperty(false);
-        selected = new SimpleIntegerProperty(0);
-        allAvailableCount = new SimpleIntegerProperty(0);
-
-        setSelectedForMergeLabelText(getSelected());
-        setActionButtonsVisibility(getSelected());
-        selected.addListener(this::selectedCountChanged);
-
-        ContextMenu contextMenu = generateContextMenu(sortByGroup, sortDirectionGroup, guiContext.getSettings());
-        sortByGroup.selectedToggleProperty().addListener(this::sortByChanged);
-        sortDirectionGroup.selectedToggleProperty().addListener(this::sortDirectionChanged);
-
-        tableWithFiles.initialize(
-                allSelected,
-                selected,
-                allAvailableCount,
-                this::loadAllFileSubtitleSizes,
-                this::loadSingleFileSubtitleSize,
-                this::addExternalSubtitleFileClicked,
-                this::removeExternalSubtitleFileClicked,
-                this::showFfmpegStreamPreview,
-                this::showExternalFilePreview,
-                this::showMergedPreview
-        );
-        tableWithFiles.setContextMenu(contextMenu);
-
-        removeSelectedButton.disableProperty().bind(selected.isEqualTo(0));
-
+    public void initialize(VideosTabController videosTabController, Stage stage, GuiContext context) {
         this.videosTabController = videosTabController;
         this.stage = stage;
-        this.context = guiContext;
+        this.context = context;
+
+        tableWithFiles.initialize();
+
+        setSelectedLabelText(tableWithFiles.getSelectedCount());
+        setActionButtonsVisibility(tableWithFiles.getSelectedCount());
+        tableWithFiles.selectedCountProperty().addListener(this::selectedCountChanged);
+
+        removeSelectedButton.disableProperty().bind(tableWithFiles.selectedCountProperty().isEqualTo(0));
     }
 
-    private void setSelectedForMergeLabelText(int selected) {
-        selectedForMergeLabel.setText(
-                GuiUtils.getTextDependingOnTheCount(
-                        selected,
-                        "1 video selected",
-                        "%d videos selected"
-                )
+    private void setSelectedLabelText(int selected) {
+        GuiUtils.getTextDependingOnTheCount(
+                selected,
+                "1 file selected",
+                "%d files selected"
         );
     }
 
@@ -235,8 +164,8 @@ public class ContentPaneController extends AbstractController {
     }
 
     private void selectedCountChanged(Observable observable) {
-        setActionButtonsVisibility(getSelected());
-        setSelectedForMergeLabelText(getSelected());
+        setSelectedLabelText(tableWithFiles.getSelectedCount());
+        setActionButtonsVisibility(tableWithFiles.getSelectedCount());
     }
 
     @FXML
@@ -282,7 +211,7 @@ public class ContentPaneController extends AbstractController {
         GuiSubtitleStream guiUpperSubtitles = guiFileInfo.getSubtitleStreams().stream()
                 .filter(GuiSubtitleStream::isSelectedAsUpper)
                 .findFirst().orElseThrow(IllegalStateException::new);
-        SubtitleStream upperSubtitles = SubtitleStream.getById(
+        SubtitleOption upperSubtitles = SubtitleOption.getById(
                 guiUpperSubtitles.getId(),
                 fileInfo.getSubtitleStreams()
         );
@@ -290,7 +219,7 @@ public class ContentPaneController extends AbstractController {
         GuiSubtitleStream guiLowerSubtitles = guiFileInfo.getSubtitleStreams().stream()
                 .filter(GuiSubtitleStream::isSelectedAsLower)
                 .findFirst().orElseThrow(IllegalStateException::new);
-        SubtitleStream lowerSubtitles = SubtitleStream.getById(
+        SubtitleOption lowerSubtitles = SubtitleOption.getById(
                 guiLowerSubtitles.getId(),
                 fileInfo.getSubtitleStreams()
         );
@@ -400,62 +329,6 @@ public class ContentPaneController extends AbstractController {
                 result -> updateTableContent(result, tableWithFiles.getMode(), false);
 
         runInBackground(backgroundRunner, callback);
-    }
-
-    private static ContextMenu generateContextMenu(
-            ToggleGroup sortByGroup,
-            ToggleGroup sortDirectionGroup,
-            GuiSettings settings
-    ) {
-        ContextMenu result = new ContextMenu();
-
-        Menu menu = new Menu("_Sort files");
-
-        GuiSettings.SortBy sortBy = settings.getSortBy();
-        GuiSettings.SortDirection sortDirection = settings.getSortDirection();
-
-        RadioMenuItem byName = new RadioMenuItem(SORT_BY_NAME_TEXT);
-        byName.setToggleGroup(sortByGroup);
-        if (sortBy == GuiSettings.SortBy.NAME) {
-            byName.setSelected(true);
-        }
-
-        RadioMenuItem byModificationTime = new RadioMenuItem(SORT_BY_MODIFICATION_TIME_TEXT);
-        byModificationTime.setToggleGroup(sortByGroup);
-        if (sortBy == GuiSettings.SortBy.MODIFICATION_TIME) {
-            byModificationTime.setSelected(true);
-        }
-
-        RadioMenuItem bySize = new RadioMenuItem(SORT_BY_SIZE_TEXT);
-        bySize.setToggleGroup(sortByGroup);
-        if (sortBy == GuiSettings.SortBy.SIZE) {
-            bySize.setSelected(true);
-        }
-
-        RadioMenuItem ascending = new RadioMenuItem(SORT_ASCENDING_TEXT);
-        ascending.setToggleGroup(sortDirectionGroup);
-        if (sortDirection == GuiSettings.SortDirection.ASCENDING) {
-            ascending.setSelected(true);
-        }
-
-        RadioMenuItem descending = new RadioMenuItem(SORT_DESCENDING_TEXT);
-        descending.setToggleGroup(sortDirectionGroup);
-        if (sortDirection == GuiSettings.SortDirection.DESCENDING) {
-            descending.setSelected(true);
-        }
-
-        menu.getItems().addAll(
-                byName,
-                byModificationTime,
-                bySize,
-                new SeparatorMenuItem(),
-                ascending,
-                descending
-        );
-
-        result.getItems().add(menu);
-
-        return result;
     }
 
     public void show() {
@@ -694,7 +567,7 @@ public class ContentPaneController extends AbstractController {
     }
 
     public static int getSubtitleCanBeHiddenCount(FileInfo fileInfo, GuiSettings guiSettings) {
-        if (CollectionUtils.isEmpty(fileInfo.getSubtitleStreams())) {
+        if (CollectionUtils.isEmpty(fileInfo.getFfmpegSubtitleStreams())) {
             return 0;
         }
 
@@ -732,14 +605,14 @@ public class ContentPaneController extends AbstractController {
 
         int externalSubtitleStreamIndex;
         File otherFile;
-        if (CollectionUtils.isEmpty(fileInfo.getExternalSubtitleStreams())) {
+        if (CollectionUtils.isEmpty(fileInfo.getSubtitlesFromFiles())) {
             otherFile = null;
             externalSubtitleStreamIndex = 0;
-        } else if (fileInfo.getExternalSubtitleStreams().size() == 1) {
-            otherFile = fileInfo.getExternalSubtitleStreams().get(0).getFile();
+        } else if (fileInfo.getSubtitlesFromFiles().size() == 1) {
+            otherFile = fileInfo.getSubtitlesFromFiles().get(0).getFile();
             externalSubtitleStreamIndex = 1;
         } else {
-            log.error("unexpected amount of subtitle streams: " + fileInfo.getExternalSubtitleStreams().size());
+            log.error("unexpected amount of subtitle streams: " + fileInfo.getSubtitlesFromFiles().size());
             throw new IllegalStateException();
         }
 
@@ -765,15 +638,14 @@ public class ContentPaneController extends AbstractController {
             } else if (result.getIncorrectFileReason() != null) {
                 guiFileInfo.setResultOnlyError(getErrorText(result.getIncorrectFileReason()));
             } else {
-                ExternalSubtitleStream externalSubtitleStream = new ExternalSubtitleStream(
-                        SubtitleCodec.SUBRIP,
-                        result.getSubtitles(),
+                FileWithSubtitles externalSubtitleStream = new FileWithSubtitles(
                         file,
                         result.getRawData(),
+                        result.getSubtitles(),
                         StandardCharsets.UTF_8
                 );
 
-                fileInfo.getSubtitleStreams().add(externalSubtitleStream);
+                fileInfo.getSubtitlesFromFiles().add(externalSubtitleStream);
 
                 guiFileInfo.setExternalSubtitleStream(
                         externalSubtitleStreamIndex,
@@ -914,7 +786,7 @@ public class ContentPaneController extends AbstractController {
 
         FileInfo fileInfo = GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo);
 
-        FfmpegSubtitleStream stream = SubtitleStream.getById(streamId, fileInfo.getFfmpegSubtitleStreams());
+        FfmpegSubtitleStream stream = FfmpegSubtitleStream.getById(streamId, fileInfo.getFfmpegSubtitleStreams());
 
         NodeAndController<Pane, SubtitlePreviewController> nodeAndController = GuiUtils.loadNodeAndController(
                 "/gui/application_specific/subtitlePreview.fxml"
@@ -938,42 +810,36 @@ public class ContentPaneController extends AbstractController {
         dialogStage.showAndWait();
     }
 
-    private static String getStreamTitleForPreview(FileInfo fileInfo, SubtitleStream stream) {
-        if (stream instanceof ExternalSubtitleStream) {
-            ExternalSubtitleStream externalStream = (ExternalSubtitleStream) stream;
+    private static String getStreamTitleForPreview(FileInfo fileInfo, FfmpegSubtitleStream stream) {
+        String videoFilePath = GuiUtils.getShortenedStringIfNecessary(
+                fileInfo.getFile().getName(),
+                0,
+                128
+        );
 
-            return GuiUtils.getShortenedStringIfNecessary(
-                    externalStream.getFile().getAbsolutePath(),
-                    0,
-                    128
+        String language = GuiUtils.languageToString(stream.getLanguage()).toUpperCase();
+
+        String streamTitle = "";
+        if (!StringUtils.isBlank(stream.getTitle())) {
+            streamTitle += String.format(
+                    " (%s)",
+                    GuiUtils.getShortenedStringIfNecessary(
+                            stream.getTitle(),
+                            20,
+                            0
+                    )
             );
-        } else if (stream instanceof FfmpegSubtitleStream) {
-            FfmpegSubtitleStream ffmpegStream = (FfmpegSubtitleStream) stream;
-
-            String videoFilePath = GuiUtils.getShortenedStringIfNecessary(
-                    fileInfo.getFile().getName(),
-                    0,
-                    128
-            );
-
-            String language = GuiUtils.languageToString(ffmpegStream.getLanguage()).toUpperCase();
-
-            String streamTitle = "";
-            if (!StringUtils.isBlank(ffmpegStream.getTitle())) {
-                streamTitle += String.format(
-                        " (%s)",
-                        GuiUtils.getShortenedStringIfNecessary(
-                                ffmpegStream.getTitle(),
-                                20,
-                                0
-                        )
-                );
-            }
-
-            return videoFilePath + ", " + language + streamTitle;
-        } else {
-            throw new IllegalStateException();
         }
+
+        return videoFilePath + ", " + language + streamTitle;
+    }
+
+    private static String getStreamTitleForPreview(FileWithSubtitles fileWithSubtitles) {
+        return GuiUtils.getShortenedStringIfNecessary(
+                fileWithSubtitles.getFile().getAbsolutePath(),
+                0,
+                128
+        );
     }
 
     private void showExternalFilePreview(String streamId, GuiFileInfo guiFileInfo) {
@@ -983,7 +849,7 @@ public class ContentPaneController extends AbstractController {
         lastProcessedFileInfo = guiFileInfo;
 
         FileInfo fileInfo = GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo);
-        ExternalSubtitleStream subtitleStream = SubtitleStream.getById(streamId, fileInfo.getExternalSubtitleStreams());
+        FileWithSubtitles subtitleStream = SubtitleOption.getById(streamId, fileInfo.getExternalSubtitleStreams());
         GuiExternalSubtitleStream guiSubtitleStream = GuiSubtitleStream.getById(streamId, guiFileInfo.getExternalSubtitleStreams());
 
         Stage dialogStage = new Stage();
@@ -1032,12 +898,12 @@ public class ContentPaneController extends AbstractController {
         GuiSubtitleStream guiUpperStream = guiFileInfo.getSubtitleStreams().stream()
                 .filter(GuiSubtitleStream::isSelectedAsUpper)
                 .findFirst().orElseThrow(IllegalStateException::new);
-        SubtitleStream upperStream = SubtitleStream.getById(guiUpperStream.getId(), fileInfo.getSubtitleStreams());
+        SubtitleOption upperStream = SubtitleOption.getById(guiUpperStream.getId(), fileInfo.getSubtitleStreams());
         Charset upperStreamEncoding;
         if (upperStream instanceof FfmpegSubtitleStream) {
             upperStreamEncoding = StandardCharsets.UTF_8;
-        } else if (upperStream instanceof ExternalSubtitleStream) {
-            upperStreamEncoding = ((ExternalSubtitleStream) upperStream).getEncoding();
+        } else if (upperStream instanceof FileWithSubtitles) {
+            upperStreamEncoding = ((FileWithSubtitles) upperStream).getEncoding();
         } else {
             throw new IllegalStateException();
         }
@@ -1045,12 +911,12 @@ public class ContentPaneController extends AbstractController {
         GuiSubtitleStream guiLowerStream = guiFileInfo.getSubtitleStreams().stream()
                 .filter(GuiSubtitleStream::isSelectedAsLower)
                 .findFirst().orElseThrow(IllegalStateException::new);
-        SubtitleStream lowerStream = SubtitleStream.getById(guiLowerStream.getId(), fileInfo.getSubtitleStreams());
+        SubtitleOption lowerStream = SubtitleOption.getById(guiLowerStream.getId(), fileInfo.getSubtitleStreams());
         Charset lowerStreamEncoding;
         if (lowerStream instanceof FfmpegSubtitleStream) {
             lowerStreamEncoding = StandardCharsets.UTF_8;
-        } else if (lowerStream instanceof ExternalSubtitleStream) {
-            lowerStreamEncoding = ((ExternalSubtitleStream) lowerStream).getEncoding();
+        } else if (lowerStream instanceof FileWithSubtitles) {
+            lowerStreamEncoding = ((FileWithSubtitles) lowerStream).getEncoding();
         } else {
             throw new IllegalStateException();
         }

@@ -4,8 +4,8 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import kirill.subtitlemerger.gui.utils.custom_controls.MultiColorLabels?>
 <?import kirill.subtitlemerger.gui.GuiConstants?>
+<?import kirill.subtitlemerger.gui.utils.custom_controls.ActionResultLabels?>
 <Tab xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
      fx:controller="kirill.subtitlemerger.gui.application_specific.subtitle_files_tab.SubtitleFilesTabController"
      text="Subtitle files">
@@ -72,7 +72,8 @@
                     text="Merge subtitles" disable="true"
                     GridPane.rowIndex="3" GridPane.columnSpan="2"/>
 
-            <MultiColorLabels fx:id="resultLabels" wrapText="true" GridPane.rowIndex="4" GridPane.columnSpan="2"/>
+            <ActionResultLabels fx:id="actionResultLabels" wrapText="true"
+                                GridPane.rowIndex="4" GridPane.columnSpan="2"/>
         </GridPane>
         <VBox fx:id="progressPane" spacing="10" alignment="CENTER" visible="false">
             <ProgressIndicator fx:id="progressIndicator"/>

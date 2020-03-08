@@ -16,8 +16,8 @@ import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerCallback;
-import kirill.subtitlemerger.gui.utils.custom_controls.MultiColorLabels;
-import kirill.subtitlemerger.gui.utils.entities.MultiPartResult;
+import kirill.subtitlemerger.gui.utils.custom_controls.ActionResultLabels;
+import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import kirill.subtitlemerger.gui.utils.entities.NoSelectionModel;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
@@ -56,7 +56,7 @@ public class SubtitlePreviewController extends AbstractController {
     private ComboBox<Charset> encodingComboBox;
 
     @FXML
-    private MultiColorLabels resultLabels;
+    private ActionResultLabels actionResultLabels;
 
     @FXML
     private ListView<String> listView;
@@ -136,7 +136,7 @@ public class SubtitlePreviewController extends AbstractController {
     public void initializeWithEncoding(
             byte[] data,
             Charset originalEncoding,
-            String title,
+            String fileFullPath,
             Stage dialogStage
     ) {
         mode = Mode.WITH_ENCODING;
@@ -145,7 +145,13 @@ public class SubtitlePreviewController extends AbstractController {
         currentEncoding = originalEncoding;
         this.dialogStage = dialogStage;
 
-        this.title.setText(title);
+        title.setText(
+                GuiUtils.getShortenedStringIfNecessary(
+                        fileFullPath,
+                        0,
+                        128
+                )
+        );
         GuiUtils.setVisibleAndManaged(mergedUpperPane, false);
         GuiUtils.setVisibleAndManaged(mergedLowerPane, false);
         encodingComboBox.setConverter(CHARSET_STRING_CONVERTER);
@@ -221,9 +227,9 @@ public class SubtitlePreviewController extends AbstractController {
         listView.setItems(previewInfo.getLinesToDisplay());
 
         if (mode == Mode.WITH_ENCODING) {
-            MultiPartResult result = MultiPartResult.EMPTY;
+            ActionResult actionResult = ActionResult.NO_RESULT;
             if (previewInfo.getSubtitles() == null) {
-                result = MultiPartResult.onlyError(
+                actionResult = ActionResult.onlyError(
                         String.format(
                                 "This encoding (%s) doesn't fit or the file has an incorrect format",
                                 currentEncoding.name()
@@ -232,15 +238,15 @@ public class SubtitlePreviewController extends AbstractController {
             } else {
                 if (!initialRun) {
                     if (Objects.equals(currentEncoding, originalEncoding)) {
-                        result = MultiPartResult.onlySuccess(
+                        actionResult = ActionResult.onlySuccess(
                                 "Encoding has been restored to the original value successfully"
                         );
                     } else {
-                        result = MultiPartResult.onlySuccess("Encoding has been changed successfully");
+                        actionResult = ActionResult.onlySuccess("Encoding has been changed successfully");
                     }
                 }
             }
-            resultLabels.set(result);
+            actionResultLabels.set(actionResult);
 
             saveButton.setDisable(Objects.equals(currentEncoding, originalEncoding) || currentSubtitles == null);
         }

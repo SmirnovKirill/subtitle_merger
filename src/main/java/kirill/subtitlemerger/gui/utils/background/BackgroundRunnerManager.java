@@ -49,7 +49,7 @@ public class BackgroundRunnerManager {
         return task.messageProperty();
     }
 
-    public void cancel() {
+    void cancel() {
         task.cancel();
     }
 

@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.gui.application_specific.videos_tab.background_tasks;
+package kirill.subtitlemerger.gui.application_specific.videos_tab.loaders_and_handlers;
 
 import javafx.application.Platform;
 import javafx.scene.control.ProgressIndicator;

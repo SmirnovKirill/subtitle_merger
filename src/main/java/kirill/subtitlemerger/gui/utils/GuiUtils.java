@@ -1,6 +1,7 @@
 package kirill.subtitlemerger.gui.utils;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.StringProperty;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -10,10 +11,9 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.Region;
 import javafx.util.Duration;
-import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFileInfo;
 import kirill.subtitlemerger.gui.utils.entities.NodeAndController;
-import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -80,10 +80,16 @@ public class GuiUtils {
 
         result.getStyleClass().add("image-button");
 
-        ImageView imageView = new ImageView(new Image(imageUrl));
-        imageView.setFitWidth(width);
-        imageView.setFitHeight(height);
-        result.setGraphic(imageView);
+        result.setGraphic(createImageView(imageUrl, width, height));
+
+        return result;
+    }
+
+    public static ImageView createImageView(String imageUrl, int width, int height) {
+        ImageView result = new ImageView(new Image(imageUrl));
+
+        result.setFitWidth(width);
+        result.setFitHeight(height);
 
         return result;
     }
@@ -144,13 +150,6 @@ public class GuiUtils {
         }
     }
 
-    //todo move
-    public static FileInfo findMatchingFileInfo(GuiFileInfo guiFileInfo, List<FileInfo> filesInfo) {
-        return filesInfo.stream()
-                .filter(fileInfo -> Objects.equals(fileInfo.getFile().getAbsolutePath(), guiFileInfo.getFullPath()))
-                .findFirst().orElseThrow(IllegalStateException::new);
-    }
-
     public static String languageToString(LanguageAlpha3Code language) {
         return language != null ? language.toString() : "unknown language";
     }
@@ -197,5 +196,28 @@ public class GuiUtils {
     public static void setVisibleAndManaged(Node node, boolean value) {
         node.setVisible(value);
         node.setManaged(value);
+    }
+
+    public static void bindVisibleAndManaged(Node node, BooleanBinding binding) {
+        node.visibleProperty().bind(binding);
+        node.managedProperty().bind(binding);
+    }
+
+    public static Region createFixedHeightSpacer(int height) {
+        Region result = new Region();
+
+        result.setMinHeight(height);
+        result.setMaxHeight(height);
+
+        return result;
+    }
+
+    public static Region createFixedWidthSpacer(int width) {
+        Region result = new Region();
+
+        result.setMinWidth(width);
+        result.setMaxWidth(width);
+
+        return result;
     }
 }

@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import kirill.subtitlemerger.gui.utils.custom_controls.MultiColorLabels?>
+<?import kirill.subtitlemerger.gui.utils.custom_controls.ActionResultLabels?>
 <?import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles?>
 <StackPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
            fx:id="contentPane"
@@ -25,9 +25,9 @@
                 </Button>
             </HBox>
         </VBox>
-        <MultiColorLabels fx:id="generalResult" minHeight="40" maxHeight="40" alignment="CENTER" alwaysManaged="true"/>
+        <ActionResultLabels fx:id="generalResult" minHeight="40" maxHeight="40" alignment="CENTER" alwaysManaged="true"/>
         <VBox spacing="10" VBox.vgrow="ALWAYS">
-            <HBox spacing="20"><Label fx:id="selectedForMergeLabel"/></HBox>
+            <HBox spacing="20"><Label fx:id="selectedLabel"/></HBox>
             <HBox spacing="10" alignment="CENTER_LEFT">
                 <CheckBox fx:id="hideUnavailableCheckbox" onAction="#hideUnavailableClicked" text="hide unavailable"/>
                 <Region HBox.hgrow="ALWAYS"/>
