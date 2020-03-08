@@ -9,7 +9,7 @@ import java.util.Objects;
 
 @CommonsLog
 public class TableSubtitleOption {
-    static final int UNKNOWN_SIZE = -1;
+    public static final int UNKNOWN_SIZE = -1;
 
     private StringProperty id;
 

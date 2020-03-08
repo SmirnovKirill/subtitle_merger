@@ -1,37 +1,27 @@
 package kirill.subtitlemerger.gui.application_specific.videos_tab;
 
 import javafx.beans.Observable;
-import javafx.beans.binding.Bindings;
-import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
 import javafx.stage.FileChooser;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.application_specific.AbstractController;
-import kirill.subtitlemerger.gui.application_specific.SubtitlePreviewController;
-import kirill.subtitlemerger.gui.application_specific.videos_tab.loaders_and_handlers.*;
-import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiExternalSubtitleStream;
-import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFileInfo;
+import kirill.subtitlemerger.gui.application_specific.videos_tab.loaders_and_handlers.LoadDirectoryBackgroundRunner;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
-import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableSubtitleOption;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerCallback;
 import kirill.subtitlemerger.gui.utils.custom_controls.ActionResultLabels;
-import kirill.subtitlemerger.gui.utils.entities.NodeAndController;
-import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.utils.FileValidator;
-import kirill.subtitlemerger.logic.work_with_files.SubtitleInjector;
-import kirill.subtitlemerger.logic.work_with_files.entities.*;
+import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
+import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
+import kirill.subtitlemerger.logic.work_with_files.entities.FileWithSubtitles;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -41,14 +31,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-
-import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
 @CommonsLog
 public class ContentPaneController extends AbstractController {
@@ -170,7 +157,7 @@ public class ContentPaneController extends AbstractController {
 
     @FXML
     private void autoSelectButtonClicked() {
-        generalResult.clear();
+       /* generalResult.clear();
         lastProcessedFileInfo = null;
 
         AutoSelectSubtitlesTask backgroundRunner = new AutoSelectSubtitlesTask(
@@ -183,12 +170,12 @@ public class ContentPaneController extends AbstractController {
         BackgroundRunnerCallback<AutoSelectSubtitlesTask.Result> callback =
                 result -> generalResult.set(AutoSelectSubtitlesTask.generateMultiPartResult(result));
 
-        runInBackground(backgroundRunner, callback);
+        runInBackground(backgroundRunner, callback);*/
     }
 
     @FXML
     private void loadAllSubtitlesClicked() {
-        generalResult.clear();
+       /* generalResult.clear();
         lastProcessedFileInfo = null;
 
         LoadFilesAllSubtitlesTask backgroundRunner = new LoadFilesAllSubtitlesTask(
@@ -200,12 +187,12 @@ public class ContentPaneController extends AbstractController {
         BackgroundRunnerCallback<LoadFilesAllSubtitlesTask.Result> callback =
                 result -> generalResult.set(LoadFilesAllSubtitlesTask.generateMultiPartResult(result));
 
-        runInBackground(backgroundRunner, callback);
+        runInBackground(backgroundRunner, callback);*/
     }
 
     @FXML
     private void goButtonClicked() throws FfmpegException {
-        GuiFileInfo guiFileInfo = tableWithFiles.getItems().get(0);
+      /*  GuiFileInfo guiFileInfo = tableWithFiles.getItems().get(0);
         FileInfo fileInfo = GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo);
 
         GuiSubtitleStream guiUpperSubtitles = guiFileInfo.getSubtitleStreams().stream()
@@ -230,11 +217,11 @@ public class ContentPaneController extends AbstractController {
                 context.getSettings().isMarkMergedStreamAsDefault(),
                 fileInfo,
                 context.getFfmpeg()
-        );
+        );*/
     }
 
     private void sortByChanged(Observable observable) {
-        generalResult.clear();
+       /* generalResult.clear();
         clearLastProcessedResult();
 
         RadioMenuItem radioMenuItem = (RadioMenuItem) sortByGroup.getSelectedToggle();
@@ -267,38 +254,17 @@ public class ContentPaneController extends AbstractController {
         BackgroundRunnerCallback<List<GuiFileInfo>> callback =
                 result -> updateTableContent(result, tableWithFiles.getMode(), false);
 
-        runInBackground(backgroundRunner, callback);
+        runInBackground(backgroundRunner, callback);*/
     }
 
     private void clearLastProcessedResult() {
-        if (lastProcessedFileInfo != null) {
+      /*  if (lastProcessedFileInfo != null) {
             lastProcessedFileInfo.clearResult();
-        }
-    }
-
-    private void updateTableContent(
-            List<GuiFileInfo> guiFilesToShowInfo,
-            TableWithFiles.Mode mode,
-            boolean clearTableCache
-    ) {
-        setSelected((int) guiFilesToShowInfo.stream().filter(GuiFileInfo::isSelected).count());
-
-        allAvailableCount.setValue(
-                (int) guiFilesToShowInfo.stream()
-                        .filter(filesInfo -> StringUtils.isBlank(filesInfo.getUnavailabilityReason()))
-                        .count()
-        );
-
-        if (clearTableCache) {
-            tableWithFiles.clearCache();
-        }
-        tableWithFiles.setMode(mode);
-        tableWithFiles.setItems(FXCollections.observableArrayList(guiFilesToShowInfo));
-        setAllSelected(allAvailableCount.get() > 0 && getSelected() == allAvailableCount.get());
+        }*/
     }
 
     private void sortDirectionChanged(Observable observable) {
-        generalResult.clear();
+      /*  generalResult.clear();
         clearLastProcessedResult();
 
         RadioMenuItem radioMenuItem = (RadioMenuItem) sortDirectionGroup.getSelectedToggle();
@@ -328,7 +294,7 @@ public class ContentPaneController extends AbstractController {
         BackgroundRunnerCallback<List<GuiFileInfo>> callback =
                 result -> updateTableContent(result, tableWithFiles.getMode(), false);
 
-        runInBackground(backgroundRunner, callback);
+        runInBackground(backgroundRunner, callback);*/
     }
 
     public void show() {
@@ -340,7 +306,7 @@ public class ContentPaneController extends AbstractController {
     }
 
     void handleChosenFiles(List<File> files) {
-        //todo check if > 10000
+       /* //todo check if > 10000
 
         try {
             context.getSettings().saveLastDirectoryWithVideos(files.get(0).getParent());
@@ -371,7 +337,7 @@ public class ContentPaneController extends AbstractController {
             addRemoveFilesPane.setManaged(true);
         };
 
-        runInBackground(backgroundRunner, callback);
+        runInBackground(backgroundRunner, callback);*/
     }
 
     void handleChosenDirectory(File directory) {
@@ -380,31 +346,40 @@ public class ContentPaneController extends AbstractController {
         try {
             context.getSettings().saveLastDirectoryWithVideos(directory.getAbsolutePath());
         } catch (GuiSettings.ConfigException e) {
-            log.error("failed to save last directory with videos, that shouldn't happen: " + getStackTrace(e));
+            log.error(
+                    "failed to save last directory with videos, that shouldn't happen: "
+                            + ExceptionUtils.getStackTrace(e)
+            );
         }
 
         context.setWorkWithVideosInProgress(true);
 
         this.directory = directory;
 
-        LoadDirectoryFilesTask backgroundRunner = new LoadDirectoryFilesTask(
+        LoadDirectoryBackgroundRunner backgroundRunner = new LoadDirectoryBackgroundRunner(
                 this.directory,
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
                 context
         );
 
-        BackgroundRunnerCallback<LoadDirectoryFilesTask.Result> callback = result -> {
+        BackgroundRunnerCallback<LoadDirectoryBackgroundRunner.Result> callback = result -> {
             filesInfo = result.getFilesInfo();
-            allGuiFilesInfo = result.getAllGuiFilesInfo();
-            updateTableContent(result.getGuiFilesToShowInfo(), TableWithFiles.Mode.DIRECTORY, true);
+            allTableFilesInfo = result.getAllTableFilesInfo();
             hideUnavailableCheckbox.setSelected(result.isHideUnavailable());
             chosenDirectoryField.setText(directory.getAbsolutePath());
+            tableWithFiles.setFilesInfo(
+                    result.getTableFilesToShowInfo(),
+                    TableWithFiles.SortBy.NAME,
+                    TableWithFiles.SortDirection.DESCENDING, //todo fix
+                    0,
+                    0,
+                    TableWithFiles.Mode.DIRECTORY,
+                    true
+            );
 
-            chosenDirectoryPane.setVisible(true);
-            chosenDirectoryPane.setManaged(true);
-            addRemoveFilesPane.setVisible(false);
-            addRemoveFilesPane.setManaged(false);
+            GuiUtils.setVisibleAndManaged(chosenDirectoryPane, true);
+            GuiUtils.setVisibleAndManaged(addRemoveFilesPane, false);
         };
 
         runInBackground(backgroundRunner, callback);
@@ -424,25 +399,18 @@ public class ContentPaneController extends AbstractController {
 
     @FXML
     private void backToSelectionClicked() {
-        setSelected(0);
+        tableWithFiles.clearTable();
 
-        tableWithFiles.clearCache();
-        tableWithFiles.setMode(null);
-        tableWithFiles.setItems(FXCollections.emptyObservableList());
         generalResult.clear();
         lastProcessedFileInfo = null;
-        allAvailableCount.setValue(0);
-        setAllSelected(false);
         context.setWorkWithVideosInProgress(false);
-
-        System.gc();
 
         videosTabController.setActivePane(VideosTabController.ActivePane.CHOICE);
     }
 
     @FXML
     private void refreshButtonClicked() {
-        //todo check if > 10000
+       /* //todo check if > 10000
 
         lastProcessedFileInfo = null;
         generalResult.clear();
@@ -460,16 +428,16 @@ public class ContentPaneController extends AbstractController {
             updateTableContent(result.getGuiFilesToShowInfo(), tableWithFiles.getMode(), true);
             hideUnavailableCheckbox.setSelected(result.isHideUnavailable());
 
-            /* See the huge comment in the hideUnavailableClicked() method. */
+            *//* See the huge comment in the hideUnavailableClicked() method. *//*
             tableWithFiles.scrollTo(0);
         };
 
-        runInBackground(backgroundRunner, callback);
+        runInBackground(backgroundRunner, callback);*/
     }
 
     @FXML
     private void hideUnavailableClicked() {
-        generalResult.clear();
+      /*  generalResult.clear();
         clearLastProcessedResult();
 
         SortOrShowHideUnavailableTask backgroundRunner = new SortOrShowHideUnavailableTask(
@@ -482,23 +450,23 @@ public class ContentPaneController extends AbstractController {
         BackgroundRunnerCallback<List<GuiFileInfo>> callback = result -> {
             updateTableContent(result, tableWithFiles.getMode(), false);
 
-            /*
+            *//*
              * There is a strange bug with TableView - when the list is shrunk in size (because for example
              * "hide unavailable" checkbox is checked but it can also happen when refresh is clicked I suppose) and both
              * big list and shrunk list have vertical scrollbars table isn't shrunk unless you move the scrollbar.
              * I've tried many workaround but this one seems the best so far - just show the beginning of the table.
              * I couldn't find a bug with precise description but these ones fit quite well -
              * https://bugs.openjdk.java.net/browse/JDK-8095384, https://bugs.openjdk.java.net/browse/JDK-8087833.
-             */
+             *//*
             tableWithFiles.scrollTo(0);
         };
 
-        runInBackground(backgroundRunner, callback);
+        runInBackground(backgroundRunner, callback);*/
     }
 
     @FXML
     private void removeButtonClicked() {
-        generalResult.clear();
+      /*  generalResult.clear();
         clearLastProcessedResult();
 
         RemoveFilesTask backgroundRunner = new RemoveFilesTask(
@@ -522,12 +490,12 @@ public class ContentPaneController extends AbstractController {
             }
         };
 
-        runInBackground(backgroundRunner, callback);
+        runInBackground(backgroundRunner, callback);*/
     }
 
     @FXML
     private void addButtonClicked() {
-        generalResult.clear();
+       /* generalResult.clear();
         clearLastProcessedResult();
 
         List<File> filesToAdd = getFiles(stage, context.getSettings());
@@ -558,12 +526,7 @@ public class ContentPaneController extends AbstractController {
             generalResult.set(AddFilesTask.generateMultiPartResult(result));
         };
 
-        runInBackground(backgroundRunner, callback);
-    }
-
-    public static boolean isExtra(FfmpegSubtitleStream subtitleStream, GuiSettings guiSettings) {
-        return subtitleStream.getLanguage() != guiSettings.getUpperLanguage()
-                && subtitleStream.getLanguage() != guiSettings.getLowerLanguage();
+        runInBackground(backgroundRunner, callback);*/
     }
 
     public static int getSubtitleCanBeHiddenCount(FileInfo fileInfo, GuiSettings guiSettings) {
@@ -590,7 +553,7 @@ public class ContentPaneController extends AbstractController {
         return subtitlesWithOtherLanguage;
     }
 
-    private void addExternalSubtitleFileClicked(GuiFileInfo guiFileInfo, Runnable onFinish) {
+   /* private void addExternalSubtitleFileClicked(GuiFileInfo guiFileInfo, Runnable onFinish) {
         generalResult.clear();
         clearLastProcessedResult();
         guiFileInfo.clearResult();
@@ -668,9 +631,9 @@ public class ContentPaneController extends AbstractController {
         };
 
         runInBackground(backgroundRunner, callback);
-    }
+    }*/
 
-    private Optional<File> getFile(GuiFileInfo fileInfo, Stage stage, GuiSettings settings) {
+  /*  private Optional<File> getFile(GuiFileInfo fileInfo, Stage stage, GuiSettings settings) {
         FileChooser fileChooser = new FileChooser();
 
         fileChooser.setTitle("Please choose the file with the subtitles");
@@ -689,7 +652,7 @@ public class ContentPaneController extends AbstractController {
         );
 
         return Optional.ofNullable(fileChooser.showOpenDialog(stage));
-    }
+    }*/
 
     private static Optional<ExternalSubtitleFileInfo> getInputFileInfo(File file, File otherSubtitleFile) {
         FileValidator.InputFileInfo validatorFileInfo = FileValidator.getInputFileInfo(
@@ -760,7 +723,7 @@ public class ContentPaneController extends AbstractController {
         }
     }
 
-    private void removeExternalSubtitleFileClicked(String streamId, GuiFileInfo guiFileInfo, Runnable onFinish) {
+  /*  private void removeExternalSubtitleFileClicked(String streamId, GuiFileInfo guiFileInfo, Runnable onFinish) {
         generalResult.clear();
         clearLastProcessedResult();
         guiFileInfo.clearResult();
@@ -808,7 +771,7 @@ public class ContentPaneController extends AbstractController {
         dialogStage.setScene(scene);
 
         dialogStage.showAndWait();
-    }
+    }*/
 
     private static String getStreamTitleForPreview(FileInfo fileInfo, FfmpegSubtitleStream stream) {
         String videoFilePath = GuiUtils.getShortenedStringIfNecessary(
@@ -842,7 +805,7 @@ public class ContentPaneController extends AbstractController {
         );
     }
 
-    private void showExternalFilePreview(String streamId, GuiFileInfo guiFileInfo) {
+  /*  private void showExternalFilePreview(String streamId, GuiFileInfo guiFileInfo) {
         generalResult.clear();
         clearLastProcessedResult();
         guiFileInfo.clearResult();
@@ -1028,7 +991,7 @@ public class ContentPaneController extends AbstractController {
                 result -> generalResult.set(LoadSingleSubtitleTask.generateMultiPartResult(result));
 
         runInBackground(backgroundRunner, callback);
-    }
+    }*/
 
     @AllArgsConstructor
     @Getter

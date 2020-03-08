@@ -1,18 +1,14 @@
 package kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files;
 
+import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.StringBinding;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.value.ChangeListener;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import kirill.subtitlemerger.gui.GuiConstants;
@@ -74,6 +70,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         cellCache = new HashMap<>();
         sortByGroup = new ToggleGroup();
         sortDirectionGroup = new ToggleGroup();
+        allSelected = new SimpleBooleanProperty(false);
         selectedCount = new SimpleIntegerProperty(0);
 
         setSelectionModel(null);
@@ -379,17 +376,25 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         result.setAlignment(Pos.CENTER_LEFT);
         result.setSpacing(5);
 
-        Label sizeLabel = generateSizeLabel(subtitleOption);
+        result.getChildren().add(generateSizeLabel(subtitleOption));
+
         Hyperlink loadSubtitleLink = generateLoadSubtitleLink(subtitleOption, fileInfo, singleSubtitleLoader)
                 .orElse(null);
+        if (loadSubtitleLink != null) {
+            result.getChildren().add(loadSubtitleLink);
+        }
+
         Label failedToLoadLabel = generateFailedToLoadLabel(subtitleOption).orElse(null);
+        if (failedToLoadLabel != null) {
+            result.getChildren().add(failedToLoadLabel);
+        }
+
         Region spacer = new Region();
-        Button previewButton = generatePreviewButton(subtitleOption, fileInfo, subtitleOptionPreviewHandler);
 
-        List<Node> nodes = Arrays.asList(sizeLabel, loadSubtitleLink, failedToLoadLabel, spacer, previewButton);
-        nodes.removeIf(Objects::isNull);
-
-        result.getChildren().addAll(nodes);
+        result.getChildren().addAll(
+                spacer,
+                generatePreviewButton(subtitleOption, fileInfo, subtitleOptionPreviewHandler)
+        );
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         return result;
@@ -636,38 +641,43 @@ public class TableWithFiles extends TableView<TableFileInfo> {
             handler.showPreview(fileInfo);
         });
 
-        setMergedPreviewDisabledAndTooltip(result, fileInfo);
+        setMergedPreviewDisabledAndTooltip(previewButton, result, fileInfo);
 
-        ChangeListener<? super TableSubtitleOption> optionSelectionListener = (observable, oldValue, newValue) -> {
-            if (newValue == null) {
-                setMergedPreviewDisabledAndTooltip(result, fileInfo);
-            } else {
-                newValue.sizeProperty().addListener(
-                        sizeObservable -> setMergedPreviewDisabledAndTooltip(result, fileInfo)
-                );
+        InvalidationListener listener = observable ->
+                setMergedPreviewDisabledAndTooltip(previewButton, result, fileInfo);
+
+        fileInfo.upperOptionProperty().addListener(listener);
+        fileInfo.lowerOptionProperty().addListener(listener);
+        for (TableSubtitleOption option : fileInfo.getSubtitleOptions()) {
+            if (!option.isSizeAlwaysKnown()) {
+                option.sizeProperty().addListener(listener);
             }
-        };
-        fileInfo.upperOptionProperty().addListener(optionSelectionListener);
-        fileInfo.lowerOptionProperty().addListener(optionSelectionListener);
+        }
+
+        result.getChildren().add(previewButton);
 
         return result;
     }
 
-    private static void setMergedPreviewDisabledAndTooltip(Pane previewPane, TableFileInfo fileInfo) {
+    private static void setMergedPreviewDisabledAndTooltip(
+            Button previewButton,
+            Pane previewPane,
+            TableFileInfo fileInfo
+    ) {
         TableSubtitleOption upperOption = fileInfo.getUpperOption();
         TableSubtitleOption lowerOption = fileInfo.getLowerOption();
 
         if (upperOption == null || lowerOption == null) {
-            previewPane.getChildren().get(0).setDisable(true);
+            previewButton.setDisable(true);
             Tooltip.install(previewPane, GuiUtils.generateTooltip("Please select subtitles to merge first"));
         } else {
             boolean notLoaded = upperOption.getSize() == TableSubtitleOption.UNKNOWN_SIZE
                     || lowerOption.getSize() == TableSubtitleOption.UNKNOWN_SIZE;
             if (notLoaded) {
-                previewPane.getChildren().get(0).setDisable(true);
+                previewButton.setDisable(true);
                 Tooltip.install(previewPane, GuiUtils.generateTooltip("Please load selected subtitles first"));
             } else {
-                previewPane.getChildren().get(0).setDisable(false);
+                previewButton.setDisable(false);
                 Tooltip.install(previewPane, null);
             }
         }

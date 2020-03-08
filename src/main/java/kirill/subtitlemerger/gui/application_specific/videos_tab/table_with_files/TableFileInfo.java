@@ -146,39 +146,46 @@ public class TableFileInfo {
 
     private void addSubtitleOptionListeners() {
         for (TableSubtitleOption subtitleOption : subtitleOptions) {
-            subtitleOption.selectedAsUpperProperty().addListener(this::selectedAsUpperChanged);
-            subtitleOption.selectedAsLowerProperty().addListener(this::selectedAsLowerChanged);
-        }
-    }
-
-    private void selectedAsUpperChanged(javafx.beans.Observable observable, boolean oldValue, boolean newValue) {
-        if (newValue) {
-            for (TableSubtitleOption currentOption : subtitleOptions) {
-                if (Objects.equals(currentOption.getId(), getId())) {
-                    setUpperOption(currentOption);
-                    currentOption.setSelectedAsLower(false);
+            subtitleOption.selectedAsUpperProperty().addListener((observable, oldValue, newValue) -> {
+                if (newValue) {
+                    for (TableSubtitleOption currentOption : subtitleOptions) {
+                        if (Objects.equals(currentOption.getId(), subtitleOption.getId())) {
+                            setUpperOption(currentOption);
+                            currentOption.setSelectedAsLower(false);
+                        } else {
+                            currentOption.setSelectedAsUpper(false);
+                        }
+                    }
                 } else {
-                    currentOption.setSelectedAsUpper(false);
+                    TableSubtitleOption upperOption = getUpperOption();
+                    if (upperOption != null && Objects.equals(upperOption.getId(), subtitleOption.getId())) {
+                        setUpperOption(null);
+                    }
                 }
-            }
-        }
 
-        setSelectedOptionCount(calculateSelectedOptionCount(subtitleOptions));
-    }
+                setSelectedOptionCount(calculateSelectedOptionCount(subtitleOptions));
+            });
 
-    private void selectedAsLowerChanged(Observable observable, boolean oldValue, boolean newValue) {
-        if (newValue) {
-            for (TableSubtitleOption currentOption : subtitleOptions) {
-                if (Objects.equals(currentOption.getId(), getId())) {
-                    setLowerOption(currentOption);
-                    currentOption.setSelectedAsUpper(false);
+            subtitleOption.selectedAsLowerProperty().addListener((observable, oldValue, newValue) -> {
+                if (newValue) {
+                    for (TableSubtitleOption currentOption : subtitleOptions) {
+                        if (Objects.equals(currentOption.getId(), subtitleOption.getId())) {
+                            setLowerOption(currentOption);
+                            currentOption.setSelectedAsUpper(false);
+                        } else {
+                            currentOption.setSelectedAsLower(false);
+                        }
+                    }
                 } else {
-                    currentOption.setSelectedAsLower(false);
+                    TableSubtitleOption lowerOption = getLowerOption();
+                    if (lowerOption != null && Objects.equals(lowerOption.getId(), subtitleOption.getId())) {
+                        setLowerOption(null);
+                    }
                 }
-            }
-        }
 
-        setSelectedOptionCount(calculateSelectedOptionCount(subtitleOptions));
+                setSelectedOptionCount(calculateSelectedOptionCount(subtitleOptions));
+            });
+        }
     }
 
     boolean isSelected() {
