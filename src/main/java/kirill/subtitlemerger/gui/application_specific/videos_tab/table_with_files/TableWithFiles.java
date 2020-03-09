@@ -14,6 +14,7 @@ import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.custom_controls.ActionResultLabels;
 import kirill.subtitlemerger.gui.utils.entities.ActionResult;
+import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleOption;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -218,6 +219,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         VBox result = new VBox();
 
         result.setPadding(new Insets(CELL_PADDING, CELL_PADDING, CELL_PADDING, CELL_PADDING + 1));
+        result.setSpacing(2);
 
         for (TableSubtitleOption subtitleOption : fileInfo.getSubtitleOptions()) {
             result.getChildren().addAll(
@@ -227,20 +229,19 @@ public class TableWithFiles extends TableView<TableFileInfo> {
                             removeSubtitleOptionHandler,
                             singleSubtitleLoader,
                             subtitleOptionPreviewHandler
-                    ),
-                    GuiUtils.createFixedHeightSpacer(2)
+                    )
             );
         }
 
         result.getChildren().addAll(
-                GuiUtils.createFixedHeightSpacer(3),
+                GuiUtils.createFixedHeightSpacer(1),
                 generateRowWithActionsPane(
                         fileInfo,
                         addFileWithSubtitlesHandler,
                         allFileSubtitleLoader,
                         mergedSubtitlePreviewHandler
                 ),
-                GuiUtils.createFixedHeightSpacer(10),
+                GuiUtils.createFixedHeightSpacer(6),
                 generateActionResultLabels(fileInfo)
         );
 
@@ -386,8 +387,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
         result.getChildren().addAll(
                 sizeLabel,
-                generatePreviewButton(subtitleOption, fileInfo, subtitleOptionPreviewHandler),
-                generateFailedToLoadLabel(subtitleOption)
+                generatePreviewButton(subtitleOption, fileInfo, subtitleOptionPreviewHandler)
         );
 
         HBox.setHgrow(sizeLabel, Priority.ALWAYS);
@@ -528,6 +528,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
                 generateAddFileButton(fileInfo, addFileWithSubtitlesHandler),
                 spacer,
                 generateLoadAllSubtitlesPane(fileInfo, allFileSubtitleLoader),
+                GuiUtils.createFixedWidthSpacer(15),
                 generateMergedPreviewPane(fileInfo, mergedSubtitlePreviewHandler)
         );
 
@@ -564,8 +565,12 @@ public class TableWithFiles extends TableView<TableFileInfo> {
                 9
         );
 
-        BooleanBinding canAddMoreFiles = fileInfo.getSubtitleOptions().get(0).titleProperty().isEmpty()
-                .or(fileInfo.getSubtitleOptions().get(1).titleProperty().isEmpty());
+        int optionCount = fileInfo.getSubtitleOptions().size();
+        TableSubtitleOption lastButOneOption = fileInfo.getSubtitleOptions().get(optionCount - 2);
+        TableSubtitleOption lastOption = fileInfo.getSubtitleOptions().get(optionCount - 1);
+
+        BooleanBinding canAddMoreFiles = lastButOneOption.titleProperty().isEmpty()
+                .or(lastOption.titleProperty().isEmpty());
         GuiUtils.bindVisibleAndManaged(result, canAddMoreFiles);
 
         result.setOnAction(event -> {
