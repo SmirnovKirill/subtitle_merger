@@ -109,8 +109,6 @@ public class ContentPaneController extends AbstractController {
         this.stage = stage;
         this.context = context;
 
-        tableWithFiles.initialize();
-
         setSelectedLabelText(tableWithFiles.getSelectedCount());
         setActionButtonsVisibility(tableWithFiles.getSelectedCount());
         tableWithFiles.selectedCountProperty().addListener(this::selectedCountChanged);

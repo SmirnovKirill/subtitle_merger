@@ -215,9 +215,13 @@ public class GuiUtils {
     public static Region createFixedWidthSpacer(int width) {
         Region result = new Region();
 
-        result.setMinWidth(width);
-        result.setMaxWidth(width);
+        setFixedWidth(result, width);
 
         return result;
+    }
+
+    public static void setFixedWidth(Region region, int width) {
+        region.setMinWidth(width);
+        region.setMaxWidth(width);
     }
 }
