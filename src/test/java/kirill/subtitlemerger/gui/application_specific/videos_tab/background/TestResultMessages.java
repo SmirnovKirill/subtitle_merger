@@ -1,11 +1,9 @@
-package kirill.subtitlemerger.gui.application_specific.videos_tab.loaders_and_handlers;
+package kirill.subtitlemerger.gui.application_specific.videos_tab.background;
 
-import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class TestResultMessages {
     @Test

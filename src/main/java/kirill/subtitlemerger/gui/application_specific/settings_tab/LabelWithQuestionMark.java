@@ -5,7 +5,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
-import kirill.subtitlemerger.gui.utils.GuiUtils;
+import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
 
 public class LabelWithQuestionMark extends HBox {
     @FXML
@@ -15,7 +15,7 @@ public class LabelWithQuestionMark extends HBox {
     private Tooltip tooltip;
 
     public LabelWithQuestionMark() {
-        GuiUtils.initializeCustomControl("/gui/application_specific/settings_tab/labelWithQuestionMark.fxml", this);
+        GuiHelperMethods.initializeCustomControl("/gui/application_specific/settings_tab/labelWithQuestionMark.fxml", this);
     }
 
     public StringProperty labelTextProperty() {

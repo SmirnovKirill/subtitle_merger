@@ -1,19 +1,21 @@
 package kirill.subtitlemerger.gui.application_specific.videos_tab;
 
+import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.application_specific.AbstractController;
-import kirill.subtitlemerger.gui.application_specific.videos_tab.loaders_and_handlers.LoadDirectoryBackgroundRunner;
+import kirill.subtitlemerger.gui.application_specific.videos_tab.background.LoadDirectoryBackgroundRunner;
+import kirill.subtitlemerger.gui.application_specific.videos_tab.background.LoadSeparateFilesTask;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
-import kirill.subtitlemerger.gui.utils.GuiUtils;
+import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerCallback;
 import kirill.subtitlemerger.gui.utils.custom_controls.ActionResultLabels;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
@@ -27,6 +29,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -109,48 +112,177 @@ public class ContentPaneController extends AbstractController {
         this.stage = stage;
         this.context = context;
 
-        setSelectedLabelText(tableWithFiles.getSelectedCount());
-        setActionButtonsVisibility(tableWithFiles.getSelectedCount());
-        tableWithFiles.selectedCountProperty().addListener(this::selectedCountChanged);
+        setSelectedLabelText(tableWithFiles.getAllSelectedCount());
+        setActionButtonsVisibility(tableWithFiles.getAllSelectedCount(), tableWithFiles.getSelectedUnavailableCount());
+        tableWithFiles.allSelectedCountProperty().addListener(this::selectedCountChanged);
 
-        removeSelectedButton.disableProperty().bind(tableWithFiles.selectedCountProperty().isEqualTo(0));
+        setTableLoadersAndHandlers(tableWithFiles);
+
+        removeSelectedButton.disableProperty().bind(tableWithFiles.allSelectedCountProperty().isEqualTo(0));
     }
 
     private void setSelectedLabelText(int selected) {
-        GuiUtils.getTextDependingOnTheCount(
-                selected,
-                "1 file selected",
-                "%d files selected"
+        selectedLabel.setText(
+                GuiHelperMethods.getTextDependingOnTheCount(
+                        selected,
+                        "1 file selected",
+                        "%d files selected"
+                )
         );
     }
 
-    private void setActionButtonsVisibility(int selected) {
-        if (selected == 0) {
-            String tooltipText = "no videos are selected for merge";
-
-            autoSelectButton.setDisable(true);
-            Tooltip.install(autoSelectButtonWrapper, GuiUtils.generateTooltip(tooltipText));
-
-            loadAllSubtitlesButton.setDisable(true);
-            Tooltip.install(loadAllSubtitlesButtonWrapper, GuiUtils.generateTooltip(tooltipText));
-
-            goButton.setDisable(true);
-            Tooltip.install(goButtonWrapper, GuiUtils.generateTooltip(tooltipText));
-        } else {
-            autoSelectButton.setDisable(false);
-            Tooltip.install(autoSelectButtonWrapper, null);
-
-            loadAllSubtitlesButton.setDisable(false);
-            Tooltip.install(loadAllSubtitlesButtonWrapper, null);
-
-            goButton.setDisable(false);
-            Tooltip.install(goButtonWrapper, null);
+    private void setActionButtonsVisibility(int allSelectedCount, int selectedUnavailableCount) {
+        boolean disable = false;
+        Tooltip tooltip = null;
+        if (allSelectedCount == 0) {
+            disable = true;
+            tooltip = GuiHelperMethods.generateTooltip("Please select at least one file");
+        } else if (selectedUnavailableCount > 0) {
+            disable = true;
+            tooltip = GuiHelperMethods.generateTooltip("Please select only available files");
         }
+
+        autoSelectButton.setDisable(disable);
+        Tooltip.install(autoSelectButtonWrapper, tooltip);
+
+        loadAllSubtitlesButton.setDisable(disable);
+        Tooltip.install(loadAllSubtitlesButtonWrapper, tooltip);
+
+        goButton.setDisable(disable);
+        Tooltip.install(goButtonWrapper, tooltip);
     }
 
     private void selectedCountChanged(Observable observable) {
-        setSelectedLabelText(tableWithFiles.getSelectedCount());
-        setActionButtonsVisibility(tableWithFiles.getSelectedCount());
+        setSelectedLabelText(tableWithFiles.getAllSelectedCount());
+        setActionButtonsVisibility(tableWithFiles.getAllSelectedCount(), tableWithFiles.getSelectedUnavailableCount());
+    }
+
+    private void setTableLoadersAndHandlers(TableWithFiles table) {
+        setAllSelectedHandler(table);
+    }
+
+    private void setAllSelectedHandler(TableWithFiles table) {
+        table.setAllSelectedHandler(allSelected -> {
+            BackgroundRunner<Void> backgroundRunner = runnerManager -> {
+                runnerManager.setIndeterminateProgress();
+                runnerManager.updateMessage("processing files...");
+
+                for (TableFileInfo fileInfo : table.getItems()) {
+                    boolean selected;
+                    /* Separate files mode. */
+                    if (directory == null) {
+                        selected = allSelected;
+                    } else {
+                        selected = allSelected && StringUtils.isBlank(fileInfo.getUnavailabilityReason());
+                    }
+
+                    Platform.runLater(() -> tableWithFiles.setSelected(selected, fileInfo));
+                }
+
+                return null;
+            };
+
+            runInBackground(backgroundRunner, (result) -> {});
+        });
+    }
+
+    void handleChosenFiles(List<File> files) {
+        //todo check if > 10000
+
+        try {
+            context.getSettings().saveLastDirectoryWithVideos(files.get(0).getParent());
+        } catch (GuiSettings.ConfigException e) {
+            log.error(
+                    "failed to save last directory with videos, shouldn't happen: "
+                            + ExceptionUtils.getStackTrace(e)
+            );
+        }
+
+        context.setWorkWithVideosInProgress(true);
+        directory = null;
+
+        LoadSeparateFilesTask backgroundRunner = new LoadSeparateFilesTask(
+                files,
+                context.getSettings().getSortBy(),
+                context.getSettings().getSortDirection(),
+                context
+        );
+
+        BackgroundRunnerCallback<LoadSeparateFilesTask.Result> callback = result -> {
+            filesInfo = result.getFilesInfo();
+            allTableFilesInfo = result.getAllTableFilesInfo();
+            hideUnavailableCheckbox.setSelected(false);
+            tableWithFiles.setFilesInfo(
+                    result.getTableFilesToShowInfo(),
+                    getTableSortBy(context.getSettings()),
+                    getTableSortDirection(context.getSettings()),
+                    result.getTableFilesToShowInfo().size(),
+                    result.getSelectedAvailableCount(),
+                    result.getSelectedUnavailableCount(),
+                    result.getTableFilesToShowInfo().size(),
+                    TableWithFiles.Mode.SEPARATE_FILES,
+                    true
+            );
+
+            GuiHelperMethods.setVisibleAndManaged(chosenDirectoryPane, false);
+            GuiHelperMethods.setVisibleAndManaged(addRemoveFilesPane, true);
+        };
+
+        runInBackground(backgroundRunner, callback);
+    }
+
+    void handleChosenDirectory(File directory) {
+        //todo check if > 10000
+
+        try {
+            context.getSettings().saveLastDirectoryWithVideos(directory.getAbsolutePath());
+        } catch (GuiSettings.ConfigException e) {
+            log.error(
+                    "failed to save last directory with videos, that shouldn't happen: "
+                            + ExceptionUtils.getStackTrace(e)
+            );
+        }
+
+        context.setWorkWithVideosInProgress(true);
+        chosenDirectoryField.setText(directory.getAbsolutePath());
+        this.directory = directory;
+
+        LoadDirectoryBackgroundRunner backgroundRunner = new LoadDirectoryBackgroundRunner(
+                this.directory,
+                context.getSettings().getSortBy(),
+                context.getSettings().getSortDirection(),
+                context
+        );
+
+        BackgroundRunnerCallback<LoadDirectoryBackgroundRunner.Result> callback = result -> {
+            filesInfo = result.getFilesInfo();
+            allTableFilesInfo = result.getAllTableFilesInfo();
+            hideUnavailableCheckbox.setSelected(result.isHideUnavailable());
+            tableWithFiles.setFilesInfo(
+                    result.getTableFilesToShowInfo(),
+                    getTableSortBy(context.getSettings()),
+                    getTableSortDirection(context.getSettings()),
+                    result.getAllSelectableCount(),
+                    0,
+                    0,
+                    0,
+                    TableWithFiles.Mode.DIRECTORY,
+                    true
+            );
+
+            GuiHelperMethods.setVisibleAndManaged(chosenDirectoryPane, true);
+            GuiHelperMethods.setVisibleAndManaged(addRemoveFilesPane, false);
+        };
+
+        runInBackground(backgroundRunner, callback);
+    }
+
+    private static TableWithFiles.SortBy getTableSortBy(GuiSettings settings) {
+        return EnumUtils.getEnum(TableWithFiles.SortBy.class, settings.getSortBy().toString());
+    }
+
+    private static TableWithFiles.SortDirection getTableSortDirection(GuiSettings settings) {
+        return EnumUtils.getEnum(TableWithFiles.SortDirection.class, settings.getSortDirection().toString());
     }
 
     @FXML
@@ -301,98 +433,6 @@ public class ContentPaneController extends AbstractController {
 
     public void hide() {
         contentPane.setVisible(false);
-    }
-
-    void handleChosenFiles(List<File> files) {
-       /* //todo check if > 10000
-
-        try {
-            context.getSettings().saveLastDirectoryWithVideos(files.get(0).getParent());
-        } catch (GuiSettings.ConfigException e) {
-            log.error("failed to save last directory with videos, shouldn't happen: " + getStackTrace(e));
-        }
-
-        context.setWorkWithVideosInProgress(true);
-
-        directory = null;
-
-        LoadSeparateFilesTask backgroundRunner = new LoadSeparateFilesTask(
-                files,
-                context.getSettings().getSortBy(),
-                context.getSettings().getSortDirection(),
-                context
-        );
-
-        BackgroundRunnerCallback<LoadSeparateFilesTask.Result> callback = result -> {
-            filesInfo = result.getFilesInfo();
-            allGuiFilesInfo = result.getAllGuiFilesInfo();
-            updateTableContent(result.getGuiFilesToShowInfo(), TableWithFiles.Mode.SEPARATE_FILES, true);
-            hideUnavailableCheckbox.setSelected(result.isHideUnavailable());
-
-            chosenDirectoryPane.setVisible(false);
-            chosenDirectoryPane.setManaged(false);
-            addRemoveFilesPane.setVisible(true);
-            addRemoveFilesPane.setManaged(true);
-        };
-
-        runInBackground(backgroundRunner, callback);*/
-    }
-
-    void handleChosenDirectory(File directory) {
-        //todo check if > 10000
-
-        try {
-            context.getSettings().saveLastDirectoryWithVideos(directory.getAbsolutePath());
-        } catch (GuiSettings.ConfigException e) {
-            log.error(
-                    "failed to save last directory with videos, that shouldn't happen: "
-                            + ExceptionUtils.getStackTrace(e)
-            );
-        }
-
-        context.setWorkWithVideosInProgress(true);
-
-        this.directory = directory;
-
-        LoadDirectoryBackgroundRunner backgroundRunner = new LoadDirectoryBackgroundRunner(
-                this.directory,
-                context.getSettings().getSortBy(),
-                context.getSettings().getSortDirection(),
-                context
-        );
-
-        BackgroundRunnerCallback<LoadDirectoryBackgroundRunner.Result> callback = result -> {
-            filesInfo = result.getFilesInfo();
-            allTableFilesInfo = result.getAllTableFilesInfo();
-            hideUnavailableCheckbox.setSelected(result.isHideUnavailable());
-            chosenDirectoryField.setText(directory.getAbsolutePath());
-            tableWithFiles.setFilesInfo(
-                    result.getTableFilesToShowInfo(),
-                    TableWithFiles.SortBy.NAME,
-                    TableWithFiles.SortDirection.DESCENDING, //todo fix
-                    0,
-                    0,
-                    TableWithFiles.Mode.DIRECTORY,
-                    true
-            );
-
-            GuiUtils.setVisibleAndManaged(chosenDirectoryPane, true);
-            GuiUtils.setVisibleAndManaged(addRemoveFilesPane, false);
-        };
-
-        runInBackground(backgroundRunner, callback);
-    }
-
-    private static List<File> getFiles(Stage stage, GuiSettings settings) {
-        FileChooser fileChooser = new FileChooser();
-
-        fileChooser.setTitle("choose videos");
-        fileChooser.setInitialDirectory(settings.getLastDirectoryWithVideos());
-        fileChooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("mkv files (*.mkv)", "*.mkv")
-        );
-
-        return fileChooser.showOpenMultipleDialog(stage);
     }
 
     @FXML
@@ -772,19 +812,19 @@ public class ContentPaneController extends AbstractController {
     }*/
 
     private static String getStreamTitleForPreview(FileInfo fileInfo, FfmpegSubtitleStream stream) {
-        String videoFilePath = GuiUtils.getShortenedStringIfNecessary(
+        String videoFilePath = GuiHelperMethods.getShortenedStringIfNecessary(
                 fileInfo.getFile().getName(),
                 0,
                 128
         );
 
-        String language = GuiUtils.languageToString(stream.getLanguage()).toUpperCase();
+        String language = GuiHelperMethods.languageToString(stream.getLanguage()).toUpperCase();
 
         String streamTitle = "";
         if (!StringUtils.isBlank(stream.getTitle())) {
             streamTitle += String.format(
                     " (%s)",
-                    GuiUtils.getShortenedStringIfNecessary(
+                    GuiHelperMethods.getShortenedStringIfNecessary(
                             stream.getTitle(),
                             20,
                             0
@@ -796,7 +836,7 @@ public class ContentPaneController extends AbstractController {
     }
 
     private static String getStreamTitleForPreview(FileWithSubtitles fileWithSubtitles) {
-        return GuiUtils.getShortenedStringIfNecessary(
+        return GuiHelperMethods.getShortenedStringIfNecessary(
                 fileWithSubtitles.getFile().getAbsolutePath(),
                 0,
                 128

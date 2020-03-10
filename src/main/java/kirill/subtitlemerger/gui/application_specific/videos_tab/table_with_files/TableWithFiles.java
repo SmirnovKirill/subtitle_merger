@@ -4,17 +4,19 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.property.*;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyIntegerProperty;
+import javafx.beans.property.ReadOnlyIntegerWrapper;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import kirill.subtitlemerger.gui.GuiConstants;
-import kirill.subtitlemerger.gui.utils.GuiUtils;
+import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
 import kirill.subtitlemerger.gui.utils.custom_controls.ActionResultLabels;
 import kirill.subtitlemerger.gui.utils.entities.ActionResult;
-import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleOption;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -45,6 +47,8 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
     private ToggleGroup sortDirectionGroup;
 
+    private ObjectProperty<AllSelectedHandler> allSelectedHandler;
+
     private ObjectProperty<SortByChangeHandler> sortByChangeHandler;
 
     private ObjectProperty<SortDirectionChangeHandler> sortDirectionChangeHandler;
@@ -61,12 +65,17 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
     private ObjectProperty<MergedSubtitlePreviewHandler> mergedSubtitlePreviewHandler;
 
-    private BooleanProperty allSelected;
-
     private int allSelectableCount;
 
-    //todo read only
-    private IntegerProperty selectedCount;
+    private ReadOnlyIntegerWrapper allSelectedCount;
+
+    @Getter
+    private int selectedAvailableCount;
+
+    @Getter
+    private int selectedUnavailableCount;
+
+    private CheckBox allSelectedCheckBox;
 
     @Setter
     private Mode mode;
@@ -75,9 +84,10 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         cellCache = new HashMap<>();
         sortByGroup = new ToggleGroup();
         sortDirectionGroup = new ToggleGroup();
-        allSelected = new SimpleBooleanProperty(false);
-        selectedCount = new SimpleIntegerProperty(0);
+        allSelectedHandler = new SimpleObjectProperty<>();
+        allSelectedCount = new ReadOnlyIntegerWrapper();
 
+        allSelectedCheckBox = generateAlSelectedCheckBox();
         addColumns();
         setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
@@ -89,12 +99,27 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         sortDirectionGroup.selectedToggleProperty().addListener(this::sortDirectionChanged);
     }
 
+    private CheckBox generateAlSelectedCheckBox() {
+        CheckBox result = new CheckBox();
+
+        result.setOnAction(event -> {
+            AllSelectedHandler handler = allSelectedHandler.get();
+            if (handler == null) {
+                return;
+            }
+
+            handler.handle(result.isSelected());
+        });
+
+        return result;
+    }
+
     private void addColumns() {
         TableColumn<TableFileInfo, ?> selectedColumn = new TableColumn<>();
         selectedColumn.setCellFactory(
                 column -> new TableWithFilesCell<>(CellType.SELECTED, this::generateSelectedCellPane)
         );
-        selectedColumn.setGraphic(generateSelectAllCheckbox());
+        selectedColumn.setGraphic(generateAlSelectedCheckBox());
         selectedColumn.setMaxWidth(26);
         selectedColumn.setMinWidth(26);
         selectedColumn.setReorderable(false);
@@ -120,27 +145,6 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         getColumns().addAll(Arrays.asList(selectedColumn, fileDescriptionColumn, subtitleColumn));
     }
 
-    private CheckBox generateSelectAllCheckbox() {
-        CheckBox result = new CheckBox();
-
-        result.selectedProperty().bindBidirectional(allSelected);
-        result.setOnAction(event -> {
-            boolean allSelected = result.isSelected();
-
-            for (TableFileInfo fileInfo : getItems()) {
-                fileInfo.setSelected(allSelected);
-            }
-
-            if (allSelected) {
-                setSelectedCount(allSelectableCount);
-            } else {
-                setSelectedCount(0);
-            }
-        });
-
-        return result;
-    }
-
     private Pane generateSelectedCellPane(TableFileInfo fileInfo) {
         HBox result = new HBox();
 
@@ -159,19 +163,30 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         CheckBox selectedCheckBox = new CheckBox();
 
         selectedCheckBox.selectedProperty().bindBidirectional(fileInfo.selectedProperty());
-        selectedCheckBox.setOnAction(event -> {
-            if (selectedCheckBox.isSelected()) {
-                setSelectedCount(getSelectedCount() + 1);
-            } else {
-                setSelectedCount(getSelectedCount() - 1);
-            }
-
-            allSelected.set(getSelectedCount() > 0 && getSelectedCount() == allSelectableCount);
-        });
+        selectedCheckBox.setOnAction(event -> handlerFileSelectionChange(selectedCheckBox.isSelected(), fileInfo));
 
         result.getChildren().add(selectedCheckBox);
 
         return result;
+    }
+
+    private void handlerFileSelectionChange(boolean selected, TableFileInfo fileInfo) {
+        int addValue = selected ? 1 : -1;
+
+        if (StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
+            selectedAvailableCount += addValue;
+        } else {
+            selectedUnavailableCount += addValue;
+        }
+
+        /*
+         * It's very important that this line goes after the modification of the previous counters
+         * (selectedAvailableCount and selectedUnavailableCount) because this property will have subscribers and they
+         * need updated counter values there.
+         */
+        allSelectedCount.setValue(getAllSelectedCount() + addValue);
+
+        allSelectedCheckBox.setSelected(getAllSelectedCount() > 0 && getAllSelectedCount() == allSelectableCount);
     }
 
     private Pane generateFileDescriptionCellPane(TableFileInfo fileInfo) {
@@ -199,7 +214,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         Label sizeTitle = new Label("size");
         Label lastModifiedTitle = new Label("last modified");
 
-        Label size = new Label(GuiUtils.getFileSizeTextual(fileInfo.getSize()));
+        Label size = new Label(GuiHelperMethods.getFileSizeTextual(fileInfo.getSize()));
         Label lastModified = new Label(FORMATTER.print(fileInfo.getLastModified()));
 
         result.addRow(0, sizeTitle, size);
@@ -234,14 +249,14 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         }
 
         result.getChildren().addAll(
-                GuiUtils.createFixedHeightSpacer(1),
+                GuiHelperMethods.createFixedHeightSpacer(1),
                 generateRowWithActionsPane(
                         fileInfo,
                         addFileWithSubtitlesHandler,
                         allFileSubtitleLoader,
                         mergedSubtitlePreviewHandler
                 ),
-                GuiUtils.createFixedHeightSpacer(6),
+                GuiHelperMethods.createFixedHeightSpacer(6),
                 generateActionResultLabels(fileInfo)
         );
 
@@ -271,9 +286,9 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         result.setAlignment(Pos.CENTER_LEFT);
 
         if (subtitleOption.isHideable()) {
-            GuiUtils.bindVisibleAndManaged(result, Bindings.not(fileInfo.someOptionsHiddenProperty()));
+            GuiHelperMethods.bindVisibleAndManaged(result, Bindings.not(fileInfo.someOptionsHiddenProperty()));
         } else if (subtitleOption.isRemovable()) {
-            GuiUtils.bindVisibleAndManaged(result, subtitleOption.titleProperty().isNotEmpty());
+            GuiHelperMethods.bindVisibleAndManaged(result, subtitleOption.titleProperty().isNotEmpty());
         }
 
         result.getChildren().add(generateOptionTitleLabel(subtitleOption));
@@ -285,11 +300,11 @@ public class TableWithFiles extends TableView<TableFileInfo> {
                 removeSubtitleOptionHandler
         ).orElse(null);
         if (removeButton != null) {
-            result.getChildren().addAll(GuiUtils.createFixedWidthSpacer(10), removeButton);
+            result.getChildren().addAll(GuiHelperMethods.createFixedWidthSpacer(10), removeButton);
         }
 
         result.getChildren().addAll(
-                GuiUtils.createFixedWidthSpacer(15),
+                GuiHelperMethods.createFixedWidthSpacer(15),
                 generateSizeAndPreviewPane(
                         subtitleOption,
                         fileInfo,
@@ -297,7 +312,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
                         singleSubtitleLoader
                 ),
 
-                GuiUtils.createFixedWidthSpacer(15),
+                GuiHelperMethods.createFixedWidthSpacer(15),
                 generateSelectOptionPane(subtitleOption)
         );
 
@@ -323,7 +338,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
             return Optional.empty();
         }
 
-        Button result = GuiUtils.createImageButton(
+        Button result = GuiHelperMethods.createImageButton(
                 null,
                 "/gui/icons/remove.png",
                 8,
@@ -350,7 +365,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
     ) {
         StackPane result = new StackPane();
 
-        GuiUtils.setFixedWidth(result, SIZE_AND_PREVIEW_PANE_WIDTH);
+        GuiHelperMethods.setFixedWidth(result, SIZE_AND_PREVIEW_PANE_WIDTH);
 
         Pane knownSizeAndPreviewPane = generateKnownSizeAndPreviewPane(
                 subtitleOption,
@@ -381,7 +396,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         sizeLabel.setMaxWidth(Double.MAX_VALUE);
         sizeLabel.textProperty().bind(
                 Bindings.createStringBinding(() ->
-                        "Size: " + GuiUtils.getFileSizeTextual(subtitleOption.getSize()), subtitleOption.sizeProperty()
+                        "Size: " + GuiHelperMethods.getFileSizeTextual(subtitleOption.getSize()), subtitleOption.sizeProperty()
                 )
         );
 
@@ -400,7 +415,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
             TableFileInfo fileInfo,
             ObjectProperty<SubtitleOptionPreviewHandler> subtitleOptionPreviewHandler
     ) {
-        Button result = GuiUtils.createImageButton("", "/gui/icons/eye.png", 15, 10);
+        Button result = GuiHelperMethods.createImageButton("", "/gui/icons/eye.png", 15, 10);
 
         result.setOnAction(event -> {
             SubtitleOptionPreviewHandler handler = subtitleOptionPreviewHandler.get();
@@ -428,9 +443,9 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
         result.getChildren().addAll(
                 sizeLabel,
-                GuiUtils.createFixedWidthSpacer(10),
+                GuiHelperMethods.createFixedWidthSpacer(10),
                 generateLoadSubtitleLink(subtitleOption, fileInfo, singleSubtitleLoader),
-                GuiUtils.createFixedWidthSpacer(5),
+                GuiHelperMethods.createFixedWidthSpacer(5),
                 generateFailedToLoadLabel(subtitleOption)
         );
 
@@ -464,10 +479,10 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         Label result = new Label();
 
         result.setAlignment(Pos.CENTER);
-        result.setGraphic(GuiUtils.createImageView("/gui/icons/error.png", 12, 12));
+        result.setGraphic(GuiHelperMethods.createImageView("/gui/icons/error.png", 12, 12));
 
-        result.setTooltip(GuiUtils.generateTooltip(subtitleOption.failedToLoadReasonProperty()));
-        GuiUtils.bindVisibleAndManaged(result, subtitleOption.failedToLoadReasonProperty().isNotEmpty());
+        result.setTooltip(GuiHelperMethods.generateTooltip(subtitleOption.failedToLoadReasonProperty()));
+        GuiHelperMethods.bindVisibleAndManaged(result, subtitleOption.failedToLoadReasonProperty().isNotEmpty());
 
         return result;
     }
@@ -478,7 +493,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         result.setAlignment(Pos.CENTER);
         result.setSpacing(5);
 
-        GuiUtils.setFixedWidth(result, SELECT_OPTION_PANE_WIDTH);
+        GuiHelperMethods.setFixedWidth(result, SELECT_OPTION_PANE_WIDTH);
 
         setSelectOptionPaneTooltip(result, subtitleOption.getUnavailabilityReason());
         subtitleOption.unavailabilityReasonProperty().addListener(
@@ -502,7 +517,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         if (StringUtils.isBlank(unavailabilityReason)) {
             Tooltip.install(selectOptionPane, null);
         } else {
-            Tooltip.install(selectOptionPane, GuiUtils.generateTooltip(unavailabilityReason));
+            Tooltip.install(selectOptionPane, GuiHelperMethods.generateTooltip(unavailabilityReason));
         }
     }
 
@@ -519,7 +534,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         Hyperlink showHideLink = generateShowHideLink(fileInfo).orElse(null);
         if (showHideLink != null) {
             result.getChildren().add(showHideLink);
-            result.getChildren().add(GuiUtils.createFixedWidthSpacer(25));
+            result.getChildren().add(GuiHelperMethods.createFixedWidthSpacer(25));
         }
 
         Region spacer = new Region();
@@ -528,7 +543,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
                 generateAddFileButton(fileInfo, addFileWithSubtitlesHandler),
                 spacer,
                 generateLoadAllSubtitlesPane(fileInfo, allFileSubtitleLoader),
-                GuiUtils.createFixedWidthSpacer(15),
+                GuiHelperMethods.createFixedWidthSpacer(15),
                 generateMergedPreviewPane(fileInfo, mergedSubtitlePreviewHandler)
         );
 
@@ -558,7 +573,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
             TableFileInfo fileInfo,
             ObjectProperty<AddFileWithSubtitlesHandler> addFileWithSubtitlesHandler
     ) {
-        Button result = GuiUtils.createImageButton(
+        Button result = GuiHelperMethods.createImageButton(
                 "Add subtitles",
                 "/gui/icons/add.png",
                 9,
@@ -571,7 +586,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
         BooleanBinding canAddMoreFiles = lastButOneOption.titleProperty().isEmpty()
                 .or(lastOption.titleProperty().isEmpty());
-        GuiUtils.bindVisibleAndManaged(result, canAddMoreFiles);
+        result.visibleProperty().bind(canAddMoreFiles);
 
         result.setOnAction(event -> {
             AddFileWithSubtitlesHandler handler = addFileWithSubtitlesHandler.get();
@@ -592,13 +607,10 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         HBox result = new HBox();
 
         result.setAlignment(Pos.CENTER);
-        GuiUtils.setFixedWidth(result, SIZE_AND_PREVIEW_PANE_WIDTH);
+        GuiHelperMethods.setFixedWidth(result, SIZE_AND_PREVIEW_PANE_WIDTH);
 
         Hyperlink loadAllLink = new Hyperlink("load all subtitles");
-        GuiUtils.bindVisibleAndManaged(
-                loadAllLink,
-                fileInfo.optionsWithUnknownSizeCountProperty().greaterThan(0)
-        );
+        loadAllLink.visibleProperty().bind(fileInfo.optionsWithUnknownSizeCountProperty().greaterThan(0));
         loadAllLink.setOnAction(event -> {
             AllFileSubtitleLoader loader = allFileSubtitleLoader.get();
             if (loader == null) {
@@ -620,10 +632,10 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         HBox result = new HBox();
 
         result.setAlignment(Pos.CENTER);
-        GuiUtils.setFixedWidth(result, SELECT_OPTION_PANE_WIDTH);
-        GuiUtils.bindVisibleAndManaged(result, fileInfo.visibleOptionCountProperty().greaterThanOrEqualTo(2));
+        GuiHelperMethods.setFixedWidth(result, SELECT_OPTION_PANE_WIDTH);
+        result.visibleProperty().bind(fileInfo.visibleOptionCountProperty().greaterThanOrEqualTo(2));
 
-        Button previewButton = GuiUtils.createImageButton(
+        Button previewButton = GuiHelperMethods.createImageButton(
                 "result",
                 "/gui/icons/eye.png",
                 15,
@@ -667,13 +679,13 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
         if (upperOption == null || lowerOption == null) {
             previewButton.setDisable(true);
-            Tooltip.install(previewPane, GuiUtils.generateTooltip("Please select subtitles to merge first"));
+            Tooltip.install(previewPane, GuiHelperMethods.generateTooltip("Please select subtitles to merge first"));
         } else {
             boolean notLoaded = upperOption.getSize() == UNKNOWN_SIZE
                     || lowerOption.getSize() == UNKNOWN_SIZE;
             if (notLoaded) {
                 previewButton.setDisable(true);
-                Tooltip.install(previewPane, GuiUtils.generateTooltip("Please load selected subtitles first"));
+                Tooltip.install(previewPane, GuiHelperMethods.generateTooltip("Please load selected subtitles first"));
             } else {
                 previewButton.setDisable(false);
                 Tooltip.install(previewPane, null);
@@ -754,6 +766,18 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         }
 
         getSortDirectionChangeHandler().handle((SortDirection) newValue.getUserData());
+    }
+
+    public AllSelectedHandler getAllSelectedHandler() {
+        return allSelectedHandler.get();
+    }
+
+    public ObjectProperty<AllSelectedHandler> allSelectedHandlerProperty() {
+        return allSelectedHandler;
+    }
+
+    public void setAllSelectedHandler(AllSelectedHandler allSelectedHandler) {
+        this.allSelectedHandler.set(allSelectedHandler);
     }
 
     public SortByChangeHandler getSortByChangeHandler() {
@@ -844,8 +868,10 @@ public class TableWithFiles extends TableView<TableFileInfo> {
             List<TableFileInfo> filesInfo,
             SortBy sortBy,
             SortDirection sortDirection,
-            int selectedCount,
             int allSelectableCount,
+            int selectedAvailableCount,
+            int selectedUnavailableCount,
+            int allSelectedCount,
             Mode mode,
             boolean clearCache
     ) {
@@ -854,9 +880,18 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         }
 
         updateSortToggles(sortBy, sortDirection);
-        setSelectedCount(selectedCount);
         this.allSelectableCount = allSelectableCount;
-        allSelected.set(selectedCount > 0 && selectedCount == allSelectableCount);
+        this.selectedAvailableCount = selectedAvailableCount;
+        this.selectedUnavailableCount = selectedUnavailableCount;
+
+        /*
+         * It's very important that this line goes after the modification of the previous counters
+         * (selectedAvailableCount and selectedUnavailableCount) because this property will have subscribers and they
+         * need updated counter values there.
+         */
+        this.allSelectedCount.setValue(allSelectedCount);
+
+        allSelectedCheckBox.setSelected(allSelectedCount > 0 && allSelectedCount == allSelectableCount);
         setMode(mode);
         setItems(FXCollections.observableArrayList(filesInfo));
     }
@@ -883,12 +918,31 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         clearCache();
         sortByGroup.selectToggle(null);
         sortDirectionGroup.selectToggle(null);
-        setSelectedCount(0);
-        this.allSelectableCount = 0;
-        allSelected.set(false);
+        allSelectableCount = 0;
+        selectedAvailableCount = 0;
+        selectedUnavailableCount = 0;
+
+        /*
+         * It's very important that this line goes after the modification of the previous counters
+         * (selectedAvailableCount and selectedUnavailableCount) because this property will have subscribers and they
+         * need updated counter values there.
+         */
+        allSelectedCount.setValue(0);
+
+        allSelectedCheckBox.setSelected(false);
         setMode(null);
         setItems(FXCollections.emptyObservableList());
         System.gc();
+    }
+
+    public void setSelected(boolean selected, TableFileInfo fileInfo) {
+        if (fileInfo.isSelected() == selected) {
+            return;
+        }
+
+        fileInfo.setSelected(selected);
+
+        handlerFileSelectionChange(selected, fileInfo);
     }
 
     public void removeFileWithSubtitles(TableSubtitleOption option, TableFileInfo fileInfo) {
@@ -1043,13 +1097,13 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         } else if (processedCount == 0) {
             warn = "Task has been cancelled, nothing was loaded";
         } else if (loadedSuccessfullyCount == subtitlesToLoadCount) {
-            success = GuiUtils.getTextDependingOnTheCount(
+            success = GuiHelperMethods.getTextDependingOnTheCount(
                     loadedSuccessfullyCount,
                     "Subtitles have been loaded successfully",
                     "All %d subtitles have been loaded successfully"
             );
         } else if (failedToLoadCount == subtitlesToLoadCount) {
-            error = GuiUtils.getTextDependingOnTheCount(
+            error = GuiHelperMethods.getTextDependingOnTheCount(
                     failedToLoadCount,
                     "Failed to load subtitles",
                     "Failed to load all %d subtitles"
@@ -1065,7 +1119,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
             if (processedCount != subtitlesToLoadCount) {
                 if (loadedSuccessfullyCount == 0) {
-                    warn = GuiUtils.getTextDependingOnTheCount(
+                    warn = GuiHelperMethods.getTextDependingOnTheCount(
                             subtitlesToLoadCount - processedCount,
                             String.format(
                                     "1/%d subtitle loadings has been cancelled",
@@ -1123,6 +1177,11 @@ public class TableWithFiles extends TableView<TableFileInfo> {
     }
 
     @FunctionalInterface
+    public interface AllSelectedHandler {
+        void handle(boolean allSelected);
+    }
+
+    @FunctionalInterface
     public interface SortByChangeHandler {
         void handle(SortBy sortBy);
     }
@@ -1162,16 +1221,12 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         void showPreview(TableFileInfo fileInfo);
     }
 
-    public int getSelectedCount() {
-        return selectedCount.get();
+    public int getAllSelectedCount() {
+        return allSelectedCount.get();
     }
 
-    public IntegerProperty selectedCountProperty() {
-        return selectedCount;
-    }
-
-    public void setSelectedCount(int selectedCount) {
-        this.selectedCount.set(selectedCount);
+    public ReadOnlyIntegerProperty allSelectedCountProperty() {
+        return allSelectedCount.getReadOnlyProperty();
     }
 
     @AllArgsConstructor
@@ -1202,7 +1257,9 @@ public class TableWithFiles extends TableView<TableFileInfo> {
                 Pane newPane = cellPaneGenerator.generatePane(fileInfo);
 
                 if (fileInfo.getUnavailabilityReason() != null) {
-                    newPane.getStyleClass().add(PANE_UNAVAILABLE_CLASS);
+                    if (cellType != CellType.SELECTED) {
+                        newPane.getStyleClass().add(PANE_UNAVAILABLE_CLASS);
+                    }
                 } else {
                     setOrRemoveErrorClass(fileInfo, newPane);
                     fileInfo.actionResultProperty().addListener(observable -> setOrRemoveErrorClass(fileInfo, newPane));
@@ -1234,7 +1291,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
     private enum CellType {
         SELECTED,
         FILE_DESCRIPTION,
-        SUBTITLES;
+        SUBTITLES
     }
 
     public enum Mode {

@@ -13,7 +13,7 @@ import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import kirill.subtitlemerger.gui.GuiConstants;
-import kirill.subtitlemerger.gui.utils.GuiUtils;
+import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerCallback;
 import kirill.subtitlemerger.gui.utils.custom_controls.ActionResultLabels;
@@ -103,11 +103,11 @@ public class SubtitlePreviewController extends AbstractController {
         this.dialogStage = dialogStage;
 
         this.title.setText(title);
-        GuiUtils.setVisibleAndManaged(mergedUpperPane, false);
-        GuiUtils.setVisibleAndManaged(mergedLowerPane, false);
-        GuiUtils.setVisibleAndManaged(encodingPane, false);
+        GuiHelperMethods.setVisibleAndManaged(mergedUpperPane, false);
+        GuiHelperMethods.setVisibleAndManaged(mergedLowerPane, false);
+        GuiHelperMethods.setVisibleAndManaged(encodingPane, false);
         listView.setSelectionModel(new NoSelectionModel<>());
-        GuiUtils.setVisibleAndManaged(cancelSavePane, false);
+        GuiHelperMethods.setVisibleAndManaged(cancelSavePane, false);
 
         getPreviewInfoAndUpdateScene(true);
     }
@@ -126,9 +126,9 @@ public class SubtitlePreviewController extends AbstractController {
         title.setText("This is the result of merging");
         mergedUpperTitle.setText(upperTitle);
         mergedLowerTitle.setText(lowerTitle);
-        GuiUtils.setVisibleAndManaged(encodingPane, false);
+        GuiHelperMethods.setVisibleAndManaged(encodingPane, false);
         listView.setSelectionModel(new NoSelectionModel<>());
-        GuiUtils.setVisibleAndManaged(cancelSavePane, false);
+        GuiHelperMethods.setVisibleAndManaged(cancelSavePane, false);
 
         getPreviewInfoAndUpdateScene(true);
     }
@@ -146,19 +146,19 @@ public class SubtitlePreviewController extends AbstractController {
         this.dialogStage = dialogStage;
 
         title.setText(
-                GuiUtils.getShortenedStringIfNecessary(
+                GuiHelperMethods.getShortenedStringIfNecessary(
                         fileFullPath,
                         0,
                         128
                 )
         );
-        GuiUtils.setVisibleAndManaged(mergedUpperPane, false);
-        GuiUtils.setVisibleAndManaged(mergedLowerPane, false);
+        GuiHelperMethods.setVisibleAndManaged(mergedUpperPane, false);
+        GuiHelperMethods.setVisibleAndManaged(mergedLowerPane, false);
         encodingComboBox.setConverter(CHARSET_STRING_CONVERTER);
         encodingComboBox.getItems().setAll(GuiConstants.SUPPORTED_ENCODINGS);
         encodingComboBox.getSelectionModel().select(originalEncoding);
         listView.setSelectionModel(new NoSelectionModel<>());
-        GuiUtils.setVisibleAndManaged(okPane, false);
+        GuiHelperMethods.setVisibleAndManaged(okPane, false);
 
         getPreviewInfoAndUpdateScene(true);
     }

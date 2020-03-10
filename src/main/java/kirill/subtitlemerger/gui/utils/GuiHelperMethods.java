@@ -26,7 +26,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 @CommonsLog
-public class GuiUtils {
+public class GuiHelperMethods {
     /**
      * Set change listeners so that the onChange method will be invoked each time Enter button is pressed or the focus
      * is lost.
@@ -155,7 +155,7 @@ public class GuiUtils {
     }
 
     public static void initializeCustomControl(String path, Object root) {
-        FXMLLoader fxmlLoader = new FXMLLoader(GuiUtils.class.getResource(path));
+        FXMLLoader fxmlLoader = new FXMLLoader(GuiHelperMethods.class.getResource(path));
 
         fxmlLoader.setRoot(root);
         fxmlLoader.setController(root);
@@ -169,7 +169,7 @@ public class GuiUtils {
     }
 
     public static <T extends Node, S> NodeAndController<T, S> loadNodeAndController(String path) {
-        FXMLLoader fxmlLoader = new FXMLLoader(GuiUtils.class.getResource(path));
+        FXMLLoader fxmlLoader = new FXMLLoader(GuiHelperMethods.class.getResource(path));
 
         T node;
         try {

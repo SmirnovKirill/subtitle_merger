@@ -5,6 +5,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.scene.control.ProgressIndicator;
 
 public class BackgroundRunnerManager {
     private BooleanProperty cancellationPossible;
@@ -39,6 +40,10 @@ public class BackgroundRunnerManager {
 
     public void updateProgress(double workDone, double max) {
         task.updateProgress(workDone, max);
+    }
+
+    public void setIndeterminateProgress() {
+        updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
     }
 
     public ReadOnlyDoubleProperty progressProperty() {

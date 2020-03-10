@@ -5,7 +5,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
-import kirill.subtitlemerger.gui.utils.GuiUtils;
+import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
 import lombok.Getter;
 
 @Getter
@@ -20,7 +20,7 @@ public class MergeModeCharacteristicTable extends GridPane {
     private Label diskUsageLabel;
 
     public MergeModeCharacteristicTable() {
-        GuiUtils.initializeCustomControl("/gui/application_specific/settings_tab/mergeModeCharacteristicTable.fxml", this);
+        GuiHelperMethods.initializeCustomControl("/gui/application_specific/settings_tab/mergeModeCharacteristicTable.fxml", this);
     }
 
     public StringProperty convenienceTextProperty() {

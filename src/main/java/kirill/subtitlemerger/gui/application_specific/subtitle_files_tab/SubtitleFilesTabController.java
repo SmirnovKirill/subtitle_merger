@@ -13,7 +13,7 @@ import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.application_specific.AbstractController;
 import kirill.subtitlemerger.gui.application_specific.SubtitlePreviewController;
-import kirill.subtitlemerger.gui.utils.GuiUtils;
+import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerCallback;
 import kirill.subtitlemerger.gui.utils.custom_controls.ActionResultLabels;
@@ -93,15 +93,15 @@ public class SubtitleFilesTabController extends AbstractController {
         this.settings = context.getSettings();
         this.filesInfo = new FilesInfo(null, null, null, null);
 
-        GuiUtils.setTextFieldChangeListeners(
+        GuiHelperMethods.setTextFieldChangeListeners(
                 upperPathField,
                 (path) -> processInputFilePath(path, InputFileType.UPPER_SUBTITLES, FileOrigin.TEXT_FIELD)
         );
-        GuiUtils.setTextFieldChangeListeners(
+        GuiHelperMethods.setTextFieldChangeListeners(
                 lowerPathField,
                 (path) -> processInputFilePath(path, InputFileType.LOWER_SUBTITLES, FileOrigin.TEXT_FIELD)
         );
-        GuiUtils.setTextFieldChangeListeners(
+        GuiHelperMethods.setTextFieldChangeListeners(
                 mergedPathField,
                 (path) -> processMergedFilePath(path, FileOrigin.TEXT_FIELD)
         );
@@ -473,7 +473,7 @@ public class SubtitleFilesTabController extends AbstractController {
     }
 
     private static String getShortenedPath(String path) {
-        return GuiUtils.getShortenedStringIfNecessary(path, 20, 40);
+        return GuiHelperMethods.getShortenedStringIfNecessary(path, 20, 40);
     }
 
     private static String getErrorText(String path, IncorrectMergedFileReason reason) {
@@ -552,21 +552,21 @@ public class SubtitleFilesTabController extends AbstractController {
 
         Stage dialogStage = new Stage();
 
-        String fileName = GuiUtils.getShortenedStringIfNecessary(
+        String fileName = GuiHelperMethods.getShortenedStringIfNecessary(
                 mergedFileInfo.getFile().getName(),
                 0,
                 32
         );
         String parentName = "-";
         if (mergedFileInfo.getParent() != null) {
-            parentName = GuiUtils.getShortenedStringIfNecessary(
+            parentName = GuiHelperMethods.getShortenedStringIfNecessary(
                     mergedFileInfo.getParent().getName(),
                     0,
                     32
             );
         }
 
-        NodeAndController<Pane, FileExistsDialogController> nodeAndController = GuiUtils.loadNodeAndController(
+        NodeAndController<Pane, FileExistsDialogController> nodeAndController = GuiHelperMethods.loadNodeAndController(
                 "/gui/application_specific/subtitle_files_tab/fileExistsDialog.fxml"
         );
         nodeAndController.getController().initialize(fileName, parentName, dialogStage);
@@ -597,7 +597,7 @@ public class SubtitleFilesTabController extends AbstractController {
     private SubtitlePreviewController.UserSelection showInputSubtitlePreview(InputFileInfo fileInfo) {
         Stage dialogStage = new Stage();
 
-        NodeAndController<Pane, SubtitlePreviewController> nodeAndController = GuiUtils.loadNodeAndController(
+        NodeAndController<Pane, SubtitlePreviewController> nodeAndController = GuiHelperMethods.loadNodeAndController(
                 "/gui/application_specific/subtitlePreview.fxml"
         );
 
@@ -724,19 +724,19 @@ public class SubtitleFilesTabController extends AbstractController {
 
             Stage dialogStage = new Stage();
 
-            String upperTitle = "file " + GuiUtils.getShortenedStringIfNecessary(
+            String upperTitle = "file " + GuiHelperMethods.getShortenedStringIfNecessary(
                     filesInfo.getUpperFileInfo().getPath(),
                     0,
                     64
             );
 
-            String lowerTitle = "file " + GuiUtils.getShortenedStringIfNecessary(
+            String lowerTitle = "file " + GuiHelperMethods.getShortenedStringIfNecessary(
                     filesInfo.getLowerFileInfo().getPath(),
                     0,
                     64
             );
 
-            NodeAndController<Pane, SubtitlePreviewController> nodeAndController = GuiUtils.loadNodeAndController(
+            NodeAndController<Pane, SubtitlePreviewController> nodeAndController = GuiHelperMethods.loadNodeAndController(
                     "/gui/application_specific/subtitlePreview.fxml"
             );
             nodeAndController.getController().initializeMerged(subtitles, upperTitle, lowerTitle, dialogStage);
