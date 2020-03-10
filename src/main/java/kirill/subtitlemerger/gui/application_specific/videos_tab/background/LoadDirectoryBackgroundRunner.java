@@ -93,7 +93,8 @@ public class LoadDirectoryBackgroundRunner implements BackgroundRunner<LoadDirec
             List<TableFileInfo> tableFilesToShowInfo,
             BackgroundRunnerManager runnerManager
     ) {
-        runnerManager.updateMessage("getting number of all selectable files...");
+        runnerManager.setIndeterminateProgress();
+        runnerManager.updateMessage("calculating number of files...");
 
         return (int) tableFilesToShowInfo.stream()
                 .filter(fileInfo -> StringUtils.isBlank(fileInfo.getUnavailabilityReason()))

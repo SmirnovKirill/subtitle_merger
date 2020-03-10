@@ -199,6 +199,8 @@ public class ContentPaneController extends AbstractController {
         }
 
         context.setWorkWithVideosInProgress(true);
+        GuiHelperMethods.setVisibleAndManaged(addRemoveFilesPane, true);
+        hideUnavailableCheckbox.setSelected(false);
         directory = null;
 
         LoadSeparateFilesTask backgroundRunner = new LoadSeparateFilesTask(
@@ -211,7 +213,7 @@ public class ContentPaneController extends AbstractController {
         BackgroundRunnerCallback<LoadSeparateFilesTask.Result> callback = result -> {
             filesInfo = result.getFilesInfo();
             allTableFilesInfo = result.getAllTableFilesInfo();
-            hideUnavailableCheckbox.setSelected(false);
+
             tableWithFiles.setFilesInfo(
                     result.getTableFilesToShowInfo(),
                     getTableSortBy(context.getSettings()),
@@ -223,9 +225,6 @@ public class ContentPaneController extends AbstractController {
                     TableWithFiles.Mode.SEPARATE_FILES,
                     true
             );
-
-            GuiHelperMethods.setVisibleAndManaged(chosenDirectoryPane, false);
-            GuiHelperMethods.setVisibleAndManaged(addRemoveFilesPane, true);
         };
 
         runInBackground(backgroundRunner, callback);
@@ -244,6 +243,7 @@ public class ContentPaneController extends AbstractController {
         }
 
         context.setWorkWithVideosInProgress(true);
+        GuiHelperMethods.setVisibleAndManaged(chosenDirectoryPane, true);
         chosenDirectoryField.setText(directory.getAbsolutePath());
         this.directory = directory;
 
@@ -257,6 +257,7 @@ public class ContentPaneController extends AbstractController {
         BackgroundRunnerCallback<LoadDirectoryBackgroundRunner.Result> callback = result -> {
             filesInfo = result.getFilesInfo();
             allTableFilesInfo = result.getAllTableFilesInfo();
+
             hideUnavailableCheckbox.setSelected(result.isHideUnavailable());
             tableWithFiles.setFilesInfo(
                     result.getTableFilesToShowInfo(),
@@ -269,9 +270,6 @@ public class ContentPaneController extends AbstractController {
                     TableWithFiles.Mode.DIRECTORY,
                     true
             );
-
-            GuiHelperMethods.setVisibleAndManaged(chosenDirectoryPane, true);
-            GuiHelperMethods.setVisibleAndManaged(addRemoveFilesPane, false);
         };
 
         runInBackground(backgroundRunner, callback);
@@ -437,12 +435,15 @@ public class ContentPaneController extends AbstractController {
 
     @FXML
     private void backToSelectionClicked() {
-        tableWithFiles.clearTable();
+        GuiHelperMethods.setVisibleAndManaged(chosenDirectoryPane, false);
+        chosenDirectoryField.setText(null);
+        GuiHelperMethods.setVisibleAndManaged(addRemoveFilesPane, false);
 
         generalResult.clear();
         lastProcessedFileInfo = null;
-        context.setWorkWithVideosInProgress(false);
+        tableWithFiles.clearTable();
 
+        context.setWorkWithVideosInProgress(false);
         videosTabController.setActivePane(VideosTabController.ActivePane.CHOICE);
     }
 
