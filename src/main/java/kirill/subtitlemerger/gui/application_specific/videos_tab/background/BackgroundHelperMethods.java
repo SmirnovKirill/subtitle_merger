@@ -109,7 +109,7 @@ class BackgroundHelperMethods {
         boolean haveHideableOptions = subtitleOptions.stream().anyMatch(TableSubtitleOption::isHideable);
 
         return new TableFileInfo(
-                fileInfo.getFile().getAbsolutePath(),
+                fileInfo.getId(),
                 selected,
                 pathToDisplay,
                 fileInfo.getSize(),

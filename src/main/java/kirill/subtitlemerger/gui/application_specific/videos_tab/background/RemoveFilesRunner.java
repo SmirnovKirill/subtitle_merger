@@ -1,0 +1,76 @@
+package kirill.subtitlemerger.gui.application_specific.videos_tab.background;
+
+import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
+import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
+import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@AllArgsConstructor
+public class RemoveFilesRunner implements BackgroundRunner<RemoveFilesRunner.Result> {
+    private List<FileInfo> filesInfo;
+
+    private TableWithFiles.Mode mode;
+
+    private List<TableFileInfo> allTableFilesInfo;
+
+    private List<TableFileInfo> originalTableFilesToShowInfo;
+
+    @Override
+    public Result run(BackgroundRunnerManager runnerManager) {
+        List<String> selectedFileIds =getSelectedFileIds(originalTableFilesToShowInfo, runnerManager);
+
+        int originalSize = filesInfo.size();
+
+        runnerManager.setIndeterminateProgress();
+        runnerManager.updateMessage("removing files...");
+
+        filesInfo.removeIf(fileInfo -> selectedFileIds.contains(fileInfo.getId()));
+        allTableFilesInfo.removeIf(fileInfo -> selectedFileIds.contains(fileInfo.getId()));
+        List<TableFileInfo> tableFilesToShowInfo = originalTableFilesToShowInfo.stream()
+                .filter(fileInfo -> !selectedFileIds.contains(fileInfo.getId()))
+                .collect(Collectors.toList());
+
+        return new Result(
+                originalSize - filesInfo.size(),
+                filesInfo,
+                allTableFilesInfo,
+                new TableFilesToShowInfo(
+                        tableFilesToShowInfo,
+                        BackgroundHelperMethods.getAllSelectableCount(tableFilesToShowInfo, mode, runnerManager),
+                        BackgroundHelperMethods.getSelectedAvailableCount(tableFilesToShowInfo, runnerManager),
+                        BackgroundHelperMethods.getSelectedUnavailableCount(tableFilesToShowInfo, runnerManager)
+                )
+        );
+    }
+
+    private static List<String> getSelectedFileIds(
+            List<TableFileInfo> filesInfo,
+            BackgroundRunnerManager runnerManager
+    ) {
+        runnerManager.setIndeterminateProgress();
+        runnerManager.updateMessage("getting list of files to remove...");
+
+        return filesInfo.stream()
+                .filter(TableFileInfo::isSelected)
+                .map(TableFileInfo::getId)
+                .collect(Collectors.toList());
+    }
+
+    @AllArgsConstructor
+    @Getter
+    public static class Result {
+        private int removedCount;
+
+        private List<FileInfo> filesInfo;
+
+        private List<TableFileInfo> allTableFilesInfo;
+
+        private TableFilesToShowInfo tableFilesToShowInfo;
+    }
+}

@@ -1,7 +1,6 @@
 package kirill.subtitlemerger.logic.work_with_files.entities;
 
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.VideoFormat;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
@@ -11,10 +10,11 @@ import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@AllArgsConstructor
 @Getter
 public
 class FileInfo {
+    private String id;
+
     private File file;
 
     private LocalDateTime lastModified;
@@ -41,6 +41,7 @@ class FileInfo {
             List<SubtitleOption> subtitleOptions,
             MergedSubtitleInfo mergedSubtitleInfo
     ) {
+        this.id = file.getAbsolutePath();
         this.file = file;
         lastModified = new LocalDateTime(file.lastModified());
         size = file.length();

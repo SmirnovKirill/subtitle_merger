@@ -10,10 +10,7 @@ import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.application_specific.AbstractController;
-import kirill.subtitlemerger.gui.application_specific.videos_tab.background.LoadDirectoryRunner;
-import kirill.subtitlemerger.gui.application_specific.videos_tab.background.LoadSeparateFilesRunner;
-import kirill.subtitlemerger.gui.application_specific.videos_tab.background.SortHideUnavailableRunner;
-import kirill.subtitlemerger.gui.application_specific.videos_tab.background.TableFilesToShowInfo;
+import kirill.subtitlemerger.gui.application_specific.videos_tab.background.*;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
@@ -530,71 +527,6 @@ public class ContentPaneController extends AbstractController {
         }*/
     }
 
-    @FXML
-    private void removeButtonClicked() {
-      /*  generalResult.clear();
-        clearLastProcessedResult();
-
-        RemoveFilesTask backgroundRunner = new RemoveFilesTask(
-                filesInfo,
-                allGuiFilesInfo,
-                tableWithFiles.getItems()
-        );
-
-        BackgroundRunnerCallback<RemoveFilesTask.Result> callback = result -> {
-            filesInfo = result.getFilesInfo();
-            allGuiFilesInfo = result.getAllGuiFilesInfo();
-            updateTableContent(result.getGuiFilesToShowInfo(), tableWithFiles.getMode(), false);
-
-            if (result.getRemovedCount() == 0) {
-                log.error("nothing has been removed, that shouldn't happen");
-                throw new IllegalStateException();
-            } else if (result.getRemovedCount() == 1) {
-                generalResult.setOnlySuccess("File has been removed from the list successfully");
-            } else {
-                generalResult.setOnlySuccess(result.getRemovedCount() + " files have been removed from the list successfully");
-            }
-        };
-
-        runInBackground(backgroundRunner, callback);*/
-    }
-
-    @FXML
-    private void addButtonClicked() {
-       /* generalResult.clear();
-        clearLastProcessedResult();
-
-        List<File> filesToAdd = getFiles(stage, context.getSettings());
-        if (CollectionUtils.isEmpty(filesToAdd)) {
-            return;
-        }
-
-        try {
-            context.getSettings().saveLastDirectoryWithVideos(filesToAdd.get(0).getParent());
-        } catch (GuiSettings.ConfigException e) {
-            log.error("failed to save last directory with videos, that shouldn't happen: " + getStackTrace(e));
-        }
-
-        AddFilesTask backgroundRunner = new AddFilesTask(
-                filesInfo,
-                filesToAdd,
-                allGuiFilesInfo,
-                hideUnavailableCheckbox.isSelected(),
-                context.getSettings().getSortBy(),
-                context.getSettings().getSortDirection(),
-                context
-        );
-
-        BackgroundRunnerCallback<AddFilesTask.Result> callback = result -> {
-            filesInfo = result.getFilesInfo();
-            allGuiFilesInfo = result.getAllGuiFilesInfo();
-            updateTableContent(result.getGuiFilesToShowInfo(), tableWithFiles.getMode(), false);
-            generalResult.set(AddFilesTask.generateMultiPartResult(result));
-        };
-
-        runInBackground(backgroundRunner, callback);*/
-    }
-
    /* private void addExternalSubtitleFileClicked(GuiFileInfo guiFileInfo, Runnable onFinish) {
         generalResult.clear();
         clearLastProcessedResult();
@@ -1034,6 +966,87 @@ public class ContentPaneController extends AbstractController {
 
         runInBackground(backgroundRunner, callback);
     }*/
+
+    @FXML
+    private void removeButtonClicked() {
+        generalResult.clear();
+        clearLastProcessedResult();
+
+        RemoveFilesRunner backgroundRunner = new RemoveFilesRunner(
+                filesInfo,
+                tableWithFiles.getMode(),
+                allTableFilesInfo,
+                tableWithFiles.getItems()
+        );
+
+        BackgroundRunnerCallback<RemoveFilesRunner.Result> callback = result -> {
+            filesInfo = result.getFilesInfo();
+            allTableFilesInfo = result.getAllTableFilesInfo();
+
+            tableWithFiles.setFilesInfo(
+                    result.getTableFilesToShowInfo().getFilesInfo(),
+                    getTableSortBy(context.getSettings()),
+                    getTableSortDirection(context.getSettings()),
+                    result.getTableFilesToShowInfo().getAllSelectableCount(),
+                    result.getTableFilesToShowInfo().getSelectedAvailableCount(),
+                    result.getTableFilesToShowInfo().getSelectedUnavailableCount(),
+                    tableWithFiles.getMode(),
+                    false
+            );
+
+            if (result.getRemovedCount() == 0) {
+                log.error("nothing has been removed, that shouldn't happen");
+                throw new IllegalStateException();
+            } else if (result.getRemovedCount() == 1) {
+                generalResult.setOnlySuccess("File has been removed from the list successfully");
+            } else {
+                generalResult.setOnlySuccess(
+                        result.getRemovedCount() + " files have been removed from the list successfully"
+                );
+            }
+        };
+
+        runInBackground(backgroundRunner, callback);
+    }
+
+    @FXML
+    private void addButtonClicked() {
+        generalResult.clear();
+        clearLastProcessedResult();
+
+        List<File> filesToAdd = getFiles(stage, context.getSettings());
+        if (CollectionUtils.isEmpty(filesToAdd)) {
+            return;
+        }
+
+        try {
+            context.getSettings().saveLastDirectoryWithVideos(filesToAdd.get(0).getParent());
+        } catch (GuiSettings.ConfigException e) {
+            log.error(
+                    "failed to save last directory with videos, that shouldn't happen: "
+                            + ExceptionUtils.getStackTrace(e)
+            );
+        }
+
+        AddFilesRunner backgroundRunner = new AddFilesRunner(
+                filesInfo,
+                filesToAdd,
+                allGuiFilesInfo,
+                hideUnavailableCheckbox.isSelected(),
+                context.getSettings().getSortBy(),
+                context.getSettings().getSortDirection(),
+                context
+        );
+
+        BackgroundRunnerCallback<AddFilesRunner.Result> callback = result -> {
+            filesInfo = result.getFilesInfo();
+            allGuiFilesInfo = result.getAllGuiFilesInfo();
+            updateTableContent(result.getGuiFilesToShowInfo(), tableWithFiles.getMode(), false);
+            generalResult.set(AddFilesRunner.generateActionResult(result));
+        };
+
+        runInBackground(backgroundRunner, callback);
+    }
 
     @AllArgsConstructor
     @Getter

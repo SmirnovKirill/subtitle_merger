@@ -1,10 +1,10 @@
-package kirill.subtitlemerger.gui.application_specific.videos_tab.loaders_and_handlers;
+package kirill.subtitlemerger.gui.application_specific.videos_tab.background;
 
-import javafx.scene.control.ProgressIndicator;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
-import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.GuiFileInfo;
-import kirill.subtitlemerger.gui.utils.GuiUtils;
+import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
+import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
+import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.gui.utils.entities.ActionResult;
@@ -17,12 +17,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
-public class AddFilesTask implements BackgroundRunner<AddFilesTask.Result> {
+@AllArgsConstructor
+public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
     private List<FileInfo> filesInfo;
 
     private List<File> filesToAdd;
 
-    private List<GuiFileInfo> allGuiFilesInfo;
+    private List<TableFileInfo> allTableFilesInfo;
+
+    private TableWithFiles.Mode mode;
 
     private boolean hideUnavailable;
 
@@ -30,50 +33,51 @@ public class AddFilesTask implements BackgroundRunner<AddFilesTask.Result> {
 
     private GuiSettings.SortDirection sortDirection;
 
-    private GuiContext guiContext;
-
-    public AddFilesTask(
-            List<FileInfo> filesInfo,
-            List<File> filesToAdd,
-            List<GuiFileInfo> allGuiFilesInfo,
-            boolean hideUnavailable,
-            GuiSettings.SortBy sortBy,
-            GuiSettings.SortDirection sortDirection,
-            GuiContext guiContext
-    ) {
-        this.filesInfo = filesInfo;
-        this.filesToAdd = filesToAdd;
-        this.allGuiFilesInfo = allGuiFilesInfo;
-        this.hideUnavailable = hideUnavailable;
-        this.sortBy = sortBy;
-        this.sortDirection = sortDirection;
-        this.guiContext = guiContext;
-    }
+    private GuiContext context;
 
     @Override
     public Result run(BackgroundRunnerManager runnerManager) {
-        List<FileInfo> filesToAddInfo = LoadDirectoryFilesTask.getFilesInfo(filesToAdd, guiContext.getFfprobe(), runnerManager);
-        int allFilesToAdd = filesToAddInfo.size();
+        List<FileInfo> filesToAddInfo = BackgroundHelperMethods.getFilesInfo(
+                filesToAdd,
+                context.getFfprobe(),
+                runnerManager
+        );
         removeAlreadyAdded(filesToAddInfo, filesInfo, runnerManager);
-        List<GuiFileInfo> guiFilesToAddInfo = LoadDirectoryFilesTask.convert(
+        filesInfo.addAll(filesToAddInfo);
+
+        List<TableFileInfo> tableFilesToAddInfo = BackgroundHelperMethods.tableFilesInfoFrom(
                 filesToAddInfo,
                 true,
                 true,
                 runnerManager,
-                guiContext.getSettings()
+                context.getSettings()
         );
-        filesInfo.addAll(filesToAddInfo);
-        allGuiFilesInfo.addAll(guiFilesToAddInfo);
+        allTableFilesInfo.addAll(tableFilesToAddInfo);
 
-        List<GuiFileInfo> guiFilesToShowInfo = LoadDirectoryFilesTask.getFilesInfoToShow(
-                allGuiFilesInfo,
-                hideUnavailable,
+        List<TableFileInfo> filesToShowInfo = null;
+        if (hideUnavailable) {
+            filesToShowInfo = BackgroundHelperMethods.getOnlyAvailableFilesInfo(allTableFilesInfo, runnerManager);
+        }
+
+        filesToShowInfo = BackgroundHelperMethods.getSortedFilesInfo(
+                filesToShowInfo != null ? filesToShowInfo : allTableFilesInfo,
                 sortBy,
                 sortDirection,
                 runnerManager
         );
 
-        return new Result(allFilesToAdd, filesToAddInfo.size(), filesInfo, allGuiFilesInfo, guiFilesToShowInfo);
+        return new Result(
+                filesToAdd.size(),
+                filesToAddInfo.size(),
+                filesInfo,
+                allTableFilesInfo,
+                new TableFilesToShowInfo(
+                        filesToShowInfo,
+                        BackgroundHelperMethods.getAllSelectableCount(filesToShowInfo, mode, runnerManager),
+                        BackgroundHelperMethods.getSelectedAvailableCount(filesToShowInfo, runnerManager),
+                        BackgroundHelperMethods.getSelectedUnavailableCount(filesToShowInfo, runnerManager)
+                )
+        );
     }
 
     private static void removeAlreadyAdded(
@@ -81,7 +85,7 @@ public class AddFilesTask implements BackgroundRunner<AddFilesTask.Result> {
             List<FileInfo> allFilesInfo,
             BackgroundRunnerManager runnerManager
     ) {
-        runnerManager.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
+        runnerManager.setIndeterminateProgress();
         runnerManager.updateMessage("removing already added files...");
 
         Iterator<FileInfo> iterator = filesToAddInfo.iterator();
@@ -97,26 +101,26 @@ public class AddFilesTask implements BackgroundRunner<AddFilesTask.Result> {
         }
     }
 
-    public static ActionResult generateMultiPartResult(Result taskResult) {
+    public static ActionResult generateActionResult(Result taskResult) {
         String success;
 
         int filesToAdd = taskResult.getFilesToAddCount();
         int actuallyAdded = taskResult.getActuallyAddedCount();
 
         if (actuallyAdded == 0) {
-            success = GuiUtils.getTextDependingOnTheCount(
+            success = GuiHelperMethods.getTextDependingOnTheCount(
                     filesToAdd,
                     "File has been added already",
                     "All %d files have been added already"
             );
         } else if (filesToAdd == actuallyAdded) {
-            success = GuiUtils.getTextDependingOnTheCount(
+            success = GuiHelperMethods.getTextDependingOnTheCount(
                     actuallyAdded,
                     "File has been added successfully",
                     "All %d files have been added successfully"
             );
         } else {
-            success = GuiUtils.getTextDependingOnTheCount(
+            success = GuiHelperMethods.getTextDependingOnTheCount(
                     actuallyAdded,
                     String.format("1/%d files has been added successfully, ", filesToAdd),
                     String.format("%%d/%d files have been added successfully, ", filesToAdd)
@@ -136,8 +140,8 @@ public class AddFilesTask implements BackgroundRunner<AddFilesTask.Result> {
 
         private List<FileInfo> filesInfo;
 
-        private List<GuiFileInfo> allGuiFilesInfo;
+        private List<TableFileInfo> allTableFilesInfo;
 
-        private List<GuiFileInfo> guiFilesToShowInfo;
+        private TableFilesToShowInfo tableFilesToShowInfo;
     }
 }
