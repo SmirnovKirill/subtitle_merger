@@ -3,11 +3,11 @@ package kirill.subtitlemerger.logic.work_with_files.entities;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.VideoFormat;
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.commons.collections4.CollectionUtils;
 import org.joda.time.LocalDateTime;
 
 import java.io.File;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Getter
@@ -51,12 +51,10 @@ class FileInfo {
         this.mergedSubtitleInfo = mergedSubtitleInfo;
     }
 
-    public boolean haveSubtitlesToLoad() {
-        if (CollectionUtils.isEmpty(subtitleOptions)) {
-            return false;
-        }
-
-        return subtitleOptions.stream().anyMatch(option -> option.getSubtitles() == null);
+    public static FileInfo getById(String id, List<FileInfo> filesInfo) {
+        return filesInfo.stream()
+                .filter(fileInfo -> Objects.equals(fileInfo.getId(), id))
+                .findFirst().orElseThrow(IllegalAccessError::new);
     }
 
     public List<FfmpegSubtitleStream> getFfmpegSubtitleStreams() {

@@ -4,6 +4,7 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.ReadOnlyIntegerWrapper;
@@ -183,7 +184,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
     private void handlerFileSelectionChange(boolean selected, TableFileInfo fileInfo) {
         int addValue = selected ? 1 : -1;
 
-        if (StringUtils.isBlank(fileInfo.getUnavailabilityReason())) {
+        if (fileInfo.getUnavailabilityReason() == null) {
             selectedAvailableCount += addValue;
         } else {
             selectedUnavailableCount += addValue;
@@ -279,9 +280,32 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         result.setAlignment(Pos.CENTER_LEFT);
         result.setPadding(new Insets(CELL_PADDING, CELL_PADDING, CELL_PADDING, CELL_PADDING + 1));
 
-        result.getChildren().add(new Label(fileInfo.getUnavailabilityReason()));
+        result.getChildren().add(new Label(unavailabilityReasonToString(fileInfo.getUnavailabilityReason())));
 
         return result;
+    }
+
+    private static String unavailabilityReasonToString(TableFileInfo.UnavailabilityReason reason) {
+        if (reason == null) {
+            return "";
+        }
+
+        switch (reason) {
+            case NO_EXTENSION:
+                return "File has no extension";
+            case NOT_ALLOWED_EXTENSION:
+                return "File has a not allowed extension";
+            case FAILED_TO_GET_MIME_TYPE:
+                return "Failed to get the mime type";
+            case NOT_ALLOWED_MIME_TYPE:
+                return "File has a mime type that is not allowed";
+            case FAILED_TO_GET_FFPROBE_INFO:
+                return "Failed to get video info with the ffprobe";
+            case NOT_ALLOWED_CONTAINER:
+                return "Video has a format that is not allowed";
+            default:
+                throw new IllegalStateException();
+        }
     }
 
     private static Pane generateSubtitleOptionPane(
@@ -491,10 +515,29 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         result.setAlignment(Pos.CENTER);
         result.setGraphic(GuiHelperMethods.createImageView("/gui/icons/error.png", 12, 12));
 
-        result.setTooltip(GuiHelperMethods.generateTooltip(subtitleOption.failedToLoadReasonProperty()));
-        GuiHelperMethods.bindVisibleAndManaged(result, subtitleOption.failedToLoadReasonProperty().isNotEmpty());
+        StringBinding failedToLoadReasonBinding = Bindings.createStringBinding(
+                () -> unavailabilityReasonToString(subtitleOption.getFailedToLoadReason()),
+                subtitleOption.failedToLoadReasonProperty()
+        );
+        result.setTooltip(GuiHelperMethods.generateTooltip(failedToLoadReasonBinding));
+        GuiHelperMethods.bindVisibleAndManaged(result, subtitleOption.failedToLoadReasonProperty().isNotNull());
 
         return result;
+    }
+
+    private static String unavailabilityReasonToString(TableSubtitleOption.FailedToLoadSubtitlesReason reason) {
+        if (reason == null) {
+            return "";
+        }
+
+        switch (reason) {
+            case FFMPEG_ERROR:
+                return "Fmpeg returned an error";
+            case INCORRECT_FORMAT:
+                return "Subtitles seem to have an incorrect format";
+            default:
+                throw new IllegalStateException();
+        }
     }
 
     private static Pane generateSelectOptionPane(TableSubtitleOption subtitleOption) {
@@ -512,22 +555,41 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
         RadioButton upper = new RadioButton("upper");
         upper.selectedProperty().bindBidirectional(subtitleOption.selectedAsUpperProperty());
-        upper.disableProperty().bind(subtitleOption.unavailabilityReasonProperty().isNotEmpty());
+        upper.disableProperty().bind(subtitleOption.unavailabilityReasonProperty().isNotNull());
 
         RadioButton lower = new RadioButton("lower");
         lower.selectedProperty().bindBidirectional(subtitleOption.selectedAsLowerProperty());
-        lower.disableProperty().bind(subtitleOption.unavailabilityReasonProperty().isNotEmpty());
+        lower.disableProperty().bind(subtitleOption.unavailabilityReasonProperty().isNotNull());
 
         result.getChildren().addAll(upper, lower);
 
         return result;
     }
 
-    private static void setSelectOptionPaneTooltip(Pane selectOptionPane, String unavailabilityReason) {
-        if (StringUtils.isBlank(unavailabilityReason)) {
+    private static void setSelectOptionPaneTooltip(
+            Pane selectOptionPane,
+            TableSubtitleOption.UnavailabilityReason unavailabilityReason
+    ) {
+        if (unavailabilityReason == null) {
             Tooltip.install(selectOptionPane, null);
         } else {
-            Tooltip.install(selectOptionPane, GuiHelperMethods.generateTooltip(unavailabilityReason));
+            Tooltip tooltip = GuiHelperMethods.generateTooltip(unavailabilityReasonToString(unavailabilityReason));
+            Tooltip.install(selectOptionPane, tooltip);
+        }
+    }
+
+    private static String unavailabilityReasonToString(TableSubtitleOption.UnavailabilityReason reason) {
+        if (reason == null) {
+            return "";
+        }
+
+        switch (reason) {
+            case NOT_ALLOWED_CODEC:
+                return "Subtitle has a not allowed type";
+            case INCORRECT_FORMAT:
+                return "Subtitles have an incorrect format";
+            default:
+                throw new IllegalStateException();
         }
     }
 
@@ -689,13 +751,15 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
         if (upperOption == null || lowerOption == null) {
             previewButton.setDisable(true);
-            Tooltip.install(previewPane, GuiHelperMethods.generateTooltip("Please select subtitles to merge first"));
+            Tooltip tooltip = GuiHelperMethods.generateTooltip("Please select subtitles to merge first");
+            Tooltip.install(previewPane, tooltip);
         } else {
             boolean notLoaded = upperOption.getSize() == UNKNOWN_SIZE
                     || lowerOption.getSize() == UNKNOWN_SIZE;
             if (notLoaded) {
                 previewButton.setDisable(true);
-                Tooltip.install(previewPane, GuiHelperMethods.generateTooltip("Please load selected subtitles first"));
+                Tooltip tooltip = GuiHelperMethods.generateTooltip("Please load selected subtitles first");
+                Tooltip.install(previewPane, tooltip);
             } else {
                 previewButton.setDisable(false);
                 Tooltip.install(previewPane, null);
@@ -954,6 +1018,10 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         handlerFileSelectionChange(selected, fileInfo);
     }
 
+    public void clearActionResult(TableFileInfo fileInfo) {
+        fileInfo.setActionResult(ActionResult.NO_RESULT);
+    }
+
     public void removeFileWithSubtitles(TableSubtitleOption option, TableFileInfo fileInfo) {
         if (!option.isRemovable()) {
             log.error("option " + option.getId() + " is not removable");
@@ -995,8 +1063,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
         processSingleLoadedSubtitles(loadedSubtitles, subtitleOption, fileInfo);
 
-        //todo maybe create an enum
-        if (StringUtils.isBlank(loadedSubtitles.getFailedToLoadReason())) {
+        if (loadedSubtitles.getFailedToLoadReason() == null) {
             fileInfo.setActionResult(ActionResult.onlySuccess("Subtitles have been loaded successfully"));
         } else {
             fileInfo.setActionResult(ActionResult.onlyError("Failed to load subtitles"));
@@ -1014,13 +1081,15 @@ public class TableWithFiles extends TableView<TableFileInfo> {
                         : UNKNOWN_SIZE
         );
         subtitleOption.setFailedToLoadReason(loadedSubtitles.getFailedToLoadReason());
-        subtitleOption.setUnavailabilityReason(loadedSubtitles.getUnavailabilityReason());
-        if (StringUtils.isBlank(loadedSubtitles.getFailedToLoadReason()) && loadedSubtitles.getSize() != null) {
+        if (loadedSubtitles.getFailedToLoadReason() != null && loadedSubtitles.getSize() != null) {
             fileInfo.setOptionsWithUnknownSizeCount(fileInfo.getOptionsWithUnknownSizeCount() - 1);
         }
     }
 
-    void subtitleOptionPreviewClosed(String unavailabilityReason, TableSubtitleOption subtitleOption) {
+    void subtitleOptionPreviewClosed(
+            TableSubtitleOption.UnavailabilityReason unavailabilityReason,
+            TableSubtitleOption subtitleOption
+    ) {
         subtitleOption.setUnavailabilityReason(unavailabilityReason);
     }
 
@@ -1028,7 +1097,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
             String id,
             String title,
             int size,
-            String unavailabilityReason,
+            TableSubtitleOption.UnavailabilityReason unavailabilityReason,
             TableFileInfo fileInfo
     ) {
         TableSubtitleOption subtitleOption = getFirstEmptySubtitleOption(fileInfo);
@@ -1040,7 +1109,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
         fileInfo.setVisibleOptionCount(fileInfo.getVisibleOptionCount() + 1);
 
-        if (StringUtils.isBlank(unavailabilityReason)) {
+        if (unavailabilityReason == null) {
             fileInfo.setActionResult(ActionResult.onlySuccess("Subtitle file has been added to the list successfully"));
         } else {
             fileInfo.setActionResult(
@@ -1165,9 +1234,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
     public static class LoadedSubtitles {
         private Integer size;
 
-        private String failedToLoadReason;
-
-        private String unavailabilityReason;
+        private TableSubtitleOption.FailedToLoadSubtitlesReason failedToLoadReason;
     }
 
     @AllArgsConstructor

@@ -13,6 +13,7 @@ import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffprobe;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -157,39 +158,24 @@ class BackgroundHelperMethods {
         return streamLanguage != settings.getUpperLanguage() && streamLanguage != settings.getLowerLanguage();
     }
 
-    private static String tableUnavailabilityReasonFrom(FfmpegSubtitleStream.UnavailabilityReason reason) {
+    private static TableSubtitleOption.UnavailabilityReason tableUnavailabilityReasonFrom(
+            FfmpegSubtitleStream.UnavailabilityReason reason
+    ) {
         if (reason == null) {
             return null;
         }
 
-        if (reason == FfmpegSubtitleStream.UnavailabilityReason.NOT_ALLOWED_CODEC) {
-            return "Subtitle has a not allowed type";
-        }
-
-        throw new IllegalStateException();
+        return EnumUtils.getEnum(TableSubtitleOption.UnavailabilityReason.class, reason.toString());
     }
 
-    private static String tableUnavailabilityReasonFrom(FileInfo.UnavailabilityReason reason) {
+    private static TableFileInfo.UnavailabilityReason tableUnavailabilityReasonFrom(
+            FileInfo.UnavailabilityReason reason
+    ) {
         if (reason == null) {
             return null;
         }
 
-        switch (reason) {
-            case NO_EXTENSION:
-                return "File has no extension";
-            case NOT_ALLOWED_EXTENSION:
-                return "File has a not allowed extension";
-            case FAILED_TO_GET_MIME_TYPE:
-                return "Failed to get the mime type";
-            case NOT_ALLOWED_MIME_TYPE:
-                return "File has a mime type that is not allowed";
-            case FAILED_TO_GET_FFPROBE_INFO:
-                return "Failed to get video info with the ffprobe";
-            case NOT_ALLOWED_CONTAINER:
-                return "Video has a format that is not allowed";
-            default:
-                throw new IllegalStateException();
-        }
+        return EnumUtils.getEnum(TableFileInfo.UnavailabilityReason.class, reason.toString());
     }
 
     static List<TableFileInfo> getOnlyAvailableFilesInfo(
@@ -200,7 +186,7 @@ class BackgroundHelperMethods {
         runnerManager.updateMessage("filtering unavailable...");
 
         return allFilesInfo.stream()
-                .filter(fileInfo -> StringUtils.isBlank(fileInfo.getUnavailabilityReason()))
+                .filter(fileInfo -> fileInfo.getUnavailabilityReason() == null)
                 .collect(Collectors.toList());
     }
 
@@ -247,7 +233,7 @@ class BackgroundHelperMethods {
             return allFilesInfo.size();
         } else if (mode == TableWithFiles.Mode.DIRECTORY) {
             return (int) allFilesInfo.stream()
-                    .filter(fileInfo -> StringUtils.isBlank(fileInfo.getUnavailabilityReason()))
+                    .filter(fileInfo -> fileInfo.getUnavailabilityReason() == null)
                     .count();
         } else {
             throw new IllegalStateException();
@@ -263,7 +249,7 @@ class BackgroundHelperMethods {
 
         return (int) allFilesInfo.stream()
                 .filter(TableFileInfo::isSelected)
-                .filter(fileInfo -> StringUtils.isBlank(fileInfo.getUnavailabilityReason()))
+                .filter(fileInfo -> fileInfo.getUnavailabilityReason() == null)
                 .count();
 
     }
@@ -277,8 +263,24 @@ class BackgroundHelperMethods {
 
         return (int) allFilesInfo.stream()
                 .filter(TableFileInfo::isSelected)
-                .filter(fileInfo -> !StringUtils.isBlank(fileInfo.getUnavailabilityReason()))
+                .filter(fileInfo -> fileInfo.getUnavailabilityReason() != null)
                 .count();
 
+    }
+
+    static String getLoadSubtitlesProgressMessage(
+            int subtitlesToLoadCount,
+            int processedCount,
+            FfmpegSubtitleStream subtitleStream,
+            File file
+    ) {
+        String progressPrefix = subtitlesToLoadCount > 1
+                ? String.format("%d/%d ", processedCount + 1, subtitlesToLoadCount)
+                : "";
+
+        return progressPrefix + "getting subtitle "
+                + GuiHelperMethods.languageToString(subtitleStream.getLanguage()).toUpperCase()
+                + (StringUtils.isBlank(subtitleStream.getTitle()) ? "" : " " + subtitleStream.getTitle())
+                + " in " + file.getName();
     }
 }

@@ -26,9 +26,9 @@ public class TableSubtitleOption {
 
     private IntegerProperty size;
 
-    private StringProperty failedToLoadReason;
+    private ObjectProperty<FailedToLoadSubtitlesReason> failedToLoadReason;
 
-    private StringProperty unavailabilityReason;
+    private ObjectProperty<UnavailabilityReason> unavailabilityReason;
 
     private BooleanProperty selectedAsUpper;
 
@@ -41,8 +41,8 @@ public class TableSubtitleOption {
             boolean removable,
             boolean sizeAlwaysKnown,
             int size,
-            String failedToLoadReason,
-            String unavailabilityReason,
+            FailedToLoadSubtitlesReason failedToLoadReason,
+            UnavailabilityReason unavailabilityReason,
             boolean selectedAsUpper,
             boolean selectedAsLower
     ) {
@@ -52,13 +52,13 @@ public class TableSubtitleOption {
         this.removable = removable;
         this.sizeAlwaysKnown = sizeAlwaysKnown;
         this.size = new SimpleIntegerProperty(size);
-        this.failedToLoadReason = new SimpleStringProperty(failedToLoadReason);
-        this.unavailabilityReason = new SimpleStringProperty(unavailabilityReason);
+        this.failedToLoadReason = new SimpleObjectProperty<>(failedToLoadReason);
+        this.unavailabilityReason = new SimpleObjectProperty<>(unavailabilityReason);
         this.selectedAsUpper = new SimpleBooleanProperty(selectedAsUpper);
         this.selectedAsLower = new SimpleBooleanProperty(selectedAsLower);
     }
 
-    String getId() {
+    public String getId() {
         return id.get();
     }
 
@@ -70,7 +70,7 @@ public class TableSubtitleOption {
         this.id.set(id);
     }
 
-    String getTitle() {
+    public String getTitle() {
         return title.get();
     }
 
@@ -82,7 +82,7 @@ public class TableSubtitleOption {
         this.title.set(title);
     }
 
-    int getSize() {
+    public int getSize() {
         return size.get();
     }
 
@@ -94,31 +94,31 @@ public class TableSubtitleOption {
         this.size.set(size);
     }
 
-    String getFailedToLoadReason() {
+    public FailedToLoadSubtitlesReason getFailedToLoadReason() {
         return failedToLoadReason.get();
     }
 
-    StringProperty failedToLoadReasonProperty() {
+    ObjectProperty<FailedToLoadSubtitlesReason> failedToLoadReasonProperty() {
         return failedToLoadReason;
     }
 
-    void setFailedToLoadReason(String failedToLoadReason) {
+    void setFailedToLoadReason(FailedToLoadSubtitlesReason failedToLoadReason) {
         this.failedToLoadReason.set(failedToLoadReason);
     }
 
-    String getUnavailabilityReason() {
+    public UnavailabilityReason getUnavailabilityReason() {
         return unavailabilityReason.get();
     }
 
-    StringProperty unavailabilityReasonProperty() {
+    ObjectProperty<UnavailabilityReason> unavailabilityReasonProperty() {
         return unavailabilityReason;
     }
 
-    void setUnavailabilityReason(String unavailabilityReason) {
+    void setUnavailabilityReason(UnavailabilityReason unavailabilityReason) {
         this.unavailabilityReason.set(unavailabilityReason);
     }
 
-    boolean isSelectedAsUpper() {
+    public boolean isSelectedAsUpper() {
         return selectedAsUpper.get();
     }
 
@@ -130,7 +130,7 @@ public class TableSubtitleOption {
         this.selectedAsUpper.set(selectedAsUpper);
     }
 
-    boolean isSelectedAsLower() {
+    public boolean isSelectedAsLower() {
         return selectedAsLower.get();
     }
 
@@ -146,5 +146,15 @@ public class TableSubtitleOption {
         return subtitleOptions.stream()
                 .filter(option -> Objects.equals(option.getId(), id))
                 .findFirst().orElseThrow(IllegalStateException::new);
+    }
+
+    public enum FailedToLoadSubtitlesReason {
+        FFMPEG_ERROR,
+        INCORRECT_FORMAT
+    }
+
+    public enum UnavailabilityReason {
+        NOT_ALLOWED_CODEC,
+        INCORRECT_FORMAT
     }
 }

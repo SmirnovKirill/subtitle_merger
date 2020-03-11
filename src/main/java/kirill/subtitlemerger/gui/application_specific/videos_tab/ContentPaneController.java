@@ -5,6 +5,7 @@ import javafx.beans.Observable;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
@@ -27,6 +28,7 @@ import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -159,6 +161,8 @@ public class ContentPaneController extends AbstractController {
         setAllSelectedHandler(table);
         setSortByChangeHandler(table);
         setSortDirectionChangeHandler(table);
+        setRemoveSubtitleOptionHandler(table);
+        setSingleSubtitleLoader(table);
     }
 
     private void setAllSelectedHandler(TableWithFiles tableWithFiles) {
@@ -172,7 +176,7 @@ public class ContentPaneController extends AbstractController {
                     if (tableWithFiles.getMode() == TableWithFiles.Mode.SEPARATE_FILES) {
                         selected = allSelected;
                     } else {
-                        selected = allSelected && StringUtils.isBlank(fileInfo.getUnavailabilityReason());
+                        selected = allSelected && fileInfo.getUnavailabilityReason() == null;
                     }
 
                     Platform.runLater(() -> tableWithFiles.setSelected(selected, fileInfo));
@@ -271,11 +275,58 @@ public class ContentPaneController extends AbstractController {
         return EnumUtils.getEnum(GuiSettings.SortDirection.class, tableSortDirection.toString());
     }
 
-    public void show() {
+    private void setRemoveSubtitleOptionHandler(TableWithFiles tableWithFiles) {
+        tableWithFiles.setRemoveSubtitleOptionHandler((tableSubtitleOption, tableFileInfo) -> {
+            generalResult.clear();
+            clearLastProcessedResult();
+            tableWithFiles.clearActionResult(tableFileInfo);
+            lastProcessedFileInfo = tableFileInfo;
+
+            FileInfo fileInfo = FileInfo.getById(tableFileInfo.getId(), filesInfo);
+            fileInfo.getSubtitleOptions().removeIf(
+                    option -> Objects.equals(option.getId(), tableSubtitleOption.getId())
+            );
+
+            tableWithFiles.removeFileWithSubtitles(tableSubtitleOption, tableFileInfo);
+        });
+    }
+
+    private void setSingleSubtitleLoader(TableWithFiles tableWithFiles) {
+        tableWithFiles.setSingleSubtitleLoader((tableSubtitleOption, tableFileInfo) -> {
+            generalResult.clear();
+            clearLastProcessedResult();
+            tableWithFiles.clearActionResult(tableFileInfo);
+            lastProcessedFileInfo = tableFileInfo;
+
+            FileInfo fileInfo = FileInfo.getById(tableFileInfo.getId(), filesInfo);
+            FfmpegSubtitleStream ffmpegStream = FfmpegSubtitleStream.getById(
+                    tableSubtitleOption.getId(),
+                    fileInfo.getFfmpegSubtitleStreams()
+            );
+
+            LoadSingleSubtitleRunner backgroundRunner = new LoadSingleSubtitleRunner(
+                    ffmpegStream,
+                    fileInfo,
+                    context.getFfmpeg()
+            );
+
+            BackgroundRunnerCallback<LoadSingleSubtitleRunner.Result> callback = result ->
+                    tableWithFiles.subtitlesLoaded(
+                            result.isCancelled(),
+                            result.getLoadedSubtitles(),
+                            tableSubtitleOption,
+                            tableFileInfo
+                    );
+
+            runInBackground(backgroundRunner, callback);
+        });
+    }
+
+    void show() {
         contentPane.setVisible(true);
     }
 
-    public void hide() {
+    void hide() {
         contentPane.setVisible(false);
     }
 
@@ -697,21 +748,7 @@ public class ContentPaneController extends AbstractController {
         }
     }
 
-  /*  private void removeExternalSubtitleFileClicked(String streamId, GuiFileInfo guiFileInfo, Runnable onFinish) {
-        generalResult.clear();
-        clearLastProcessedResult();
-        guiFileInfo.clearResult();
-        lastProcessedFileInfo = guiFileInfo;
-
-        FileInfo fileInfo = GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo);
-
-        fileInfo.getSubtitleStreams().removeIf(stream -> Objects.equals(stream.getId(), streamId));
-        guiFileInfo.unsetExternalSubtitleStream(streamId);
-
-        onFinish.run();
-
-        guiFileInfo.setResultOnlySuccess("Subtitle file has been removed from the list successfully");
-    }
+  /*
 
     private void showFfmpegStreamPreview(String streamId, GuiFileInfo guiFileInfo) {
         generalResult.clear();
@@ -948,24 +985,7 @@ public class ContentPaneController extends AbstractController {
         runInBackground(backgroundRunner, callback);
     }
 
-    private void loadSingleFileSubtitleSize(GuiFileInfo guiFileInfo, String streamId) {
-        generalResult.clear();
-        clearLastProcessedResult();
-        guiFileInfo.clearResult();
-        lastProcessedFileInfo = guiFileInfo;
-
-        LoadSingleSubtitleTask backgroundRunner = new LoadSingleSubtitleTask(
-                streamId,
-                GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo),
-                guiFileInfo,
-                context.getFfmpeg()
-        );
-
-        BackgroundRunnerCallback<LoadSingleSubtitleTask.Result> callback =
-                result -> generalResult.set(LoadSingleSubtitleTask.generateMultiPartResult(result));
-
-        runInBackground(backgroundRunner, callback);
-    }*/
+  */
 
     @FXML
     private void removeButtonClicked() {
@@ -1031,7 +1051,8 @@ public class ContentPaneController extends AbstractController {
         AddFilesRunner backgroundRunner = new AddFilesRunner(
                 filesInfo,
                 filesToAdd,
-                allGuiFilesInfo,
+                allTableFilesInfo,
+                tableWithFiles.getMode(),
                 hideUnavailableCheckbox.isSelected(),
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
@@ -1040,12 +1061,35 @@ public class ContentPaneController extends AbstractController {
 
         BackgroundRunnerCallback<AddFilesRunner.Result> callback = result -> {
             filesInfo = result.getFilesInfo();
-            allGuiFilesInfo = result.getAllGuiFilesInfo();
-            updateTableContent(result.getGuiFilesToShowInfo(), tableWithFiles.getMode(), false);
+            allTableFilesInfo = result.getAllTableFilesInfo();
+
+            tableWithFiles.setFilesInfo(
+                    result.getTableFilesToShowInfo().getFilesInfo(),
+                    getTableSortBy(context.getSettings()),
+                    getTableSortDirection(context.getSettings()),
+                    result.getTableFilesToShowInfo().getAllSelectableCount(),
+                    result.getTableFilesToShowInfo().getSelectedAvailableCount(),
+                    result.getTableFilesToShowInfo().getSelectedUnavailableCount(),
+                    tableWithFiles.getMode(),
+                    false
+            );
+
             generalResult.set(AddFilesRunner.generateActionResult(result));
         };
 
         runInBackground(backgroundRunner, callback);
+    }
+
+    private static List<File> getFiles(Stage stage, GuiSettings settings) {
+        FileChooser fileChooser = new FileChooser();
+
+        fileChooser.setTitle("choose videos");
+        fileChooser.setInitialDirectory(settings.getLastDirectoryWithVideos());
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("mkv files (*.mkv)", "*.mkv")
+        );
+
+        return fileChooser.showOpenMultipleDialog(stage);
     }
 
     @AllArgsConstructor

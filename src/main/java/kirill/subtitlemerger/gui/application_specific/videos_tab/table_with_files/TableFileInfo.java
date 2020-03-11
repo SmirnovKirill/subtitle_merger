@@ -1,6 +1,5 @@
 package kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files;
 
-import javafx.beans.Observable;
 import javafx.beans.property.*;
 import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import lombok.Getter;
@@ -30,7 +29,7 @@ public class TableFileInfo {
     private LocalDateTime lastModified;
 
     @Getter
-    private String unavailabilityReason;
+    private UnavailabilityReason unavailabilityReason;
 
     @Getter
     private List<TableSubtitleOption> subtitleOptions;
@@ -58,7 +57,7 @@ public class TableFileInfo {
             String filePath,
             long size,
             LocalDateTime lastModified,
-            String unavailabilityReason,
+            UnavailabilityReason unavailabilityReason,
             List<TableSubtitleOption> subtitleOptions,
             boolean someOptionsHidden,
             ActionResult actionResult
@@ -288,5 +287,14 @@ public class TableFileInfo {
         return filesInfo.stream()
                 .filter(fileInfo -> Objects.equals(fileInfo.getId(), id))
                 .findFirst().orElseThrow(IllegalStateException::new);
+    }
+
+    public enum UnavailabilityReason {
+        NO_EXTENSION,
+        NOT_ALLOWED_EXTENSION,
+        FAILED_TO_GET_MIME_TYPE,
+        NOT_ALLOWED_MIME_TYPE,
+        FAILED_TO_GET_FFPROBE_INFO,
+        NOT_ALLOWED_CONTAINER
     }
 }
