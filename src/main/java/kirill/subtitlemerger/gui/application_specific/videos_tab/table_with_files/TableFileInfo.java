@@ -188,7 +188,7 @@ public class TableFileInfo {
         }
     }
 
-    boolean isSelected() {
+    public boolean isSelected() {
         return selected.get();
     }
 
@@ -200,7 +200,7 @@ public class TableFileInfo {
         this.selected.set(selected);
     }
 
-    boolean isSomeOptionsHidden() {
+    public boolean isSomeOptionsHidden() {
         return someOptionsHidden.get();
     }
 
@@ -212,7 +212,7 @@ public class TableFileInfo {
         this.someOptionsHidden.set(someOptionsHidden);
     }
 
-    int getOptionsWithUnknownSizeCount() {
+    public int getOptionsWithUnknownSizeCount() {
         return optionsWithUnknownSizeCount.get();
     }
 
@@ -224,7 +224,7 @@ public class TableFileInfo {
         this.optionsWithUnknownSizeCount.set(optionsWithUnknownSizeCount);
     }
 
-    int getSelectedOptionCount() {
+    public int getSelectedOptionCount() {
         return selectedOptionCount.get();
     }
 
@@ -236,7 +236,7 @@ public class TableFileInfo {
         this.selectedOptionCount.set(selectedOptionCount);
     }
 
-    int getVisibleOptionCount() {
+    public int getVisibleOptionCount() {
         return visibleOptionCount.get();
     }
 
@@ -248,7 +248,7 @@ public class TableFileInfo {
         this.visibleOptionCount.set(visibleOptionCount);
     }
 
-    TableSubtitleOption getUpperOption() {
+    public TableSubtitleOption getUpperOption() {
         return upperOption.get();
     }
 
@@ -260,7 +260,7 @@ public class TableFileInfo {
         this.upperOption.set(upperOption);
     }
 
-    TableSubtitleOption getLowerOption() {
+    public TableSubtitleOption getLowerOption() {
         return lowerOption.get();
     }
 
@@ -272,7 +272,7 @@ public class TableFileInfo {
         this.lowerOption.set(lowerOption);
     }
 
-    ActionResult getActionResult() {
+    public ActionResult getActionResult() {
         return actionResult.get();
     }
 

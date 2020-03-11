@@ -19,7 +19,6 @@ import kirill.subtitlemerger.gui.utils.custom_controls.ActionResultLabels;
 import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.format.DateTimeFormat;
@@ -77,18 +76,29 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
     private CheckBox allSelectedCheckBox;
 
-    @Setter
+    @Getter
     private Mode mode;
 
     public TableWithFiles() {
         cellCache = new HashMap<>();
+
         sortByGroup = new ToggleGroup();
         sortDirectionGroup = new ToggleGroup();
+
         allSelectedHandler = new SimpleObjectProperty<>();
+        sortByChangeHandler = new SimpleObjectProperty<>();
+        sortDirectionChangeHandler = new SimpleObjectProperty<>();
+        removeSubtitleOptionHandler = new SimpleObjectProperty<>();
+        singleSubtitleLoader = new SimpleObjectProperty<>();
+        subtitleOptionPreviewHandler = new SimpleObjectProperty<>();
+        addFileWithSubtitlesHandler = new SimpleObjectProperty<>();
+        allFileSubtitleLoader = new SimpleObjectProperty<>();
+        mergedSubtitlePreviewHandler = new SimpleObjectProperty<>();
+
         allSelectedCount = new ReadOnlyIntegerWrapper();
 
         allSelectedCheckBox = generateAlSelectedCheckBox();
-        addColumns();
+        addColumns(allSelectedCheckBox);
         setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         setSelectionModel(null);
@@ -114,12 +124,12 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         return result;
     }
 
-    private void addColumns() {
+    private void addColumns(CheckBox allSelectedCheckBox) {
         TableColumn<TableFileInfo, ?> selectedColumn = new TableColumn<>();
         selectedColumn.setCellFactory(
                 column -> new TableWithFilesCell<>(CellType.SELECTED, this::generateSelectedCellPane)
         );
-        selectedColumn.setGraphic(generateAlSelectedCheckBox());
+        selectedColumn.setGraphic(allSelectedCheckBox);
         selectedColumn.setMaxWidth(26);
         selectedColumn.setMinWidth(26);
         selectedColumn.setReorderable(false);
@@ -871,7 +881,6 @@ public class TableWithFiles extends TableView<TableFileInfo> {
             int allSelectableCount,
             int selectedAvailableCount,
             int selectedUnavailableCount,
-            int allSelectedCount,
             Mode mode,
             boolean clearCache
     ) {
@@ -889,10 +898,10 @@ public class TableWithFiles extends TableView<TableFileInfo> {
          * (selectedAvailableCount and selectedUnavailableCount) because this property will have subscribers and they
          * need updated counter values there.
          */
-        this.allSelectedCount.setValue(allSelectedCount);
+        this.allSelectedCount.setValue(selectedAvailableCount + selectedUnavailableCount);
 
-        allSelectedCheckBox.setSelected(allSelectedCount > 0 && allSelectedCount == allSelectableCount);
-        setMode(mode);
+        allSelectedCheckBox.setSelected(getAllSelectedCount() > 0 && getAllSelectedCount() == allSelectableCount);
+        this.mode = mode;
         setItems(FXCollections.observableArrayList(filesInfo));
     }
 
@@ -930,7 +939,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         allSelectedCount.setValue(0);
 
         allSelectedCheckBox.setSelected(false);
-        setMode(null);
+        this.mode = null;
         setItems(FXCollections.emptyObservableList());
         System.gc();
     }

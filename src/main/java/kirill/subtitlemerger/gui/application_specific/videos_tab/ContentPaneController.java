@@ -10,8 +10,10 @@ import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.application_specific.AbstractController;
-import kirill.subtitlemerger.gui.application_specific.videos_tab.background.LoadDirectoryBackgroundRunner;
-import kirill.subtitlemerger.gui.application_specific.videos_tab.background.LoadSeparateFilesTask;
+import kirill.subtitlemerger.gui.application_specific.videos_tab.background.LoadDirectoryRunner;
+import kirill.subtitlemerger.gui.application_specific.videos_tab.background.LoadSeparateFilesRunner;
+import kirill.subtitlemerger.gui.application_specific.videos_tab.background.SortHideUnavailableRunner;
+import kirill.subtitlemerger.gui.application_specific.videos_tab.background.TableFilesToShowInfo;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
@@ -28,7 +30,6 @@ import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -159,18 +160,19 @@ public class ContentPaneController extends AbstractController {
 
     private void setTableLoadersAndHandlers(TableWithFiles table) {
         setAllSelectedHandler(table);
+        setSortByChangeHandler(table);
+        setSortDirectionChangeHandler(table);
     }
 
-    private void setAllSelectedHandler(TableWithFiles table) {
-        table.setAllSelectedHandler(allSelected -> {
+    private void setAllSelectedHandler(TableWithFiles tableWithFiles) {
+        tableWithFiles.setAllSelectedHandler(allSelected -> {
             BackgroundRunner<Void> backgroundRunner = runnerManager -> {
                 runnerManager.setIndeterminateProgress();
                 runnerManager.updateMessage("processing files...");
 
-                for (TableFileInfo fileInfo : table.getItems()) {
+                for (TableFileInfo fileInfo : tableWithFiles.getItems()) {
                     boolean selected;
-                    /* Separate files mode. */
-                    if (directory == null) {
+                    if (tableWithFiles.getMode() == TableWithFiles.Mode.SEPARATE_FILES) {
                         selected = allSelected;
                     } else {
                         selected = allSelected && StringUtils.isBlank(fileInfo.getUnavailabilityReason());
@@ -184,6 +186,100 @@ public class ContentPaneController extends AbstractController {
 
             runInBackground(backgroundRunner, (result) -> {});
         });
+    }
+
+    private void setSortByChangeHandler(TableWithFiles tableWithFiles) {
+        tableWithFiles.setSortByChangeHandler(tableSortBy -> {
+            generalResult.clear();
+            clearLastProcessedResult();
+
+            try {
+                context.getSettings().saveSortBy(sortByFrom(tableSortBy).toString());
+            } catch (GuiSettings.ConfigException e) {
+                log.error("failed to save sort by, should not happen: " + ExceptionUtils.getStackTrace(e));
+            }
+
+            SortHideUnavailableRunner backgroundRunner = new SortHideUnavailableRunner(
+                    allTableFilesInfo,
+                    tableWithFiles.getMode(),
+                    hideUnavailableCheckbox.isSelected(),
+                    context.getSettings().getSortBy(),
+                    context.getSettings().getSortDirection()
+            );
+
+            BackgroundRunnerCallback<TableFilesToShowInfo> callback = result ->
+                    tableWithFiles.setFilesInfo(
+                            result.getFilesInfo(),
+                            getTableSortBy(context.getSettings()),
+                            getTableSortDirection(context.getSettings()),
+                            result.getAllSelectableCount(),
+                            result.getSelectedAvailableCount(),
+                            result.getSelectedUnavailableCount(),
+                            tableWithFiles.getMode(),
+                            false
+                    );
+
+            runInBackground(backgroundRunner, callback);
+        });
+    }
+
+    private static GuiSettings.SortBy sortByFrom(TableWithFiles.SortBy tableSortBy) {
+        return EnumUtils.getEnum(GuiSettings.SortBy.class, tableSortBy.toString());
+    }
+
+    private static TableWithFiles.SortBy getTableSortBy(GuiSettings settings) {
+        return EnumUtils.getEnum(TableWithFiles.SortBy.class, settings.getSortBy().toString());
+    }
+
+    private static TableWithFiles.SortDirection getTableSortDirection(GuiSettings settings) {
+        return EnumUtils.getEnum(TableWithFiles.SortDirection.class, settings.getSortDirection().toString());
+    }
+
+    private void setSortDirectionChangeHandler(TableWithFiles tableWithFiles) {
+        tableWithFiles.setSortDirectionChangeHandler(tableSortDirection -> {
+            generalResult.clear();
+            clearLastProcessedResult();
+
+            try {
+                context.getSettings().saveSortDirection(sortDirectionFrom(tableSortDirection).toString());
+            } catch (GuiSettings.ConfigException e) {
+                log.error("failed to save sort direction, should not happen: " + ExceptionUtils.getStackTrace(e));
+            }
+
+            SortHideUnavailableRunner backgroundRunner = new SortHideUnavailableRunner(
+                    allTableFilesInfo,
+                    tableWithFiles.getMode(),
+                    hideUnavailableCheckbox.isSelected(),
+                    context.getSettings().getSortBy(),
+                    context.getSettings().getSortDirection()
+            );
+
+            BackgroundRunnerCallback<TableFilesToShowInfo> callback = result ->
+                    tableWithFiles.setFilesInfo(
+                            result.getFilesInfo(),
+                            getTableSortBy(context.getSettings()),
+                            getTableSortDirection(context.getSettings()),
+                            result.getAllSelectableCount(),
+                            result.getSelectedAvailableCount(),
+                            result.getSelectedUnavailableCount(),
+                            tableWithFiles.getMode(),
+                            false
+                    );
+
+            runInBackground(backgroundRunner, callback);
+        });
+    }
+
+    private static GuiSettings.SortDirection sortDirectionFrom(TableWithFiles.SortDirection tableSortDirection) {
+        return EnumUtils.getEnum(GuiSettings.SortDirection.class, tableSortDirection.toString());
+    }
+
+    public void show() {
+        contentPane.setVisible(true);
+    }
+
+    public void hide() {
+        contentPane.setVisible(false);
     }
 
     void handleChosenFiles(List<File> files) {
@@ -203,25 +299,24 @@ public class ContentPaneController extends AbstractController {
         hideUnavailableCheckbox.setSelected(false);
         directory = null;
 
-        LoadSeparateFilesTask backgroundRunner = new LoadSeparateFilesTask(
+        LoadSeparateFilesRunner backgroundRunner = new LoadSeparateFilesRunner(
                 files,
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
                 context
         );
 
-        BackgroundRunnerCallback<LoadSeparateFilesTask.Result> callback = result -> {
+        BackgroundRunnerCallback<LoadSeparateFilesRunner.Result> callback = result -> {
             filesInfo = result.getFilesInfo();
             allTableFilesInfo = result.getAllTableFilesInfo();
 
             tableWithFiles.setFilesInfo(
-                    result.getTableFilesToShowInfo(),
+                    result.getTableFilesToShowInfo().getFilesInfo(),
                     getTableSortBy(context.getSettings()),
                     getTableSortDirection(context.getSettings()),
-                    result.getTableFilesToShowInfo().size(),
-                    result.getSelectedAvailableCount(),
-                    result.getSelectedUnavailableCount(),
-                    result.getTableFilesToShowInfo().size(),
+                    result.getTableFilesToShowInfo().getAllSelectableCount(),
+                    result.getTableFilesToShowInfo().getSelectedAvailableCount(),
+                    result.getTableFilesToShowInfo().getSelectedUnavailableCount(),
                     TableWithFiles.Mode.SEPARATE_FILES,
                     true
             );
@@ -247,26 +342,25 @@ public class ContentPaneController extends AbstractController {
         chosenDirectoryField.setText(directory.getAbsolutePath());
         this.directory = directory;
 
-        LoadDirectoryBackgroundRunner backgroundRunner = new LoadDirectoryBackgroundRunner(
+        LoadDirectoryRunner backgroundRunner = new LoadDirectoryRunner(
                 this.directory,
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
                 context
         );
 
-        BackgroundRunnerCallback<LoadDirectoryBackgroundRunner.Result> callback = result -> {
+        BackgroundRunnerCallback<LoadDirectoryRunner.Result> callback = result -> {
             filesInfo = result.getFilesInfo();
             allTableFilesInfo = result.getAllTableFilesInfo();
 
             hideUnavailableCheckbox.setSelected(result.isHideUnavailable());
             tableWithFiles.setFilesInfo(
-                    result.getTableFilesToShowInfo(),
+                    result.getTableFilesToShowInfo().getFilesInfo(),
                     getTableSortBy(context.getSettings()),
                     getTableSortDirection(context.getSettings()),
-                    result.getAllSelectableCount(),
-                    0,
-                    0,
-                    0,
+                    result.getTableFilesToShowInfo().getAllSelectableCount(),
+                    result.getTableFilesToShowInfo().getSelectedAvailableCount(),
+                    result.getTableFilesToShowInfo().getSelectedUnavailableCount(),
                     TableWithFiles.Mode.DIRECTORY,
                     true
             );
@@ -275,12 +369,94 @@ public class ContentPaneController extends AbstractController {
         runInBackground(backgroundRunner, callback);
     }
 
-    private static TableWithFiles.SortBy getTableSortBy(GuiSettings settings) {
-        return EnumUtils.getEnum(TableWithFiles.SortBy.class, settings.getSortBy().toString());
+    @FXML
+    private void backToSelectionClicked() {
+        GuiHelperMethods.setVisibleAndManaged(chosenDirectoryPane, false);
+        chosenDirectoryField.setText(null);
+        GuiHelperMethods.setVisibleAndManaged(addRemoveFilesPane, false);
+
+        generalResult.clear();
+        lastProcessedFileInfo = null;
+        tableWithFiles.clearTable();
+
+        context.setWorkWithVideosInProgress(false);
+        videosTabController.setActivePane(VideosTabController.ActivePane.CHOICE);
     }
 
-    private static TableWithFiles.SortDirection getTableSortDirection(GuiSettings settings) {
-        return EnumUtils.getEnum(TableWithFiles.SortDirection.class, settings.getSortDirection().toString());
+    @FXML
+    private void refreshButtonClicked() {
+        //todo check if > 10000
+
+        generalResult.clear();
+        lastProcessedFileInfo = null;
+
+        LoadDirectoryRunner backgroundRunner = new LoadDirectoryRunner(
+                this.directory,
+                context.getSettings().getSortBy(),
+                context.getSettings().getSortDirection(),
+                context
+        );
+
+        BackgroundRunnerCallback<LoadDirectoryRunner.Result> callback = result -> {
+            filesInfo = result.getFilesInfo();
+            allTableFilesInfo = result.getAllTableFilesInfo();
+
+            hideUnavailableCheckbox.setSelected(result.isHideUnavailable());
+            tableWithFiles.setFilesInfo(
+                    result.getTableFilesToShowInfo().getFilesInfo(),
+                    getTableSortBy(context.getSettings()),
+                    getTableSortDirection(context.getSettings()),
+                    result.getTableFilesToShowInfo().getAllSelectableCount(),
+                    result.getTableFilesToShowInfo().getSelectedAvailableCount(),
+                    result.getTableFilesToShowInfo().getSelectedUnavailableCount(),
+                    TableWithFiles.Mode.DIRECTORY,
+                    true
+            );
+
+            /* See the huge comment in the hideUnavailableClicked() method. */
+            tableWithFiles.scrollTo(0);
+        };
+
+        runInBackground(backgroundRunner, callback);
+    }
+
+    @FXML
+    private void hideUnavailableClicked() {
+        generalResult.clear();
+        clearLastProcessedResult();
+
+        SortHideUnavailableRunner backgroundRunner = new SortHideUnavailableRunner(
+                allTableFilesInfo,
+                tableWithFiles.getMode(),
+                hideUnavailableCheckbox.isSelected(),
+                context.getSettings().getSortBy(),
+                context.getSettings().getSortDirection()
+        );
+
+        BackgroundRunnerCallback<TableFilesToShowInfo> callback = result -> {
+            tableWithFiles.setFilesInfo(
+                    result.getFilesInfo(),
+                    getTableSortBy(context.getSettings()),
+                    getTableSortDirection(context.getSettings()),
+                    result.getAllSelectableCount(),
+                    result.getSelectedAvailableCount(),
+                    result.getSelectedUnavailableCount(),
+                    tableWithFiles.getMode(),
+                    false
+            );
+
+            /*
+             * There is a strange bug with TableView - when the list is shrunk in size (because for example
+             * "hide unavailable" checkbox is checked but it can also happen when refresh is clicked I suppose) and both
+             * big list and shrunk list have vertical scrollbars table isn't shrunk unless you move the scrollbar.
+             * I've tried many workaround but this one seems the best so far - just show the beginning of the table.
+             * I couldn't find a bug with precise description but these ones fit quite well -
+             * https://bugs.openjdk.java.net/browse/JDK-8095384, https://bugs.openjdk.java.net/browse/JDK-8087833.
+             */
+            tableWithFiles.scrollTo(0);
+        };
+
+        runInBackground(backgroundRunner, callback);
     }
 
     @FXML
@@ -348,159 +524,10 @@ public class ContentPaneController extends AbstractController {
         );*/
     }
 
-    private void sortByChanged(Observable observable) {
-       /* generalResult.clear();
-        clearLastProcessedResult();
-
-        RadioMenuItem radioMenuItem = (RadioMenuItem) sortByGroup.getSelectedToggle();
-
-        try {
-            switch (radioMenuItem.getText()) {
-                case SORT_BY_NAME_TEXT:
-                    context.getSettings().saveSortBy(GuiSettings.SortBy.NAME.toString());
-                    break;
-                case SORT_BY_MODIFICATION_TIME_TEXT:
-                    context.getSettings().saveSortBy(GuiSettings.SortBy.MODIFICATION_TIME.toString());
-                    break;
-                case SORT_BY_SIZE_TEXT:
-                    context.getSettings().saveSortBy(GuiSettings.SortBy.SIZE.toString());
-                    break;
-                default:
-                    throw new IllegalStateException();
-            }
-        } catch (GuiSettings.ConfigException e) {
-            log.error("failed to save sort by, should not happen: " + ExceptionUtils.getStackTrace(e));
-        }
-
-        SortOrShowHideUnavailableTask backgroundRunner = new SortOrShowHideUnavailableTask(
-                allGuiFilesInfo,
-                hideUnavailableCheckbox.isSelected(),
-                context.getSettings().getSortBy(),
-                context.getSettings().getSortDirection()
-        );
-
-        BackgroundRunnerCallback<List<GuiFileInfo>> callback =
-                result -> updateTableContent(result, tableWithFiles.getMode(), false);
-
-        runInBackground(backgroundRunner, callback);*/
-    }
-
     private void clearLastProcessedResult() {
       /*  if (lastProcessedFileInfo != null) {
             lastProcessedFileInfo.clearResult();
         }*/
-    }
-
-    private void sortDirectionChanged(Observable observable) {
-      /*  generalResult.clear();
-        clearLastProcessedResult();
-
-        RadioMenuItem radioMenuItem = (RadioMenuItem) sortDirectionGroup.getSelectedToggle();
-
-        try {
-            switch (radioMenuItem.getText()) {
-                case SORT_ASCENDING_TEXT:
-                    context.getSettings().saveSortDirection(GuiSettings.SortDirection.ASCENDING.toString());
-                    break;
-                case SORT_DESCENDING_TEXT:
-                    context.getSettings().saveSortDirection(GuiSettings.SortDirection.DESCENDING.toString());
-                    break;
-                default:
-                    throw new IllegalStateException();
-            }
-        } catch (GuiSettings.ConfigException e) {
-            log.error("failed to save sort direction, should not happen: " + ExceptionUtils.getStackTrace(e));
-        }
-
-        SortOrShowHideUnavailableTask backgroundRunner = new SortOrShowHideUnavailableTask(
-                allGuiFilesInfo,
-                hideUnavailableCheckbox.isSelected(),
-                context.getSettings().getSortBy(),
-                context.getSettings().getSortDirection()
-        );
-
-        BackgroundRunnerCallback<List<GuiFileInfo>> callback =
-                result -> updateTableContent(result, tableWithFiles.getMode(), false);
-
-        runInBackground(backgroundRunner, callback);*/
-    }
-
-    public void show() {
-        contentPane.setVisible(true);
-    }
-
-    public void hide() {
-        contentPane.setVisible(false);
-    }
-
-    @FXML
-    private void backToSelectionClicked() {
-        GuiHelperMethods.setVisibleAndManaged(chosenDirectoryPane, false);
-        chosenDirectoryField.setText(null);
-        GuiHelperMethods.setVisibleAndManaged(addRemoveFilesPane, false);
-
-        generalResult.clear();
-        lastProcessedFileInfo = null;
-        tableWithFiles.clearTable();
-
-        context.setWorkWithVideosInProgress(false);
-        videosTabController.setActivePane(VideosTabController.ActivePane.CHOICE);
-    }
-
-    @FXML
-    private void refreshButtonClicked() {
-       /* //todo check if > 10000
-
-        lastProcessedFileInfo = null;
-        generalResult.clear();
-
-        LoadDirectoryFilesTask backgroundRunner = new LoadDirectoryFilesTask(
-                this.directory,
-                context.getSettings().getSortBy(),
-                context.getSettings().getSortDirection(),
-                context
-        );
-
-        BackgroundRunnerCallback<LoadDirectoryFilesTask.Result> callback = result -> {
-            filesInfo = result.getFilesInfo();
-            allGuiFilesInfo = result.getAllGuiFilesInfo();
-            updateTableContent(result.getGuiFilesToShowInfo(), tableWithFiles.getMode(), true);
-            hideUnavailableCheckbox.setSelected(result.isHideUnavailable());
-
-            *//* See the huge comment in the hideUnavailableClicked() method. *//*
-            tableWithFiles.scrollTo(0);
-        };
-
-        runInBackground(backgroundRunner, callback);*/
-    }
-
-    @FXML
-    private void hideUnavailableClicked() {
-      /*  generalResult.clear();
-        clearLastProcessedResult();
-
-        SortOrShowHideUnavailableTask backgroundRunner = new SortOrShowHideUnavailableTask(
-                allGuiFilesInfo,
-                hideUnavailableCheckbox.isSelected(),
-                context.getSettings().getSortBy(),
-                context.getSettings().getSortDirection()
-        );
-
-        BackgroundRunnerCallback<List<GuiFileInfo>> callback = result -> {
-            updateTableContent(result, tableWithFiles.getMode(), false);
-
-            *//*
-             * There is a strange bug with TableView - when the list is shrunk in size (because for example
-             * "hide unavailable" checkbox is checked but it can also happen when refresh is clicked I suppose) and both
-             * big list and shrunk list have vertical scrollbars table isn't shrunk unless you move the scrollbar.
-             * I've tried many workaround but this one seems the best so far - just show the beginning of the table.
-             * I couldn't find a bug with precise description but these ones fit quite well -
-             * https://bugs.openjdk.java.net/browse/JDK-8095384, https://bugs.openjdk.java.net/browse/JDK-8087833.
-             *//*
-            tableWithFiles.scrollTo(0);
-        };
-
-        runInBackground(backgroundRunner, callback);*/
     }
 
     @FXML
@@ -566,30 +593,6 @@ public class ContentPaneController extends AbstractController {
         };
 
         runInBackground(backgroundRunner, callback);*/
-    }
-
-    public static int getSubtitleCanBeHiddenCount(FileInfo fileInfo, GuiSettings guiSettings) {
-        if (CollectionUtils.isEmpty(fileInfo.getFfmpegSubtitleStreams())) {
-            return 0;
-        }
-
-        boolean hasSubtitlesWithUpperLanguage = fileInfo.getFfmpegSubtitleStreams().stream()
-                .filter(stream -> stream.getUnavailabilityReason() == null)
-                .anyMatch(stream -> stream.getLanguage() == guiSettings.getUpperLanguage());
-        boolean hasSubtitlesWithLowerLanguage = fileInfo.getFfmpegSubtitleStreams().stream()
-                .filter(stream -> stream.getUnavailabilityReason() == null)
-                .anyMatch(stream -> stream.getLanguage() == guiSettings.getLowerLanguage());
-        int subtitlesWithOtherLanguage = (int) fileInfo.getFfmpegSubtitleStreams().stream()
-                .filter(stream -> stream.getUnavailabilityReason() == null)
-                .filter(stream -> stream.getLanguage() != guiSettings.getUpperLanguage())
-                .filter(stream -> stream.getLanguage() != guiSettings.getLowerLanguage())
-                .count();
-
-        if (!hasSubtitlesWithUpperLanguage || !hasSubtitlesWithLowerLanguage) {
-            return 0;
-        }
-
-        return subtitlesWithOtherLanguage;
     }
 
    /* private void addExternalSubtitleFileClicked(GuiFileInfo guiFileInfo, Runnable onFinish) {

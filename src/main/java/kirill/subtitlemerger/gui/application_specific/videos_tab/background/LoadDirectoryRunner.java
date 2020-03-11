@@ -3,13 +3,13 @@ package kirill.subtitlemerger.gui.application_specific.videos_tab.background;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
+import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -17,51 +17,57 @@ import java.util.Arrays;
 import java.util.List;
 
 @CommonsLog
-public class LoadDirectoryBackgroundRunner implements BackgroundRunner<LoadDirectoryBackgroundRunner.Result> {
+@AllArgsConstructor
+public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner.Result> {
     private File directory;
 
     private GuiSettings.SortBy sortBy;
 
     private GuiSettings.SortDirection sortDirection;
 
-    private GuiContext guiContext;
-
-    public LoadDirectoryBackgroundRunner(
-            File directory,
-            GuiSettings.SortBy sortBy,
-            GuiSettings.SortDirection sortDirection,
-            GuiContext guiContext
-    ) {
-        this.directory = directory;
-        this.sortBy = sortBy;
-        this.sortDirection = sortDirection;
-        this.guiContext = guiContext;
-    }
+    private GuiContext context;
 
     @Override
     public Result run(BackgroundRunnerManager runnerManager) {
         List<File> files = getDirectoryFiles(directory, runnerManager);
-        List<FileInfo> filesInfo = BackgroundHelperMethods.getFilesInfo(files, guiContext.getFfprobe(), runnerManager);
+        List<FileInfo> filesInfo = BackgroundHelperMethods.getFilesInfo(files, context.getFfprobe(), runnerManager);
         List<TableFileInfo> allTableFilesInfo = BackgroundHelperMethods.tableFilesInfoFrom(
                 filesInfo,
                 false,
                 false,
                 runnerManager,
-                guiContext.getSettings()
+                context.getSettings()
         );
 
         boolean hideUnavailable = shouldHideUnavailable(filesInfo, runnerManager);
-        List<TableFileInfo> tableFilesToShowInfo = BackgroundHelperMethods.getFilesToShowInfo(
-                allTableFilesInfo,
-                hideUnavailable,
+
+        List<TableFileInfo> tableFilesToShowInfo = null;
+        if (hideUnavailable) {
+            tableFilesToShowInfo = BackgroundHelperMethods.getOnlyAvailableFilesInfo(allTableFilesInfo, runnerManager);
+        }
+
+        tableFilesToShowInfo = BackgroundHelperMethods.getSortedFilesInfo(
+                tableFilesToShowInfo != null ? tableFilesToShowInfo : allTableFilesInfo,
                 sortBy,
                 sortDirection,
                 runnerManager
         );
 
-        int allSelectableCount = getAllSelectableCount(tableFilesToShowInfo, runnerManager);
-
-        return new Result(filesInfo, allTableFilesInfo, tableFilesToShowInfo, hideUnavailable, allSelectableCount);
+        return new Result(
+                filesInfo,
+                hideUnavailable,
+                allTableFilesInfo,
+                new TableFilesToShowInfo(
+                        tableFilesToShowInfo,
+                        BackgroundHelperMethods.getAllSelectableCount(
+                                tableFilesToShowInfo,
+                                TableWithFiles.Mode.DIRECTORY,
+                                runnerManager
+                        ),
+                        0,
+                        0
+                )
+        );
     }
 
     private static List<File> getDirectoryFiles(File directory, BackgroundRunnerManager runnerManager) {
@@ -89,29 +95,15 @@ public class LoadDirectoryBackgroundRunner implements BackgroundRunner<LoadDirec
         return filesInfo.stream().anyMatch(fileInfo -> fileInfo.getUnavailabilityReason() == null);
     }
 
-    private static int getAllSelectableCount(
-            List<TableFileInfo> tableFilesToShowInfo,
-            BackgroundRunnerManager runnerManager
-    ) {
-        runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("calculating number of files...");
-
-        return (int) tableFilesToShowInfo.stream()
-                .filter(fileInfo -> StringUtils.isBlank(fileInfo.getUnavailabilityReason()))
-                .count();
-    }
-
     @AllArgsConstructor
     @Getter
     public static class Result {
         private List<FileInfo> filesInfo;
 
-        private List<TableFileInfo> allTableFilesInfo;
-
-        private List<TableFileInfo> tableFilesToShowInfo;
-
         private boolean hideUnavailable;
 
-        private int allSelectableCount;
+        private List<TableFileInfo> allTableFilesInfo;
+
+        private TableFilesToShowInfo tableFilesToShowInfo;
     }
 }

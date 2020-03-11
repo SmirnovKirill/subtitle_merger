@@ -4,6 +4,7 @@ import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableSubtitleOption;
+import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.logic.LogicConstants;
@@ -191,21 +192,25 @@ class BackgroundHelperMethods {
         }
     }
 
-    static List<TableFileInfo> getFilesToShowInfo(
+    static List<TableFileInfo> getOnlyAvailableFilesInfo(
             List<TableFileInfo> allFilesInfo,
-            boolean hideUnavailable,
+            BackgroundRunnerManager runnerManager
+    ) {
+        runnerManager.setIndeterminateProgress();
+        runnerManager.updateMessage("filtering unavailable...");
+
+        return allFilesInfo.stream()
+                .filter(fileInfo -> StringUtils.isBlank(fileInfo.getUnavailabilityReason()))
+                .collect(Collectors.toList());
+    }
+
+    static List<TableFileInfo> getSortedFilesInfo(
+            List<TableFileInfo> allFilesInfo,
             GuiSettings.SortBy sortBy,
             GuiSettings.SortDirection sortDirection,
             BackgroundRunnerManager runnerManager
     ) {
         runnerManager.setIndeterminateProgress();
-
-        List<TableFileInfo> result = new ArrayList<>(allFilesInfo);
-        if (hideUnavailable) {
-            runnerManager.updateMessage("filtering unavailable...");
-            result.removeIf(fileInfo -> !StringUtils.isBlank(fileInfo.getUnavailabilityReason()));
-        }
-
         runnerManager.updateMessage("sorting file list...");
 
         Comparator<TableFileInfo> comparator;
@@ -227,8 +232,53 @@ class BackgroundHelperMethods {
             comparator = comparator.reversed();
         }
 
-        result.sort(comparator);
+        return allFilesInfo.stream().sorted(comparator).collect(Collectors.toList());
+    }
 
-        return result;
+    static int getAllSelectableCount(
+            List<TableFileInfo> allFilesInfo,
+            TableWithFiles.Mode mode,
+            BackgroundRunnerManager runnerManager
+    ) {
+        runnerManager.setIndeterminateProgress();
+        runnerManager.updateMessage("calculating number of files...");
+
+        if (mode == TableWithFiles.Mode.SEPARATE_FILES) {
+            return allFilesInfo.size();
+        } else if (mode == TableWithFiles.Mode.DIRECTORY) {
+            return (int) allFilesInfo.stream()
+                    .filter(fileInfo -> StringUtils.isBlank(fileInfo.getUnavailabilityReason()))
+                    .count();
+        } else {
+            throw new IllegalStateException();
+        }
+    }
+
+    static int getSelectedAvailableCount(
+            List<TableFileInfo> allFilesInfo,
+            BackgroundRunnerManager runnerManager
+    ) {
+        runnerManager.setIndeterminateProgress();
+        runnerManager.updateMessage("calculating number of files...");
+
+        return (int) allFilesInfo.stream()
+                .filter(TableFileInfo::isSelected)
+                .filter(fileInfo -> StringUtils.isBlank(fileInfo.getUnavailabilityReason()))
+                .count();
+
+    }
+
+    static int getSelectedUnavailableCount(
+            List<TableFileInfo> allFilesInfo,
+            BackgroundRunnerManager runnerManager
+    ) {
+        runnerManager.setIndeterminateProgress();
+        runnerManager.updateMessage("calculating number of files...");
+
+        return (int) allFilesInfo.stream()
+                .filter(TableFileInfo::isSelected)
+                .filter(fileInfo -> !StringUtils.isBlank(fileInfo.getUnavailabilityReason()))
+                .count();
+
     }
 }
