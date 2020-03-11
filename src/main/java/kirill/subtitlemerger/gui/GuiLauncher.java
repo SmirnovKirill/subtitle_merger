@@ -3,7 +3,6 @@ package kirill.subtitlemerger.gui;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
-import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.application_specific.MainPaneController;
 import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
@@ -20,11 +19,12 @@ public class GuiLauncher extends Application {
 
     @Override
     public void start(Stage stage) {
-        NodeAndController<Pane, MainPaneController> nodeAndController = GuiHelperMethods.loadNodeAndController(
+        NodeAndController nodeAndController = GuiHelperMethods.loadNodeAndController(
                 "/gui/application_specific/mainPane.fxml"
         );
 
-        nodeAndController.getController().initialize(stage, new GuiContext());
+        MainPaneController controller = nodeAndController.getController();
+        controller.initialize(stage, new GuiContext());
 
         Scene scene = new Scene(nodeAndController.getNode());
         scene.getStylesheets().add("/gui/style.css");

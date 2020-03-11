@@ -3,7 +3,6 @@ package kirill.subtitlemerger.gui.utils;
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.StringBinding;
-import javafx.beans.property.StringProperty;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -169,10 +168,10 @@ public class GuiHelperMethods {
         }
     }
 
-    public static <T extends Node, S> NodeAndController<T, S> loadNodeAndController(String path) {
+    public static NodeAndController loadNodeAndController(String path) {
         FXMLLoader fxmlLoader = new FXMLLoader(GuiHelperMethods.class.getResource(path));
 
-        T node;
+        Node node;
         try {
             node = fxmlLoader.load();
         } catch (IOException e) {
@@ -180,7 +179,7 @@ public class GuiHelperMethods {
             throw new IllegalStateException();
         }
 
-        S controller;
+        Object controller;
         try {
             controller = Objects.requireNonNull(fxmlLoader.getController());
         } catch (NullPointerException e) {
@@ -191,7 +190,7 @@ public class GuiHelperMethods {
             throw new IllegalStateException();
         }
 
-        return new NodeAndController<>(node, controller);
+        return new NodeAndController(node, controller);
     }
 
     public static void setVisibleAndManaged(Node node, boolean value) {

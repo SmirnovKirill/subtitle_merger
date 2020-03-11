@@ -3,27 +3,33 @@ package kirill.subtitlemerger.gui.application_specific.videos_tab;
 import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.application_specific.AbstractController;
+import kirill.subtitlemerger.gui.application_specific.SubtitlePreviewController;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.background.*;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
+import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableSubtitleOption;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerCallback;
 import kirill.subtitlemerger.gui.utils.custom_controls.ActionResultLabels;
+import kirill.subtitlemerger.gui.utils.entities.NodeAndController;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.utils.FileValidator;
 import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileWithSubtitles;
+import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleOption;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -163,6 +169,7 @@ public class ContentPaneController extends AbstractController {
         setSortDirectionChangeHandler(table);
         setRemoveSubtitleOptionHandler(table);
         setSingleSubtitleLoader(table);
+        setSubtitleOptionPreviewHandler(table);
     }
 
     private void setAllSelectedHandler(TableWithFiles tableWithFiles) {
@@ -320,6 +327,94 @@ public class ContentPaneController extends AbstractController {
 
             runInBackground(backgroundRunner, callback);
         });
+    }
+
+    private void setSubtitleOptionPreviewHandler(TableWithFiles tableWithFiles) {
+        tableWithFiles.setSubtitleOptionPreviewHandler((tableSubtitleOption, tableFileInfo) -> {
+            generalResult.clear();
+            clearLastProcessedResult();
+            tableWithFiles.clearActionResult(tableFileInfo);
+
+            FileInfo fileInfo = FileInfo.getById(tableFileInfo.getId(), filesInfo);
+            SubtitleOption subtitleOption = SubtitleOption.getById(
+                    tableSubtitleOption.getId(),
+                    fileInfo.getSubtitleOptions()
+            );
+
+            NodeAndController nodeAndController = GuiHelperMethods.loadNodeAndController(
+                    "/gui/application_specific/subtitlePreview.fxml"
+            );
+
+            Stage dialogStage = generatePreviewStage(stage, nodeAndController.getNode());
+            SubtitlePreviewController controller = getInitializedOptionPreviewController(
+                    nodeAndController,
+                    subtitleOption,
+                    fileInfo,
+                    dialogStage
+            );
+
+            dialogStage.showAndWait();
+
+            if (subtitleOption instanceof FileWithSubtitles) {
+                FileWithSubtitles fileWithSubtitles = (FileWithSubtitles) subtitleOption;
+
+                fileWithSubtitles.setEncoding(controller.getUserSelection().getEncoding());
+                fileWithSubtitles.setSubtitles(controller.getUserSelection().getSubtitles());
+
+                tableWithFiles.subtitleOptionPreviewClosed(
+                        controller.getUserSelection().getSubtitles() != null
+                                ? null
+                                : TableSubtitleOption.UnavailabilityReason.INCORRECT_FORMAT,
+                        tableSubtitleOption);
+            }
+        });
+    }
+
+    private static Stage generatePreviewStage(Stage mainStage, Pane contentPane) {
+        Stage dialogStage = new Stage();
+
+        dialogStage.setTitle("Subtitle preview");
+        dialogStage.initModality(Modality.APPLICATION_MODAL);
+        dialogStage.initOwner(mainStage);
+        dialogStage.setResizable(false);
+
+        Scene scene = new Scene(contentPane);
+        scene.getStylesheets().add("/gui/style.css");
+        dialogStage.setScene(scene);
+
+        return dialogStage;
+    }
+
+    private SubtitlePreviewController getInitializedOptionPreviewController(
+            NodeAndController nodeAndController,
+            SubtitleOption subtitleOption,
+            FileInfo fileInfo,
+            Stage dialogStage
+    ) {
+        SubtitlePreviewController result = nodeAndController.getController();
+
+        if (subtitleOption instanceof FfmpegSubtitleStream) {
+            FfmpegSubtitleStream ffmpegStream = (FfmpegSubtitleStream) subtitleOption;
+
+            result.initializeSimple(
+                    subtitleOption.getSubtitles(),
+                    getStreamTitleForPreview(fileInfo, ffmpegStream),
+                    dialogStage
+            );
+        } else if (subtitleOption instanceof FileWithSubtitles) {
+            FileWithSubtitles fileWithSubtitles = (FileWithSubtitles) subtitleOption;
+
+            result.initializeWithEncoding(
+                    fileWithSubtitles.getRawData(),
+                    fileWithSubtitles.getEncoding(),
+                    fileInfo.getFile().getAbsolutePath(),
+                    dialogStage
+            );
+        } else {
+            throw new IllegalStateException();
+        }
+
+        return result;
     }
 
     void show() {
@@ -747,42 +842,6 @@ public class ContentPaneController extends AbstractController {
                 throw new IllegalStateException();
         }
     }
-
-  /*
-
-    private void showFfmpegStreamPreview(String streamId, GuiFileInfo guiFileInfo) {
-        generalResult.clear();
-        clearLastProcessedResult();
-        guiFileInfo.clearResult();
-        lastProcessedFileInfo = guiFileInfo;
-
-        Stage dialogStage = new Stage();
-
-        FileInfo fileInfo = GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo);
-
-        FfmpegSubtitleStream stream = FfmpegSubtitleStream.getById(streamId, fileInfo.getFfmpegSubtitleStreams());
-
-        NodeAndController<Pane, SubtitlePreviewController> nodeAndController = GuiUtils.loadNodeAndController(
-                "/gui/application_specific/subtitlePreview.fxml"
-        );
-
-        nodeAndController.getController().initializeSimple(
-                stream.getSubtitles(),
-                getStreamTitleForPreview(fileInfo, stream),
-                dialogStage
-        );
-
-        dialogStage.setTitle("Subtitle preview");
-        dialogStage.initModality(Modality.APPLICATION_MODAL);
-        dialogStage.initOwner(stage);
-        dialogStage.setResizable(false);
-
-        Scene scene = new Scene(nodeAndController.getNode());
-        scene.getStylesheets().add("/gui/style.css");
-        dialogStage.setScene(scene);
-
-        dialogStage.showAndWait();
-    }*/
 
     private static String getStreamTitleForPreview(FileInfo fileInfo, FfmpegSubtitleStream stream) {
         String videoFilePath = GuiHelperMethods.getShortenedStringIfNecessary(

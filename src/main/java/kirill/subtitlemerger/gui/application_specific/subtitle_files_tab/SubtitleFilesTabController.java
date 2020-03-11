@@ -4,7 +4,6 @@ import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.Pane;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -566,10 +565,12 @@ public class SubtitleFilesTabController extends AbstractController {
             );
         }
 
-        NodeAndController<Pane, FileExistsDialogController> nodeAndController = GuiHelperMethods.loadNodeAndController(
+        NodeAndController nodeAndController = GuiHelperMethods.loadNodeAndController(
                 "/gui/application_specific/subtitle_files_tab/fileExistsDialog.fxml"
         );
-        nodeAndController.getController().initialize(fileName, parentName, dialogStage);
+
+        FileExistsDialogController controller = nodeAndController.getController();
+        controller.initialize(fileName, parentName, dialogStage);
 
         //todo set stage parameters in the same manner everywhere
         dialogStage.setTitle("File exists!");
@@ -585,7 +586,7 @@ public class SubtitleFilesTabController extends AbstractController {
 
         agreeToOverwriteInProgress = false;
 
-        return nodeAndController.getController().isAgreeToOverwrite();
+        return controller.isAgreeToOverwrite();
     }
 
     @FXML
@@ -597,11 +598,12 @@ public class SubtitleFilesTabController extends AbstractController {
     private SubtitlePreviewController.UserSelection showInputSubtitlePreview(InputFileInfo fileInfo) {
         Stage dialogStage = new Stage();
 
-        NodeAndController<Pane, SubtitlePreviewController> nodeAndController = GuiHelperMethods.loadNodeAndController(
+        NodeAndController nodeAndController = GuiHelperMethods.loadNodeAndController(
                 "/gui/application_specific/subtitlePreview.fxml"
         );
 
-        nodeAndController.getController().initializeWithEncoding(
+        SubtitlePreviewController controller = nodeAndController.getController();
+        controller.initializeWithEncoding(
                 fileInfo.getRawData(),
                 fileInfo.getEncoding(),
                 fileInfo.getPath(),
@@ -619,7 +621,7 @@ public class SubtitleFilesTabController extends AbstractController {
 
         dialogStage.showAndWait();
 
-        return nodeAndController.getController().getUserSelection();
+        return controller.getUserSelection();
     }
 
     private void updateSubtitlesAndEncodingIfChanged(
@@ -736,10 +738,12 @@ public class SubtitleFilesTabController extends AbstractController {
                     64
             );
 
-            NodeAndController<Pane, SubtitlePreviewController> nodeAndController = GuiHelperMethods.loadNodeAndController(
+            NodeAndController nodeAndController = GuiHelperMethods.loadNodeAndController(
                     "/gui/application_specific/subtitlePreview.fxml"
             );
-            nodeAndController.getController().initializeMerged(subtitles, upperTitle, lowerTitle, dialogStage);
+
+            SubtitlePreviewController controller = nodeAndController.getController();
+            controller.initializeMerged(subtitles, upperTitle, lowerTitle, dialogStage);
 
             dialogStage.setTitle("Subtitle preview");
             dialogStage.initModality(Modality.APPLICATION_MODAL);

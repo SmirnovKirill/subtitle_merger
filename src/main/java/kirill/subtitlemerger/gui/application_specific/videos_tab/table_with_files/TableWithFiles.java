@@ -1086,7 +1086,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         }
     }
 
-    void subtitleOptionPreviewClosed(
+    public void subtitleOptionPreviewClosed(
             TableSubtitleOption.UnavailabilityReason unavailabilityReason,
             TableSubtitleOption subtitleOption
     ) {
