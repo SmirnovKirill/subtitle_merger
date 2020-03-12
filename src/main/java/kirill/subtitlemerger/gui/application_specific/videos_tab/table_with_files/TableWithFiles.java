@@ -356,8 +356,9 @@ public class TableWithFiles extends TableView<TableFileInfo> {
     }
 
     private static Label generateOptionTitleLabel(TableSubtitleOption subtitleOption) {
-        Label result = new Label(subtitleOption.getTitle());
+        Label result = new Label();
 
+        result.textProperty().bind(subtitleOption.titleProperty());
         result.setMaxWidth(Double.MAX_VALUE);
 
         return result;
@@ -1093,11 +1094,42 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         subtitleOption.setUnavailabilityReason(unavailabilityReason);
     }
 
-    void addFileWithSubtitles(
+    public void failedToAddFileWithSubtitles(FileWithSubtitlesUnavailabilityReason reason, TableFileInfo fileInfo) {
+        fileInfo.setActionResult(ActionResult.onlyError(unavailabilityReasonToString(reason)));
+    }
+
+    private static String unavailabilityReasonToString(FileWithSubtitlesUnavailabilityReason reason) {
+        switch (reason) {
+            case DUPLICATE:
+                return "This file has already been added";
+            case PATH_IS_TOO_LONG:
+                return "File path is too long";
+            case INVALID_PATH:
+                return "File path is invalid";
+            case IS_A_DIRECTORY:
+                return "Is a directory, not a file";
+            case FILE_DOES_NOT_EXIST:
+                return "File doesn't exist";
+            case FAILED_TO_GET_PARENT_DIRECTORY:
+                return "Failed to get parent directory for the file";
+            case EXTENSION_IS_NOT_VALID:
+                return "File has an incorrect extension";
+            case FILE_IS_EMPTY:
+                return "File is empty";
+            case FILE_IS_TOO_BIG:
+                return "File is too big (>" + GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)";
+            case FAILED_TO_READ_CONTENT:
+                return "Failed to read the file";
+            default:
+                throw new IllegalStateException();
+        }
+    }
+
+    public void addFileWithSubtitles(
             String id,
             String title,
+            boolean incorrectFormat,
             int size,
-            TableSubtitleOption.UnavailabilityReason unavailabilityReason,
             TableFileInfo fileInfo
     ) {
         TableSubtitleOption subtitleOption = getFirstEmptySubtitleOption(fileInfo);
@@ -1105,19 +1137,21 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         subtitleOption.setId(id);
         subtitleOption.setTitle(title);
         subtitleOption.setSize(size);
-        subtitleOption.setUnavailabilityReason(unavailabilityReason);
+        subtitleOption.setUnavailabilityReason(
+                incorrectFormat ? TableSubtitleOption.UnavailabilityReason.INCORRECT_FORMAT : null
+        );
 
         fileInfo.setVisibleOptionCount(fileInfo.getVisibleOptionCount() + 1);
 
-        if (unavailabilityReason == null) {
-            fileInfo.setActionResult(ActionResult.onlySuccess("Subtitle file has been added to the list successfully"));
-        } else {
+        if (incorrectFormat) {
             fileInfo.setActionResult(
                     ActionResult.onlyWarn(
                             "File was added but it has an incorrect subtitle format, you can try and change the "
                                     + "encoding pressing the preview button"
                     )
             );
+        } else {
+            fileInfo.setActionResult(ActionResult.onlySuccess("Subtitle file has been added to the list successfully"));
         }
     }
 
@@ -1285,6 +1319,19 @@ public class TableWithFiles extends TableView<TableFileInfo> {
     @FunctionalInterface
     public interface AddFileWithSubtitlesHandler {
         void addFile(TableFileInfo fileInfo);
+    }
+
+    public enum FileWithSubtitlesUnavailabilityReason {
+        DUPLICATE,
+        PATH_IS_TOO_LONG,
+        INVALID_PATH,
+        IS_A_DIRECTORY,
+        FILE_DOES_NOT_EXIST,
+        FAILED_TO_GET_PARENT_DIRECTORY,
+        EXTENSION_IS_NOT_VALID,
+        FILE_IS_EMPTY,
+        FILE_IS_TOO_BIG,
+        FAILED_TO_READ_CONTENT
     }
 
     @FunctionalInterface
