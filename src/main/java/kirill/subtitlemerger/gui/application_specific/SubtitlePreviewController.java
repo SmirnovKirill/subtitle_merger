@@ -177,8 +177,8 @@ public class SubtitlePreviewController extends AbstractController {
         BackgroundRunnerCallback<PreviewInfo> callback = previewInfo -> {
             if (mode == Mode.WITH_ENCODING) {
                 if (initialRun) {
-                    originalSubtitles = currentSubtitles;
-                    userSelection = new UserSelection(currentSubtitles, currentEncoding);
+                    originalSubtitles = previewInfo.getSubtitles();
+                    userSelection = new UserSelection(originalSubtitles, originalEncoding);
                 }
                 currentSubtitles = previewInfo.getSubtitles();
             }
