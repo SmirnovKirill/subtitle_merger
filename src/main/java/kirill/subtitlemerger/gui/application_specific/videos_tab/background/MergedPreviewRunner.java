@@ -12,34 +12,30 @@ import lombok.AllArgsConstructor;
 import java.util.Objects;
 
 @AllArgsConstructor
-public class MergedPreviewRunner implements BackgroundRunner<Void> {
+public class MergedPreviewRunner implements BackgroundRunner<MergedSubtitleInfo> {
     private SubtitleOption upperOption;
 
     private SubtitleOption lowerOption;
 
     private FileInfo fileInfo;
 
-    public Void run(BackgroundRunnerManager runnerManager) {
+    public MergedSubtitleInfo run(BackgroundRunnerManager runnerManager) {
         if (fileInfo.getMergedSubtitleInfo() != null) {
             if (mergedMatchesCurrentSelection(fileInfo.getMergedSubtitleInfo(), upperOption, lowerOption)) {
-                return null;
+                return fileInfo.getMergedSubtitleInfo();
             }
         }
 
         runnerManager.updateMessage("merging subtitles...");
         Subtitles merged = SubtitleMerger.mergeSubtitles(upperOption.getSubtitles(), lowerOption.getSubtitles());
 
-        fileInfo.setMergedSubtitleInfo(
-                new MergedSubtitleInfo(
-                        merged,
-                        upperOption.getId(),
-                        upperOption.getEncoding(),
-                        lowerOption.getId(),
-                        lowerOption.getEncoding()
-                )
+        return new MergedSubtitleInfo(
+                merged,
+                upperOption.getId(),
+                upperOption.getEncoding(),
+                lowerOption.getId(),
+                lowerOption.getEncoding()
         );
-
-        return null;
     }
 
     private static boolean mergedMatchesCurrentSelection(

@@ -22,10 +22,7 @@ import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerCallback;
 import kirill.subtitlemerger.gui.utils.custom_controls.ActionResultLabels;
 import kirill.subtitlemerger.gui.utils.entities.NodeAndController;
-import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
-import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
-import kirill.subtitlemerger.logic.work_with_files.entities.FileWithSubtitles;
-import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleOption;
+import kirill.subtitlemerger.logic.work_with_files.entities.*;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
@@ -521,7 +518,9 @@ public class ContentPaneController extends AbstractController {
 
             MergedPreviewRunner mergedPreviewRunner = new MergedPreviewRunner(upperOption, lowerOption, fileInfo);
 
-            BackgroundRunnerCallback<Void> callback = mergedSubtitleInfo -> {
+            BackgroundRunnerCallback<MergedSubtitleInfo> callback = mergedSubtitleInfo -> {
+                fileInfo.setMergedSubtitleInfo(mergedSubtitleInfo);
+
                 NodeAndController nodeAndController = GuiHelperMethods.loadNodeAndController(
                         "/gui/application_specific/subtitlePreview.fxml"
                 );

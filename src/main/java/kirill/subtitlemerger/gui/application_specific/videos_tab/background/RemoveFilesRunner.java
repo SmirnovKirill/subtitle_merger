@@ -13,11 +13,11 @@ import java.util.stream.Collectors;
 
 @AllArgsConstructor
 public class RemoveFilesRunner implements BackgroundRunner<RemoveFilesRunner.Result> {
-    private List<FileInfo> filesInfo;
+    private List<FileInfo> originalFilesInfo;
 
     private TableWithFiles.Mode mode;
 
-    private List<TableFileInfo> allTableFilesInfo;
+    private List<TableFileInfo> originalAllTableFilesInfo;
 
     private List<TableFileInfo> originalTableFilesToShowInfo;
 
@@ -25,19 +25,21 @@ public class RemoveFilesRunner implements BackgroundRunner<RemoveFilesRunner.Res
     public Result run(BackgroundRunnerManager runnerManager) {
         List<String> selectedFileIds =getSelectedFileIds(originalTableFilesToShowInfo, runnerManager);
 
-        int originalSize = filesInfo.size();
-
         runnerManager.setIndeterminateProgress();
         runnerManager.updateMessage("removing files...");
 
-        filesInfo.removeIf(fileInfo -> selectedFileIds.contains(fileInfo.getId()));
-        allTableFilesInfo.removeIf(fileInfo -> selectedFileIds.contains(fileInfo.getId()));
+        List<FileInfo> filesInfo = originalFilesInfo.stream()
+                .filter(fileInfo -> !selectedFileIds.contains(fileInfo.getId()))
+                .collect(Collectors.toList());
+        List<TableFileInfo> allTableFilesInfo = originalAllTableFilesInfo.stream()
+                .filter(fileInfo -> !selectedFileIds.contains(fileInfo.getId()))
+                .collect(Collectors.toList());
         List<TableFileInfo> tableFilesToShowInfo = originalTableFilesToShowInfo.stream()
                 .filter(fileInfo -> !selectedFileIds.contains(fileInfo.getId()))
                 .collect(Collectors.toList());
 
         return new Result(
-                originalSize - filesInfo.size(),
+                originalFilesInfo.size() - filesInfo.size(),
                 filesInfo,
                 allTableFilesInfo,
                 new TableFilesToShowInfo(
