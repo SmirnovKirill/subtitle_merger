@@ -110,8 +110,8 @@ public class ContentPaneController extends AbstractController {
         this.stage = stage;
         this.context = context;
 
-        setSelectedLabelText(tableWithFiles.getAllSelectedCount());
-        setActionButtonsVisibility(tableWithFiles.getAllSelectedCount(), tableWithFiles.getSelectedUnavailableCount());
+        updateSelectedLabelText(tableWithFiles.getAllSelectedCount());
+        updateActionButtons(tableWithFiles.getAllSelectedCount(), tableWithFiles.getSelectedUnavailableCount());
         tableWithFiles.allSelectedCountProperty().addListener(this::selectedCountChanged);
 
         setTableLoadersAndHandlers(tableWithFiles);
@@ -119,7 +119,7 @@ public class ContentPaneController extends AbstractController {
         removeSelectedButton.disableProperty().bind(tableWithFiles.allSelectedCountProperty().isEqualTo(0));
     }
 
-    private void setSelectedLabelText(int selected) {
+    private void updateSelectedLabelText(int selected) {
         selectedLabel.setText(
                 GuiHelperMethods.getTextDependingOnTheCount(
                         selected,
@@ -129,7 +129,7 @@ public class ContentPaneController extends AbstractController {
         );
     }
 
-    private void setActionButtonsVisibility(int allSelectedCount, int selectedUnavailableCount) {
+    private void updateActionButtons(int allSelectedCount, int selectedUnavailableCount) {
         boolean disable = false;
         Tooltip tooltip = null;
         if (allSelectedCount == 0) {
@@ -151,18 +151,21 @@ public class ContentPaneController extends AbstractController {
     }
 
     private void selectedCountChanged(Observable observable) {
-        setSelectedLabelText(tableWithFiles.getAllSelectedCount());
-        setActionButtonsVisibility(tableWithFiles.getAllSelectedCount(), tableWithFiles.getSelectedUnavailableCount());
+        updateSelectedLabelText(tableWithFiles.getAllSelectedCount());
+        updateActionButtons(tableWithFiles.getAllSelectedCount(), tableWithFiles.getSelectedUnavailableCount());
     }
 
     private void setTableLoadersAndHandlers(TableWithFiles table) {
         setAllSelectedHandler(table);
         setSortByChangeHandler(table);
         setSortDirectionChangeHandler(table);
+
         setRemoveSubtitleOptionHandler(table);
         setSingleSubtitleLoader(table);
         setSubtitleOptionPreviewHandler(table);
         setAddFileWithSubtitlesHandler(table);
+        setAllFileSubtitleLoader(table);
+        setMergedSubtitlePreviewHandler(table);
     }
 
     private void setAllSelectedHandler(TableWithFiles tableWithFiles) {
@@ -395,9 +398,13 @@ public class ContentPaneController extends AbstractController {
         if (subtitleOption instanceof FfmpegSubtitleStream) {
             FfmpegSubtitleStream ffmpegStream = (FfmpegSubtitleStream) subtitleOption;
 
+            String title = fileInfo.getFile().getName()
+                    + ", " + GuiHelperMethods.languageToString(ffmpegStream.getLanguage()).toUpperCase()
+                    + (!StringUtils.isBlank(ffmpegStream.getTitle()) ? " " + ffmpegStream.getTitle() : "");
+
             result.initializeSimple(
                     subtitleOption.getSubtitles(),
-                    getTitleForSubtitlePreview(fileInfo, ffmpegStream),
+                    title,
                     dialogStage
             );
         } else if (subtitleOption instanceof FileWithSubtitles) {
@@ -414,30 +421,6 @@ public class ContentPaneController extends AbstractController {
         }
 
         return result;
-    }
-
-    private static String getTitleForSubtitlePreview(FileInfo fileInfo, FfmpegSubtitleStream stream) {
-        String videoFilePath = GuiHelperMethods.getShortenedStringIfNecessary(
-                fileInfo.getFile().getName(),
-                0,
-                128
-        );
-
-        String language = GuiHelperMethods.languageToString(stream.getLanguage()).toUpperCase();
-
-        String streamTitle = "";
-        if (!StringUtils.isBlank(stream.getTitle())) {
-            streamTitle += String.format(
-                    " (%s)",
-                    GuiHelperMethods.getShortenedStringIfNecessary(
-                            stream.getTitle(),
-                            20,
-                            0
-                    )
-            );
-        }
-
-        return videoFilePath + ", " + language + streamTitle;
     }
 
     private void setAddFileWithSubtitlesHandler(TableWithFiles tableWithFiles) {
@@ -509,6 +492,69 @@ public class ContentPaneController extends AbstractController {
         );
 
         return Optional.ofNullable(fileChooser.showOpenDialog(stage));
+    }
+
+    private void setAllFileSubtitleLoader(TableWithFiles tableWithFiles) {
+        tableWithFiles.setAllFileSubtitleLoader(tableFileInfo -> {
+            generalResult.clear();
+            clearLastProcessedResult();
+            tableWithFiles.clearActionResult(tableFileInfo);
+            lastProcessedFileInfo = tableFileInfo;
+        });
+    }
+
+    private void setMergedSubtitlePreviewHandler(TableWithFiles tableWithFiles) {
+        tableWithFiles.setMergedSubtitlePreviewHandler(tableFileInfo -> {
+            generalResult.clear();
+            clearLastProcessedResult();
+            tableWithFiles.clearActionResult(tableFileInfo);
+
+            FileInfo fileInfo = FileInfo.getById(tableFileInfo.getId(), filesInfo);
+            SubtitleOption upperOption = SubtitleOption.getById(
+                    tableFileInfo.getUpperOption().getId(),
+                    fileInfo.getSubtitleOptions()
+            );
+            SubtitleOption lowerOption = SubtitleOption.getById(
+                    tableFileInfo.getLowerOption().getId(),
+                    fileInfo.getSubtitleOptions()
+            );
+
+            MergedPreviewRunner mergedPreviewRunner = new MergedPreviewRunner(upperOption, lowerOption, fileInfo);
+
+            BackgroundRunnerCallback<Void> callback = mergedSubtitleInfo -> {
+                NodeAndController nodeAndController = GuiHelperMethods.loadNodeAndController(
+                        "/gui/application_specific/subtitlePreview.fxml"
+                );
+
+                Stage dialogStage = generatePreviewStage(stage, nodeAndController.getNode());
+                SubtitlePreviewController controller = nodeAndController.getController();
+                controller.initializeMerged(
+                        fileInfo.getMergedSubtitleInfo().getSubtitles(),
+                        getOptionTitleForPreview(upperOption),
+                        getOptionTitleForPreview(lowerOption),
+                        dialogStage
+                );
+
+                dialogStage.showAndWait();
+            };
+
+            runInBackground(mergedPreviewRunner, callback);
+        });
+    }
+
+    private static String getOptionTitleForPreview(SubtitleOption option) {
+        if (option instanceof FfmpegSubtitleStream) {
+            FfmpegSubtitleStream ffmpegStream = (FfmpegSubtitleStream) option;
+
+            return GuiHelperMethods.languageToString(ffmpegStream.getLanguage()).toUpperCase()
+                    + (!StringUtils.isBlank(ffmpegStream.getTitle()) ? " " + ffmpegStream.getTitle() : "");
+        } else if (option instanceof FileWithSubtitles) {
+            FileWithSubtitles fileWithSubtitles = (FileWithSubtitles) option;
+
+            return fileWithSubtitles.getFile().getAbsolutePath();
+        } else {
+            throw new IllegalStateException();
+        }
     }
 
     void show() {
@@ -760,123 +806,7 @@ public class ContentPaneController extends AbstractController {
                 context.getFfmpeg()
         );*/
     }
-
-    private static String getStreamTitleForPreview(FileWithSubtitles fileWithSubtitles) {
-        return GuiHelperMethods.getShortenedStringIfNecessary(
-                fileWithSubtitles.getFile().getAbsolutePath(),
-                0,
-                128
-        );
-    }
-
-  /*
-
-    private void showMergedPreview(GuiFileInfo guiFileInfo) {
-        generalResult.clear();
-        clearLastProcessedResult();
-        guiFileInfo.clearResult();
-        lastProcessedFileInfo = guiFileInfo;
-
-        FileInfo fileInfo = GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo);
-
-        GuiSubtitleStream guiUpperStream = guiFileInfo.getSubtitleStreams().stream()
-                .filter(GuiSubtitleStream::isSelectedAsUpper)
-                .findFirst().orElseThrow(IllegalStateException::new);
-        SubtitleOption upperStream = SubtitleOption.getById(guiUpperStream.getId(), fileInfo.getSubtitleStreams());
-        Charset upperStreamEncoding;
-        if (upperStream instanceof FfmpegSubtitleStream) {
-            upperStreamEncoding = StandardCharsets.UTF_8;
-        } else if (upperStream instanceof FileWithSubtitles) {
-            upperStreamEncoding = ((FileWithSubtitles) upperStream).getEncoding();
-        } else {
-            throw new IllegalStateException();
-        }
-
-        GuiSubtitleStream guiLowerStream = guiFileInfo.getSubtitleStreams().stream()
-                .filter(GuiSubtitleStream::isSelectedAsLower)
-                .findFirst().orElseThrow(IllegalStateException::new);
-        SubtitleOption lowerStream = SubtitleOption.getById(guiLowerStream.getId(), fileInfo.getSubtitleStreams());
-        Charset lowerStreamEncoding;
-        if (lowerStream instanceof FfmpegSubtitleStream) {
-            lowerStreamEncoding = StandardCharsets.UTF_8;
-        } else if (lowerStream instanceof FileWithSubtitles) {
-            lowerStreamEncoding = ((FileWithSubtitles) lowerStream).getEncoding();
-        } else {
-            throw new IllegalStateException();
-        }
-
-        BackgroundRunner<MergedSubtitleInfo> backgroundRunner = runnerManager -> {
-            if (fileInfo.getMergedSubtitleInfo() != null) {
-                boolean matches = true;
-
-                if (!Objects.equals(fileInfo.getMergedSubtitleInfo().getUpperStreamId(), upperStream.getId())) {
-                    matches = false;
-                }
-
-                if (!Objects.equals(fileInfo.getMergedSubtitleInfo().getUpperStreamEncoding(), upperStreamEncoding)) {
-                    matches = false;
-                }
-
-                if (!Objects.equals(fileInfo.getMergedSubtitleInfo().getLowerStreamId(), lowerStream.getId())) {
-                    matches = false;
-                }
-
-                if (!Objects.equals(fileInfo.getMergedSubtitleInfo().getLowerStreamEncoding(), lowerStreamEncoding)) {
-                    matches = false;
-                }
-
-                if (matches) {
-                    return fileInfo.getMergedSubtitleInfo();
-                }
-            }
-
-            runnerManager.updateMessage("merging subtitles...");
-
-            Subtitles merged = SubtitleMerger.mergeSubtitles(
-                    upperStream.getSubtitles(),
-                    lowerStream.getSubtitles()
-            );
-
-            return new MergedSubtitleInfo(
-                    merged,
-                    upperStream.getId(),
-                    upperStreamEncoding,
-                    lowerStream.getId(),
-                    lowerStreamEncoding
-            );
-        };
-
-        BackgroundRunnerCallback<MergedSubtitleInfo> callback = mergedSubtitleInfo -> {
-            fileInfo.setMergedSubtitleInfo(mergedSubtitleInfo);
-
-            Stage dialogStage = new Stage();
-
-            NodeAndController<Pane, SubtitlePreviewController> nodeAndController = GuiUtils.loadNodeAndController(
-                    "/gui/application_specific/subtitlePreview.fxml"
-            );
-
-            nodeAndController.getController().initializeMerged(
-                    mergedSubtitleInfo.getSubtitles(),
-                    getStreamTitleForPreview(fileInfo, upperStream),
-                    getStreamTitleForPreview(fileInfo, lowerStream),
-                    dialogStage
-            );
-
-            dialogStage.setTitle("Subtitle preview");
-            dialogStage.initModality(Modality.APPLICATION_MODAL);
-            dialogStage.initOwner(stage);
-            dialogStage.setResizable(false);
-
-            Scene scene = new Scene(nodeAndController.getNode());
-            scene.getStylesheets().add("/gui/style.css");
-            dialogStage.setScene(scene);
-
-            dialogStage.showAndWait();
-        };
-
-        runInBackground(backgroundRunner, callback);
-    }
-
+/*
     private void loadAllFileSubtitleSizes(GuiFileInfo guiFileInfo) {
         generalResult.clear();
         clearLastProcessedResult();

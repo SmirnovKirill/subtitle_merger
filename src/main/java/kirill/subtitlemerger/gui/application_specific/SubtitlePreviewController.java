@@ -102,7 +102,7 @@ public class SubtitlePreviewController extends AbstractController {
         this.currentSubtitles = subtitles;
         this.dialogStage = dialogStage;
 
-        this.title.setText(title);
+        this.title.setText(getShortenedTitleIfNecessary(title));
         GuiHelperMethods.setVisibleAndManaged(mergedUpperPane, false);
         GuiHelperMethods.setVisibleAndManaged(mergedLowerPane, false);
         GuiHelperMethods.setVisibleAndManaged(encodingPane, false);
@@ -110,6 +110,10 @@ public class SubtitlePreviewController extends AbstractController {
         GuiHelperMethods.setVisibleAndManaged(cancelSavePane, false);
 
         getPreviewInfoAndUpdateScene(true);
+    }
+
+    private static String getShortenedTitleIfNecessary(String title) {
+        return GuiHelperMethods.getShortenedStringIfNecessary(title, 0, 128);
     }
 
     public void initializeMerged(
@@ -145,13 +149,7 @@ public class SubtitlePreviewController extends AbstractController {
         currentEncoding = originalEncoding;
         this.dialogStage = dialogStage;
 
-        title.setText(
-                GuiHelperMethods.getShortenedStringIfNecessary(
-                        fileFullPath,
-                        0,
-                        128
-                )
-        );
+        title.setText(getShortenedTitleIfNecessary(fileFullPath));
         GuiHelperMethods.setVisibleAndManaged(mergedUpperPane, false);
         GuiHelperMethods.setVisibleAndManaged(mergedLowerPane, false);
         encodingComboBox.setConverter(CHARSET_STRING_CONVERTER);

@@ -41,8 +41,6 @@ public class TableFileInfo {
 
     private IntegerProperty optionsWithUnknownSizeCount;
 
-    private IntegerProperty selectedOptionCount;
-
     private IntegerProperty visibleOptionCount;
 
     private ObjectProperty<TableSubtitleOption> upperOption;
@@ -76,7 +74,6 @@ public class TableFileInfo {
         optionsWithUnknownSizeCount = new SimpleIntegerProperty(
                 calculateOptionsWithUnknownSizeCount(subtitleOptions)
         );
-        selectedOptionCount = new SimpleIntegerProperty(calculateSelectedOptionCount(subtitleOptions));
         visibleOptionCount = new SimpleIntegerProperty(calculateVisibleOptionCount(subtitleOptions));
         upperOption = new SimpleObjectProperty<>(getUpperOption(subtitleOptions).orElse(null));
         lowerOption = new SimpleObjectProperty<>(getLowerOption(subtitleOptions).orElse(null));
@@ -117,18 +114,6 @@ public class TableFileInfo {
                 .count();
     }
 
-    private static int calculateSelectedOptionCount(List<TableSubtitleOption> subtitleOptions) {
-        int result = (int) subtitleOptions.stream()
-                .filter(option -> option.isSelectedAsUpper() || option.isSelectedAsLower())
-                .count();
-        if (result > 2) {
-            log.error("incorrect number of selected options: " + result);
-            throw new IllegalStateException();
-        }
-
-        return result;
-    }
-
     private static int calculateVisibleOptionCount(List<TableSubtitleOption> subtitleOptions) {
         return (int) subtitleOptions.stream()
                 .filter(option -> !option.isRemovable() || !StringUtils.isBlank(option.getTitle()))
@@ -161,8 +146,6 @@ public class TableFileInfo {
                         setUpperOption(null);
                     }
                 }
-
-                setSelectedOptionCount(calculateSelectedOptionCount(subtitleOptions));
             });
 
             subtitleOption.selectedAsLowerProperty().addListener((observable, oldValue, newValue) -> {
@@ -181,8 +164,6 @@ public class TableFileInfo {
                         setLowerOption(null);
                     }
                 }
-
-                setSelectedOptionCount(calculateSelectedOptionCount(subtitleOptions));
             });
         }
     }
@@ -221,18 +202,6 @@ public class TableFileInfo {
 
     void setOptionsWithUnknownSizeCount(int optionsWithUnknownSizeCount) {
         this.optionsWithUnknownSizeCount.set(optionsWithUnknownSizeCount);
-    }
-
-    public int getSelectedOptionCount() {
-        return selectedOptionCount.get();
-    }
-
-    IntegerProperty selectedOptionCountProperty() {
-        return selectedOptionCount;
-    }
-
-    void setSelectedOptionCount(int selectedOptionCount) {
-        this.selectedOptionCount.set(selectedOptionCount);
     }
 
     public int getVisibleOptionCount() {

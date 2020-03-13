@@ -726,24 +726,17 @@ public class SubtitleFilesTabController extends AbstractController {
 
             Stage dialogStage = new Stage();
 
-            String upperTitle = "file " + GuiHelperMethods.getShortenedStringIfNecessary(
-                    filesInfo.getUpperFileInfo().getPath(),
-                    0,
-                    64
-            );
-
-            String lowerTitle = "file " + GuiHelperMethods.getShortenedStringIfNecessary(
-                    filesInfo.getLowerFileInfo().getPath(),
-                    0,
-                    64
-            );
-
             NodeAndController nodeAndController = GuiHelperMethods.loadNodeAndController(
                     "/gui/application_specific/subtitlePreview.fxml"
             );
 
             SubtitlePreviewController controller = nodeAndController.getController();
-            controller.initializeMerged(subtitles, upperTitle, lowerTitle, dialogStage);
+            controller.initializeMerged(
+                    subtitles,
+                    filesInfo.getUpperFileInfo().getPath(),
+                    filesInfo.getLowerFileInfo().getPath(),
+                    dialogStage
+            );
 
             dialogStage.setTitle("Subtitle preview");
             dialogStage.initModality(Modality.APPLICATION_MODAL);

@@ -5,10 +5,7 @@ import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.StringBinding;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyIntegerProperty;
-import javafx.beans.property.ReadOnlyIntegerWrapper;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -33,9 +30,9 @@ import static kirill.subtitlemerger.gui.application_specific.videos_tab.table_wi
 
 @CommonsLog
 public class TableWithFiles extends TableView<TableFileInfo> {
-    private static final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern("dd.MM.YYYY HH:mm");
-
     private static final int CELL_PADDING = 4;
+
+    private static final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern("dd.MM.YYYY HH:mm");
 
     private static final int SIZE_AND_PREVIEW_PANE_WIDTH = 95;
 
@@ -43,11 +40,26 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
     private final Map<String, Map<CellType, Pane>> cellCache;
 
+    @Getter
+    private Mode mode;
+
+    private ReadOnlyIntegerWrapper allSelectedCount;
+
+    private CheckBox allSelectedCheckBox;
+
+    private int allSelectableCount;
+
+    @Getter
+    private int selectedAvailableCount;
+
+    @Getter
+    private int selectedUnavailableCount;
+
+    private ObjectProperty<AllSelectedHandler> allSelectedHandler;
+
     private ToggleGroup sortByGroup;
 
     private ToggleGroup sortDirectionGroup;
-
-    private ObjectProperty<AllSelectedHandler> allSelectedHandler;
 
     private ObjectProperty<SortByChangeHandler> sortByChangeHandler;
 
@@ -65,30 +77,22 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
     private ObjectProperty<MergedSubtitlePreviewHandler> mergedSubtitlePreviewHandler;
 
-    private int allSelectableCount;
-
-    private ReadOnlyIntegerWrapper allSelectedCount;
-
-    @Getter
-    private int selectedAvailableCount;
-
-    @Getter
-    private int selectedUnavailableCount;
-
-    private CheckBox allSelectedCheckBox;
-
-    @Getter
-    private Mode mode;
-
     public TableWithFiles() {
         cellCache = new HashMap<>();
 
-        sortByGroup = new ToggleGroup();
-        sortDirectionGroup = new ToggleGroup();
-
+        allSelectedCount = new ReadOnlyIntegerWrapper();
+        allSelectedCheckBox = generateAlSelectedCheckBox();
         allSelectedHandler = new SimpleObjectProperty<>();
+
+        sortByGroup = new ToggleGroup();
+        sortByGroup.selectedToggleProperty().addListener(this::sortByChanged);
+
+        sortDirectionGroup = new ToggleGroup();
+        sortDirectionGroup.selectedToggleProperty().addListener(this::sortDirectionChanged);
+
         sortByChangeHandler = new SimpleObjectProperty<>();
         sortDirectionChangeHandler = new SimpleObjectProperty<>();
+
         removeSubtitleOptionHandler = new SimpleObjectProperty<>();
         singleSubtitleLoader = new SimpleObjectProperty<>();
         subtitleOptionPreviewHandler = new SimpleObjectProperty<>();
@@ -96,18 +100,12 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         allFileSubtitleLoader = new SimpleObjectProperty<>();
         mergedSubtitlePreviewHandler = new SimpleObjectProperty<>();
 
-        allSelectedCount = new ReadOnlyIntegerWrapper();
-
-        allSelectedCheckBox = generateAlSelectedCheckBox();
-        addColumns(allSelectedCheckBox);
         setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-
-        setSelectionModel(null);
-        setPlaceholder(new Label("there are no files to display"));
+        addColumns(allSelectedCheckBox);
 
         setContextMenu(generateContextMenu(sortByGroup, sortDirectionGroup));
-        sortByGroup.selectedToggleProperty().addListener(this::sortByChanged);
-        sortDirectionGroup.selectedToggleProperty().addListener(this::sortDirectionChanged);
+        setPlaceholder(new Label("there are no files to display"));
+        setSelectionModel(null);
     }
 
     private CheckBox generateAlSelectedCheckBox() {
@@ -123,6 +121,22 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         });
 
         return result;
+    }
+
+    private void sortByChanged(Observable observable, Toggle oldValue, Toggle newValue) {
+        if (oldValue == null || newValue == null) {
+            return;
+        }
+
+        getSortByChangeHandler().handle((SortBy) newValue.getUserData());
+    }
+
+    private void sortDirectionChanged(Observable observable, Toggle oldValue, Toggle newValue) {
+        if (oldValue == null || newValue == null) {
+            return;
+        }
+
+        getSortDirectionChangeHandler().handle((SortDirection) newValue.getUserData());
     }
 
     private void addColumns(CheckBox allSelectedCheckBox) {
@@ -174,14 +188,14 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         CheckBox selectedCheckBox = new CheckBox();
 
         selectedCheckBox.selectedProperty().bindBidirectional(fileInfo.selectedProperty());
-        selectedCheckBox.setOnAction(event -> handlerFileSelectionChange(selectedCheckBox.isSelected(), fileInfo));
+        selectedCheckBox.setOnAction(event -> handleFileSelectionChange(selectedCheckBox.isSelected(), fileInfo));
 
         result.getChildren().add(selectedCheckBox);
 
         return result;
     }
 
-    private void handlerFileSelectionChange(boolean selected, TableFileInfo fileInfo) {
+    private void handleFileSelectionChange(boolean selected, TableFileInfo fileInfo) {
         int addValue = selected ? 1 : -1;
 
         if (fileInfo.getUnavailabilityReason() == null) {
@@ -827,20 +841,12 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         return result;
     }
 
-    private void sortByChanged(Observable observable, Toggle oldValue, Toggle newValue) {
-        if (oldValue == null || newValue == null) {
-            return;
-        }
-
-        getSortByChangeHandler().handle((SortBy) newValue.getUserData());
+    public int getAllSelectedCount() {
+        return allSelectedCount.get();
     }
 
-    private void sortDirectionChanged(Observable observable, Toggle oldValue, Toggle newValue) {
-        if (oldValue == null || newValue == null) {
-            return;
-        }
-
-        getSortDirectionChangeHandler().handle((SortDirection) newValue.getUserData());
+    public ReadOnlyIntegerProperty allSelectedCountProperty() {
+        return allSelectedCount.getReadOnlyProperty();
     }
 
     public AllSelectedHandler getAllSelectedHandler() {
@@ -939,6 +945,18 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         this.allFileSubtitleLoader.set(allFileSubtitleLoader);
     }
 
+    public MergedSubtitlePreviewHandler getMergedSubtitlePreviewHandler() {
+        return mergedSubtitlePreviewHandler.get();
+    }
+
+    public ObjectProperty<MergedSubtitlePreviewHandler> mergedSubtitlePreviewHandlerProperty() {
+        return mergedSubtitlePreviewHandler;
+    }
+
+    public void setMergedSubtitlePreviewHandler(MergedSubtitlePreviewHandler mergedSubtitlePreviewHandler) {
+        this.mergedSubtitlePreviewHandler.set(mergedSubtitlePreviewHandler);
+    }
+
     public void setFilesInfo(
             List<TableFileInfo> filesInfo,
             SortBy sortBy,
@@ -1016,7 +1034,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
         fileInfo.setSelected(selected);
 
-        handlerFileSelectionChange(selected, fileInfo);
+        handleFileSelectionChange(selected, fileInfo);
     }
 
     public void clearActionResult(TableFileInfo fileInfo) {
@@ -1263,12 +1281,9 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         return new ActionResult(success, warn, error);
     }
 
-    @AllArgsConstructor
-    @Getter
-    public static class LoadedSubtitles {
-        private Integer size;
-
-        private TableSubtitleOption.FailedToLoadSubtitlesReason failedToLoadReason;
+    public enum Mode {
+        SEPARATE_FILES,
+        DIRECTORY
     }
 
     @AllArgsConstructor
@@ -1284,6 +1299,14 @@ public class TableWithFiles extends TableView<TableFileInfo> {
     public enum SortDirection {
         ASCENDING,
         DESCENDING
+    }
+
+    @AllArgsConstructor
+    @Getter
+    public static class LoadedSubtitles {
+        private Integer size;
+
+        private TableSubtitleOption.FailedToLoadSubtitlesReason failedToLoadReason;
     }
 
     @FunctionalInterface
@@ -1342,14 +1365,6 @@ public class TableWithFiles extends TableView<TableFileInfo> {
     @FunctionalInterface
     public interface MergedSubtitlePreviewHandler {
         void showPreview(TableFileInfo fileInfo);
-    }
-
-    public int getAllSelectedCount() {
-        return allSelectedCount.get();
-    }
-
-    public ReadOnlyIntegerProperty allSelectedCountProperty() {
-        return allSelectedCount.getReadOnlyProperty();
     }
 
     @AllArgsConstructor
@@ -1415,10 +1430,5 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         SELECTED,
         FILE_DESCRIPTION,
         SUBTITLES
-    }
-
-    public enum Mode {
-        SEPARATE_FILES,
-        DIRECTORY
     }
 }
