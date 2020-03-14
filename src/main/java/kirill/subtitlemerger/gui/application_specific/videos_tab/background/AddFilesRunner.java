@@ -1,5 +1,6 @@
 package kirill.subtitlemerger.gui.application_specific.videos_tab.background;
 
+import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
@@ -43,6 +44,18 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
                 runnerManager
         );
         removeAlreadyAdded(filesToAddInfo, filesInfo, runnerManager);
+
+        if (filesToAddInfo.size() + filesInfo.size() > GuiConstants.TABLE_FILE_LIMIT) {
+            return new Result(
+                    String.format("There will be too many files (>%d)", GuiConstants.TABLE_FILE_LIMIT),
+                    filesToAdd.size(),
+                    0,
+                    null,
+                    null,
+                    null
+            );
+        }
+
         filesInfo.addAll(filesToAddInfo);
 
         List<TableFileInfo> tableFilesToAddInfo = BackgroundHelperMethods.tableFilesInfoFrom(
@@ -67,6 +80,7 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
         );
 
         return new Result(
+                null,
                 filesToAdd.size(),
                 filesToAddInfo.size(),
                 filesInfo,
@@ -134,6 +148,8 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
     @AllArgsConstructor
     @Getter
     public static class Result {
+        private String addFailedReason;
+
         private int filesToAddCount;
 
         private int actuallyAddedCount;

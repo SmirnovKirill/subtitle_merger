@@ -38,7 +38,7 @@ public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner
         DirectoryInfo directoryInfo = getDirectoryInfo(path, runnerManager);
         if (directoryInfo.getUnavailabilityReason() != null) {
             return new Result(
-                    unavailabilityReasonToString(directoryInfo.getUnavailabilityReason(), directoryInfo.getDirectory()),
+                    unavailabilityReasonToString(directoryInfo.getUnavailabilityReason(), path),
                     disableRefresh(directoryInfo.getUnavailabilityReason()),
                     null,
                     null,
@@ -146,8 +146,7 @@ public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner
                 || unavailabilityReason == DirectoryUnavailabilityReason.INVALID_PATH;
     }
 
-    private static String unavailabilityReasonToString(DirectoryUnavailabilityReason reason, File file) {
-        String path = file != null ? file.getAbsolutePath() : "";
+    private static String unavailabilityReasonToString(DirectoryUnavailabilityReason reason, String path) {
         path = GuiHelperMethods.getShortenedStringIfNecessary(path, 20, 40);
 
         switch (reason) {

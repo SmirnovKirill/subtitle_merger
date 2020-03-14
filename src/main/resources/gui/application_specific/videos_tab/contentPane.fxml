@@ -14,7 +14,7 @@
     <VBox fx:id="mainPane">
         <VBox spacing="5">
             <Hyperlink onAction="#backToSelectionClicked" text="back to selection" styleClass="back-link"/>
-            <HBox fx:id="chosenDirectoryPane" spacing="10" alignment="CENTER_LEFT" visible="false">
+            <HBox fx:id="chosenDirectoryPane" spacing="10" alignment="CENTER_LEFT" managed="false" visible="false">
                 <TextField fx:id="chosenDirectoryField" HBox.hgrow="ALWAYS"/>
                 <Button fx:id="refreshButton" onAction="#refreshButtonClicked">
                     <graphic>

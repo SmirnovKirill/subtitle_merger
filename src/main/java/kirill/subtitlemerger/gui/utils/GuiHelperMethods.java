@@ -5,6 +5,8 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.StringBinding;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
@@ -12,7 +14,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Region;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import javafx.util.Duration;
+import kirill.subtitlemerger.gui.utils.custom_forms.ErrorPopupController;
 import kirill.subtitlemerger.gui.utils.entities.NodeAndController;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -223,5 +228,38 @@ public class GuiHelperMethods {
     public static void setFixedWidth(Region region, int width) {
         region.setMinWidth(width);
         region.setMaxWidth(width);
+    }
+
+    public static Stage createPopupStage(String title, Parent content, Stage ownerStage) {
+        Stage result = new Stage();
+
+        //todo set stage parameters in the same manner everywhere
+        result.setTitle(title);
+        result.initModality(Modality.APPLICATION_MODAL);
+        result.initOwner(ownerStage);
+        result.setResizable(false);
+
+        Scene scene = new Scene(content);
+        scene.getStylesheets().add("/gui/style.css");
+        result.setScene(scene);
+
+        return result;
+    }
+
+    public static void showErrorPopup(String message, Stage ownerStage) {
+        NodeAndController nodeAndController = GuiHelperMethods.loadNodeAndController(
+                "/gui/utils/custom_forms/errorPopup.fxml"
+        );
+
+        Stage popupStage = GuiHelperMethods.createPopupStage(
+                "Error!",
+                nodeAndController.getNode(),
+                ownerStage
+        );
+
+        ErrorPopupController controller = nodeAndController.getController();
+        controller.initialize(message, popupStage);
+
+        popupStage.showAndWait();
     }
 }

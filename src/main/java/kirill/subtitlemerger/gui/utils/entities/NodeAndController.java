@@ -1,8 +1,7 @@
 package kirill.subtitlemerger.gui.utils.entities;
 
-import javafx.scene.Node;
+import javafx.scene.Parent;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 
 @AllArgsConstructor
 public class NodeAndController {
@@ -10,7 +9,7 @@ public class NodeAndController {
 
     private Object controller;
 
-    public <T extends Node> T getNode() {
+    public <T extends Parent> T getNode() {
         /* We can suppress the warning because JavaFX itself has no type checks for nodes and controllers. */
         @SuppressWarnings("unchecked")
         T result  = (T) node;

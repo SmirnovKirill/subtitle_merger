@@ -1,11 +1,9 @@
 package kirill.subtitlemerger.gui.application_specific.subtitle_files_tab;
 
 import javafx.fxml.FXML;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
@@ -550,8 +548,6 @@ public class SubtitleFilesTabController extends AbstractController {
     private boolean agreeToOverwrite(MergedFileInfo mergedFileInfo) {
         agreeToOverwriteInProgress = true;
 
-        Stage dialogStage = new Stage();
-
         String fileName = GuiHelperMethods.getShortenedStringIfNecessary(
                 mergedFileInfo.getFile().getName(),
                 0,
@@ -570,20 +566,12 @@ public class SubtitleFilesTabController extends AbstractController {
                 "/gui/application_specific/subtitle_files_tab/fileExistsDialog.fxml"
         );
 
+        Stage popupStage = GuiHelperMethods.createPopupStage("File exists!", nodeAndController.getNode(), stage);
+
         FileExistsDialogController controller = nodeAndController.getController();
-        controller.initialize(fileName, parentName, dialogStage);
+        controller.initialize(fileName, parentName, popupStage);
 
-        //todo set stage parameters in the same manner everywhere
-        dialogStage.setTitle("File exists!");
-        dialogStage.initModality(Modality.APPLICATION_MODAL);
-        dialogStage.initOwner(stage);
-        dialogStage.setResizable(false);
-
-        Scene scene = new Scene(nodeAndController.getNode());
-        scene.getStylesheets().add("/gui/style.css");
-        dialogStage.setScene(scene);
-
-        dialogStage.showAndWait();
+        popupStage.showAndWait();
 
         agreeToOverwriteInProgress = false;
 
@@ -597,10 +585,14 @@ public class SubtitleFilesTabController extends AbstractController {
     }
 
     private SubtitlePreviewController.UserSelection showInputSubtitlePreview(InputFileInfo fileInfo) {
-        Stage dialogStage = new Stage();
-
         NodeAndController nodeAndController = GuiHelperMethods.loadNodeAndController(
                 "/gui/application_specific/subtitlePreview.fxml"
+        );
+
+        Stage previewStage = GuiHelperMethods.createPopupStage(
+                "Subtitle preview",
+                nodeAndController.getNode(),
+                stage
         );
 
         SubtitlePreviewController controller = nodeAndController.getController();
@@ -608,19 +600,10 @@ public class SubtitleFilesTabController extends AbstractController {
                 fileInfo.getRawData(),
                 fileInfo.getEncoding(),
                 fileInfo.getPath(),
-                dialogStage
+                previewStage
         );
 
-        dialogStage.setTitle("Subtitle preview");
-        dialogStage.initModality(Modality.APPLICATION_MODAL);
-        dialogStage.initOwner(stage);
-        dialogStage.setResizable(false);
-
-        Scene scene = new Scene(nodeAndController.getNode());
-        scene.getStylesheets().add("/gui/style.css");
-        dialogStage.setScene(scene);
-
-        dialogStage.showAndWait();
+        previewStage.showAndWait();
 
         return controller.getUserSelection();
     }
@@ -725,10 +708,14 @@ public class SubtitleFilesTabController extends AbstractController {
         BackgroundRunnerCallback<Subtitles> callback = subtitles -> {
             filesInfo.setMergedSubtitles(subtitles);
 
-            Stage dialogStage = new Stage();
-
             NodeAndController nodeAndController = GuiHelperMethods.loadNodeAndController(
                     "/gui/application_specific/subtitlePreview.fxml"
+            );
+
+            Stage previewStage = GuiHelperMethods.createPopupStage(
+                    "Subtitle preview",
+                    nodeAndController.getNode(),
+                    stage
             );
 
             SubtitlePreviewController controller = nodeAndController.getController();
@@ -736,19 +723,10 @@ public class SubtitleFilesTabController extends AbstractController {
                     subtitles,
                     filesInfo.getUpperFileInfo().getPath(),
                     filesInfo.getLowerFileInfo().getPath(),
-                    dialogStage
+                    previewStage
             );
 
-            dialogStage.setTitle("Subtitle preview");
-            dialogStage.initModality(Modality.APPLICATION_MODAL);
-            dialogStage.initOwner(stage);
-            dialogStage.setResizable(false);
-
-            Scene scene = new Scene(nodeAndController.getNode());
-            scene.getStylesheets().add("/gui/style.css");
-            dialogStage.setScene(scene);
-
-            dialogStage.showAndWait();
+            previewStage.showAndWait();
         };
 
         runInBackground(backgroundRunner, callback);

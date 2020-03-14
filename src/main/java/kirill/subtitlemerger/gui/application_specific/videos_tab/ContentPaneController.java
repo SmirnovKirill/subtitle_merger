@@ -3,11 +3,9 @@ package kirill.subtitlemerger.gui.application_specific.videos_tab;
 import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.fxml.FXML;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
 import javafx.stage.FileChooser;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
@@ -22,6 +20,7 @@ import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerCallback;
 import kirill.subtitlemerger.gui.utils.custom_controls.ActionResultLabels;
+import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import kirill.subtitlemerger.gui.utils.entities.FileOrigin;
 import kirill.subtitlemerger.gui.utils.entities.NodeAndController;
 import kirill.subtitlemerger.logic.work_with_files.entities.*;
@@ -358,15 +357,19 @@ public class ContentPaneController extends AbstractController {
                     "/gui/application_specific/subtitlePreview.fxml"
             );
 
-            Stage dialogStage = generatePreviewStage(stage, nodeAndController.getNode());
+            Stage previewStage = GuiHelperMethods.createPopupStage(
+                    "Subtitle preview",
+                    nodeAndController.getNode(),
+                    stage
+            );
             SubtitlePreviewController controller = getInitializedOptionPreviewController(
                     nodeAndController,
                     subtitleOption,
                     fileInfo,
-                    dialogStage
+                    previewStage
             );
 
-            dialogStage.showAndWait();
+            previewStage.showAndWait();
 
             if (subtitleOption instanceof FileWithSubtitles) {
                 FileWithSubtitles fileWithSubtitles = (FileWithSubtitles) subtitleOption;
@@ -381,21 +384,6 @@ public class ContentPaneController extends AbstractController {
                         tableSubtitleOption);
             }
         });
-    }
-
-    private static Stage generatePreviewStage(Stage mainStage, Pane contentPane) {
-        Stage dialogStage = new Stage();
-
-        dialogStage.setTitle("Subtitle preview");
-        dialogStage.initModality(Modality.APPLICATION_MODAL);
-        dialogStage.initOwner(mainStage);
-        dialogStage.setResizable(false);
-
-        Scene scene = new Scene(contentPane);
-        scene.getStylesheets().add("/gui/style.css");
-        dialogStage.setScene(scene);
-
-        return dialogStage;
     }
 
     private SubtitlePreviewController getInitializedOptionPreviewController(
@@ -539,16 +527,20 @@ public class ContentPaneController extends AbstractController {
                         "/gui/application_specific/subtitlePreview.fxml"
                 );
 
-                Stage dialogStage = generatePreviewStage(stage, nodeAndController.getNode());
+                Stage previewStage = GuiHelperMethods.createPopupStage(
+                        "Subtitle preview",
+                        nodeAndController.getNode(),
+                        stage
+                );
                 SubtitlePreviewController controller = nodeAndController.getController();
                 controller.initializeMerged(
                         fileInfo.getMergedSubtitleInfo().getSubtitles(),
                         getOptionTitleForPreview(upperOption),
                         getOptionTitleForPreview(lowerOption),
-                        dialogStage
+                        previewStage
                 );
 
-                dialogStage.showAndWait();
+                previewStage.showAndWait();
             };
 
             runInBackground(mergedPreviewRunner, callback);
@@ -953,21 +945,25 @@ public class ContentPaneController extends AbstractController {
         );
 
         BackgroundRunnerCallback<AddFilesRunner.Result> callback = result -> {
-            filesInfo = result.getFilesInfo();
-            allTableFilesInfo = result.getAllTableFilesInfo();
+            if (!StringUtils.isBlank(result.getAddFailedReason())) {
+                generalResult.set(ActionResult.onlyError(result.getAddFailedReason()));
+            } else {
+                filesInfo = result.getFilesInfo();
+                allTableFilesInfo = result.getAllTableFilesInfo();
 
-            tableWithFiles.setFilesInfo(
-                    result.getTableFilesToShowInfo().getFilesInfo(),
-                    getTableSortBy(context.getSettings()),
-                    getTableSortDirection(context.getSettings()),
-                    result.getTableFilesToShowInfo().getAllSelectableCount(),
-                    result.getTableFilesToShowInfo().getSelectedAvailableCount(),
-                    result.getTableFilesToShowInfo().getSelectedUnavailableCount(),
-                    tableWithFiles.getMode(),
-                    false
-            );
+                tableWithFiles.setFilesInfo(
+                        result.getTableFilesToShowInfo().getFilesInfo(),
+                        getTableSortBy(context.getSettings()),
+                        getTableSortDirection(context.getSettings()),
+                        result.getTableFilesToShowInfo().getAllSelectableCount(),
+                        result.getTableFilesToShowInfo().getSelectedAvailableCount(),
+                        result.getTableFilesToShowInfo().getSelectedUnavailableCount(),
+                        tableWithFiles.getMode(),
+                        false
+                );
 
-            generalResult.set(AddFilesRunner.generateActionResult(result));
+                generalResult.set(AddFilesRunner.generateActionResult(result));
+            }
         };
 
         runInBackground(backgroundRunner, callback);

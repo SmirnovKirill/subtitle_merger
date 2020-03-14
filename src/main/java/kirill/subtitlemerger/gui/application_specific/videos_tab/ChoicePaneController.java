@@ -5,8 +5,10 @@ import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
+import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -51,6 +53,18 @@ public class ChoicePaneController {
     private void separateFilesButtonClicked() {
         List<File> files = getFiles(stage, context.getSettings());
         if (CollectionUtils.isEmpty(files)) {
+            return;
+        }
+
+        if (files.size() > GuiConstants.TABLE_FILE_LIMIT) {
+            GuiHelperMethods.showErrorPopup(
+                    String.format(
+                            "Unfortunately, it's impossible to add more than %d files",
+                            GuiConstants.TABLE_FILE_LIMIT
+                    ),
+                    stage
+            );
+
             return;
         }
 
