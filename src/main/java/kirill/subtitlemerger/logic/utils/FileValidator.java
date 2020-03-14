@@ -14,7 +14,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 public class FileValidator {
-    private static final int PATH_LENGTH_LIMIT = 4096;
+    public static final int PATH_LENGTH_LIMIT = 4096;
 
     public static Optional<InputFileInfo> getInputFileInfo(
             String path,
@@ -50,7 +50,7 @@ public class FileValidator {
 
         if (!file.exists()) {
             return Optional.of(
-                    new InputFileInfo(file, null, IncorrectInputFileReason.FILE_DOES_NOT_EXIST, null)
+                    new InputFileInfo(file, null, IncorrectInputFileReason.DOES_NOT_EXIST, null)
             );
         }
 
@@ -125,7 +125,7 @@ public class FileValidator {
         }
 
         if (!allowNonExistent && !file.exists()) {
-            return Optional.of(new OutputFileInfo(file, parent, IncorrectOutputFileReason.FILE_DOES_NOT_EXIST));
+            return Optional.of(new OutputFileInfo(file, parent, IncorrectOutputFileReason.DOES_NOT_EXIST));
         }
 
         String extension = FilenameUtils.getExtension(file.getAbsolutePath());
@@ -152,7 +152,7 @@ public class FileValidator {
         PATH_IS_TOO_LONG,
         INVALID_PATH,
         IS_A_DIRECTORY,
-        FILE_DOES_NOT_EXIST,
+        DOES_NOT_EXIST,
         FAILED_TO_GET_PARENT_DIRECTORY,
         EXTENSION_IS_NOT_VALID,
         FILE_IS_EMPTY,
@@ -174,7 +174,7 @@ public class FileValidator {
         PATH_IS_TOO_LONG,
         INVALID_PATH,
         IS_A_DIRECTORY,
-        FILE_DOES_NOT_EXIST,
+        DOES_NOT_EXIST,
         EXTENSION_IS_NOT_VALID
     }
 }

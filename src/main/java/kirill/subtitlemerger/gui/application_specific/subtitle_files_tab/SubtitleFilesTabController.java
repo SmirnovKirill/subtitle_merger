@@ -17,6 +17,7 @@ import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerCallback;
 import kirill.subtitlemerger.gui.utils.custom_controls.ActionResultLabels;
 import kirill.subtitlemerger.gui.utils.entities.ActionResult;
+import kirill.subtitlemerger.gui.utils.entities.FileOrigin;
 import kirill.subtitlemerger.gui.utils.entities.NodeAndController;
 import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
@@ -450,7 +451,7 @@ public class SubtitleFilesTabController extends AbstractController {
                 return "File path is invalid";
             case IS_A_DIRECTORY:
                 return path + " is a directory, not a file";
-            case FILE_DOES_NOT_EXIST:
+            case DOES_NOT_EXIST:
                 return "File '" + path + "' doesn't exist";
             case FAILED_TO_GET_PARENT_DIRECTORY:
                 return path + ": failed to get parent directory";
@@ -840,11 +841,6 @@ public class SubtitleFilesTabController extends AbstractController {
         MERGED_SUBTITLES
     }
 
-    private enum FileOrigin {
-        TEXT_FIELD,
-        FILE_CHOOSER
-    }
-
     @AllArgsConstructor
     @Getter
     private static class InputFileInfo {
@@ -878,8 +874,8 @@ public class SubtitleFilesTabController extends AbstractController {
                     return SubtitleFilesTabController.IncorrectInputFileReason.INVALID_PATH;
                 case IS_A_DIRECTORY:
                     return SubtitleFilesTabController.IncorrectInputFileReason.IS_A_DIRECTORY;
-                case FILE_DOES_NOT_EXIST:
-                    return SubtitleFilesTabController.IncorrectInputFileReason.FILE_DOES_NOT_EXIST;
+                case DOES_NOT_EXIST:
+                    return SubtitleFilesTabController.IncorrectInputFileReason.DOES_NOT_EXIST;
                 case FAILED_TO_GET_PARENT_DIRECTORY:
                     return SubtitleFilesTabController.IncorrectInputFileReason.FAILED_TO_GET_PARENT_DIRECTORY;
                 case EXTENSION_IS_NOT_VALID:
@@ -900,7 +896,7 @@ public class SubtitleFilesTabController extends AbstractController {
         PATH_IS_TOO_LONG,
         INVALID_PATH,
         IS_A_DIRECTORY,
-        FILE_DOES_NOT_EXIST,
+        DOES_NOT_EXIST,
         FAILED_TO_GET_PARENT_DIRECTORY,
         EXTENSION_IS_NOT_VALID,
         FILE_IS_EMPTY,

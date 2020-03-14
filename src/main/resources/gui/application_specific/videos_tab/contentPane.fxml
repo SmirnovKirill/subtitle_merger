@@ -15,8 +15,8 @@
         <VBox spacing="5">
             <Hyperlink onAction="#backToSelectionClicked" text="back to selection" styleClass="back-link"/>
             <HBox fx:id="chosenDirectoryPane" spacing="10" alignment="CENTER_LEFT" visible="false">
-                <TextField fx:id="chosenDirectoryField" editable="false" HBox.hgrow="ALWAYS"/>
-                <Button onAction="#refreshButtonClicked">
+                <TextField fx:id="chosenDirectoryField" HBox.hgrow="ALWAYS"/>
+                <Button fx:id="refreshButton" onAction="#refreshButtonClicked">
                     <graphic>
                         <ImageView fitHeight="16" fitWidth="16">
                             <Image url="/gui/icons/refresh.png"/>
@@ -26,7 +26,7 @@
             </HBox>
         </VBox>
         <ActionResultLabels fx:id="generalResult" minHeight="40" maxHeight="40" alignment="CENTER" alwaysManaged="true"/>
-        <VBox spacing="10" VBox.vgrow="ALWAYS">
+        <VBox fx:id="tableAndActionsPane" spacing="10" VBox.vgrow="ALWAYS">
             <HBox spacing="20"><Label fx:id="selectedLabel"/></HBox>
             <HBox spacing="10" alignment="CENTER_LEFT">
                 <CheckBox fx:id="hideUnavailableCheckbox" onAction="#hideUnavailableClicked" text="hide unavailable"/>

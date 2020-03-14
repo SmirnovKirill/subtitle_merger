@@ -1,17 +1,23 @@
 package kirill.subtitlemerger.gui.application_specific.videos_tab.background;
 
+import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
+import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
+import kirill.subtitlemerger.logic.utils.FileValidator;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,7 +25,7 @@ import java.util.List;
 @CommonsLog
 @AllArgsConstructor
 public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner.Result> {
-    private File directory;
+    private String path;
 
     private GuiSettings.SortBy sortBy;
 
@@ -29,8 +35,23 @@ public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner
 
     @Override
     public Result run(BackgroundRunnerManager runnerManager) {
-        List<File> files = getDirectoryFiles(directory, runnerManager);
-        List<FileInfo> filesInfo = BackgroundHelperMethods.getFilesInfo(files, context.getFfprobe(), runnerManager);
+        DirectoryInfo directoryInfo = getDirectoryInfo(path, runnerManager);
+        if (directoryInfo.getUnavailabilityReason() != null) {
+            return new Result(
+                    unavailabilityReasonToString(directoryInfo.getUnavailabilityReason(), directoryInfo.getDirectory()),
+                    disableRefresh(directoryInfo.getUnavailabilityReason()),
+                    null,
+                    null,
+                    false,
+                    null
+            );
+        }
+
+        List<FileInfo> filesInfo = BackgroundHelperMethods.getFilesInfo(
+                directoryInfo.getDirectoryFiles(),
+                context.getFfprobe(),
+                runnerManager
+        );
         List<TableFileInfo> allTableFilesInfo = BackgroundHelperMethods.tableFilesInfoFrom(
                 filesInfo,
                 false,
@@ -54,9 +75,11 @@ public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner
         );
 
         return new Result(
+                null,
+                false,
                 filesInfo,
-                hideUnavailable,
                 allTableFilesInfo,
+                hideUnavailable,
                 new TableFilesToShowInfo(
                         tableFilesToShowInfo,
                         BackgroundHelperMethods.getAllSelectableCount(
@@ -70,10 +93,43 @@ public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner
         );
     }
 
-    private static List<File> getDirectoryFiles(File directory, BackgroundRunnerManager runnerManager) {
+    private static DirectoryInfo getDirectoryInfo(String path, BackgroundRunnerManager runnerManager) {
+        if (StringUtils.isBlank(path)) {
+            return new DirectoryInfo(null, null, DirectoryUnavailabilityReason.PATH_EMPTY);
+        }
+
+        if (path.length() > FileValidator.PATH_LENGTH_LIMIT) {
+            return new DirectoryInfo(null, null, DirectoryUnavailabilityReason.PATH_IS_TOO_LONG);
+        }
+
+        try {
+            Path.of(path);
+        } catch (InvalidPathException e) {
+            return new DirectoryInfo(null, null, DirectoryUnavailabilityReason.INVALID_PATH);
+        }
+
+        File file = new File(path);
+        if (file.isFile()) {
+            return new DirectoryInfo(file, null, DirectoryUnavailabilityReason.IS_A_FILE);
+        }
+
+        if (!file.exists()) {
+            return new DirectoryInfo(file, null, DirectoryUnavailabilityReason.DOES_NOT_EXIST);
+        }
+
+        List<File> directoryFiles = getDirectoryFiles(path, runnerManager);
+        if (directoryFiles.size() > GuiConstants.TABLE_FILE_LIMIT) {
+            return new DirectoryInfo(file, null, DirectoryUnavailabilityReason.TOO_MANY_FILES);
+        }
+
+        return new DirectoryInfo(file, directoryFiles, null);
+    }
+
+    private static List<File> getDirectoryFiles(String directoryPath, BackgroundRunnerManager runnerManager) {
         runnerManager.setIndeterminateProgress();
         runnerManager.updateMessage("getting file list...");
 
+        File directory = new File(directoryPath);
         File[] directoryFiles = directory.listFiles();
 
         if (directoryFiles == null) {
@@ -81,6 +137,34 @@ public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner
             return new ArrayList<>();
         } else {
             return Arrays.asList(directoryFiles);
+        }
+    }
+
+    private static boolean disableRefresh(DirectoryUnavailabilityReason unavailabilityReason) {
+        return unavailabilityReason == DirectoryUnavailabilityReason.PATH_EMPTY
+                || unavailabilityReason == DirectoryUnavailabilityReason.PATH_IS_TOO_LONG
+                || unavailabilityReason == DirectoryUnavailabilityReason.INVALID_PATH;
+    }
+
+    private static String unavailabilityReasonToString(DirectoryUnavailabilityReason reason, File file) {
+        String path = file != null ? file.getAbsolutePath() : "";
+        path = GuiHelperMethods.getShortenedStringIfNecessary(path, 20, 40);
+
+        switch (reason) {
+            case PATH_EMPTY:
+                return "Directory is not selected!";
+            case PATH_IS_TOO_LONG:
+                return "Directory path is too long";
+            case INVALID_PATH:
+                return "Directory path is invalid";
+            case IS_A_FILE:
+                return path + " is a file, not a directory";
+            case DOES_NOT_EXIST:
+                return "Directory '" + path + "' doesn't exist";
+            case TOO_MANY_FILES:
+                return String.format("Directory has too many files (>%d)", GuiConstants.TABLE_FILE_LIMIT);
+            default:
+                throw new IllegalStateException();
         }
     }
 
@@ -98,12 +182,35 @@ public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner
     @AllArgsConstructor
     @Getter
     public static class Result {
-        private List<FileInfo> filesInfo;
+        private String unavailabilityReason;
 
-        private boolean hideUnavailable;
+        private boolean disableRefresh;
+
+        private List<FileInfo> filesInfo;
 
         private List<TableFileInfo> allTableFilesInfo;
 
+        private boolean hideUnavailable;
+
         private TableFilesToShowInfo tableFilesToShowInfo;
+    }
+
+    @AllArgsConstructor
+    @Getter
+    private static class DirectoryInfo {
+        private File directory;
+
+        private List<File> directoryFiles;
+        
+        private DirectoryUnavailabilityReason unavailabilityReason;
+    }
+    
+    private enum DirectoryUnavailabilityReason {
+        PATH_EMPTY,
+        PATH_IS_TOO_LONG,
+        INVALID_PATH,
+        IS_A_FILE,
+        DOES_NOT_EXIST,
+        TOO_MANY_FILES
     }
 }

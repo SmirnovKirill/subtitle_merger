@@ -15,6 +15,7 @@ import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
 import kirill.subtitlemerger.gui.utils.custom_controls.ActionResultLabels;
+import kirill.subtitlemerger.gui.utils.entities.FileOrigin;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
@@ -570,10 +571,5 @@ public class SettingsTabController {
             /* + 4 because every code is 3 symbol long. */
             return LanguageAlpha3Code.getByCode(rawCode.substring(leftBracketIndex + 1, leftBracketIndex + 4));
         }
-    }
-
-    private enum FileOrigin {
-        TEXT_FIELD,
-        FILE_CHOOSER
     }
 }

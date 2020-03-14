@@ -1,6 +1,7 @@
 package kirill.subtitlemerger.gui.application_specific.videos_tab.background;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
+import javafx.application.Platform;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableSubtitleOption;
@@ -282,5 +283,28 @@ class BackgroundHelperMethods {
                 + GuiHelperMethods.languageToString(subtitleStream.getLanguage()).toUpperCase()
                 + (StringUtils.isBlank(subtitleStream.getTitle()) ? "" : " " + subtitleStream.getTitle())
                 + " in " + file.getName();
+    }
+
+    static void clearActionResults(
+            List<TableFileInfo> filesInfo,
+            TableWithFiles tableWithFiles,
+            BackgroundRunnerManager runnerManager
+    ) {
+        runnerManager.setIndeterminateProgress();
+        runnerManager.updateMessage("clearing state...");
+
+        for (TableFileInfo fileInfo : filesInfo) {
+            Platform.runLater(() -> tableWithFiles.clearActionResult(fileInfo));
+        }
+    }
+
+    static List<TableFileInfo> getSelectedFilesInfo(
+            List<TableFileInfo> filesInfo,
+            BackgroundRunnerManager runnerManager
+    ) {
+        runnerManager.setIndeterminateProgress();
+        runnerManager.updateMessage("getting list of files to work with...");
+
+        return filesInfo.stream().filter(TableFileInfo::isSelected).collect(Collectors.toList());
     }
 }

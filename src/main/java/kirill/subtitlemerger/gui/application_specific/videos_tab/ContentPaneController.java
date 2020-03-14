@@ -9,6 +9,7 @@ import javafx.scene.layout.Pane;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.application_specific.AbstractController;
@@ -21,12 +22,14 @@ import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerCallback;
 import kirill.subtitlemerger.gui.utils.custom_controls.ActionResultLabels;
+import kirill.subtitlemerger.gui.utils.entities.FileOrigin;
 import kirill.subtitlemerger.gui.utils.entities.NodeAndController;
 import kirill.subtitlemerger.logic.work_with_files.entities.*;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.EnumUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -47,7 +50,13 @@ public class ContentPaneController extends AbstractController {
     private TextField chosenDirectoryField;
 
     @FXML
+    private Button refreshButton;
+
+    @FXML
     private ActionResultLabels generalResult;
+
+    @FXML
+    private Pane tableAndActionsPane;
 
     @FXML
     private Label selectedLabel;
@@ -82,7 +91,7 @@ public class ContentPaneController extends AbstractController {
     @FXML
     private Button removeSelectedButton;
 
-    private File directory;
+    private String directoryPath;
 
     private List<FileInfo> filesInfo;
 
@@ -106,6 +115,11 @@ public class ContentPaneController extends AbstractController {
         this.videosTabController = videosTabController;
         this.stage = stage;
         this.context = context;
+
+        GuiHelperMethods.setTextFieldChangeListeners(
+                chosenDirectoryField,
+                (path) -> processDirectoryPath(path, FileOrigin.TEXT_FIELD)
+        );
 
         updateSelectedLabelText(tableWithFiles.getAllSelectedCount());
         updateActionButtons(tableWithFiles.getAllSelectedCount(), tableWithFiles.getSelectedUnavailableCount());
@@ -579,7 +593,7 @@ public class ContentPaneController extends AbstractController {
         context.setWorkWithVideosInProgress(true);
         GuiHelperMethods.setVisibleAndManaged(addRemoveFilesPane, true);
         hideUnavailableCheckbox.setSelected(false);
-        directory = null;
+        directoryPath = null;
 
         LoadSeparateFilesRunner backgroundRunner = new LoadSeparateFilesRunner(
                 files,
@@ -608,44 +622,72 @@ public class ContentPaneController extends AbstractController {
     }
 
     void handleChosenDirectory(File directory) {
-        //todo check if > 10000
+        context.setWorkWithVideosInProgress(true);
+        GuiHelperMethods.setVisibleAndManaged(chosenDirectoryPane, true);
+
+        processDirectoryPath(directory.getAbsolutePath(), FileOrigin.FILE_CHOOSER);
+    }
+
+    private void processDirectoryPath(String path, FileOrigin fileOrigin) {
+        if (fileOrigin == FileOrigin.TEXT_FIELD && path.equals(ObjectUtils.firstNonNull(directoryPath, ""))) {
+            return;
+        }
+
+        directoryPath = path;
+
+        chosenDirectoryField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
+        if (fileOrigin == FileOrigin.FILE_CHOOSER) {
+            chosenDirectoryField.setText(path);
+        }
+        refreshButton.setDisable(false);
+        generalResult.clear();
+        tableAndActionsPane.setDisable(false);
+        tableWithFiles.clearTable();
+        lastProcessedFileInfo = null;
 
         try {
-            context.getSettings().saveLastDirectoryWithVideos(directory.getAbsolutePath());
+            if (fileOrigin == FileOrigin.FILE_CHOOSER) {
+                context.getSettings().saveLastDirectoryWithVideos(path);
+            }
         } catch (GuiSettings.ConfigException e) {
             log.error(
-                    "failed to save last directory with videos, that shouldn't happen: "
+                    "failed to save last directory with videos, shouldn't happen: "
                             + ExceptionUtils.getStackTrace(e)
             );
         }
 
-        context.setWorkWithVideosInProgress(true);
-        GuiHelperMethods.setVisibleAndManaged(chosenDirectoryPane, true);
-        chosenDirectoryField.setText(directory.getAbsolutePath());
-        this.directory = directory;
-
         LoadDirectoryRunner backgroundRunner = new LoadDirectoryRunner(
-                this.directory,
+                directoryPath,
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
                 context
         );
 
         BackgroundRunnerCallback<LoadDirectoryRunner.Result> callback = result -> {
-            filesInfo = result.getFilesInfo();
-            allTableFilesInfo = result.getAllTableFilesInfo();
+            if (result.getUnavailabilityReason() != null) {
+                filesInfo = null;
+                allTableFilesInfo = null;
 
-            hideUnavailableCheckbox.setSelected(result.isHideUnavailable());
-            tableWithFiles.setFilesInfo(
-                    result.getTableFilesToShowInfo().getFilesInfo(),
-                    getTableSortBy(context.getSettings()),
-                    getTableSortDirection(context.getSettings()),
-                    result.getTableFilesToShowInfo().getAllSelectableCount(),
-                    result.getTableFilesToShowInfo().getSelectedAvailableCount(),
-                    result.getTableFilesToShowInfo().getSelectedUnavailableCount(),
-                    TableWithFiles.Mode.DIRECTORY,
-                    true
-            );
+                chosenDirectoryField.getStyleClass().add(GuiConstants.TEXT_FIELD_ERROR_CLASS);
+                refreshButton.setDisable(result.isDisableRefresh());
+                generalResult.setOnlyError(result.getUnavailabilityReason());
+                tableAndActionsPane.setDisable(true);
+            } else {
+                filesInfo = result.getFilesInfo();
+                allTableFilesInfo = result.getAllTableFilesInfo();
+
+                hideUnavailableCheckbox.setSelected(result.isHideUnavailable());
+                tableWithFiles.setFilesInfo(
+                        result.getTableFilesToShowInfo().getFilesInfo(),
+                        getTableSortBy(context.getSettings()),
+                        getTableSortDirection(context.getSettings()),
+                        result.getTableFilesToShowInfo().getAllSelectableCount(),
+                        result.getTableFilesToShowInfo().getSelectedAvailableCount(),
+                        result.getTableFilesToShowInfo().getSelectedUnavailableCount(),
+                        TableWithFiles.Mode.DIRECTORY,
+                        true
+                );
+            }
         };
 
         runInBackground(backgroundRunner, callback);
@@ -658,8 +700,9 @@ public class ContentPaneController extends AbstractController {
         GuiHelperMethods.setVisibleAndManaged(addRemoveFilesPane, false);
 
         generalResult.clear();
-        lastProcessedFileInfo = null;
+        tableAndActionsPane.setDisable(false);
         tableWithFiles.clearTable();
+        lastProcessedFileInfo = null;
 
         context.setWorkWithVideosInProgress(false);
         videosTabController.setActivePane(VideosTabController.ActivePane.CHOICE);
@@ -667,36 +710,47 @@ public class ContentPaneController extends AbstractController {
 
     @FXML
     private void refreshButtonClicked() {
-        //todo check if > 10000
-
+        chosenDirectoryField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
+        refreshButton.setDisable(false);
         generalResult.clear();
+        tableAndActionsPane.setDisable(false);
+        tableWithFiles.clearTable();
         lastProcessedFileInfo = null;
 
         LoadDirectoryRunner backgroundRunner = new LoadDirectoryRunner(
-                this.directory,
+                directoryPath,
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
                 context
         );
 
         BackgroundRunnerCallback<LoadDirectoryRunner.Result> callback = result -> {
-            filesInfo = result.getFilesInfo();
-            allTableFilesInfo = result.getAllTableFilesInfo();
+            if (result.getUnavailabilityReason() != null) {
+                filesInfo = null;
+                allTableFilesInfo = null;
 
-            hideUnavailableCheckbox.setSelected(result.isHideUnavailable());
-            tableWithFiles.setFilesInfo(
-                    result.getTableFilesToShowInfo().getFilesInfo(),
-                    getTableSortBy(context.getSettings()),
-                    getTableSortDirection(context.getSettings()),
-                    result.getTableFilesToShowInfo().getAllSelectableCount(),
-                    result.getTableFilesToShowInfo().getSelectedAvailableCount(),
-                    result.getTableFilesToShowInfo().getSelectedUnavailableCount(),
-                    TableWithFiles.Mode.DIRECTORY,
-                    true
-            );
+                chosenDirectoryField.getStyleClass().add(GuiConstants.TEXT_FIELD_ERROR_CLASS);
+                generalResult.setOnlyError(result.getUnavailabilityReason());
+                tableAndActionsPane.setDisable(true);
+            } else {
+                filesInfo = result.getFilesInfo();
+                allTableFilesInfo = result.getAllTableFilesInfo();
 
-            /* See the huge comment in the hideUnavailableClicked() method. */
-            tableWithFiles.scrollTo(0);
+                hideUnavailableCheckbox.setSelected(result.isHideUnavailable());
+                tableWithFiles.setFilesInfo(
+                        result.getTableFilesToShowInfo().getFilesInfo(),
+                        getTableSortBy(context.getSettings()),
+                        getTableSortDirection(context.getSettings()),
+                        result.getTableFilesToShowInfo().getAllSelectableCount(),
+                        result.getTableFilesToShowInfo().getSelectedAvailableCount(),
+                        result.getTableFilesToShowInfo().getSelectedUnavailableCount(),
+                        TableWithFiles.Mode.DIRECTORY,
+                        true
+                );
+
+                /* See the huge comment in the hideUnavailableClicked() method. */
+                tableWithFiles.scrollTo(0);
+            }
         };
 
         runInBackground(backgroundRunner, callback);
