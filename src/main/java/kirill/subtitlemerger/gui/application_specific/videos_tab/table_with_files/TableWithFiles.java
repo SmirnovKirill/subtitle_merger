@@ -40,7 +40,11 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
     private static final int OPTION_TITLE_PANE_MIN_WIDTH = 190;
 
-    private static final int SIZE_AND_PREVIEW_PANE_WIDTH = SystemUtils.IS_OS_LINUX ? 90 : 80;
+    /*
+     * On Windows default font is more compact than the Linux's one. So it's better to set the width smaller because
+     * the gap between the unknown size label and load link looks pretty big anyway but on Windows it looks even bigger.
+     */
+    private static final int SIZE_AND_PREVIEW_PANE_WIDTH = SystemUtils.IS_OS_LINUX ? 90 : 82;
 
     private static final int SELECT_OPTION_PANE_WIDTH = 110;
 
