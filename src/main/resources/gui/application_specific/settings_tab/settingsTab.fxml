@@ -30,9 +30,7 @@
             </padding>
 
             <columnConstraints>
-                <ColumnConstraints>
-                    <minWidth><Region fx:constant="USE_PREF_SIZE"/></minWidth>
-                </ColumnConstraints>
+                <ColumnConstraints minWidth="295"/>
                 <ColumnConstraints hgrow="ALWAYS"/>
             </columnConstraints>
 
@@ -56,7 +54,7 @@
             </HBox>
 
             <LabelWithQuestionMark GridPane.rowIndex="2" GridPane.columnIndex="0">
-                <labelText>Preferred language for upper subtitle</labelText>
+                <labelText>Preferred language for upper subtitles</labelText>
                 <tooltipText>
                     This setting will be used to auto-select subtitles to merge when working with videos
                 </tooltipText>
@@ -82,7 +80,7 @@
             </Button>
 
             <LabelWithQuestionMark GridPane.rowIndex="4" GridPane.columnIndex="0">
-                <labelText>Preferred language for lower subtitle</labelText>
+                <labelText>Preferred language for lower subtitles</labelText>
                 <tooltipText>
                     This setting will be used to auto-select subtitles to merge when working with videos
                 </tooltipText>
@@ -188,7 +186,7 @@
             </padding>
 
             <Label textAlignment="CENTER" styleClass="unavailable-description" wrapText="true" maxWidth="700">
-                Settings tab is unavailable when you work with videos. Please press "back to selection" button on
+                Settings tab is unavailable when you work with videos. Please press the "back to selection" button on
                 the tab with videos if you want to change settings.
             </Label>
         </HBox>
