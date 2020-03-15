@@ -242,7 +242,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         Label sizeTitle = new Label("size");
         Label lastModifiedTitle = new Label("last modified");
 
-        Label size = new Label(GuiHelperMethods.getFileSizeTextual(fileInfo.getSize()));
+        Label size = new Label(GuiHelperMethods.getFileSizeTextual(fileInfo.getSize(), false));
         Label lastModified = new Label(FORMATTER.print(fileInfo.getLastModified()));
 
         result.addRow(0, sizeTitle, size);
@@ -446,7 +446,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         Label sizeLabel = new Label();
         sizeLabel.textProperty().bind(
                 Bindings.createStringBinding(() ->
-                        "Size: " + GuiHelperMethods.getFileSizeTextual(subtitleOption.getSize()),
+                        "Size: " + GuiHelperMethods.getFileSizeTextual(subtitleOption.getSize(), true),
                         subtitleOption.sizeProperty()
                 )
         );

@@ -24,6 +24,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.List;
@@ -97,24 +98,6 @@ public class GuiHelperMethods {
         result.setFitHeight(height);
 
         return result;
-    }
-
-    public static String getFileSizeTextual(long size) {
-        List<String> sizes = Arrays.asList("B", "KB", "MB", "GB", "TB");
-
-        BigDecimal divisor = new BigDecimal(1024);
-        BigDecimal sizeBigDecimal = new BigDecimal(size);
-
-        int power = 0;
-        while (power < sizes.size() - 1) {
-            if (sizeBigDecimal.divide(divisor.pow(power), 2, RoundingMode.HALF_UP).compareTo(divisor) < 0) {
-                break;
-            }
-
-            power++;
-        }
-
-        return sizeBigDecimal.divide(divisor.pow(power), 2, RoundingMode.HALF_UP) + " " + sizes.get(power);
     }
 
     public static Tooltip generateTooltip(String text) {
@@ -261,5 +244,67 @@ public class GuiHelperMethods {
         controller.initialize(message, popupStage);
 
         popupStage.showAndWait();
+    }
+
+    /*
+     * This method is used only be the TableWithFiles class but because it's a JavaFX's Control class it has a static
+     * initializer that requires JavaFX environment and thus can't be used in unit tests.
+     */
+    public static String getFileSizeTextual(long size, boolean keepShort) {
+        List<String> suffixes = Arrays.asList("B", "KB", "MB", "GB", "TB");
+
+        BigDecimal sizeBigDecimal = new BigDecimal(size);
+
+        BigDecimal divisor = BigDecimal.ONE;
+        int suffixIndex = 0;
+        while (suffixIndex < suffixes.size() - 1) {
+            if (sizeBigDecimal.divide(divisor, 2, RoundingMode.HALF_UP).compareTo(new BigDecimal(1024)) < 0) {
+                break;
+            }
+
+            divisor = divisor.multiply(new BigDecimal(1024));
+            suffixIndex++;
+        }
+
+        int scale = getScale(keepShort, sizeBigDecimal, divisor);
+
+        return sizeBigDecimal.divide(divisor, scale, RoundingMode.HALF_UP) + " " + suffixes.get(suffixIndex);
+    }
+
+    private static int getScale(boolean keepShort, BigDecimal sizeBigDecimal, BigDecimal divisor) {
+        if (!keepShort) {
+            return 2;
+        }
+
+        BigInteger wholePart = sizeBigDecimal.divide(divisor, 0, RoundingMode.FLOOR).toBigInteger();
+        if (wholePart.compareTo(BigInteger.valueOf(9999)) >= 0) {
+            log.error("it's impossible to keep short the size that big: " + sizeBigDecimal);
+            throw new IllegalArgumentException();
+        }
+
+        int preliminaryResult;
+        if (wholePart.compareTo(BigInteger.valueOf(100)) >= 0) {
+            preliminaryResult = 0;
+        } else if (wholePart.compareTo(BigInteger.valueOf(10)) >= 0) {
+            preliminaryResult = 1;
+        } else {
+            preliminaryResult = 2;
+        }
+
+        /*
+         * There are two border cases - when the whole part is 99 and 9. Because after adding fractional part and
+         * rounding whole part may start to have more digits than before.
+         */
+        if (wholePart.compareTo(BigInteger.valueOf(99)) != 0 && wholePart.compareTo(BigInteger.valueOf(9)) != 0) {
+            return preliminaryResult;
+        }
+
+        BigInteger wholePartAfterwards = sizeBigDecimal.divide(divisor, preliminaryResult, RoundingMode.HALF_UP)
+                .toBigInteger();
+        if (wholePartAfterwards.compareTo(wholePart) > 0) {
+            return preliminaryResult - 1;
+        } else {
+            return preliminaryResult;
+        }
     }
 }
