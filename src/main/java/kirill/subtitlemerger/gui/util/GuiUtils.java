@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.gui.utils;
+package kirill.subtitlemerger.gui.util;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.beans.binding.BooleanBinding;
@@ -17,8 +17,8 @@ import javafx.scene.layout.Region;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import kirill.subtitlemerger.gui.utils.custom_forms.ErrorPopupController;
-import kirill.subtitlemerger.gui.utils.entities.NodeAndController;
+import kirill.subtitlemerger.gui.util.custom_forms.ErrorPopupController;
+import kirill.subtitlemerger.gui.util.entities.NodeAndController;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -32,7 +32,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 @CommonsLog
-public class GuiHelperMethods {
+public class GuiUtils {
     /**
      * Set change listeners so that the onChange method will be invoked each time Enter button is pressed or the focus
      * is lost.
@@ -143,7 +143,7 @@ public class GuiHelperMethods {
     }
 
     public static void initializeCustomControl(String path, Object root) {
-        FXMLLoader fxmlLoader = new FXMLLoader(GuiHelperMethods.class.getResource(path));
+        FXMLLoader fxmlLoader = new FXMLLoader(GuiUtils.class.getResource(path));
 
         fxmlLoader.setRoot(root);
         fxmlLoader.setController(root);
@@ -157,7 +157,7 @@ public class GuiHelperMethods {
     }
 
     public static NodeAndController loadNodeAndController(String path) {
-        FXMLLoader fxmlLoader = new FXMLLoader(GuiHelperMethods.class.getResource(path));
+        FXMLLoader fxmlLoader = new FXMLLoader(GuiUtils.class.getResource(path));
 
         Node node;
         try {
@@ -222,11 +222,11 @@ public class GuiHelperMethods {
     }
 
     public static void showErrorPopup(String message, Stage ownerStage) {
-        NodeAndController nodeAndController = GuiHelperMethods.loadNodeAndController(
+        NodeAndController nodeAndController = GuiUtils.loadNodeAndController(
                 "/gui/utils/custom_forms/errorPopup.fxml"
         );
 
-        Stage popupStage = GuiHelperMethods.createPopupStage(
+        Stage popupStage = GuiUtils.createPopupStage(
                 "Error!",
                 nodeAndController.getNode(),
                 ownerStage

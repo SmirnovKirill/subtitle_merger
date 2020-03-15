@@ -8,7 +8,7 @@ import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
-import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
+import kirill.subtitlemerger.gui.util.GuiUtils;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -57,7 +57,7 @@ public class ChoicePaneController {
         }
 
         if (files.size() > GuiConstants.TABLE_FILE_LIMIT) {
-            GuiHelperMethods.showErrorPopup(
+            GuiUtils.showErrorPopup(
                     String.format(
                             "Unfortunately, it's impossible to add more than %d files",
                             GuiConstants.TABLE_FILE_LIMIT

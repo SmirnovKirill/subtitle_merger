@@ -5,9 +5,9 @@ import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
-import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
+import kirill.subtitlemerger.gui.util.GuiUtils;
+import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
+import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.logic.utils.FileValidator;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import lombok.AllArgsConstructor;
@@ -47,12 +47,12 @@ public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner
             );
         }
 
-        List<FileInfo> filesInfo = BackgroundHelperMethods.getFilesInfo(
+        List<FileInfo> filesInfo = VideoTabBackgroundUtils.getFilesInfo(
                 directoryInfo.getDirectoryFiles(),
                 context.getFfprobe(),
                 runnerManager
         );
-        List<TableFileInfo> allTableFilesInfo = BackgroundHelperMethods.tableFilesInfoFrom(
+        List<TableFileInfo> allTableFilesInfo = VideoTabBackgroundUtils.tableFilesInfoFrom(
                 filesInfo,
                 false,
                 false,
@@ -64,10 +64,10 @@ public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner
 
         List<TableFileInfo> tableFilesToShowInfo = null;
         if (hideUnavailable) {
-            tableFilesToShowInfo = BackgroundHelperMethods.getOnlyAvailableFilesInfo(allTableFilesInfo, runnerManager);
+            tableFilesToShowInfo = VideoTabBackgroundUtils.getOnlyAvailableFilesInfo(allTableFilesInfo, runnerManager);
         }
 
-        tableFilesToShowInfo = BackgroundHelperMethods.getSortedFilesInfo(
+        tableFilesToShowInfo = VideoTabBackgroundUtils.getSortedFilesInfo(
                 tableFilesToShowInfo != null ? tableFilesToShowInfo : allTableFilesInfo,
                 sortBy,
                 sortDirection,
@@ -82,7 +82,7 @@ public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner
                 hideUnavailable,
                 new TableFilesToShowInfo(
                         tableFilesToShowInfo,
-                        BackgroundHelperMethods.getAllSelectableCount(
+                        VideoTabBackgroundUtils.getAllSelectableCount(
                                 tableFilesToShowInfo,
                                 TableWithFiles.Mode.DIRECTORY,
                                 runnerManager
@@ -147,7 +147,7 @@ public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner
     }
 
     private static String unavailabilityReasonToString(DirectoryUnavailabilityReason reason, String path) {
-        path = GuiHelperMethods.getShortenedStringIfNecessary(path, 20, 40);
+        path = GuiUtils.getShortenedStringIfNecessary(path, 20, 40);
 
         switch (reason) {
             case PATH_EMPTY:

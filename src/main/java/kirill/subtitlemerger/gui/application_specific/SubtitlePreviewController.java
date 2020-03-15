@@ -13,12 +13,12 @@ import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import kirill.subtitlemerger.gui.GuiConstants;
-import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerCallback;
-import kirill.subtitlemerger.gui.utils.custom_controls.ActionResultLabels;
-import kirill.subtitlemerger.gui.utils.entities.ActionResult;
-import kirill.subtitlemerger.gui.utils.entities.NoSelectionModel;
+import kirill.subtitlemerger.gui.util.GuiUtils;
+import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
+import kirill.subtitlemerger.gui.util.background.BackgroundRunnerCallback;
+import kirill.subtitlemerger.gui.util.custom_controls.ActionResultLabels;
+import kirill.subtitlemerger.gui.util.entities.ActionResult;
+import kirill.subtitlemerger.gui.util.entities.NoSelectionModel;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.core.SubtitleWriter;
@@ -103,17 +103,17 @@ public class SubtitlePreviewController extends AbstractController {
         this.dialogStage = dialogStage;
 
         this.title.setText(getShortenedTitleIfNecessary(title));
-        GuiHelperMethods.setVisibleAndManaged(mergedUpperPane, false);
-        GuiHelperMethods.setVisibleAndManaged(mergedLowerPane, false);
-        GuiHelperMethods.setVisibleAndManaged(encodingPane, false);
+        GuiUtils.setVisibleAndManaged(mergedUpperPane, false);
+        GuiUtils.setVisibleAndManaged(mergedLowerPane, false);
+        GuiUtils.setVisibleAndManaged(encodingPane, false);
         listView.setSelectionModel(new NoSelectionModel<>());
-        GuiHelperMethods.setVisibleAndManaged(cancelSavePane, false);
+        GuiUtils.setVisibleAndManaged(cancelSavePane, false);
 
         getPreviewInfoAndUpdateScene(true);
     }
 
     private static String getShortenedTitleIfNecessary(String title) {
-        return GuiHelperMethods.getShortenedStringIfNecessary(title, 0, 128);
+        return GuiUtils.getShortenedStringIfNecessary(title, 0, 128);
     }
 
     public void initializeMerged(
@@ -130,9 +130,9 @@ public class SubtitlePreviewController extends AbstractController {
         title.setText("This is the result of merging");
         mergedUpperTitle.setText(upperTitle);
         mergedLowerTitle.setText(lowerTitle);
-        GuiHelperMethods.setVisibleAndManaged(encodingPane, false);
+        GuiUtils.setVisibleAndManaged(encodingPane, false);
         listView.setSelectionModel(new NoSelectionModel<>());
-        GuiHelperMethods.setVisibleAndManaged(cancelSavePane, false);
+        GuiUtils.setVisibleAndManaged(cancelSavePane, false);
 
         getPreviewInfoAndUpdateScene(true);
     }
@@ -150,13 +150,13 @@ public class SubtitlePreviewController extends AbstractController {
         this.dialogStage = dialogStage;
 
         title.setText(getShortenedTitleIfNecessary(fileFullPath));
-        GuiHelperMethods.setVisibleAndManaged(mergedUpperPane, false);
-        GuiHelperMethods.setVisibleAndManaged(mergedLowerPane, false);
+        GuiUtils.setVisibleAndManaged(mergedUpperPane, false);
+        GuiUtils.setVisibleAndManaged(mergedLowerPane, false);
         encodingComboBox.setConverter(CHARSET_STRING_CONVERTER);
         encodingComboBox.getItems().setAll(GuiConstants.SUPPORTED_ENCODINGS);
         encodingComboBox.getSelectionModel().select(originalEncoding);
         listView.setSelectionModel(new NoSelectionModel<>());
-        GuiHelperMethods.setVisibleAndManaged(okPane, false);
+        GuiUtils.setVisibleAndManaged(okPane, false);
 
         getPreviewInfoAndUpdateScene(true);
     }

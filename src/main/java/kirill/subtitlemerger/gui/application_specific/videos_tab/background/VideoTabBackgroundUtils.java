@@ -6,8 +6,8 @@ import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableSubtitleOption;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
-import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
+import kirill.subtitlemerger.gui.util.GuiUtils;
+import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.work_with_files.FileInfoGetter;
 import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
@@ -23,7 +23,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-class BackgroundHelperMethods {
+class VideoTabBackgroundUtils {
     static List<FileInfo> getFilesInfo(
             List<File> files,
             Ffprobe ffprobe,
@@ -144,7 +144,7 @@ class BackgroundHelperMethods {
     }
 
     private static String tableOptionTitleFrom(FfmpegSubtitleStream stream) {
-        String result = GuiHelperMethods.languageToString(stream.getLanguage()).toUpperCase();
+        String result = GuiUtils.languageToString(stream.getLanguage()).toUpperCase();
 
         if (!StringUtils.isBlank(stream.getTitle())) {
             result += " (" + stream.getTitle() + ")";
@@ -280,7 +280,7 @@ class BackgroundHelperMethods {
                 : "";
 
         return progressPrefix + "getting subtitle "
-                + GuiHelperMethods.languageToString(subtitleStream.getLanguage()).toUpperCase()
+                + GuiUtils.languageToString(subtitleStream.getLanguage()).toUpperCase()
                 + (StringUtils.isBlank(subtitleStream.getTitle()) ? "" : " " + subtitleStream.getTitle())
                 + " in " + file.getName();
     }

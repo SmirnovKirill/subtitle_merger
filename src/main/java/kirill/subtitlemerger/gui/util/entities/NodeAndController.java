@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.gui.utils.entities;
+package kirill.subtitlemerger.gui.util.entities;
 
 import javafx.scene.Parent;
 import lombok.AllArgsConstructor;

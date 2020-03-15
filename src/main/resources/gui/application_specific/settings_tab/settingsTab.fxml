@@ -7,7 +7,7 @@
 <?import javafx.scene.layout.*?>
 <?import kirill.subtitlemerger.gui.GuiConstants?>
 <?import kirill.subtitlemerger.gui.application_specific.settings_tab.*?>
-<?import kirill.subtitlemerger.gui.utils.custom_controls.ActionResultLabels?>
+<?import kirill.subtitlemerger.gui.util.custom_controls.ActionResultLabels?>
 <Tab xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
      fx:controller="kirill.subtitlemerger.gui.application_specific.settings_tab.SettingsTabController"
      text="Settings">

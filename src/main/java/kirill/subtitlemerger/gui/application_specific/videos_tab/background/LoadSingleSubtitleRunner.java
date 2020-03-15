@@ -2,8 +2,8 @@ package kirill.subtitlemerger.gui.application_specific.videos_tab.background;
 
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableSubtitleOption;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
+import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
+import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
@@ -25,7 +25,7 @@ public class LoadSingleSubtitleRunner implements BackgroundRunner<LoadSingleSubt
         runnerManager.setIndeterminateProgress();
 
         runnerManager.updateMessage(
-                BackgroundHelperMethods.getLoadSubtitlesProgressMessage(
+                VideoTabBackgroundUtils.getLoadSubtitlesProgressMessage(
                         1,
                         0,
                         ffmpegStream,

@@ -7,7 +7,7 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
-import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
+import kirill.subtitlemerger.gui.util.GuiUtils;
 import lombok.Getter;
 
 @Getter
@@ -19,7 +19,7 @@ public class MergeModeOption extends HBox {
     private Tooltip tooltip;
 
     public MergeModeOption() {
-        GuiHelperMethods.initializeCustomControl("/gui/application_specific/settings_tab/mergeModeOption.fxml", this);
+        GuiUtils.initializeCustomControl("/gui/application_specific/settings_tab/mergeModeOption.fxml", this);
     }
 
     public StringProperty textProperty() {

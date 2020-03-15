@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.gui.utils.custom_controls;
+package kirill.subtitlemerger.gui.util.custom_controls;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
@@ -6,7 +6,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import kirill.subtitlemerger.gui.GuiConstants;
-import kirill.subtitlemerger.gui.utils.entities.ActionResult;
+import kirill.subtitlemerger.gui.util.entities.ActionResult;
 import org.apache.commons.lang3.StringUtils;
 
 

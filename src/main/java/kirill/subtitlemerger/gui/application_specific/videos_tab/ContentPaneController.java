@@ -16,13 +16,13 @@ import kirill.subtitlemerger.gui.application_specific.videos_tab.background.*;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableSubtitleOption;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
-import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerCallback;
-import kirill.subtitlemerger.gui.utils.custom_controls.ActionResultLabels;
-import kirill.subtitlemerger.gui.utils.entities.ActionResult;
-import kirill.subtitlemerger.gui.utils.entities.FileOrigin;
-import kirill.subtitlemerger.gui.utils.entities.NodeAndController;
+import kirill.subtitlemerger.gui.util.GuiUtils;
+import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
+import kirill.subtitlemerger.gui.util.background.BackgroundRunnerCallback;
+import kirill.subtitlemerger.gui.util.custom_controls.ActionResultLabels;
+import kirill.subtitlemerger.gui.util.entities.ActionResult;
+import kirill.subtitlemerger.gui.util.entities.FileOrigin;
+import kirill.subtitlemerger.gui.util.entities.NodeAndController;
 import kirill.subtitlemerger.logic.work_with_files.entities.*;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import lombok.extern.apachecommons.CommonsLog;
@@ -115,7 +115,7 @@ public class ContentPaneController extends AbstractController {
         this.stage = stage;
         this.context = context;
 
-        GuiHelperMethods.setTextFieldChangeListeners(
+        GuiUtils.setTextFieldChangeListeners(
                 chosenDirectoryField,
                 (path) -> processDirectoryPath(path, FileOrigin.TEXT_FIELD)
         );
@@ -131,7 +131,7 @@ public class ContentPaneController extends AbstractController {
 
     private void updateSelectedLabelText(int selected) {
         selectedLabel.setText(
-                GuiHelperMethods.getTextDependingOnTheCount(
+                GuiUtils.getTextDependingOnTheCount(
                         selected,
                         "1 file selected",
                         "%d files selected"
@@ -144,10 +144,10 @@ public class ContentPaneController extends AbstractController {
         Tooltip tooltip = null;
         if (allSelectedCount == 0) {
             disable = true;
-            tooltip = GuiHelperMethods.generateTooltip("Please select at least one file");
+            tooltip = GuiUtils.generateTooltip("Please select at least one file");
         } else if (selectedUnavailableCount > 0) {
             disable = true;
-            tooltip = GuiHelperMethods.generateTooltip("Please select only available files");
+            tooltip = GuiUtils.generateTooltip("Please select only available files");
         }
 
         autoSelectButton.setDisable(disable);
@@ -353,11 +353,11 @@ public class ContentPaneController extends AbstractController {
                     fileInfo.getSubtitleOptions()
             );
 
-            NodeAndController nodeAndController = GuiHelperMethods.loadNodeAndController(
+            NodeAndController nodeAndController = GuiUtils.loadNodeAndController(
                     "/gui/application_specific/subtitlePreview.fxml"
             );
 
-            Stage previewStage = GuiHelperMethods.createPopupStage(
+            Stage previewStage = GuiUtils.createPopupStage(
                     "Subtitle preview",
                     nodeAndController.getNode(),
                     stage
@@ -398,7 +398,7 @@ public class ContentPaneController extends AbstractController {
             FfmpegSubtitleStream ffmpegStream = (FfmpegSubtitleStream) subtitleOption;
 
             String title = fileInfo.getFile().getName()
-                    + ", " + GuiHelperMethods.languageToString(ffmpegStream.getLanguage()).toUpperCase()
+                    + ", " + GuiUtils.languageToString(ffmpegStream.getLanguage()).toUpperCase()
                     + (!StringUtils.isBlank(ffmpegStream.getTitle()) ? " " + ffmpegStream.getTitle() : "");
 
             result.initializeSimple(
@@ -523,11 +523,11 @@ public class ContentPaneController extends AbstractController {
             BackgroundRunnerCallback<MergedSubtitleInfo> callback = mergedSubtitleInfo -> {
                 fileInfo.setMergedSubtitleInfo(mergedSubtitleInfo);
 
-                NodeAndController nodeAndController = GuiHelperMethods.loadNodeAndController(
+                NodeAndController nodeAndController = GuiUtils.loadNodeAndController(
                         "/gui/application_specific/subtitlePreview.fxml"
                 );
 
-                Stage previewStage = GuiHelperMethods.createPopupStage(
+                Stage previewStage = GuiUtils.createPopupStage(
                         "Subtitle preview",
                         nodeAndController.getNode(),
                         stage
@@ -551,7 +551,7 @@ public class ContentPaneController extends AbstractController {
         if (option instanceof FfmpegSubtitleStream) {
             FfmpegSubtitleStream ffmpegStream = (FfmpegSubtitleStream) option;
 
-            return GuiHelperMethods.languageToString(ffmpegStream.getLanguage()).toUpperCase()
+            return GuiUtils.languageToString(ffmpegStream.getLanguage()).toUpperCase()
                     + (!StringUtils.isBlank(ffmpegStream.getTitle()) ? " " + ffmpegStream.getTitle() : "");
         } else if (option instanceof FileWithSubtitles) {
             FileWithSubtitles fileWithSubtitles = (FileWithSubtitles) option;
@@ -581,7 +581,7 @@ public class ContentPaneController extends AbstractController {
         }
 
         context.setWorkWithVideosInProgress(true);
-        GuiHelperMethods.setVisibleAndManaged(addRemoveFilesPane, true);
+        GuiUtils.setVisibleAndManaged(addRemoveFilesPane, true);
         hideUnavailableCheckbox.setSelected(false);
         directoryPath = null;
 
@@ -613,7 +613,7 @@ public class ContentPaneController extends AbstractController {
 
     void handleChosenDirectory(File directory) {
         context.setWorkWithVideosInProgress(true);
-        GuiHelperMethods.setVisibleAndManaged(chosenDirectoryPane, true);
+        GuiUtils.setVisibleAndManaged(chosenDirectoryPane, true);
 
         processDirectoryPath(directory.getAbsolutePath(), FileOrigin.FILE_CHOOSER);
     }
@@ -685,9 +685,9 @@ public class ContentPaneController extends AbstractController {
 
     @FXML
     private void backToSelectionClicked() {
-        GuiHelperMethods.setVisibleAndManaged(chosenDirectoryPane, false);
+        GuiUtils.setVisibleAndManaged(chosenDirectoryPane, false);
         chosenDirectoryField.setText(null);
-        GuiHelperMethods.setVisibleAndManaged(addRemoveFilesPane, false);
+        GuiUtils.setVisibleAndManaged(addRemoveFilesPane, false);
 
         generalResult.clear();
         tableAndActionsPane.setDisable(false);

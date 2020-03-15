@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.gui.utils.background;
+package kirill.subtitlemerger.gui.util.background;
 
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;

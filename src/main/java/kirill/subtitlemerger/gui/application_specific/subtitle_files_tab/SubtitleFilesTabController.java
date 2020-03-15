@@ -10,13 +10,13 @@ import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.application_specific.AbstractController;
 import kirill.subtitlemerger.gui.application_specific.SubtitlePreviewController;
-import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerCallback;
-import kirill.subtitlemerger.gui.utils.custom_controls.ActionResultLabels;
-import kirill.subtitlemerger.gui.utils.entities.ActionResult;
-import kirill.subtitlemerger.gui.utils.entities.FileOrigin;
-import kirill.subtitlemerger.gui.utils.entities.NodeAndController;
+import kirill.subtitlemerger.gui.util.GuiUtils;
+import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
+import kirill.subtitlemerger.gui.util.background.BackgroundRunnerCallback;
+import kirill.subtitlemerger.gui.util.custom_controls.ActionResultLabels;
+import kirill.subtitlemerger.gui.util.entities.ActionResult;
+import kirill.subtitlemerger.gui.util.entities.FileOrigin;
+import kirill.subtitlemerger.gui.util.entities.NodeAndController;
 import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.core.SubtitleWriter;
@@ -91,15 +91,15 @@ public class SubtitleFilesTabController extends AbstractController {
         this.settings = context.getSettings();
         this.filesInfo = new FilesInfo(null, null, null, null);
 
-        GuiHelperMethods.setTextFieldChangeListeners(
+        GuiUtils.setTextFieldChangeListeners(
                 upperPathField,
                 (path) -> processInputFilePath(path, InputFileType.UPPER_SUBTITLES, FileOrigin.TEXT_FIELD)
         );
-        GuiHelperMethods.setTextFieldChangeListeners(
+        GuiUtils.setTextFieldChangeListeners(
                 lowerPathField,
                 (path) -> processInputFilePath(path, InputFileType.LOWER_SUBTITLES, FileOrigin.TEXT_FIELD)
         );
-        GuiHelperMethods.setTextFieldChangeListeners(
+        GuiUtils.setTextFieldChangeListeners(
                 mergedPathField,
                 (path) -> processMergedFilePath(path, FileOrigin.TEXT_FIELD)
         );
@@ -471,7 +471,7 @@ public class SubtitleFilesTabController extends AbstractController {
     }
 
     private static String getShortenedPath(String path) {
-        return GuiHelperMethods.getShortenedStringIfNecessary(path, 20, 40);
+        return GuiUtils.getShortenedStringIfNecessary(path, 20, 40);
     }
 
     private static String getErrorText(String path, IncorrectMergedFileReason reason) {
@@ -548,25 +548,25 @@ public class SubtitleFilesTabController extends AbstractController {
     private boolean agreeToOverwrite(MergedFileInfo mergedFileInfo) {
         agreeToOverwriteInProgress = true;
 
-        String fileName = GuiHelperMethods.getShortenedStringIfNecessary(
+        String fileName = GuiUtils.getShortenedStringIfNecessary(
                 mergedFileInfo.getFile().getName(),
                 0,
                 32
         );
         String parentName = "-";
         if (mergedFileInfo.getParent() != null) {
-            parentName = GuiHelperMethods.getShortenedStringIfNecessary(
+            parentName = GuiUtils.getShortenedStringIfNecessary(
                     mergedFileInfo.getParent().getName(),
                     0,
                     32
             );
         }
 
-        NodeAndController nodeAndController = GuiHelperMethods.loadNodeAndController(
+        NodeAndController nodeAndController = GuiUtils.loadNodeAndController(
                 "/gui/application_specific/subtitle_files_tab/fileExistsDialog.fxml"
         );
 
-        Stage popupStage = GuiHelperMethods.createPopupStage("File exists!", nodeAndController.getNode(), stage);
+        Stage popupStage = GuiUtils.createPopupStage("File exists!", nodeAndController.getNode(), stage);
 
         FileExistsDialogController controller = nodeAndController.getController();
         controller.initialize(fileName, parentName, popupStage);
@@ -585,11 +585,11 @@ public class SubtitleFilesTabController extends AbstractController {
     }
 
     private SubtitlePreviewController.UserSelection showInputSubtitlePreview(InputFileInfo fileInfo) {
-        NodeAndController nodeAndController = GuiHelperMethods.loadNodeAndController(
+        NodeAndController nodeAndController = GuiUtils.loadNodeAndController(
                 "/gui/application_specific/subtitlePreview.fxml"
         );
 
-        Stage previewStage = GuiHelperMethods.createPopupStage(
+        Stage previewStage = GuiUtils.createPopupStage(
                 "Subtitle preview",
                 nodeAndController.getNode(),
                 stage
@@ -708,11 +708,11 @@ public class SubtitleFilesTabController extends AbstractController {
         BackgroundRunnerCallback<Subtitles> callback = subtitles -> {
             filesInfo.setMergedSubtitles(subtitles);
 
-            NodeAndController nodeAndController = GuiHelperMethods.loadNodeAndController(
+            NodeAndController nodeAndController = GuiUtils.loadNodeAndController(
                     "/gui/application_specific/subtitlePreview.fxml"
             );
 
-            Stage previewStage = GuiHelperMethods.createPopupStage(
+            Stage previewStage = GuiUtils.createPopupStage(
                     "Subtitle preview",
                     nodeAndController.getNode(),
                     stage

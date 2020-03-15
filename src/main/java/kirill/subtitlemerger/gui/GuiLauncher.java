@@ -5,8 +5,8 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.application_specific.MainPaneController;
-import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
-import kirill.subtitlemerger.gui.utils.entities.NodeAndController;
+import kirill.subtitlemerger.gui.util.GuiUtils;
+import kirill.subtitlemerger.gui.util.entities.NodeAndController;
 import lombok.extern.apachecommons.CommonsLog;
 
 import java.awt.*;
@@ -19,7 +19,7 @@ public class GuiLauncher extends Application {
 
     @Override
     public void start(Stage stage) {
-        NodeAndController nodeAndController = GuiHelperMethods.loadNodeAndController(
+        NodeAndController nodeAndController = GuiUtils.loadNodeAndController(
                 "/gui/application_specific/mainPane.fxml"
         );
 

@@ -5,10 +5,10 @@ import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
-import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
-import kirill.subtitlemerger.gui.utils.entities.ActionResult;
+import kirill.subtitlemerger.gui.util.GuiUtils;
+import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
+import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
+import kirill.subtitlemerger.gui.util.entities.ActionResult;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -38,7 +38,7 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
 
     @Override
     public Result run(BackgroundRunnerManager runnerManager) {
-        List<FileInfo> filesToAddInfo = BackgroundHelperMethods.getFilesInfo(
+        List<FileInfo> filesToAddInfo = VideoTabBackgroundUtils.getFilesInfo(
                 filesToAdd,
                 context.getFfprobe(),
                 runnerManager
@@ -58,7 +58,7 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
 
         filesInfo.addAll(filesToAddInfo);
 
-        List<TableFileInfo> tableFilesToAddInfo = BackgroundHelperMethods.tableFilesInfoFrom(
+        List<TableFileInfo> tableFilesToAddInfo = VideoTabBackgroundUtils.tableFilesInfoFrom(
                 filesToAddInfo,
                 true,
                 true,
@@ -69,10 +69,10 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
 
         List<TableFileInfo> filesToShowInfo = null;
         if (hideUnavailable) {
-            filesToShowInfo = BackgroundHelperMethods.getOnlyAvailableFilesInfo(allTableFilesInfo, runnerManager);
+            filesToShowInfo = VideoTabBackgroundUtils.getOnlyAvailableFilesInfo(allTableFilesInfo, runnerManager);
         }
 
-        filesToShowInfo = BackgroundHelperMethods.getSortedFilesInfo(
+        filesToShowInfo = VideoTabBackgroundUtils.getSortedFilesInfo(
                 filesToShowInfo != null ? filesToShowInfo : allTableFilesInfo,
                 sortBy,
                 sortDirection,
@@ -87,9 +87,9 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
                 allTableFilesInfo,
                 new TableFilesToShowInfo(
                         filesToShowInfo,
-                        BackgroundHelperMethods.getAllSelectableCount(filesToShowInfo, mode, runnerManager),
-                        BackgroundHelperMethods.getSelectedAvailableCount(filesToShowInfo, runnerManager),
-                        BackgroundHelperMethods.getSelectedUnavailableCount(filesToShowInfo, runnerManager)
+                        VideoTabBackgroundUtils.getAllSelectableCount(filesToShowInfo, mode, runnerManager),
+                        VideoTabBackgroundUtils.getSelectedAvailableCount(filesToShowInfo, runnerManager),
+                        VideoTabBackgroundUtils.getSelectedUnavailableCount(filesToShowInfo, runnerManager)
                 )
         );
     }
@@ -122,19 +122,19 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
         int actuallyAdded = taskResult.getActuallyAddedCount();
 
         if (actuallyAdded == 0) {
-            success = GuiHelperMethods.getTextDependingOnTheCount(
+            success = GuiUtils.getTextDependingOnTheCount(
                     filesToAdd,
                     "File has been added already",
                     "All %d files have been added already"
             );
         } else if (filesToAdd == actuallyAdded) {
-            success = GuiHelperMethods.getTextDependingOnTheCount(
+            success = GuiUtils.getTextDependingOnTheCount(
                     actuallyAdded,
                     "File has been added successfully",
                     "All %d files have been added successfully"
             );
         } else {
-            success = GuiHelperMethods.getTextDependingOnTheCount(
+            success = GuiUtils.getTextDependingOnTheCount(
                     actuallyAdded,
                     String.format("1/%d files has been added successfully, ", filesToAdd),
                     String.format("%%d/%d files have been added successfully, ", filesToAdd)

@@ -3,7 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import kirill.subtitlemerger.gui.utils.custom_controls.ActionResultLabels?>
+<?import kirill.subtitlemerger.gui.util.custom_controls.ActionResultLabels?>
 <?import kirill.subtitlemerger.gui.GuiConstants?>
 <StackPane xmlns:fx="http://javafx.com/fxml" prefHeight="600" prefWidth="900"
            fx:controller="kirill.subtitlemerger.gui.application_specific.SubtitlePreviewController"

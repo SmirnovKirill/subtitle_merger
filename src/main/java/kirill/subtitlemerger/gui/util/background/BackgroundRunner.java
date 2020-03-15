@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.gui.utils.background;
+package kirill.subtitlemerger.gui.util.background;
 
 @FunctionalInterface
 public interface BackgroundRunner<T> {

@@ -15,9 +15,9 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import kirill.subtitlemerger.gui.GuiConstants;
-import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
-import kirill.subtitlemerger.gui.utils.custom_controls.ActionResultLabels;
-import kirill.subtitlemerger.gui.utils.entities.ActionResult;
+import kirill.subtitlemerger.gui.util.GuiUtils;
+import kirill.subtitlemerger.gui.util.custom_controls.ActionResultLabels;
+import kirill.subtitlemerger.gui.util.entities.ActionResult;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
@@ -249,7 +249,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         Label sizeTitle = new Label("size");
         Label lastModifiedTitle = new Label("last modified");
 
-        Label size = new Label(GuiHelperMethods.getFileSizeTextual(fileInfo.getSize(), false));
+        Label size = new Label(GuiUtils.getFileSizeTextual(fileInfo.getSize(), false));
         Label lastModified = new Label(FORMATTER.print(fileInfo.getLastModified()));
 
         result.addRow(0, sizeTitle, size);
@@ -284,14 +284,14 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         }
 
         result.getChildren().addAll(
-                GuiHelperMethods.createFixedHeightSpacer(1),
+                GuiUtils.createFixedHeightSpacer(1),
                 generateRowWithActionsPane(
                         fileInfo,
                         addFileWithSubtitlesHandler,
                         allFileSubtitleLoader,
                         mergedSubtitlePreviewHandler
                 ),
-                GuiHelperMethods.createFixedHeightSpacer(6),
+                GuiUtils.createFixedHeightSpacer(6),
                 generateActionResultLabels(fileInfo)
         );
 
@@ -345,9 +345,9 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         result.setSpacing(15);
 
         if (subtitleOption.isHideable()) {
-            GuiHelperMethods.bindVisibleAndManaged(result, Bindings.not(fileInfo.someOptionsHiddenProperty()));
+            GuiUtils.bindVisibleAndManaged(result, Bindings.not(fileInfo.someOptionsHiddenProperty()));
         } else if (subtitleOption.isRemovable()) {
-            GuiHelperMethods.bindVisibleAndManaged(result, subtitleOption.titleProperty().isNotEmpty());
+            GuiUtils.bindVisibleAndManaged(result, subtitleOption.titleProperty().isNotEmpty());
         }
 
         result.getChildren().addAll(
@@ -410,7 +410,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
             return Optional.empty();
         }
 
-        Button result = GuiHelperMethods.createImageButton(
+        Button result = GuiUtils.createImageButton(
                 null,
                 "/gui/icons/remove.png",
                 8,
@@ -437,7 +437,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
     ) {
         StackPane result = new StackPane();
 
-        GuiHelperMethods.setFixedWidth(result, SIZE_AND_PREVIEW_PANE_WIDTH);
+        GuiUtils.setFixedWidth(result, SIZE_AND_PREVIEW_PANE_WIDTH);
 
         Pane knownSizeAndPreviewPane = generateKnownSizeAndPreviewPane(
                 subtitleOption,
@@ -466,7 +466,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         Label sizeLabel = new Label();
         sizeLabel.textProperty().bind(
                 Bindings.createStringBinding(() ->
-                        "Size: " + GuiHelperMethods.getFileSizeTextual(subtitleOption.getSize(), true),
+                        "Size: " + GuiUtils.getFileSizeTextual(subtitleOption.getSize(), true),
                         subtitleOption.sizeProperty()
                 )
         );
@@ -488,7 +488,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
             TableFileInfo fileInfo,
             ObjectProperty<SubtitleOptionPreviewHandler> subtitleOptionPreviewHandler
     ) {
-        Button result = GuiHelperMethods.createImageButton("", "/gui/icons/eye.png", 15, 10);
+        Button result = GuiUtils.createImageButton("", "/gui/icons/eye.png", 15, 10);
 
         result.setOnAction(event -> {
             SubtitleOptionPreviewHandler handler = subtitleOptionPreviewHandler.get();
@@ -541,14 +541,14 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         Label result = new Label();
 
         result.setAlignment(Pos.CENTER);
-        result.setGraphic(GuiHelperMethods.createImageView("/gui/icons/error.png", 12, 12));
+        result.setGraphic(GuiUtils.createImageView("/gui/icons/error.png", 12, 12));
 
         StringBinding failedToLoadReasonBinding = Bindings.createStringBinding(
                 () -> unavailabilityReasonToString(subtitleOption.getFailedToLoadReason()),
                 subtitleOption.failedToLoadReasonProperty()
         );
-        result.setTooltip(GuiHelperMethods.generateTooltip(failedToLoadReasonBinding));
-        GuiHelperMethods.bindVisibleAndManaged(result, subtitleOption.failedToLoadReasonProperty().isNotNull());
+        result.setTooltip(GuiUtils.generateTooltip(failedToLoadReasonBinding));
+        GuiUtils.bindVisibleAndManaged(result, subtitleOption.failedToLoadReasonProperty().isNotNull());
 
         return result;
     }
@@ -595,7 +595,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         result.setAlignment(Pos.CENTER);
         result.setSpacing(5);
 
-        GuiHelperMethods.setFixedWidth(result, SELECT_OPTION_PANE_WIDTH);
+        GuiUtils.setFixedWidth(result, SELECT_OPTION_PANE_WIDTH);
 
         setSelectOptionPaneTooltip(result, subtitleOption.getUnavailabilityReason());
         subtitleOption.unavailabilityReasonProperty().addListener(
@@ -622,7 +622,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         if (unavailabilityReason == null) {
             Tooltip.install(selectOptionPane, null);
         } else {
-            Tooltip tooltip = GuiHelperMethods.generateTooltip(unavailabilityReasonToString(unavailabilityReason));
+            Tooltip tooltip = GuiUtils.generateTooltip(unavailabilityReasonToString(unavailabilityReason));
             Tooltip.install(selectOptionPane, tooltip);
         }
     }
@@ -706,7 +706,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
             TableFileInfo fileInfo,
             ObjectProperty<AddFileWithSubtitlesHandler> addFileWithSubtitlesHandler
     ) {
-        Button result = GuiHelperMethods.createImageButton(
+        Button result = GuiUtils.createImageButton(
                 "Add subtitles",
                 "/gui/icons/add.png",
                 9,
@@ -740,7 +740,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         HBox result = new HBox();
 
         result.setAlignment(Pos.CENTER);
-        GuiHelperMethods.setFixedWidth(result, SIZE_AND_PREVIEW_PANE_WIDTH);
+        GuiUtils.setFixedWidth(result, SIZE_AND_PREVIEW_PANE_WIDTH);
 
         Hyperlink loadAllLink = new Hyperlink("load all subtitles");
         loadAllLink.visibleProperty().bind(fileInfo.optionsWithUnknownSizeCountProperty().greaterThan(1));
@@ -765,10 +765,10 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         HBox result = new HBox();
 
         result.setAlignment(Pos.CENTER);
-        GuiHelperMethods.setFixedWidth(result, SELECT_OPTION_PANE_WIDTH);
+        GuiUtils.setFixedWidth(result, SELECT_OPTION_PANE_WIDTH);
         result.visibleProperty().bind(fileInfo.visibleOptionCountProperty().greaterThanOrEqualTo(2));
 
-        Button previewButton = GuiHelperMethods.createImageButton(
+        Button previewButton = GuiUtils.createImageButton(
                 "result preview",
                 "/gui/icons/eye.png",
                 15,
@@ -807,7 +807,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
         if (upperOption == null || lowerOption == null) {
             previewButton.setDisable(true);
-            Tooltip tooltip = GuiHelperMethods.generateTooltip("Please select subtitles to merge first");
+            Tooltip tooltip = GuiUtils.generateTooltip("Please select subtitles to merge first");
             Tooltip.install(previewPane, tooltip);
         } else {
             previewButton.setDisable(false);
@@ -1260,13 +1260,13 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         } else if (processedCount == 0) {
             warn = "Task has been cancelled, nothing was loaded";
         } else if (loadedSuccessfullyCount == subtitlesToLoadCount) {
-            success = GuiHelperMethods.getTextDependingOnTheCount(
+            success = GuiUtils.getTextDependingOnTheCount(
                     loadedSuccessfullyCount,
                     "Subtitles have been loaded successfully",
                     "All %d subtitles have been loaded successfully"
             );
         } else if (failedToLoadCount == subtitlesToLoadCount) {
-            error = GuiHelperMethods.getTextDependingOnTheCount(
+            error = GuiUtils.getTextDependingOnTheCount(
                     failedToLoadCount,
                     "Failed to load subtitles",
                     "Failed to load all %d subtitles"
@@ -1282,7 +1282,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
             if (processedCount != subtitlesToLoadCount) {
                 if (loadedSuccessfullyCount == 0) {
-                    warn = GuiHelperMethods.getTextDependingOnTheCount(
+                    warn = GuiUtils.getTextDependingOnTheCount(
                             subtitlesToLoadCount - processedCount,
                             String.format(
                                     "1/%d subtitle loadings has been cancelled",

@@ -3,8 +3,8 @@ package kirill.subtitlemerger.gui.application_specific.videos_tab.background;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
+import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
+import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
 import lombok.AllArgsConstructor;
 
 import java.util.List;
@@ -25,10 +25,10 @@ public class SortHideUnavailableRunner implements BackgroundRunner<TableFilesToS
     public TableFilesToShowInfo run(BackgroundRunnerManager runnerManager) {
         List<TableFileInfo> filesToShowInfo = null;
         if (hideUnavailable) {
-            filesToShowInfo = BackgroundHelperMethods.getOnlyAvailableFilesInfo(allFilesInfo, runnerManager);
+            filesToShowInfo = VideoTabBackgroundUtils.getOnlyAvailableFilesInfo(allFilesInfo, runnerManager);
         }
 
-        filesToShowInfo = BackgroundHelperMethods.getSortedFilesInfo(
+        filesToShowInfo = VideoTabBackgroundUtils.getSortedFilesInfo(
                 filesToShowInfo != null ? filesToShowInfo : allFilesInfo,
                 sortBy,
                 sortDirection,
@@ -37,9 +37,9 @@ public class SortHideUnavailableRunner implements BackgroundRunner<TableFilesToS
 
         return new TableFilesToShowInfo(
                 filesToShowInfo,
-                BackgroundHelperMethods.getAllSelectableCount(filesToShowInfo, mode, runnerManager),
-                BackgroundHelperMethods.getSelectedAvailableCount(filesToShowInfo, runnerManager),
-                BackgroundHelperMethods.getSelectedUnavailableCount(filesToShowInfo, runnerManager)
+                VideoTabBackgroundUtils.getAllSelectableCount(filesToShowInfo, mode, runnerManager),
+                VideoTabBackgroundUtils.getSelectedAvailableCount(filesToShowInfo, runnerManager),
+                VideoTabBackgroundUtils.getSelectedUnavailableCount(filesToShowInfo, runnerManager)
         );
     }
 }

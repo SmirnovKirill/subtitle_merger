@@ -13,9 +13,9 @@ import javafx.util.StringConverter;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
-import kirill.subtitlemerger.gui.utils.GuiHelperMethods;
-import kirill.subtitlemerger.gui.utils.custom_controls.ActionResultLabels;
-import kirill.subtitlemerger.gui.utils.entities.FileOrigin;
+import kirill.subtitlemerger.gui.util.GuiUtils;
+import kirill.subtitlemerger.gui.util.custom_controls.ActionResultLabels;
+import kirill.subtitlemerger.gui.util.entities.FileOrigin;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
@@ -110,11 +110,11 @@ public class SettingsTabController {
         this.context = context;
         this.settings = context.getSettings();
 
-        GuiHelperMethods.setTextFieldChangeListeners(
+        GuiUtils.setTextFieldChangeListeners(
                 ffprobePathField,
                 (path) -> processFfprobePath(path, FileOrigin.TEXT_FIELD)
         );
-        GuiHelperMethods.setTextFieldChangeListeners(
+        GuiUtils.setTextFieldChangeListeners(
                 ffmpegPathField,
                 (path) -> processFfmpegPath(path, FileOrigin.TEXT_FIELD)
         );

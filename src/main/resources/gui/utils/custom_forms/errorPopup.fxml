@@ -9,7 +9,7 @@
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.layout.Region?>
 <VBox xmlns:fx="http://javafx.com/fxml"
-      fx:controller="kirill.subtitlemerger.gui.utils.custom_forms.ErrorPopupController"
+      fx:controller="kirill.subtitlemerger.gui.util.custom_forms.ErrorPopupController"
       spacing="20" prefWidth="450"
 >
     <padding>

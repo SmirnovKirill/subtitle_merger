@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.gui.utils.custom_forms;
+package kirill.subtitlemerger.gui.util.custom_forms;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
