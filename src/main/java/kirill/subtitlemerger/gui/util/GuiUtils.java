@@ -2,7 +2,7 @@ package kirill.subtitlemerger.gui.util;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.binding.StringBinding;
+import javafx.beans.property.StringProperty;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -108,7 +108,7 @@ public class GuiUtils {
         return result;
     }
 
-    public static Tooltip generateTooltip(StringBinding text) {
+    public static Tooltip generateTooltip(StringProperty text) {
         Tooltip result = new Tooltip();
 
         result.textProperty().bind(text);

@@ -326,16 +326,14 @@ public class ContentPaneController extends AbstractController {
             LoadSingleSubtitleRunner backgroundRunner = new LoadSingleSubtitleRunner(
                     ffmpegStream,
                     fileInfo,
+                    tableSubtitleOption,
+                    tableFileInfo,
+                    tableWithFiles,
                     context.getFfmpeg()
             );
 
-            BackgroundRunnerCallback<LoadSingleSubtitleRunner.Result> callback = result ->
-                    tableWithFiles.subtitlesLoaded(
-                            result.isCancelled(),
-                            result.getLoadedSubtitles(),
-                            tableSubtitleOption,
-                            tableFileInfo
-                    );
+            BackgroundRunnerCallback<ActionResult> callback = actionResult ->
+                    tableWithFiles.setActionResult(actionResult, tableFileInfo);
 
             runInBackground(backgroundRunner, callback);
         });
@@ -499,6 +497,20 @@ public class ContentPaneController extends AbstractController {
             clearLastProcessedResult();
             tableWithFiles.clearActionResult(tableFileInfo);
             lastProcessedFileInfo = tableFileInfo;
+
+            FileInfo fileInfo = FileInfo.getById(tableFileInfo.getId(), filesInfo);
+
+            SingleFileAllSubtitleLoader backgroundRunner = new SingleFileAllSubtitleLoader(
+                    fileInfo,
+                    tableFileInfo,
+                    tableWithFiles,
+                    context.getFfmpeg()
+            );
+
+            BackgroundRunnerCallback<ActionResult> callback = actionResult ->
+                    tableWithFiles.setActionResult(actionResult, tableFileInfo);
+
+            runInBackground(backgroundRunner, callback);
         });
     }
 
@@ -805,19 +817,19 @@ public class ContentPaneController extends AbstractController {
 
     @FXML
     private void loadAllSubtitlesClicked() {
-       /* generalResult.clear();
+        generalResult.clear();
         lastProcessedFileInfo = null;
 
-        LoadFilesAllSubtitlesTask backgroundRunner = new LoadFilesAllSubtitlesTask(
-                filesInfo,
+        MultipleFilesAllSubtitleLoader backgroundRunner = new MultipleFilesAllSubtitleLoader(
                 tableWithFiles.getItems(),
+                filesInfo,
+                tableWithFiles,
                 context.getFfmpeg()
         );
 
-        BackgroundRunnerCallback<LoadFilesAllSubtitlesTask.Result> callback =
-                result -> generalResult.set(LoadFilesAllSubtitlesTask.generateMultiPartResult(result));
+        BackgroundRunnerCallback<ActionResult> callback = actionResult -> generalResult.set(actionResult);
 
-        runInBackground(backgroundRunner, callback);*/
+        runInBackground(backgroundRunner, callback);
     }
 
     @FXML

@@ -4,7 +4,6 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.ReadOnlyIntegerWrapper;
@@ -548,29 +547,10 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         result.setAlignment(Pos.CENTER);
         result.setGraphic(GuiUtils.createImageView("/gui/icons/error.png", 12, 12));
 
-        StringBinding failedToLoadReasonBinding = Bindings.createStringBinding(
-                () -> unavailabilityReasonToString(subtitleOption.getFailedToLoadReason()),
-                subtitleOption.failedToLoadReasonProperty()
-        );
-        result.setTooltip(GuiUtils.generateTooltip(failedToLoadReasonBinding));
+        result.setTooltip(GuiUtils.generateTooltip(subtitleOption.failedToLoadReasonProperty()));
         GuiUtils.bindVisibleAndManaged(result, subtitleOption.failedToLoadReasonProperty().isNotNull());
 
         return result;
-    }
-
-    private static String unavailabilityReasonToString(TableSubtitleOption.FailedToLoadSubtitlesReason reason) {
-        if (reason == null) {
-            return "";
-        }
-
-        switch (reason) {
-            case FFMPEG_ERROR:
-                return "Fmpeg returned an error";
-            case INCORRECT_FORMAT:
-                return "Subtitles seem to have an incorrect format";
-            default:
-                throw new IllegalStateException();
-        }
     }
 
     private static Hyperlink generateLoadSubtitleLink(
@@ -1076,7 +1056,11 @@ public class TableWithFiles extends TableView<TableFileInfo> {
     }
 
     public void clearActionResult(TableFileInfo fileInfo) {
-        fileInfo.setActionResult(ActionResult.NO_RESULT);
+        setActionResult(ActionResult.NO_RESULT, fileInfo);
+    }
+
+    public void setActionResult(ActionResult actionResult, TableFileInfo fileInfo) {
+        fileInfo.setActionResult(actionResult);
     }
 
     public void removeFileWithSubtitles(TableSubtitleOption option, TableFileInfo fileInfo) {
@@ -1107,40 +1091,18 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         fileInfo.setActionResult(ActionResult.onlySuccess("Subtitle file has been removed from the list successfully"));
     }
 
-    public void subtitlesLoaded(
-            boolean cancelled,
-            LoadedSubtitles loadedSubtitles,
-            TableSubtitleOption subtitleOption,
-            TableFileInfo fileInfo
-    ) {
-        if (cancelled) {
-            fileInfo.setActionResult(ActionResult.onlyWarn("Task has been cancelled"));
-            return;
-        }
-
-        processSingleLoadedSubtitles(loadedSubtitles, subtitleOption, fileInfo);
-
-        if (loadedSubtitles.getFailedToLoadReason() == null) {
-            fileInfo.setActionResult(ActionResult.onlySuccess("Subtitles have been loaded successfully"));
-        } else {
-            fileInfo.setActionResult(ActionResult.onlyError("Failed to load subtitles"));
-        }
+    public void subtitlesLoadedSuccessfully(int size, TableSubtitleOption subtitleOption, TableFileInfo fileInfo) {
+        subtitleOption.setSize(size);
+        subtitleOption.setFailedToLoadReason(null);
+        fileInfo.setOptionsWithUnknownSizeCount(fileInfo.getOptionsWithUnknownSizeCount() - 1);
     }
 
-    private void processSingleLoadedSubtitles(
-            LoadedSubtitles loadedSubtitles,
-            TableSubtitleOption subtitleOption,
-            TableFileInfo fileInfo
+    public void failedToLoadSubtitles(
+            String failedToLoadReason,
+            TableSubtitleOption subtitleOption
     ) {
-        subtitleOption.setSize(
-                loadedSubtitles.getSize() != null
-                        ? loadedSubtitles.getSize()
-                        : UNKNOWN_SIZE
-        );
-        subtitleOption.setFailedToLoadReason(loadedSubtitles.getFailedToLoadReason());
-        if (loadedSubtitles.getFailedToLoadReason() != null && loadedSubtitles.getSize() != null) {
-            fileInfo.setOptionsWithUnknownSizeCount(fileInfo.getOptionsWithUnknownSizeCount() - 1);
-        }
+        subtitleOption.setSize(UNKNOWN_SIZE);
+        subtitleOption.setFailedToLoadReason(failedToLoadReason);
     }
 
     public void subtitleOptionPreviewClosed(
@@ -1226,99 +1188,6 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         throw new IllegalStateException();
     }
 
-    void subtitlesLoaded(
-            int subtitlesToLoadCount,
-            int processedCount,
-            int loadedSuccessfullyCount,
-            int failedToLoadCount,
-            Map<String, LoadedSubtitles> allLoadedSubtitles,
-            TableFileInfo fileInfo
-    ) {
-        for (String optionId: allLoadedSubtitles.keySet()) {
-            TableSubtitleOption subtitleOption = TableSubtitleOption.getById(optionId, fileInfo.getSubtitleOptions());
-
-            processSingleLoadedSubtitles(allLoadedSubtitles.get(optionId), subtitleOption, fileInfo);
-        }
-
-        fileInfo.setActionResult(
-                generateSubtitleLoadingActionResult(
-                        subtitlesToLoadCount,
-                        processedCount,
-                        loadedSuccessfullyCount,
-                        failedToLoadCount
-                )
-        );
-    }
-
-    private static ActionResult generateSubtitleLoadingActionResult(
-            int subtitlesToLoadCount,
-            int processedCount,
-            int loadedSuccessfullyCount,
-            int failedToLoadCount
-    ) {
-        String success = null;
-        String warn = null;
-        String error = null;
-
-        if (subtitlesToLoadCount == 0) {
-            warn = "There are no subtitles to load";
-        } else if (processedCount == 0) {
-            warn = "Task has been cancelled, nothing was loaded";
-        } else if (loadedSuccessfullyCount == subtitlesToLoadCount) {
-            success = GuiUtils.getTextDependingOnTheCount(
-                    loadedSuccessfullyCount,
-                    "Subtitles have been loaded successfully",
-                    "All %d subtitles have been loaded successfully"
-            );
-        } else if (failedToLoadCount == subtitlesToLoadCount) {
-            error = GuiUtils.getTextDependingOnTheCount(
-                    failedToLoadCount,
-                    "Failed to load subtitles",
-                    "Failed to load all %d subtitles"
-            );
-        } else {
-            if (loadedSuccessfullyCount != 0) {
-                success = String.format(
-                        "%d/%d subtitles have been loaded successfully",
-                        loadedSuccessfullyCount,
-                        subtitlesToLoadCount
-                );
-            }
-
-            if (processedCount != subtitlesToLoadCount) {
-                if (loadedSuccessfullyCount == 0) {
-                    warn = GuiUtils.getTextDependingOnTheCount(
-                            subtitlesToLoadCount - processedCount,
-                            String.format(
-                                    "1/%d subtitle loadings has been cancelled",
-                                    subtitlesToLoadCount
-                            ),
-                            String.format(
-                                    "%%d/%d subtitle loadings have been cancelled",
-                                    subtitlesToLoadCount
-                            )
-                    );
-                } else {
-                    warn = String.format(
-                            "%d/%d cancelled",
-                            subtitlesToLoadCount - processedCount,
-                            subtitlesToLoadCount
-                    );
-                }
-            }
-
-            if (failedToLoadCount != 0) {
-                error = String.format(
-                        "%d/%d failed",
-                        failedToLoadCount,
-                        subtitlesToLoadCount
-                );
-            }
-        }
-
-        return new ActionResult(success, warn, error);
-    }
-
     public enum Mode {
         SEPARATE_FILES,
         DIRECTORY
@@ -1337,14 +1206,6 @@ public class TableWithFiles extends TableView<TableFileInfo> {
     public enum SortDirection {
         ASCENDING,
         DESCENDING
-    }
-
-    @AllArgsConstructor
-    @Getter
-    public static class LoadedSubtitles {
-        private Integer size;
-
-        private TableSubtitleOption.FailedToLoadSubtitlesReason failedToLoadReason;
     }
 
     @FunctionalInterface

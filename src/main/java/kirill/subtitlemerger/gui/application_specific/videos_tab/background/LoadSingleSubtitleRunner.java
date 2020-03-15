@@ -1,27 +1,35 @@
 package kirill.subtitlemerger.gui.application_specific.videos_tab.background;
 
+import javafx.application.Platform;
+import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableSubtitleOption;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
+import kirill.subtitlemerger.gui.util.entities.ActionResult;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 
 @AllArgsConstructor
-public class LoadSingleSubtitleRunner implements BackgroundRunner<LoadSingleSubtitleRunner.Result> {
+public class LoadSingleSubtitleRunner implements BackgroundRunner<ActionResult> {
     private FfmpegSubtitleStream ffmpegStream;
 
     private FileInfo fileInfo;
 
+    private TableSubtitleOption tableSubtitleOption;
+
+    private TableFileInfo tableFileInfo;
+
+    private TableWithFiles tableWithFiles;
+
     private Ffmpeg ffmpeg;
 
     @Override
-    public Result run(BackgroundRunnerManager runnerManager) {
+    public ActionResult run(BackgroundRunnerManager runnerManager) {
         runnerManager.setIndeterminateProgress();
 
         runnerManager.updateMessage(
@@ -38,41 +46,37 @@ public class LoadSingleSubtitleRunner implements BackgroundRunner<LoadSingleSubt
             String subtitleText = ffmpeg.getSubtitleText(ffmpegStream.getFfmpegIndex(), fileInfo.getFile());
             ffmpegStream.setSubtitles(SubtitleParser.fromSubRipText(subtitleText, ffmpegStream.getLanguage()));
 
-            return new Result(
-                    false,
-                    new TableWithFiles.LoadedSubtitles(
+            Platform.runLater(
+                    () -> tableWithFiles.subtitlesLoadedSuccessfully(
                             ffmpegStream.getSubtitles().getSize(),
-                            null
+                            tableSubtitleOption,
+                            tableFileInfo
                     )
             );
+
+            return ActionResult.onlySuccess("Subtitles have been loaded successfully");
         } catch (FfmpegException e) {
             if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
-                return new Result(true, null);
+                return ActionResult.onlyWarn("Task has been cancelled");
             } else {
-                return new Result(
-                        false,
-                        new TableWithFiles.LoadedSubtitles(
-                                null,
-                                TableSubtitleOption.FailedToLoadSubtitlesReason.FFMPEG_ERROR
+                Platform.runLater(
+                        () -> tableWithFiles.failedToLoadSubtitles(
+                                VideoTabBackgroundUtils.failedToLoadReasonFrom(e.getCode()),
+                                tableSubtitleOption
                         )
                 );
+
+                return ActionResult.onlyError("Failed to load subtitles");
             }
         } catch (SubtitleParser.IncorrectFormatException e) {
-            return new Result(
-                    false,
-                    new TableWithFiles.LoadedSubtitles(
-                            null,
-                            TableSubtitleOption.FailedToLoadSubtitlesReason.INCORRECT_FORMAT
+            Platform.runLater(
+                    () -> tableWithFiles.failedToLoadSubtitles(
+                            VideoTabBackgroundUtils.FAILED_TO_LOAD_STREAM_INCORRECT_FORMAT,
+                            tableSubtitleOption
                     )
             );
+
+            return ActionResult.onlyError("Failed to load subtitles");
         }
-    }
-
-    @AllArgsConstructor
-    @Getter
-    public static class Result {
-        private boolean cancelled;
-
-        private TableWithFiles.LoadedSubtitles loadedSubtitles;
     }
 }

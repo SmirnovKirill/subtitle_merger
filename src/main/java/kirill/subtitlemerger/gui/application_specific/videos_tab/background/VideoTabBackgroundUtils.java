@@ -8,11 +8,14 @@ import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_file
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.util.GuiUtils;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
+import kirill.subtitlemerger.gui.util.entities.ActionResult;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.work_with_files.FileInfoGetter;
 import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
+import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffprobe;
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -23,7 +26,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@CommonsLog
 class VideoTabBackgroundUtils {
+    static final String FAILED_TO_LOAD_STREAM_INCORRECT_FORMAT = "Subtitles seem to have an incorrect format";
+
     static List<FileInfo> getFilesInfo(
             List<File> files,
             Ffprobe ffprobe,
@@ -313,5 +319,83 @@ class VideoTabBackgroundUtils {
         runnerManager.updateMessage("getting list of files to work with...");
 
         return filesInfo.stream().filter(TableFileInfo::isSelected).collect(Collectors.toList());
+    }
+
+    static ActionResult generateSubtitleLoadingActionResult(
+            int subtitlesToLoadCount,
+            int processedCount,
+            int loadedSuccessfullyCount,
+            int failedToLoadCount
+    ) {
+        String success = null;
+        String warn = null;
+        String error = null;
+
+        if (subtitlesToLoadCount == 0) {
+            warn = "There are no subtitles to load";
+        } else if (processedCount == 0) {
+            warn = "Task has been cancelled, nothing was loaded";
+        } else if (loadedSuccessfullyCount == subtitlesToLoadCount) {
+            success = GuiUtils.getTextDependingOnTheCount(
+                    loadedSuccessfullyCount,
+                    "Subtitles have been loaded successfully",
+                    "All %d subtitles have been loaded successfully"
+            );
+        } else if (failedToLoadCount == subtitlesToLoadCount) {
+            error = GuiUtils.getTextDependingOnTheCount(
+                    failedToLoadCount,
+                    "Failed to load subtitles",
+                    "Failed to load all %d subtitles"
+            );
+        } else {
+            if (loadedSuccessfullyCount != 0) {
+                success = String.format(
+                        "%d/%d subtitles have been loaded successfully",
+                        loadedSuccessfullyCount,
+                        subtitlesToLoadCount
+                );
+            }
+
+            if (processedCount != subtitlesToLoadCount) {
+                if (loadedSuccessfullyCount == 0) {
+                    warn = GuiUtils.getTextDependingOnTheCount(
+                            subtitlesToLoadCount - processedCount,
+                            String.format(
+                                    "1/%d subtitle loadings has been cancelled",
+                                    subtitlesToLoadCount
+                            ),
+                            String.format(
+                                    "%%d/%d subtitle loadings have been cancelled",
+                                    subtitlesToLoadCount
+                            )
+                    );
+                } else {
+                    warn = String.format(
+                            "%d/%d cancelled",
+                            subtitlesToLoadCount - processedCount,
+                            subtitlesToLoadCount
+                    );
+                }
+            }
+
+            if (failedToLoadCount != 0) {
+                error = String.format(
+                        "%d/%d failed",
+                        failedToLoadCount,
+                        subtitlesToLoadCount
+                );
+            }
+        }
+
+        return new ActionResult(success, warn, error);
+    }
+
+    static String failedToLoadReasonFrom(FfmpegException.Code code) {
+        if (code == FfmpegException.Code.GENERAL_ERROR) {
+            return "Fmpeg returned an error";
+        } else {
+            log.error("unexpected code: " + code);
+            throw new IllegalStateException();
+        }
     }
 }

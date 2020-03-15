@@ -26,7 +26,7 @@ public class TableSubtitleOption {
 
     private IntegerProperty size;
 
-    private ObjectProperty<FailedToLoadSubtitlesReason> failedToLoadReason;
+    private StringProperty failedToLoadReason;
 
     private ObjectProperty<UnavailabilityReason> unavailabilityReason;
 
@@ -41,7 +41,7 @@ public class TableSubtitleOption {
             boolean removable,
             boolean sizeAlwaysKnown,
             int size,
-            FailedToLoadSubtitlesReason failedToLoadReason,
+            String failedToLoadReason,
             UnavailabilityReason unavailabilityReason,
             boolean selectedAsUpper,
             boolean selectedAsLower
@@ -52,7 +52,7 @@ public class TableSubtitleOption {
         this.removable = removable;
         this.sizeAlwaysKnown = sizeAlwaysKnown;
         this.size = new SimpleIntegerProperty(size);
-        this.failedToLoadReason = new SimpleObjectProperty<>(failedToLoadReason);
+        this.failedToLoadReason = new SimpleStringProperty(failedToLoadReason);
         this.unavailabilityReason = new SimpleObjectProperty<>(unavailabilityReason);
         this.selectedAsUpper = new SimpleBooleanProperty(selectedAsUpper);
         this.selectedAsLower = new SimpleBooleanProperty(selectedAsLower);
@@ -94,15 +94,15 @@ public class TableSubtitleOption {
         this.size.set(size);
     }
 
-    public FailedToLoadSubtitlesReason getFailedToLoadReason() {
+    public String getFailedToLoadReason() {
         return failedToLoadReason.get();
     }
 
-    ObjectProperty<FailedToLoadSubtitlesReason> failedToLoadReasonProperty() {
+    StringProperty failedToLoadReasonProperty() {
         return failedToLoadReason;
     }
 
-    void setFailedToLoadReason(FailedToLoadSubtitlesReason failedToLoadReason) {
+    void setFailedToLoadReason(String failedToLoadReason) {
         this.failedToLoadReason.set(failedToLoadReason);
     }
 
@@ -142,16 +142,13 @@ public class TableSubtitleOption {
         this.selectedAsLower.set(selectedAsLower);
     }
 
-    static TableSubtitleOption getById(String id, Collection<TableSubtitleOption> subtitleOptions) {
+    public static TableSubtitleOption getById(String id, Collection<TableSubtitleOption> subtitleOptions) {
         return subtitleOptions.stream()
                 .filter(option -> Objects.equals(option.getId(), id))
                 .findFirst().orElseThrow(IllegalStateException::new);
     }
 
-    public enum FailedToLoadSubtitlesReason {
-        FFMPEG_ERROR,
-        INCORRECT_FORMAT
-    }
+    //todo there shouldn't be any enums, gui should be unaware of the logic
 
     public enum UnavailabilityReason {
         NOT_ALLOWED_CODEC,
