@@ -200,14 +200,6 @@ public class GuiHelperMethods {
         return result;
     }
 
-    public static Region createFixedWidthSpacer(int width) {
-        Region result = new Region();
-
-        setFixedWidth(result, width);
-
-        return result;
-    }
-
     public static void setFixedWidth(Region region, int width) {
         region.setMinWidth(width);
         region.setMaxWidth(width);

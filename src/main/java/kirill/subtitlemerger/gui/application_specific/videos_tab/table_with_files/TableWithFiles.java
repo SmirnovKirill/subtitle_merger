@@ -37,6 +37,8 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern("dd.MM.YYYY HH:mm");
 
+    private static final int OPTION_TITLE_PANE_MIN_WIDTH = 190;
+
     private static final int SIZE_AND_PREVIEW_PANE_WIDTH = 90;
 
     private static final int SELECT_OPTION_PANE_WIDTH = 110;
@@ -166,7 +168,12 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         subtitleColumn.setCellFactory(
                 column -> new TableWithFilesCell<>(CellType.SUBTITLES, this::generateSubtitleCellPane)
         );
-        subtitleColumn.setMinWidth(300);
+
+        subtitleColumn.setMinWidth(
+                CELL_PADDING + 1
+                        + OPTION_TITLE_PANE_MIN_WIDTH + 15 + SIZE_AND_PREVIEW_PANE_WIDTH + 15 + SELECT_OPTION_PANE_WIDTH
+                        + CELL_PADDING
+        );
         subtitleColumn.setReorderable(false);
         subtitleColumn.setSortable(false);
 
@@ -335,12 +342,40 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         HBox result = new HBox();
 
         result.setAlignment(Pos.CENTER_LEFT);
+        result.setSpacing(15);
 
         if (subtitleOption.isHideable()) {
             GuiHelperMethods.bindVisibleAndManaged(result, Bindings.not(fileInfo.someOptionsHiddenProperty()));
         } else if (subtitleOption.isRemovable()) {
             GuiHelperMethods.bindVisibleAndManaged(result, subtitleOption.titleProperty().isNotEmpty());
         }
+
+        result.getChildren().addAll(
+                generateOptionTitleAndRemovePane(subtitleOption, fileInfo, removeSubtitleOptionHandler),
+                generateSizeAndPreviewPane(
+                        subtitleOption,
+                        fileInfo,
+                        subtitleOptionPreviewHandler,
+                        singleSubtitleLoader
+                ),
+                generateSelectOptionPane(subtitleOption)
+        );
+
+        HBox.setHgrow(result.getChildren().get(0), Priority.ALWAYS);
+
+        return result;
+    }
+
+    private static Pane generateOptionTitleAndRemovePane(
+            TableSubtitleOption subtitleOption,
+            TableFileInfo fileInfo,
+            ObjectProperty<RemoveSubtitleOptionHandler> removeSubtitleOptionHandler
+    ) {
+        HBox result = new HBox();
+
+        result.setAlignment(Pos.CENTER_LEFT);
+        result.setMinWidth(OPTION_TITLE_PANE_MIN_WIDTH);
+        result.setSpacing(10);
 
         result.getChildren().add(generateOptionTitleLabel(subtitleOption));
 
@@ -351,23 +386,8 @@ public class TableWithFiles extends TableView<TableFileInfo> {
                 removeSubtitleOptionHandler
         ).orElse(null);
         if (removeButton != null) {
-            result.getChildren().addAll(GuiHelperMethods.createFixedWidthSpacer(10), removeButton);
+            result.getChildren().add(removeButton);
         }
-
-        result.getChildren().addAll(
-                GuiHelperMethods.createFixedWidthSpacer(15),
-                generateSizeAndPreviewPane(
-                        subtitleOption,
-                        fileInfo,
-                        subtitleOptionPreviewHandler,
-                        singleSubtitleLoader
-                ),
-
-                GuiHelperMethods.createFixedWidthSpacer(15),
-                generateSelectOptionPane(subtitleOption)
-        );
-
-        HBox.setHgrow(result.getChildren().get(0), Priority.ALWAYS);
 
         return result;
     }
@@ -631,24 +651,36 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         HBox result = new HBox();
 
         result.setAlignment(Pos.CENTER_LEFT);
-
-        Hyperlink showHideLink = generateShowHideLink(fileInfo).orElse(null);
-        if (showHideLink != null) {
-            result.getChildren().add(showHideLink);
-            result.getChildren().add(GuiHelperMethods.createFixedWidthSpacer(25));
-        }
-
-        Region spacer = new Region();
+        result.setSpacing(15);
 
         result.getChildren().addAll(
-                generateAddFileButton(fileInfo, addFileWithSubtitlesHandler),
-                spacer,
+                generateShowHideAddFilePane(fileInfo, addFileWithSubtitlesHandler),
                 generateLoadAllSubtitlesPane(fileInfo, allFileSubtitleLoader),
-                GuiHelperMethods.createFixedWidthSpacer(15),
                 generateMergedPreviewPane(fileInfo, mergedSubtitlePreviewHandler)
         );
 
-        HBox.setHgrow(spacer, Priority.ALWAYS);
+        HBox.setHgrow(result.getChildren().get(0), Priority.ALWAYS);
+
+        return result;
+    }
+
+    private static Pane generateShowHideAddFilePane(
+            TableFileInfo fileInfo,
+            ObjectProperty<AddFileWithSubtitlesHandler> addFileWithSubtitlesHandler
+    ) {
+        HBox result = new HBox();
+
+        result.setAlignment(Pos.CENTER_LEFT);
+        result.setMinWidth(OPTION_TITLE_PANE_MIN_WIDTH);
+        result.setSpacing(25);
+
+        //noinspection SimplifyOptionalCallChains
+        Hyperlink showHideLink = generateShowHideLink(fileInfo).orElse(null);
+        if (showHideLink != null) {
+            result.getChildren().add(showHideLink);
+        }
+
+        result.getChildren().add(generateAddFileButton(fileInfo, addFileWithSubtitlesHandler));
 
         return result;
     }
@@ -711,7 +743,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         GuiHelperMethods.setFixedWidth(result, SIZE_AND_PREVIEW_PANE_WIDTH);
 
         Hyperlink loadAllLink = new Hyperlink("load all subtitles");
-        loadAllLink.visibleProperty().bind(fileInfo.optionsWithUnknownSizeCountProperty().greaterThan(0));
+        loadAllLink.visibleProperty().bind(fileInfo.optionsWithUnknownSizeCountProperty().greaterThan(1));
         loadAllLink.setOnAction(event -> {
             AllFileSubtitleLoader loader = allFileSubtitleLoader.get();
             if (loader == null) {
@@ -759,11 +791,6 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
         fileInfo.upperOptionProperty().addListener(listener);
         fileInfo.lowerOptionProperty().addListener(listener);
-        for (TableSubtitleOption option : fileInfo.getSubtitleOptions()) {
-            if (!option.isSizeAlwaysKnown()) {
-                option.sizeProperty().addListener(listener);
-            }
-        }
 
         result.getChildren().add(previewButton);
 
@@ -783,16 +810,8 @@ public class TableWithFiles extends TableView<TableFileInfo> {
             Tooltip tooltip = GuiHelperMethods.generateTooltip("Please select subtitles to merge first");
             Tooltip.install(previewPane, tooltip);
         } else {
-            boolean notLoaded = upperOption.getSize() == UNKNOWN_SIZE
-                    || lowerOption.getSize() == UNKNOWN_SIZE;
-            if (notLoaded) {
-                previewButton.setDisable(true);
-                Tooltip tooltip = GuiHelperMethods.generateTooltip("Please load selected subtitles first");
-                Tooltip.install(previewPane, tooltip);
-            } else {
-                previewButton.setDisable(false);
-                Tooltip.install(previewPane, null);
-            }
+            previewButton.setDisable(false);
+            Tooltip.install(previewPane, null);
         }
     }
 
