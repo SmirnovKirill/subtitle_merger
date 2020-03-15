@@ -22,6 +22,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -39,7 +40,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
     private static final int OPTION_TITLE_PANE_MIN_WIDTH = 190;
 
-    private static final int SIZE_AND_PREVIEW_PANE_WIDTH = 90;
+    private static final int SIZE_AND_PREVIEW_PANE_WIDTH = SystemUtils.IS_OS_LINUX ? 90 : 80;
 
     private static final int SELECT_OPTION_PANE_WIDTH = 110;
 

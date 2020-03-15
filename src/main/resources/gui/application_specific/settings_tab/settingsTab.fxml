@@ -30,7 +30,7 @@
             </padding>
 
             <columnConstraints>
-                <ColumnConstraints minWidth="295"/>
+                <ColumnConstraints hgrow="NEVER"/>
                 <ColumnConstraints hgrow="ALWAYS"/>
             </columnConstraints>
 
@@ -161,7 +161,7 @@
             <LabelWithQuestionMark
                     visible="${controller.markStreamCheckBoxVisible}" managed="${controller.markStreamCheckBoxVisible}"
                                    GridPane.rowIndex="6" GridPane.columnIndex="0">
-                <labelText>Mark merged subtitle streams as default</labelText>
+                <labelText>Mark merged subtitles as default</labelText>
                 <tooltipText>
                     Merged subtitles will be displayed by the video player by default automatically
                 </tooltipText>
