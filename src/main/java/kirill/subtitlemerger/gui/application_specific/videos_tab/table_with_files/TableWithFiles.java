@@ -5,7 +5,10 @@ import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.StringBinding;
-import javafx.beans.property.*;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyIntegerProperty;
+import javafx.beans.property.ReadOnlyIntegerWrapper;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -34,7 +37,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern("dd.MM.YYYY HH:mm");
 
-    private static final int SIZE_AND_PREVIEW_PANE_WIDTH = 95;
+    private static final int SIZE_AND_PREVIEW_PANE_WIDTH = 90;
 
     private static final int SELECT_OPTION_PANE_WIDTH = 110;
 
@@ -439,22 +442,23 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         HBox result = new HBox();
 
         result.setAlignment(Pos.CENTER_LEFT);
-        result.setSpacing(10);
 
         Label sizeLabel = new Label();
-        sizeLabel.setMaxWidth(Double.MAX_VALUE);
         sizeLabel.textProperty().bind(
                 Bindings.createStringBinding(() ->
-                        "Size: " + GuiHelperMethods.getFileSizeTextual(subtitleOption.getSize()), subtitleOption.sizeProperty()
+                        "Size: " + GuiHelperMethods.getFileSizeTextual(subtitleOption.getSize()),
+                        subtitleOption.sizeProperty()
                 )
         );
 
+        Region spacer = new Region();
+
         result.getChildren().addAll(
                 sizeLabel,
+                spacer,
                 generatePreviewButton(subtitleOption, fileInfo, subtitleOptionPreviewHandler)
         );
-
-        HBox.setHgrow(sizeLabel, Priority.ALWAYS);
+        HBox.setHgrow(spacer, Priority.ALWAYS);
 
         return result;
     }
@@ -487,39 +491,28 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
         result.setAlignment(Pos.CENTER_LEFT);
 
-        Label sizeLabel = new Label("Size: ? KB");
-        sizeLabel.setMaxWidth(Double.MAX_VALUE);
+        Region spacer = new Region();
 
         result.getChildren().addAll(
-                sizeLabel,
-                GuiHelperMethods.createFixedWidthSpacer(10),
-                generateLoadSubtitleLink(subtitleOption, fileInfo, singleSubtitleLoader),
-                GuiHelperMethods.createFixedWidthSpacer(5),
-                generateFailedToLoadLabel(subtitleOption)
+                generateSizeAndFailedToLoadPane(subtitleOption),
+                spacer,
+                generateLoadSubtitleLink(subtitleOption, fileInfo, singleSubtitleLoader)
         );
-
-        HBox.setHgrow(sizeLabel, Priority.ALWAYS);
+        HBox.setHgrow(spacer, Priority.ALWAYS);
 
         return result;
     }
 
-    private static Hyperlink generateLoadSubtitleLink(
-            TableSubtitleOption subtitleOption,
-            TableFileInfo fileInfo,
-            ObjectProperty<SingleSubtitleLoader> singleSubtitleLoader
-    ) {
-        Hyperlink result = new Hyperlink("load");
+    private static Pane generateSizeAndFailedToLoadPane(TableSubtitleOption subtitleOption) {
+        HBox result = new HBox();
 
-        result.visibleProperty().bind(subtitleOption.sizeProperty().isEqualTo(UNKNOWN_SIZE));
+        result.setAlignment(Pos.CENTER_LEFT);
+        result.setSpacing(5);
 
-        result.setOnAction(event -> {
-            SingleSubtitleLoader loader = singleSubtitleLoader.get();
-            if (loader == null) {
-                return;
-            }
-
-            loader.loadSubtitles(subtitleOption, fileInfo);
-        });
+        result.getChildren().addAll(
+                new Label("Size: ? KB"),
+                generateFailedToLoadLabel(subtitleOption)
+        );
 
         return result;
     }
@@ -553,6 +546,27 @@ public class TableWithFiles extends TableView<TableFileInfo> {
             default:
                 throw new IllegalStateException();
         }
+    }
+
+    private static Hyperlink generateLoadSubtitleLink(
+            TableSubtitleOption subtitleOption,
+            TableFileInfo fileInfo,
+            ObjectProperty<SingleSubtitleLoader> singleSubtitleLoader
+    ) {
+        Hyperlink result = new Hyperlink("load");
+
+        result.visibleProperty().bind(subtitleOption.sizeProperty().isEqualTo(UNKNOWN_SIZE));
+
+        result.setOnAction(event -> {
+            SingleSubtitleLoader loader = singleSubtitleLoader.get();
+            if (loader == null) {
+                return;
+            }
+
+            loader.loadSubtitles(subtitleOption, fileInfo);
+        });
+
+        return result;
     }
 
     private static Pane generateSelectOptionPane(TableSubtitleOption subtitleOption) {
@@ -723,7 +737,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         result.visibleProperty().bind(fileInfo.visibleOptionCountProperty().greaterThanOrEqualTo(2));
 
         Button previewButton = GuiHelperMethods.createImageButton(
-                "result",
+                "result preview",
                 "/gui/icons/eye.png",
                 15,
                 10

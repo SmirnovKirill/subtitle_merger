@@ -571,8 +571,6 @@ public class ContentPaneController extends AbstractController {
     }
 
     void handleChosenFiles(List<File> files) {
-        //todo check if > 10000
-
         try {
             context.getSettings().saveLastDirectoryWithVideos(files.get(0).getParent());
         } catch (GuiSettings.ConfigException e) {
