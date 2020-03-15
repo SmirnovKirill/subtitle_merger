@@ -1,3 +1,7 @@
+.root {
+    -fx-font-size: 13px;
+}
+
 .button-error {
     -fx-outer-border: #e2574c;
 }
