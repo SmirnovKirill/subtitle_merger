@@ -86,8 +86,14 @@ class VideoTabBackgroundUtils {
 
         List<TableSubtitleOption> subtitleOptions = new ArrayList<>();
         if (!CollectionUtils.isEmpty(fileInfo.getFfmpegSubtitleStreams())) {
+            boolean fileHasPreferredUpperLanguage = fileInfo.getFfmpegSubtitleStreams().stream()
+                    .anyMatch(stream -> stream.getLanguage() == settings.getUpperLanguage());
+            boolean fileHasPreferredLowerLanguage = fileInfo.getFfmpegSubtitleStreams().stream()
+                    .anyMatch(stream -> stream.getLanguage() == settings.getLowerLanguage());
+            boolean hideableOptionsPossible = fileHasPreferredUpperLanguage && fileHasPreferredLowerLanguage;
+
             subtitleOptions = fileInfo.getFfmpegSubtitleStreams().stream()
-                    .map(subtitleStream -> tableSubtitleOptionFrom(subtitleStream, settings))
+                    .map(subtitleStream -> tableSubtitleOptionFrom(subtitleStream, hideableOptionsPossible, settings))
                     .collect(Collectors.toList());
         }
 
@@ -125,12 +131,13 @@ class VideoTabBackgroundUtils {
 
     private static TableSubtitleOption tableSubtitleOptionFrom(
             FfmpegSubtitleStream subtitleStream,
+            boolean hideableOptionsPossible,
             GuiSettings settings
     ) {
         return new TableSubtitleOption(
                 subtitleStream.getId(),
                 tableOptionTitleFrom(subtitleStream),
-                isOptionHideable(subtitleStream, settings),
+                hideableOptionsPossible && isOptionHideable(subtitleStream, settings),
                 false,
                 false,
                 subtitleStream.getSubtitles() != null
