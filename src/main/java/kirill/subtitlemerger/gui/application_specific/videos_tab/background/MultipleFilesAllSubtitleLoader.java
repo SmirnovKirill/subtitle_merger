@@ -23,7 +23,7 @@ import java.util.List;
 public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionResult> {
     private List<TableFileInfo> displayedTableFilesInfo;
 
-    private List<FileInfo> allFilesInfo;
+    private List<FileInfo> filesInfo;
 
     private TableWithFiles tableWithFiles;
 
@@ -38,7 +38,7 @@ public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionRe
                 runnerManager
         );
 
-        int streamToLoadCount = getStreamToLoadCount(selectedTableFilesInfo, allFilesInfo, runnerManager);
+        int streamToLoadCount = getStreamToLoadCount(selectedTableFilesInfo, filesInfo, runnerManager);
         int processedCount = 0;
         int loadedSuccessfullyCount = 0;
         int failedToLoadCount = 0;
@@ -46,8 +46,8 @@ public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionRe
         runnerManager.setIndeterminateProgress();
         runnerManager.setCancellationPossible(true);
 
-        for (TableFileInfo tableFileInfo : selectedTableFilesInfo) {
-            FileInfo fileInfo = FileInfo.getById(tableFileInfo.getId(), allFilesInfo);
+        mainLoop: for (TableFileInfo tableFileInfo : selectedTableFilesInfo) {
+            FileInfo fileInfo = FileInfo.getById(tableFileInfo.getId(), filesInfo);
             if (CollectionUtils.isEmpty(fileInfo.getFfmpegSubtitleStreams())) {
                 continue;
             }
@@ -56,12 +56,7 @@ public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionRe
 
             for (FfmpegSubtitleStream ffmpegStream : fileInfo.getFfmpegSubtitleStreams()) {
                 if (runnerManager.isCancelled()) {
-                    return VideoTabBackgroundUtils.generateSubtitleLoadingActionResult(
-                            streamToLoadCount,
-                            processedCount,
-                            loadedSuccessfullyCount,
-                            failedToLoadCount
-                    );
+                    break mainLoop;
                 }
 
                 if (ffmpegStream.getUnavailabilityReason() != null || ffmpegStream.getSubtitles() != null) {
@@ -99,12 +94,7 @@ public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionRe
                     if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
                         setFileInfoErrorIfNecessary(failedToLoadForFile, tableFileInfo, tableWithFiles);
 
-                        return VideoTabBackgroundUtils.generateSubtitleLoadingActionResult(
-                                streamToLoadCount,
-                                processedCount,
-                                loadedSuccessfullyCount,
-                                failedToLoadCount
-                        );
+                        break mainLoop;
                     } else {
                         Platform.runLater(
                                 () -> tableWithFiles.failedToLoadSubtitles(

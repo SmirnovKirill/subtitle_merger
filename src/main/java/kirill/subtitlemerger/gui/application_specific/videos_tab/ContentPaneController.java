@@ -323,7 +323,7 @@ public class ContentPaneController extends AbstractController {
                     fileInfo.getFfmpegSubtitleStreams()
             );
 
-            LoadSingleSubtitleRunner backgroundRunner = new LoadSingleSubtitleRunner(
+            LoadSingleSubtitlesRunner backgroundRunner = new LoadSingleSubtitlesRunner(
                     ffmpegStream,
                     fileInfo,
                     tableSubtitleOption,
@@ -799,20 +799,20 @@ public class ContentPaneController extends AbstractController {
 
     @FXML
     private void autoSelectButtonClicked() {
-       /* generalResult.clear();
+        generalResult.clear();
         lastProcessedFileInfo = null;
 
-        AutoSelectSubtitlesTask backgroundRunner = new AutoSelectSubtitlesTask(
-                filesInfo,
+        AutoSelectSubtitlesRunner backgroundRunner = new AutoSelectSubtitlesRunner(
                 tableWithFiles.getItems(),
+                filesInfo,
+                tableWithFiles,
                 context.getFfmpeg(),
                 context.getSettings()
         );
 
-        BackgroundRunnerCallback<AutoSelectSubtitlesTask.Result> callback =
-                result -> generalResult.set(AutoSelectSubtitlesTask.generateMultiPartResult(result));
+        BackgroundRunnerCallback<ActionResult> callback = actionResult -> generalResult.set(actionResult);
 
-        runInBackground(backgroundRunner, callback);*/
+        runInBackground(backgroundRunner, callback);
     }
 
     @FXML
@@ -861,26 +861,6 @@ public class ContentPaneController extends AbstractController {
                 context.getFfmpeg()
         );*/
     }
-/*
-    private void loadAllFileSubtitleSizes(GuiFileInfo guiFileInfo) {
-        generalResult.clear();
-        clearLastProcessedResult();
-        guiFileInfo.clearResult();
-        lastProcessedFileInfo = guiFileInfo;
-
-        LoadSingleFileAllSubtitlesTask backgroundRunner = new LoadSingleFileAllSubtitlesTask(
-                GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo),
-                guiFileInfo,
-                context.getFfmpeg()
-        );
-
-        BackgroundRunnerCallback<LoadFilesAllSubtitlesTask.Result> callback =
-                result -> guiFileInfo.setResult(LoadFilesAllSubtitlesTask.generateMultiPartResult(result));
-
-        runInBackground(backgroundRunner, callback);
-    }
-
-  */
 
     @FXML
     private void removeButtonClicked() {

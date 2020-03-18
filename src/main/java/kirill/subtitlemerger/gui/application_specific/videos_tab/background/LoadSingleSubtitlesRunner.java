@@ -15,7 +15,7 @@ import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public class LoadSingleSubtitleRunner implements BackgroundRunner<ActionResult> {
+public class LoadSingleSubtitlesRunner implements BackgroundRunner<ActionResult> {
     private FfmpegSubtitleStream ffmpegStream;
 
     private FileInfo fileInfo;

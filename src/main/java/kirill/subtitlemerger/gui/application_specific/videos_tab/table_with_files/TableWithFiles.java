@@ -820,6 +820,14 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         actionResultLabels.set(fileInfo.getActionResult());
     }
 
+    public void setSelectedAsUpper(TableSubtitleOption subtitleOption) {
+        subtitleOption.setSelectedAsUpper(true);
+    }
+
+    public void setSelectedAsLower(TableSubtitleOption subtitleOption) {
+        subtitleOption.setSelectedAsLower(true);
+    }
+
     private static ContextMenu generateContextMenu(ToggleGroup sortByGroup, ToggleGroup sortDirectionGroup) {
         ContextMenu result = new ContextMenu();
 

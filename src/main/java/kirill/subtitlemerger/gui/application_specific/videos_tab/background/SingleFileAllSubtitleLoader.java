@@ -36,12 +36,7 @@ public class SingleFileAllSubtitleLoader implements BackgroundRunner<ActionResul
 
         for (FfmpegSubtitleStream ffmpegStream : fileInfo.getFfmpegSubtitleStreams()) {
             if (runnerManager.isCancelled()) {
-                return VideoTabBackgroundUtils.generateSubtitleLoadingActionResult(
-                        streamToLoadCount,
-                        processedCount,
-                        loadedSuccessfullyCount,
-                        failedToLoadCount
-                );
+                break;
             }
 
             if (ffmpegStream.getUnavailabilityReason() != null || ffmpegStream.getSubtitles() != null) {
@@ -77,12 +72,7 @@ public class SingleFileAllSubtitleLoader implements BackgroundRunner<ActionResul
                 loadedSuccessfullyCount++;
             } catch (FfmpegException e) {
                 if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
-                    return VideoTabBackgroundUtils.generateSubtitleLoadingActionResult(
-                            streamToLoadCount,
-                            processedCount,
-                            loadedSuccessfullyCount,
-                            failedToLoadCount
-                    );
+                    break;
                 } else {
                     Platform.runLater(
                             () -> tableWithFiles.failedToLoadSubtitles(
