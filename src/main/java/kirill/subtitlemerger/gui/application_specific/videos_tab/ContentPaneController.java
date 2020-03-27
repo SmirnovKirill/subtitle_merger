@@ -24,7 +24,6 @@ import kirill.subtitlemerger.gui.util.entities.ActionResult;
 import kirill.subtitlemerger.gui.util.entities.FileOrigin;
 import kirill.subtitlemerger.gui.util.entities.NodeAndController;
 import kirill.subtitlemerger.logic.work_with_files.entities.*;
-import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.EnumUtils;
@@ -833,33 +832,21 @@ public class ContentPaneController extends AbstractController {
     }
 
     @FXML
-    private void goButtonClicked() throws FfmpegException {
-      /*  GuiFileInfo guiFileInfo = tableWithFiles.getItems().get(0);
-        FileInfo fileInfo = GuiUtils.findMatchingFileInfo(guiFileInfo, filesInfo);
+    private void goButtonClicked() {
+        generalResult.clear();
+        lastProcessedFileInfo = null;
 
-        GuiSubtitleStream guiUpperSubtitles = guiFileInfo.getSubtitleStreams().stream()
-                .filter(GuiSubtitleStream::isSelectedAsUpper)
-                .findFirst().orElseThrow(IllegalStateException::new);
-        SubtitleOption upperSubtitles = SubtitleOption.getById(
-                guiUpperSubtitles.getId(),
-                fileInfo.getSubtitleStreams()
+        MergeSubtitlesRunner backgroundRunner = new MergeSubtitlesRunner(
+                tableWithFiles.getItems(),
+                filesInfo,
+                tableWithFiles,
+                context.getFfmpeg(),
+                context.getSettings()
         );
 
-        GuiSubtitleStream guiLowerSubtitles = guiFileInfo.getSubtitleStreams().stream()
-                .filter(GuiSubtitleStream::isSelectedAsLower)
-                .findFirst().orElseThrow(IllegalStateException::new);
-        SubtitleOption lowerSubtitles = SubtitleOption.getById(
-                guiLowerSubtitles.getId(),
-                fileInfo.getSubtitleStreams()
-        );
+        BackgroundRunnerCallback<ActionResult> callback = actionResult -> generalResult.set(actionResult);
 
-        SubtitleInjector.mergeAndInjectSubtitlesToFile(
-                upperSubtitles.getSubtitles(),
-                lowerSubtitles.getSubtitles(),
-                context.getSettings().isMarkMergedStreamAsDefault(),
-                fileInfo,
-                context.getFfmpeg()
-        );*/
+        runInBackground(backgroundRunner, callback);
     }
 
     @FXML

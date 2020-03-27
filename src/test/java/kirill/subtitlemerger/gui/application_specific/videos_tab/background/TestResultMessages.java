@@ -114,7 +114,7 @@ public class TestResultMessages {
                                 0
                         )
                 )
-        ).isEqualTo(new ActionResult(null, "Auto-selection is not possible for the file", null));
+        ).isEqualTo(new ActionResult(null, "Auto-selection is not possible for this file", null));
 
         assertThat(
                 AutoSelectSubtitlesTask.generateMultiPartResult(

@@ -266,7 +266,7 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
         } else if (notPossibleCount == allFileCount) {
             warn = GuiUtils.getTextDependingOnTheCount(
                     notPossibleCount,
-                    "Auto-selection is not possible for the file",
+                    "Auto-selection is not possible for this file",
                     "Auto-selection is not possible for all %d files"
             );
         } else if (failedCount == allFileCount) {
