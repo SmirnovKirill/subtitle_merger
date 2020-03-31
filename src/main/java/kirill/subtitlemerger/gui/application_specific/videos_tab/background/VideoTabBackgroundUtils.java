@@ -283,8 +283,8 @@ class VideoTabBackgroundUtils {
     }
 
     static String getLoadSubtitlesProgressMessage(
-            int subtitlesToLoadCount,
             int processedCount,
+            int subtitlesToLoadCount,
             FfmpegSubtitleStream subtitleStream,
             File file
     ) {
@@ -397,5 +397,13 @@ class VideoTabBackgroundUtils {
             log.error("unexpected code: " + code);
             throw new IllegalStateException();
         }
+    }
+
+    static String getProcessFileProgressMessage(int processedCount, int allFileCount, TableFileInfo fileInfo) {
+        String progressPrefix = allFileCount > 1
+                ? String.format("%d/%d ", processedCount + 1, allFileCount)
+                : "";
+
+        return progressPrefix + "processing file " + fileInfo.getFilePath();
     }
 }

@@ -32,6 +32,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -529,10 +530,17 @@ public class ContentPaneController extends AbstractController {
                     fileInfo.getSubtitleOptions()
             );
 
-            MergedPreviewRunner mergedPreviewRunner = new MergedPreviewRunner(upperOption, lowerOption, fileInfo);
+            MergedPreviewRunner mergedPreviewRunner = new MergedPreviewRunner(
+                    upperOption,
+                    lowerOption,
+                    fileInfo,
+                    tableFileInfo,
+                    tableWithFiles,
+                    context.getFfmpeg()
+            );
 
-            BackgroundRunnerCallback<MergedSubtitleInfo> callback = mergedSubtitleInfo -> {
-                fileInfo.setMergedSubtitleInfo(mergedSubtitleInfo);
+            BackgroundRunnerCallback<MergedPreviewRunner.Result> callback = result -> {
+                fileInfo.setMergedSubtitleInfo(result.getMergedSubtitleInfo());
 
                 NodeAndController nodeAndController = GuiUtils.loadNodeAndController(
                         "/gui/application_specific/subtitlePreview.fxml"
@@ -836,17 +844,60 @@ public class ContentPaneController extends AbstractController {
         generalResult.clear();
         lastProcessedFileInfo = null;
 
-        MergeSubtitlesRunner backgroundRunner = new MergeSubtitlesRunner(
+        MergePreparationRunner preparationRunner = new MergePreparationRunner(
                 tableWithFiles.getItems(),
                 filesInfo,
                 tableWithFiles,
-                context.getFfmpeg(),
                 context.getSettings()
         );
 
-        BackgroundRunnerCallback<ActionResult> callback = actionResult -> generalResult.set(actionResult);
+        BackgroundRunnerCallback<MergePreparationRunner.Result> callback = preparationResult -> {
+            String agreementMessage = getFreeSpaceAgreementMessage(preparationResult).orElse(null);
+            if (agreementMessage != null) {
+                if (!GuiUtils.showAgreementPopup(agreementMessage, "yes", "no", stage)) {
+                    return;
+                }
+            }
 
-        runInBackground(backgroundRunner, callback);
+            List<File> confirmedFilesToOverwrite = null;
+            if (!CollectionUtils.isEmpty(preparationResult.getFilesToOverwrite())) {
+                confirmedFilesToOverwrite = getConfirmedFilesToOverwrite(preparationResult.getFilesToOverwrite());
+            }
+        };
+
+        runInBackground(preparationRunner, callback);
+    }
+
+    private static Optional<String> getFreeSpaceAgreementMessage(MergePreparationRunner.Result preparationResult) {
+      if (preparationResult.getRequiredTempSpace() != null) {
+          if (preparationResult.getRequiredTempSpace() <= preparationResult.getAvailableTempSpace()) {
+              return Optional.empty();
+          }
+
+          return Optional.of(
+                  "Merge requires approximately "
+                          + GuiUtils.getFileSizeTextual(preparationResult.getRequiredTempSpace(), false)
+                          + " of free disk space during the process but only "
+                          + GuiUtils.getFileSizeTextual(preparationResult.getAvailableTempSpace(), false)
+                          + " is available, proceed anyway?"
+          );
+      } else if (preparationResult.getRequiredPermanentSpace() != null) {
+          return Optional.of(
+                  "Approximately "
+                          + GuiUtils.getFileSizeTextual(preparationResult.getRequiredTempSpace(), false)
+                          + " of free disk space will be used, do you want to proceed?"
+          );
+      } else {
+          return Optional.empty();
+      }
+    }
+
+    private static List<File> getConfirmedFilesToOverwrite(List<File> allFilesToOverwrite) {
+        for (File file : allFilesToOverwrite) {
+
+        }
+
+        return new ArrayList<>();
     }
 
     @FXML

@@ -65,8 +65,8 @@ public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionRe
 
                 runnerManager.updateMessage(
                         VideoTabBackgroundUtils.getLoadSubtitlesProgressMessage(
-                                streamToLoadCount,
                                 processedCount,
+                                streamToLoadCount,
                                 ffmpegStream,
                                 fileInfo.getFile()
                         )

@@ -63,6 +63,10 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
                 break;
             }
 
+            runnerManager.updateMessage(
+                    VideoTabBackgroundUtils.getProcessFileProgressMessage(processedCount, allFileCount, tableFileInfo)
+            );
+
             FileInfo fileInfo = FileInfo.getById(tableFileInfo.getId(), filesInfo);
             if (CollectionUtils.isEmpty(fileInfo.getFfmpegSubtitleStreams())) {
                 notPossibleCount++;

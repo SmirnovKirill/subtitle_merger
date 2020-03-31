@@ -34,8 +34,8 @@ public class LoadSingleSubtitlesRunner implements BackgroundRunner<ActionResult>
 
         runnerManager.updateMessage(
                 VideoTabBackgroundUtils.getLoadSubtitlesProgressMessage(
-                        1,
                         0,
+                        1,
                         ffmpegStream,
                         fileInfo.getFile()
                 )

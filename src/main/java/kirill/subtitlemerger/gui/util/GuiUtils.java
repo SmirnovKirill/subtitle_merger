@@ -17,6 +17,7 @@ import javafx.scene.layout.Region;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import kirill.subtitlemerger.gui.util.custom_forms.AgreementPopupController;
 import kirill.subtitlemerger.gui.util.custom_forms.ErrorPopupController;
 import kirill.subtitlemerger.gui.util.entities.NodeAndController;
 import lombok.extern.apachecommons.CommonsLog;
@@ -236,6 +237,25 @@ public class GuiUtils {
         controller.initialize(message, popupStage);
 
         popupStage.showAndWait();
+    }
+
+    public static boolean showAgreementPopup(String message, String yesText, String noText, Stage ownerStage) {
+        NodeAndController nodeAndController = GuiUtils.loadNodeAndController(
+                "/gui/utils/custom_forms/agreementPopup.fxml"
+        );
+
+        Stage popupStage = GuiUtils.createPopupStage(
+                "Please confirm",
+                nodeAndController.getNode(),
+                ownerStage
+        );
+
+        AgreementPopupController controller = nodeAndController.getController();
+        controller.initialize(message, yesText, noText, popupStage);
+
+        popupStage.showAndWait();
+
+        return Boolean.TRUE.equals(controller.getAgreed());
     }
 
     /*
