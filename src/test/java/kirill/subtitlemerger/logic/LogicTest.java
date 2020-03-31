@@ -31,7 +31,7 @@ public class LogicTest {
     }
 
     @Test
-    public void testMerge() throws IOException, SubtitleParser.IncorrectFormatException {
+    public void testMerge() throws IOException, SubtitleParser.IncorrectFormatException, InterruptedException {
         Subtitles upperSubtitles = SubtitleParser.fromSubRipText(
                 IOUtils.toString(
                         LogicTest.class.getResourceAsStream("/MainTest/testMerged/upper.srt"),

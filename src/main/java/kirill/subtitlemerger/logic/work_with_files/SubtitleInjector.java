@@ -18,7 +18,7 @@ public class SubtitleInjector {
             FileInfo fileInfo,
             boolean makeDefault,
             Ffmpeg ffmpeg
-    ) throws FfmpegException {
+    ) throws FfmpegException, InterruptedException {
         SubtitleOption upperSubtitleOption = fileInfo.getSubtitleOptions().stream()
                 .filter(SubtitleOption::isSelectedAsUpper)
                 .findFirst().orElseThrow(IllegalStateException::new);

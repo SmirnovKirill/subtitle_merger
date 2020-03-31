@@ -18,7 +18,10 @@ import static java.util.stream.Collectors.toSet;
 
 @CommonsLog
 public class SubtitleMerger {
-    public static Subtitles mergeSubtitles(Subtitles upperSubtitles, Subtitles lowerSubtitles) {
+    public static Subtitles mergeSubtitles(
+            Subtitles upperSubtitles,
+            Subtitles lowerSubtitles
+    ) throws InterruptedException {
         List<ExtendedSubtitle> result = makeInitialMerge(upperSubtitles, lowerSubtitles);
         result = getExpandedSubtitles(result);
         sortSubtitleLines(result);
@@ -31,13 +34,20 @@ public class SubtitleMerger {
      * The first and the simplest merging stage - we make a list of all mentioned points of time and for each segment
      * we see whether there are subtitles from any source if there are we add this segment and its lines.
      */
-    private static List<ExtendedSubtitle> makeInitialMerge(Subtitles upperSubtitles, Subtitles lowerSubtitles) {
+    private static List<ExtendedSubtitle> makeInitialMerge(
+            Subtitles upperSubtitles,
+            Subtitles lowerSubtitles
+    ) throws InterruptedException {
         List<ExtendedSubtitle> result = new ArrayList<>();
 
         List<LocalTime> uniqueSortedPointsOfTime = getUniqueSortedPointsOfTime(upperSubtitles, lowerSubtitles);
 
         int subtitleNumber = 1;
         for (int i = 0; i < uniqueSortedPointsOfTime.size() - 1; i++) {
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+
             LocalTime from = uniqueSortedPointsOfTime.get(i);
             LocalTime to = uniqueSortedPointsOfTime.get(i + 1);
 
@@ -69,15 +79,26 @@ public class SubtitleMerger {
         return result;
     }
 
-    private static List<LocalTime> getUniqueSortedPointsOfTime(Subtitles upperSubtitles, Subtitles lowerSubtitles) {
+    private static List<LocalTime> getUniqueSortedPointsOfTime(
+            Subtitles upperSubtitles,
+            Subtitles lowerSubtitles
+    ) throws InterruptedException {
         Set<LocalTime> result = new TreeSet<>();
 
         for (Subtitle subtitle : upperSubtitles.getSubtitles()) {
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+
             result.add(subtitle.getFrom());
             result.add(subtitle.getTo());
         }
 
         for (Subtitle subtitle : lowerSubtitles.getSubtitles()) {
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+
             result.add(subtitle.getFrom());
             result.add(subtitle.getTo());
         }
@@ -85,8 +106,16 @@ public class SubtitleMerger {
         return new ArrayList<>(result);
     }
 
-    private static Optional<Subtitle> findSubtitleForPeriod(LocalTime from, LocalTime to, Subtitles subtitles) {
+    private static Optional<Subtitle> findSubtitleForPeriod(
+            LocalTime from,
+            LocalTime to,
+            Subtitles subtitles
+    ) throws InterruptedException {
         for (Subtitle subtitle : subtitles.getSubtitles()) {
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+
             boolean fromInside = !from.isBefore(subtitle.getFrom()) && !from.isAfter(subtitle.getTo());
             boolean toInside = !to.isBefore(subtitle.getFrom()) && !to.isAfter(subtitle.getTo());
             if (fromInside && toInside) {
@@ -107,11 +136,17 @@ public class SubtitleMerger {
      * common case for english subtitles when there are descriptions of sounds that usually are not present for
      * other languages, so no expanding happens there.
      */
-    private static List<ExtendedSubtitle> getExpandedSubtitles(List<ExtendedSubtitle> subtitles) {
+    private static List<ExtendedSubtitle> getExpandedSubtitles(
+            List<ExtendedSubtitle> subtitles
+    ) throws InterruptedException {
         List<ExtendedSubtitle> result = new ArrayList<>();
 
         int i = 0;
         for (ExtendedSubtitle subtitle : subtitles) {
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+
             Set<Source> sources = subtitle.getLines().stream().map(ExtendedSubtitleLine::getSource).collect(toSet());
 
             if (sources.size() != 1 && sources.size() != 2) {
@@ -149,11 +184,15 @@ public class SubtitleMerger {
             List<ExtendedSubtitleLine> lines,
             int subtitleIndex,
             List<ExtendedSubtitle> subtitles
-    ) {
+    ) throws InterruptedException {
         Source linesSource = lines.get(0).getSource();
 
         int startIndex = -1;
         for (int i = subtitleIndex; i >= 0; i--) {
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+
             List<ExtendedSubtitleLine> linesFromOriginalSource = subtitles.get(i).getLines().stream()
                     .filter(line -> Objects.equals(line.getSource(), linesSource))
                     .collect(Collectors.toList());
@@ -170,6 +209,10 @@ public class SubtitleMerger {
         }
 
         for (int i = startIndex; i < subtitles.size(); i++) {
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+
             if (!Objects.equals(subtitles.get(i).getLines(), lines)) {
                 /*
                  * If we got here it means that lines have changed. It can be because the lines from the original source
@@ -192,11 +235,15 @@ public class SubtitleMerger {
             int subtitleIndex,
             Source otherSource,
             List<ExtendedSubtitle> subtitles
-    ) {
+    ) throws InterruptedException {
         List<ExtendedSubtitleLine> result;
 
         ExtendedSubtitle firstMatchingSubtitleForward = null;
         for (int i = subtitleIndex + 1; i < subtitles.size(); i++) {
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+
             ExtendedSubtitle currentSubtitle = subtitles.get(i);
             if (currentSubtitle.getLines().stream().anyMatch(line -> Objects.equals(line.getSource(), otherSource))) {
                 firstMatchingSubtitleForward = currentSubtitle;
@@ -206,6 +253,10 @@ public class SubtitleMerger {
 
         ExtendedSubtitle firstMatchingSubtitleBackward = null;
         for (int i = subtitleIndex - 1; i >= 0; i--) {
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+
             ExtendedSubtitle currentSubtitle = subtitles.get(i);
             if (currentSubtitle.getLines().stream().anyMatch(line -> Objects.equals(line.getSource(), otherSource))) {
                 firstMatchingSubtitleBackward = currentSubtitle;
@@ -238,8 +289,12 @@ public class SubtitleMerger {
                 .collect(Collectors.toList());
     }
 
-    private static void sortSubtitleLines(List<ExtendedSubtitle> subtitles) {
+    private static void sortSubtitleLines(List<ExtendedSubtitle> subtitles) throws InterruptedException {
         for (ExtendedSubtitle subtitle : subtitles) {
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+
             List<ExtendedSubtitleLine> orderedLines = new ArrayList<>();
 
             for (Source source : Source.values()) {
@@ -258,10 +313,16 @@ public class SubtitleMerger {
     /**
      * This method combines consecutive subtitles that have the same lines (to simply make the result more compact).
      */
-    private static List<ExtendedSubtitle> getCombinedSubtitles(List<ExtendedSubtitle> subtitles) {
+    private static List<ExtendedSubtitle> getCombinedSubtitles(
+            List<ExtendedSubtitle> subtitles
+    ) throws InterruptedException {
         List<ExtendedSubtitle> result = new ArrayList<>();
 
         for (ExtendedSubtitle currentSubtitle : subtitles) {
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+
             boolean shouldAddCurrentSubtitle = true;
 
             if (result.size() > 0) {
@@ -284,9 +345,17 @@ public class SubtitleMerger {
         return result;
     }
 
-    private static Subtitles convert(List<ExtendedSubtitle> merged, Subtitles upper, Subtitles lower) {
+    private static Subtitles convert(
+            List<ExtendedSubtitle> merged,
+            Subtitles upper,
+            Subtitles lower
+    ) throws InterruptedException {
         List<Subtitle> subtitles = new ArrayList<>();
         for (ExtendedSubtitle mergedSubtitle : merged) {
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+
             subtitles.add(
                     new Subtitle(
                             mergedSubtitle.getNumber(),

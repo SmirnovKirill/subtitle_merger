@@ -73,7 +73,12 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
                     fileInfo.getSubtitleOptions()
             );
 
-            SubtitleMerger.mergeSubtitles(upperOption.getSubtitles(), lowerOption.getSubtitles());
+            try {
+                SubtitleMerger.mergeSubtitles(upperOption.getSubtitles(), lowerOption.getSubtitles());
+            } catch (InterruptedException e) {
+                //todo
+                e.printStackTrace();
+            }
 
             finishedSuccessfullyCount++;
             processedCount++;
