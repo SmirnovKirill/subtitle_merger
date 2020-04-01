@@ -49,6 +49,7 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
         int failedCount = 0;
 
         runnerManager.setIndeterminateProgress();
+        runnerManager.setCancellationDescription("Please be patient, this may take a while depending on the size.");
         runnerManager.setCancellationPossible(true);
 
         for (TableFileInfo tableFileInfo : selectedTableFilesInfo) {

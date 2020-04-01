@@ -1,5 +1,6 @@
 package kirill.subtitlemerger.gui.application_specific;
 
+import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
@@ -8,6 +9,7 @@ import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunnerCallback;
 import kirill.subtitlemerger.gui.util.background.HelperTask;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.StringUtils;
 
 @CommonsLog
 public abstract class AbstractController {
@@ -26,6 +28,9 @@ public abstract class AbstractController {
     @FXML
     private Pane cancelTaskPane;
 
+    @FXML
+    private Label cancelDescriptionLabel;
+
     private HelperTask<?> currentTask;
 
     protected <T> void runInBackground(
@@ -40,6 +45,15 @@ public abstract class AbstractController {
         progressIndicator.progressProperty().bind(task.progressProperty());
         progressLabel.textProperty().bind(task.messageProperty());
         if (cancelTaskPane != null) {
+            cancelDescriptionLabel.textProperty().bind(
+                    Bindings.createStringBinding(
+                            () -> {
+                                String description = task.getBackgroundRunnerManager().getCancellationDescription();
+                                return StringUtils.isBlank(description) ? "" : description + " ";
+                            },
+                            task.getBackgroundRunnerManager().cancellationDescriptionProperty()
+                    )
+            );
             cancelTaskPane.visibleProperty().bind(task.getBackgroundRunnerManager().cancellationPossibleProperty());
         }
 

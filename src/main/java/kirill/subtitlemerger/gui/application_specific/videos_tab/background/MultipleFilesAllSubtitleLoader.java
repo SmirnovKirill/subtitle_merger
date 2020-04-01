@@ -44,6 +44,7 @@ public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionRe
         int failedToLoadCount = 0;
 
         runnerManager.setIndeterminateProgress();
+        runnerManager.setCancellationDescription("Please be patient, this may take a while depending on the size.");
         runnerManager.setCancellationPossible(true);
 
         mainLoop: for (TableFileInfo tableFileInfo : selectedTableFilesInfo) {

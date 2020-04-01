@@ -40,6 +40,8 @@ public class LoadSingleSubtitlesRunner implements BackgroundRunner<ActionResult>
                         fileInfo.getFile()
                 )
         );
+
+        runnerManager.setCancellationDescription("Please be patient, this may take a while depending on the size.");
         runnerManager.setCancellationPossible(true);
 
         try {

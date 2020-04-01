@@ -56,6 +56,8 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
         int failedCount = 0;
 
         runnerManager.setIndeterminateProgress();
+
+        runnerManager.setCancellationDescription("Please be patient, this may take a while depending on the size.");
         runnerManager.setCancellationPossible(true);
 
         for (TableFileInfo tableFileInfo : selectedTableFilesInfo) {
@@ -221,10 +223,10 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
             File file
     ) {
         String progressPrefix = allFileCount > 1
-                ? (processedCount + 1) + "/" + allFileCount + " "
-                : "";
+                ? (processedCount + 1) + "/" + allFileCount + " getting subtitles "
+                : "Getting subtitles ";
 
-        return progressPrefix + "getting subtitles "
+        return progressPrefix
                 + GuiUtils.languageToString(subtitleStream.getLanguage()).toUpperCase()
                 + (StringUtils.isBlank(subtitleStream.getTitle()) ? "" : " " + subtitleStream.getTitle())
                 + " in " + file.getName();

@@ -540,6 +540,10 @@ public class ContentPaneController extends AbstractController {
             );
 
             BackgroundRunnerCallback<MergedPreviewRunner.Result> callback = result -> {
+                if (result.isCancelled()) {
+                    return;
+                }
+
                 fileInfo.setMergedSubtitleInfo(result.getMergedSubtitleInfo());
 
                 NodeAndController nodeAndController = GuiUtils.loadNodeAndController(

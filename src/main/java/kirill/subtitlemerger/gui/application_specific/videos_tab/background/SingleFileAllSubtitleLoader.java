@@ -32,6 +32,7 @@ public class SingleFileAllSubtitleLoader implements BackgroundRunner<ActionResul
         int failedToLoadCount = 0;
 
         runnerManager.setIndeterminateProgress();
+        runnerManager.setCancellationDescription("Please be patient, this may take a while depending on the size.");
         runnerManager.setCancellationPossible(true);
 
         for (FfmpegSubtitleStream ffmpegStream : fileInfo.getFfmpegSubtitleStreams()) {

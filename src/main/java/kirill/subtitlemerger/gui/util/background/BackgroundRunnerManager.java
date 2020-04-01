@@ -1,19 +1,19 @@
 package kirill.subtitlemerger.gui.util.background;
 
 import javafx.application.Platform;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ReadOnlyDoubleProperty;
-import javafx.beans.property.ReadOnlyStringProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.*;
 import javafx.scene.control.ProgressIndicator;
 
 public class BackgroundRunnerManager {
     private BooleanProperty cancellationPossible;
 
+    private StringProperty cancellationDescription;
+
     private HelperTask task;
 
     BackgroundRunnerManager(HelperTask task) {
         this.cancellationPossible = new SimpleBooleanProperty(false);
+        this.cancellationDescription = new SimpleStringProperty();
         this.task = task;
     }
 
@@ -26,8 +26,21 @@ public class BackgroundRunnerManager {
     }
 
     public void setCancellationPossible(boolean cancellationPossible) {
-        /* Cancellation property is usually bound to some gui element so it should be updated in the javafx thread. */
+        /* Property is usually bound to some gui element so it should be updated in the javafx thread. */
         Platform.runLater(() -> this.cancellationPossible.set(cancellationPossible));
+    }
+
+    public String getCancellationDescription() {
+        return cancellationDescription.get();
+    }
+
+    public StringProperty cancellationDescriptionProperty() {
+        return cancellationDescription;
+    }
+
+    public void setCancellationDescription(String cancellationDescription) {
+        /* Property is usually bound to some gui element so it should be updated in the javafx thread. */
+        Platform.runLater(() -> this.cancellationDescription.set(cancellationDescription));
     }
 
     public void updateMessage(String message) {

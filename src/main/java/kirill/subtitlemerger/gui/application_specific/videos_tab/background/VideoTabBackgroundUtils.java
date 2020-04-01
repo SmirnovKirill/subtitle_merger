@@ -289,10 +289,10 @@ class VideoTabBackgroundUtils {
             File file
     ) {
         String progressPrefix = subtitlesToLoadCount > 1
-                ? String.format("%d/%d ", processedCount + 1, subtitlesToLoadCount)
-                : "";
+                ? String.format("%d/%d ", processedCount + 1, subtitlesToLoadCount) + "getting subtitles "
+                : "Getting subtitles ";
 
-        return progressPrefix + "getting subtitle "
+        return progressPrefix
                 + GuiUtils.languageToString(subtitleStream.getLanguage()).toUpperCase()
                 + (StringUtils.isBlank(subtitleStream.getTitle()) ? "" : " " + subtitleStream.getTitle())
                 + " in " + file.getName();

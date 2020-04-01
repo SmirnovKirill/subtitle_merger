@@ -159,7 +159,7 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
     }
 
     private static String getUpdateMessage(FfmpegSubtitleStream subtitleStream, File file) {
-        return "getting subtitles "
+        return "Getting subtitles "
                 + GuiUtils.languageToString(subtitleStream.getLanguage()).toUpperCase()
                 + (StringUtils.isBlank(subtitleStream.getTitle()) ? "" : " " + subtitleStream.getTitle())
                 + " in " + file.getName();
