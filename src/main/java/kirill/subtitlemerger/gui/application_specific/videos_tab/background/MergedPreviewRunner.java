@@ -47,6 +47,8 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
             }
         }
 
+        runnerManager.setCancellationPossible(true);
+
         try {
             loadStreamsIfNecessary(runnerManager);
         } catch (FfmpegException e) {
@@ -57,8 +59,14 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
             throw new IllegalStateException();
         }
 
-        runnerManager.updateMessage("merging subtitles...");
-        Subtitles merged = SubtitleMerger.mergeSubtitles(upperOption.getSubtitles(), lowerOption.getSubtitles());
+        runnerManager.updateMessage("Merging subtitles...");
+
+        Subtitles merged;
+        try {
+            merged = SubtitleMerger.mergeSubtitles(upperOption.getSubtitles(), lowerOption.getSubtitles());
+        } catch (InterruptedException e) {
+            return new Result(true, null);
+        }
 
         return new Result(
                 false,

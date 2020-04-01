@@ -100,7 +100,7 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
             BackgroundRunnerManager runnerManager
     ) {
         runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("removing already added files...");
+        runnerManager.updateMessage("Removing already added files...");
 
         Iterator<FileInfo> iterator = filesToAddInfo.iterator();
 

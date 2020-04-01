@@ -105,7 +105,7 @@ public class SingleFileAllSubtitleLoader implements BackgroundRunner<ActionResul
 
     private static int getStreamToLoadCount(FileInfo fileInfo, BackgroundRunnerManager runnerManager) {
         runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("calculating number of subtitles to load...");
+        runnerManager.updateMessage("Calculating number of subtitles to load...");
 
         int result = 0;
 

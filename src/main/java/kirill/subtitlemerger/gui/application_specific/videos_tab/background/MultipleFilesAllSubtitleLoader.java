@@ -136,7 +136,7 @@ public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionRe
             BackgroundRunnerManager runnerManager
     ) {
         runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("calculating number of subtitles to load...");
+        runnerManager.updateMessage("Calculating number of subtitles to load...");
 
         int result = 0;
 

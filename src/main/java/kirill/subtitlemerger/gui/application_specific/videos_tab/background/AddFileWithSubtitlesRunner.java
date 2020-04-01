@@ -31,7 +31,7 @@ public class AddFileWithSubtitlesRunner implements BackgroundRunner<AddFileWithS
     @Override
     public Result run(BackgroundRunnerManager runnerManager) {
         runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("processing file " + fileWithSubtitlesToAdd.getAbsolutePath() + "...");
+        runnerManager.updateMessage("Processing file " + fileWithSubtitlesToAdd.getAbsolutePath() + "...");
 
         FileValidator.InputFileInfo validatorFileInfo = FileValidator.getInputFileInfo(
                 fileWithSubtitlesToAdd.getAbsolutePath(),

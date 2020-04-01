@@ -93,7 +93,7 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
             BackgroundRunnerManager runnerManager
     ) {
         runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("getting file availability info...");
+        runnerManager.updateMessage("Getting file availability info...");
 
         return (int) filesInfo.stream()
                 .filter(fileInfo -> fileInfo.getUpperOption() == null || fileInfo.getLowerOption() == null)

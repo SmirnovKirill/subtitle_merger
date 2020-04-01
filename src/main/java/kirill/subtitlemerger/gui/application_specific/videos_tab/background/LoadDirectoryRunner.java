@@ -127,7 +127,7 @@ public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner
 
     private static List<File> getDirectoryFiles(String directoryPath, BackgroundRunnerManager runnerManager) {
         runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("getting file list...");
+        runnerManager.updateMessage("Getting file list...");
 
         File directory = new File(directoryPath);
         File[] directoryFiles = directory.listFiles();
@@ -173,7 +173,7 @@ public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner
      */
     private static boolean shouldHideUnavailable(List<FileInfo> filesInfo, BackgroundRunnerManager runnerManager) {
         runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("calculating whether to hide unavailable files by default...");
+        runnerManager.updateMessage("Calculating whether to hide unavailable files by default...");
 
         return filesInfo.stream().anyMatch(fileInfo -> fileInfo.getUnavailabilityReason() == null);
     }

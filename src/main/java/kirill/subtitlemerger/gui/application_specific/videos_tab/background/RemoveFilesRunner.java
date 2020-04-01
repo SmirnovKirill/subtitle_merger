@@ -26,7 +26,7 @@ public class RemoveFilesRunner implements BackgroundRunner<RemoveFilesRunner.Res
         List<String> selectedFileIds =getSelectedFileIds(originalTableFilesToShowInfo, runnerManager);
 
         runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("removing files...");
+        runnerManager.updateMessage("Removing files...");
 
         List<FileInfo> filesInfo = originalFilesInfo.stream()
                 .filter(fileInfo -> !selectedFileIds.contains(fileInfo.getId()))
@@ -56,7 +56,7 @@ public class RemoveFilesRunner implements BackgroundRunner<RemoveFilesRunner.Res
             BackgroundRunnerManager runnerManager
     ) {
         runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("getting list of files to remove...");
+        runnerManager.updateMessage("Getting list of files to remove...");
 
         return filesInfo.stream()
                 .filter(TableFileInfo::isSelected)

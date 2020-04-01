@@ -111,7 +111,7 @@ public class SubtitleFilesTabController extends AbstractController {
         }
 
         BackgroundRunner<InputFileInfo> backgroundRunner = runnerManager -> {
-            runnerManager.updateMessage("processing file " + path + "...");
+            runnerManager.updateMessage("Processing file " + path + "...");
             return getInputFileInfo(path, fileType, fileOrigin, filesInfo).orElse(null);
         };
 
@@ -692,20 +692,33 @@ public class SubtitleFilesTabController extends AbstractController {
     private void mergedPreviewClicked() {
         clearState();
 
-        BackgroundRunner<Subtitles> backgroundRunner = runnerManager -> {
+        BackgroundRunner<Optional<Subtitles>> backgroundRunner = runnerManager -> {
             if (filesInfo.getMergedSubtitles() != null) {
-                return filesInfo.getMergedSubtitles();
+                return Optional.of(filesInfo.getMergedSubtitles());
             }
 
-            runnerManager.updateMessage("merging subtitles...");
+            runnerManager.setCancellationPossible(true);
 
-            return SubtitleMerger.mergeSubtitles(
-                    filesInfo.getUpperFileInfo().getSubtitles(),
-                    filesInfo.getLowerFileInfo().getSubtitles()
-            );
+            runnerManager.updateMessage("Merging subtitles...");
+
+            try {
+                return Optional.of(
+                        SubtitleMerger.mergeSubtitles(
+                                filesInfo.getUpperFileInfo().getSubtitles(),
+                                filesInfo.getLowerFileInfo().getSubtitles()
+                        )
+                );
+            } catch (InterruptedException e) {
+                return Optional.empty();
+            }
         };
 
-        BackgroundRunnerCallback<Subtitles> callback = subtitles -> {
+        BackgroundRunnerCallback<Optional<Subtitles>> callback = result -> {
+            Subtitles subtitles = result.orElse(null);
+            if (subtitles == null) {
+                return;
+            }
+
             filesInfo.setMergedSubtitles(subtitles);
 
             NodeAndController nodeAndController = GuiUtils.loadNodeAndController(
@@ -770,12 +783,18 @@ public class SubtitleFilesTabController extends AbstractController {
             if (filesInfo.getMergedSubtitles() != null) {
                 mergedSubtitles = filesInfo.getMergedSubtitles();
             } else {
-                runnerManager.updateMessage("merging subtitles...");
+                runnerManager.setCancellationPossible(true);
 
-                mergedSubtitles = SubtitleMerger.mergeSubtitles(
-                        filesInfo.getUpperFileInfo().getSubtitles(),
-                        filesInfo.getLowerFileInfo().getSubtitles()
-                );
+                runnerManager.updateMessage("Merging subtitles...");
+
+                try {
+                    mergedSubtitles = SubtitleMerger.mergeSubtitles(
+                            filesInfo.getUpperFileInfo().getSubtitles(),
+                            filesInfo.getLowerFileInfo().getSubtitles()
+                    );
+                } catch (InterruptedException e) {
+                    return ActionResult.NO_RESULT;
+                }
             }
 
             try {

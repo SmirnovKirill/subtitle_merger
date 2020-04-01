@@ -78,6 +78,15 @@
         <VBox fx:id="progressPane" spacing="10" alignment="CENTER" visible="false">
             <ProgressIndicator fx:id="progressIndicator"/>
             <Label fx:id="progressLabel"/>
+            <HBox fx:id="cancelTaskPane" alignment="CENTER">
+                <Label text="If you want to cancel the task click "/>
+                <Hyperlink text="here" onAction="#cancelTaskClicked">
+                    <padding>
+                        <Insets/>
+                    </padding>
+                </Hyperlink>
+                <Label text="."/>
+            </HBox>
         </VBox>
     </StackPane>
 </Tab>

@@ -41,7 +41,7 @@ class VideoTabBackgroundUtils {
 
         int i = 0;
         for (File file : files) {
-            runnerManager.updateMessage("getting file info " + file.getName() + "...");
+            runnerManager.updateMessage("Getting file info " + file.getName() + "...");
 
             if (file.isFile() && file.exists()) {
                 result.add(
@@ -74,7 +74,7 @@ class VideoTabBackgroundUtils {
         List<TableFileInfo> result = new ArrayList<>();
 
         for (FileInfo fileInfo : filesInfo) {
-            runnerManager.updateMessage("creating object for " + fileInfo.getFile().getName() + "...");
+            runnerManager.updateMessage("Creating object for " + fileInfo.getFile().getName() + "...");
 
             result.add(tableFileInfoFrom(fileInfo, showFullPath, selectByDefault, settings));
         }
@@ -197,7 +197,7 @@ class VideoTabBackgroundUtils {
             BackgroundRunnerManager runnerManager
     ) {
         runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("filtering unavailable...");
+        runnerManager.updateMessage("Filtering unavailable...");
 
         return allFilesInfo.stream()
                 .filter(fileInfo -> fileInfo.getUnavailabilityReason() == null)
@@ -211,7 +211,7 @@ class VideoTabBackgroundUtils {
             BackgroundRunnerManager runnerManager
     ) {
         runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("sorting file list...");
+        runnerManager.updateMessage("Sorting file list...");
 
         Comparator<TableFileInfo> comparator;
         switch (sortBy) {
@@ -241,7 +241,7 @@ class VideoTabBackgroundUtils {
             BackgroundRunnerManager runnerManager
     ) {
         runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("calculating number of files...");
+        runnerManager.updateMessage("Calculating number of files...");
 
         if (mode == TableWithFiles.Mode.SEPARATE_FILES) {
             return allFilesInfo.size();
@@ -259,7 +259,7 @@ class VideoTabBackgroundUtils {
             BackgroundRunnerManager runnerManager
     ) {
         runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("calculating number of files...");
+        runnerManager.updateMessage("Calculating number of files...");
 
         return (int) allFilesInfo.stream()
                 .filter(TableFileInfo::isSelected)
@@ -273,7 +273,7 @@ class VideoTabBackgroundUtils {
             BackgroundRunnerManager runnerManager
     ) {
         runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("calculating number of files...");
+        runnerManager.updateMessage("Calculating number of files...");
 
         return (int) allFilesInfo.stream()
                 .filter(TableFileInfo::isSelected)
@@ -304,7 +304,7 @@ class VideoTabBackgroundUtils {
             BackgroundRunnerManager runnerManager
     ) {
         runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("clearing state...");
+        runnerManager.updateMessage("Clearing state...");
 
         for (TableFileInfo fileInfo : filesInfo) {
             Platform.runLater(() -> tableWithFiles.clearActionResult(fileInfo));
@@ -316,7 +316,7 @@ class VideoTabBackgroundUtils {
             BackgroundRunnerManager runnerManager
     ) {
         runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("getting list of files to work with...");
+        runnerManager.updateMessage("Getting list of files to work with...");
 
         return filesInfo.stream().filter(TableFileInfo::isSelected).collect(Collectors.toList());
     }
