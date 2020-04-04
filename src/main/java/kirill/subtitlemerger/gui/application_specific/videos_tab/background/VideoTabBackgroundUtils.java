@@ -401,9 +401,9 @@ class VideoTabBackgroundUtils {
 
     static String getProcessFileProgressMessage(int processedCount, int allFileCount, TableFileInfo fileInfo) {
         String progressPrefix = allFileCount > 1
-                ? String.format("%d/%d ", processedCount + 1, allFileCount)
-                : "";
+                ? String.format("%d/%d ", processedCount + 1, allFileCount) + " processing file "
+                : "Processing file ";
 
-        return progressPrefix + "processing file " + fileInfo.getFilePath();
+        return progressPrefix + fileInfo.getFilePath() + "...";
     }
 }

@@ -36,10 +36,6 @@ public class SingleFileAllSubtitleLoader implements BackgroundRunner<ActionResul
         runnerManager.setCancellationPossible(true);
 
         for (FfmpegSubtitleStream ffmpegStream : fileInfo.getFfmpegSubtitleStreams()) {
-            if (runnerManager.isCancelled()) {
-                break;
-            }
-
             if (ffmpegStream.getUnavailabilityReason() != null || ffmpegStream.getSubtitles() != null) {
                 continue;
             }

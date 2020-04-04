@@ -698,7 +698,6 @@ public class SubtitleFilesTabController extends AbstractController {
             }
 
             runnerManager.setCancellationPossible(true);
-
             runnerManager.updateMessage("Merging subtitles...");
 
             try {
@@ -716,6 +715,7 @@ public class SubtitleFilesTabController extends AbstractController {
         BackgroundRunnerCallback<Optional<Subtitles>> callback = result -> {
             Subtitles subtitles = result.orElse(null);
             if (subtitles == null) {
+                actionResultLabels.setOnlyWarn("Merge has been cancelled");
                 return;
             }
 
@@ -784,7 +784,6 @@ public class SubtitleFilesTabController extends AbstractController {
                 mergedSubtitles = filesInfo.getMergedSubtitles();
             } else {
                 runnerManager.setCancellationPossible(true);
-
                 runnerManager.updateMessage("Merging subtitles...");
 
                 try {
@@ -793,7 +792,7 @@ public class SubtitleFilesTabController extends AbstractController {
                             filesInfo.getLowerFileInfo().getSubtitles()
                     );
                 } catch (InterruptedException e) {
-                    return ActionResult.NO_RESULT;
+                    return ActionResult.onlyWarn("Merge has been cancelled");
                 }
             }
 

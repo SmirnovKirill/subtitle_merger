@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.Objects;
 
 @AllArgsConstructor
 @Getter
@@ -14,11 +15,34 @@ public class Subtitles {
 
     private LanguageAlpha3Code language;
 
-    private int size;
+    private String text;
 
     public Subtitles(List<Subtitle> subtitles, LanguageAlpha3Code language) {
         this.subtitles = subtitles;
         this.language = language;
-        this.size = SubtitleWriter.toSubRipText(this).getBytes().length;;
+        this.text = SubtitleWriter.toSubRipText(this);;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        Subtitles subtitles1 = (Subtitles) o;
+        return Objects.equals(text, subtitles1.text);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(text);
+    }
+
+    public int getSize() {
+        return text.getBytes().length;
     }
 }

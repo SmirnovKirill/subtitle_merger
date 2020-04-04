@@ -56,10 +56,6 @@ public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionRe
             int failedToLoadForFile = 0;
 
             for (FfmpegSubtitleStream ffmpegStream : fileInfo.getFfmpegSubtitleStreams()) {
-                if (runnerManager.isCancelled()) {
-                    break mainLoop;
-                }
-
                 if (ffmpegStream.getUnavailabilityReason() != null || ffmpegStream.getSubtitles() != null) {
                     continue;
                 }

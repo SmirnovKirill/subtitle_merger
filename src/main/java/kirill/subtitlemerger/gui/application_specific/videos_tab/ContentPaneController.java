@@ -541,6 +541,7 @@ public class ContentPaneController extends AbstractController {
 
             BackgroundRunnerCallback<MergedPreviewRunner.Result> callback = result -> {
                 if (result.isCancelled()) {
+                    generalResult.setOnlyWarn("Merge has been cancelled");
                     return;
                 }
 
@@ -852,10 +853,24 @@ public class ContentPaneController extends AbstractController {
                 tableWithFiles.getItems(),
                 filesInfo,
                 tableWithFiles,
-                context.getSettings()
+                context
         );
 
         BackgroundRunnerCallback<MergePreparationRunner.Result> callback = preparationResult -> {
+            if (preparationResult.isCancelled()) {
+                generalResult.setOnlyWarn("Merge has been cancelled");
+                return;
+            }
+
+            if (preparationResult.getFilesWithoutSelectionCount() != 0) {
+                generalResult.set(
+                        getFilesWithoutSelectionResult(
+                                preparationResult.getFilesWithoutSelectionCount(),
+                                tableWithFiles.getAllSelectedCount()
+                        )
+                );
+            }
+
             String agreementMessage = getFreeSpaceAgreementMessage(preparationResult).orElse(null);
             if (agreementMessage != null) {
                 if (!GuiUtils.showAgreementPopup(agreementMessage, "yes", "no", stage)) {
@@ -870,6 +885,21 @@ public class ContentPaneController extends AbstractController {
         };
 
         runInBackground(preparationRunner, callback);
+    }
+
+    private static ActionResult getFilesWithoutSelectionResult(
+            int filesWithoutSelectionCount,
+            int selectedFileCount
+    ) {
+        String message;
+        if (selectedFileCount == 1) {
+            message = "Merge for the file is unavailable because you have to select upper and lower subtitles first";
+        } else {
+            message = "Merge is unavailable because you have to select upper and lower subtitles for all the selected "
+                    + "files (%d left)";
+        }
+
+        return ActionResult.onlyError(String.format(message, filesWithoutSelectionCount));
     }
 
     private static Optional<String> getFreeSpaceAgreementMessage(MergePreparationRunner.Result preparationResult) {

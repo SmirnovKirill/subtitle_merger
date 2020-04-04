@@ -1,17 +1,33 @@
 package kirill.subtitlemerger.gui.application_specific.videos_tab.background;
 
+import com.neovisionaries.i18n.LanguageAlpha3Code;
+import javafx.application.Platform;
+import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
+import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableSubtitleOption;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
+import kirill.subtitlemerger.gui.util.GuiUtils;
+import kirill.subtitlemerger.gui.util.background.BackgroundResult;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.gui.util.entities.ActionResult;
+import kirill.subtitlemerger.logic.core.SubtitleMerger;
+import kirill.subtitlemerger.logic.core.SubtitleParser;
+import kirill.subtitlemerger.logic.core.entities.Subtitles;
+import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
+import kirill.subtitlemerger.logic.work_with_files.entities.FileWithSubtitles;
+import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleOption;
+import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 public class MergePreparationRunner implements BackgroundRunner<MergePreparationRunner.Result> {
@@ -21,65 +37,80 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
 
     private TableWithFiles tableWithFiles;
 
-    private GuiSettings settings;
+    private GuiContext context;
 
     @Override
     public MergePreparationRunner.Result run(BackgroundRunnerManager runnerManager) {
-        /*VideoTabBackgroundUtils.clearActionResults(displayedTableFilesInfo, tableWithFiles, runnerManager);
+        VideoTabBackgroundUtils.clearActionResults(displayedTableFilesInfo, tableWithFiles, runnerManager);
 
         List<TableFileInfo> selectedTableFilesInfo = VideoTabBackgroundUtils.getSelectedFilesInfo(
                 displayedTableFilesInfo,
                 runnerManager
         );
 
-        int allFileCount = selectedTableFilesInfo.size();
-
         int filesWithoutSelectionCount = getFilesWithoutSelectionCount(selectedTableFilesInfo, runnerManager);
         if (filesWithoutSelectionCount != 0) {
-            return getFilesWithoutSelectionResult(filesWithoutSelectionCount, allFileCount);
+            return new Result(
+                    false,
+                    filesWithoutSelectionCount,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+            );
         }
-
-        int processedCount = 0;
-        int finishedSuccessfullyCount = 0;
-        int notPossibleCount = 0;
-        int failedCount = 0;
 
         runnerManager.setIndeterminateProgress();
         runnerManager.setCancellationPossible(true);
 
+        List<FileMergeInfo> filesMergeInfo = new ArrayList<>();
+
+        int processedCount = 0;
         for (TableFileInfo tableFileInfo : selectedTableFilesInfo) {
-            if (runnerManager.isCancelled()) {
-                break;
+            try {
+                filesMergeInfo.add(
+                        getFileMergeInfo(tableFileInfo, processedCount, selectedTableFilesInfo.size(), runnerManager)
+                );
+                processedCount++;
+            } catch (InterruptedException e) {
+                return new Result(
+                        true,
+                        filesWithoutSelectionCount,
+                        null,
+                        null,
+                        null,
+                        null,
+                        filesMergeInfo
+                );
             }
-
-            runnerManager.updateMessage(
-                    VideoTabBackgroundUtils.getProcessFileProgressMessage(processedCount, allFileCount, tableFileInfo)
-            );
-
-            FileInfo fileInfo = FileInfo.getById(tableFileInfo.getId(), filesInfo);
-
-            TableSubtitleOption tableUpperOption = tableFileInfo.getUpperOption();
-            TableSubtitleOption tableLowerOption = tableFileInfo.getLowerOption();
-            SubtitleOption upperOption = SubtitleOption.getById(
-                    tableUpperOption.getId(),
-                    fileInfo.getSubtitleOptions()
-            );
-            SubtitleOption lowerOption = SubtitleOption.getById(
-                    tableLowerOption.getId(),
-                    fileInfo.getSubtitleOptions()
-            );
-
-            SubtitleMerger.mergeSubtitles(upperOption.getSubtitles(), lowerOption.getSubtitles());
-
-            finishedSuccessfullyCount++;
-            processedCount++;
         }
 
-        return ActionResult.onlySuccess("ok");*/
-        return new Result(0L, 0L, 0L, null);
+        RequiredAndAvailableSpace requiredAndAvailableSpace = getRequiredAndAvailableTempSpace(
+                filesMergeInfo,
+                filesInfo,
+                context.getSettings(),
+                runnerManager
+        ).orElse(null);
+
+        Long requiredPermanentSpace = getRequiredPermanentSpace(
+                filesMergeInfo,
+                filesInfo,
+                context.getSettings(),
+                runnerManager
+        ).orElse(null);
+
+        return new Result(
+                false,
+                filesWithoutSelectionCount,
+                requiredAndAvailableSpace != null ? requiredAndAvailableSpace.getRequiredSpace() : null,
+                requiredAndAvailableSpace != null ? requiredAndAvailableSpace.getAvailableSpace() : null,
+                requiredPermanentSpace,
+                getFilesToOverwrite(filesMergeInfo, runnerManager),
+                filesMergeInfo
+        );
     }
 
-    //todo better diagnostics
     private static int getFilesWithoutSelectionCount(
             List<TableFileInfo> filesInfo,
             BackgroundRunnerManager runnerManager
@@ -92,24 +123,332 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                 .count();
     }
 
-    private static ActionResult getFilesWithoutSelectionResult(
-            int filesWithoutSelectionCount,
-            int selectedFileCount
-    ) {
-        String message;
-        if (selectedFileCount == 1) {
-            message = "Merge for the file is unavailable because you have to select upper and lower subtitles first";
-        } else {
-            message = "Merge is unavailable because you have to select upper and lower subtitles for all the selected "
-                    + "files (%d missing)";
-        }
+    private FileMergeInfo getFileMergeInfo(
+            TableFileInfo tableFileInfo,
+            int processedCount,
+            int allCount,
+            BackgroundRunnerManager runnerManager
+    ) throws InterruptedException {
+        String progressMessagePrefix = getProgressMessagePrefix(processedCount, allCount, tableFileInfo);
+        runnerManager.updateMessage(progressMessagePrefix + "...");
 
-        return ActionResult.onlyError(String.format(message, filesWithoutSelectionCount));
+        FileInfo fileInfo = FileInfo.getById(tableFileInfo.getId(), filesInfo);
+
+        TableSubtitleOption tableUpperOption = tableFileInfo.getUpperOption();
+        TableSubtitleOption tableLowerOption = tableFileInfo.getLowerOption();
+        SubtitleOption upperOption = SubtitleOption.getById(tableUpperOption.getId(), fileInfo.getSubtitleOptions());
+        SubtitleOption lowerOption = SubtitleOption.getById(tableLowerOption.getId(), fileInfo.getSubtitleOptions());
+
+        try {
+            Set<LanguageAlpha3Code> usedLanguages = getUsedLanguages(upperOption, lowerOption);
+
+            boolean loadedSuccessfully = loadStreamsIfNecessary(
+                    tableFileInfo,
+                    fileInfo,
+                    usedLanguages,
+                    progressMessagePrefix,
+                    runnerManager
+            );
+            if (!loadedSuccessfully) {
+                return new FileMergeInfo(
+                        fileInfo.getId(),
+                        FileMergeStatus.FAILED_TO_LOAD_SUBTITLES,
+                        null,
+                        null
+                );
+            }
+
+            runnerManager.updateMessage(progressMessagePrefix + ": merging subtitles...");
+            Subtitles mergedSubtitles = SubtitleMerger.mergeSubtitles(
+                    upperOption.getSubtitles(),
+                    lowerOption.getSubtitles()
+            );
+
+            if (isDuplicate(mergedSubtitles, usedLanguages, fileInfo)) {
+                String message = "These subtitles have already been merged";
+                Platform.runLater(() -> tableWithFiles.setActionResult(ActionResult.onlyWarn(message), tableFileInfo));
+
+                return new FileMergeInfo(
+                        fileInfo.getId(),
+                        FileMergeStatus.DUPLICATE,
+                        mergedSubtitles,
+                        null
+                );
+            } else {
+                return new FileMergeInfo(
+                        fileInfo.getId(),
+                        FileMergeStatus.OK,
+                        mergedSubtitles,
+                        getFileToOverwrite(fileInfo, upperOption, lowerOption, context.getSettings()).orElse(null)
+                );
+            }
+        } catch (FfmpegException e) {
+            if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
+                throw new InterruptedException();
+            } else {
+                throw new IllegalStateException();
+            }
+        }
     }
 
-    @AllArgsConstructor
+    private static String getProgressMessagePrefix(int processedCount, int allFileCount, TableFileInfo fileInfo) {
+        String progressPrefix = allFileCount > 1
+                ? String.format("%d/%d ", processedCount + 1, allFileCount) + " processing file "
+                : "Processing file ";
+
+        return progressPrefix + fileInfo.getFilePath();
+    }
+
+    private static Set<LanguageAlpha3Code> getUsedLanguages(SubtitleOption upperOption, SubtitleOption lowerOption) {
+        Set<LanguageAlpha3Code> result = new HashSet<>();
+
+        if (upperOption instanceof FfmpegSubtitleStream) {
+            result.add(((FfmpegSubtitleStream) upperOption).getLanguage());
+        }
+
+        if (lowerOption instanceof FfmpegSubtitleStream) {
+            result.add(((FfmpegSubtitleStream) lowerOption).getLanguage());
+        }
+
+        return result;
+    }
+
+    private boolean loadStreamsIfNecessary(
+            TableFileInfo tableFileInfo,
+            FileInfo fileInfo,
+            Set<LanguageAlpha3Code> usedLanguages,
+            String progressMessagePrefix,
+            BackgroundRunnerManager runnerManager
+    ) throws FfmpegException {
+        boolean result = true;
+
+        int failedToLoadForFile = 0;
+
+        List<FfmpegSubtitleStream> streamsToLoad = fileInfo.getFfmpegSubtitleStreams().stream()
+                .filter(stream -> usedLanguages.contains(stream.getLanguage()))
+                .filter(stream -> stream.getSubtitles() == null)
+                .collect(Collectors.toList());
+
+        for (FfmpegSubtitleStream ffmpegStream : streamsToLoad) {
+            runnerManager.updateMessage(
+                    progressMessagePrefix + ": loading subtitles "
+                            + GuiUtils.languageToString(ffmpegStream.getLanguage()).toUpperCase()
+                            + (StringUtils.isBlank(ffmpegStream.getTitle()) ? "" : " " + ffmpegStream.getTitle())
+                            + "..."
+            );
+
+            TableSubtitleOption tableSubtitleOption = TableSubtitleOption.getById(
+                    ffmpegStream.getId(),
+                    tableFileInfo.getSubtitleOptions()
+            );
+
+            try {
+                String subtitleText = context.getFfmpeg().getSubtitleText(
+                        ffmpegStream.getFfmpegIndex(),
+                        fileInfo.getFile()
+                );
+                ffmpegStream.setSubtitles(SubtitleParser.fromSubRipText(subtitleText, ffmpegStream.getLanguage()));
+
+                Platform.runLater(
+                        () -> tableWithFiles.subtitlesLoadedSuccessfully(
+                                ffmpegStream.getSubtitles().getSize(),
+                                tableSubtitleOption,
+                                tableFileInfo
+                        )
+                );
+            } catch (FfmpegException e) {
+                if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
+                    setFileInfoErrorIfNecessary(failedToLoadForFile, tableFileInfo, tableWithFiles);
+                    throw e;
+                }
+
+                result = false;
+                Platform.runLater(
+                        () -> tableWithFiles.failedToLoadSubtitles(
+                                VideoTabBackgroundUtils.failedToLoadReasonFrom(e.getCode()),
+                                tableSubtitleOption
+                        )
+                );
+                failedToLoadForFile++;
+            } catch (SubtitleParser.IncorrectFormatException e) {
+                result = false;
+                Platform.runLater(
+                        () -> tableWithFiles.failedToLoadSubtitles(
+                                VideoTabBackgroundUtils.FAILED_TO_LOAD_STREAM_INCORRECT_FORMAT,
+                                tableSubtitleOption
+                        )
+                );
+                failedToLoadForFile++;
+            }
+        }
+
+        setFileInfoErrorIfNecessary(failedToLoadForFile, tableFileInfo, tableWithFiles);
+
+        return result;
+    }
+
+    private static void setFileInfoErrorIfNecessary(
+            int failedToLoadForFile,
+            TableFileInfo fileInfo,
+            TableWithFiles tableWithFiles
+    ) {
+        if (failedToLoadForFile == 0) {
+            return;
+        }
+
+        String message = GuiUtils.getTextDependingOnTheCount(
+                failedToLoadForFile,
+                "Merge is unavailable because failed to load subtitles",
+                "Merge is unavailable because failed to load %d subtitles"
+        );
+
+        Platform.runLater(() -> tableWithFiles.setActionResult(ActionResult.onlyError(message), fileInfo));
+    }
+
+    private static boolean isDuplicate(Subtitles merged, Set<LanguageAlpha3Code> usedLanguages, FileInfo fileInfo) {
+        for (FfmpegSubtitleStream subtitleStream : fileInfo.getFfmpegSubtitleStreams()) {
+            if (usedLanguages.contains(subtitleStream.getLanguage())) {
+                if (Objects.equals(merged, subtitleStream.getSubtitles())) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static Optional<File> getFileToOverwrite(
+            FileInfo fileInfo,
+            SubtitleOption upperOption,
+            SubtitleOption lowerOption,
+            GuiSettings settings
+    ) {
+        if (settings.getMergeMode() == GuiSettings.MergeMode.ORIGINAL_VIDEOS) {
+            return Optional.empty();
+        } else if (settings.getMergeMode() == GuiSettings.MergeMode.VIDEO_COPIES) {
+            File fileCopy = new File(
+                    FilenameUtils.removeExtension(fileInfo.getFile().getAbsolutePath())
+                            + "_merged_copy"
+                            + FilenameUtils.getExtension(fileInfo.getFile().getAbsolutePath())
+            );
+
+            if (fileCopy.exists()) {
+                return Optional.of(fileCopy);
+            } else {
+                return Optional.empty();
+            }
+        } else if (settings.getMergeMode() == GuiSettings.MergeMode.SEPARATE_SUBTITLE_FILES) {
+            File fileWithSubtitles = new File(
+                    FilenameUtils.removeExtension(fileInfo.getFile().getAbsolutePath())
+                            + "_" + getStreamTitleForFile(upperOption) + "-" + getStreamTitleForFile(lowerOption)
+                            + ".srt"
+            );
+            if (fileWithSubtitles.exists()) {
+                return Optional.of(fileWithSubtitles);
+            } else {
+                return Optional.empty();
+            }
+        } else {
+            throw new IllegalStateException();
+        }
+    }
+
+    private static String getStreamTitleForFile(SubtitleOption subtitleOption) {
+        if (subtitleOption instanceof FileWithSubtitles) {
+            return "external";
+        } else if (subtitleOption instanceof FfmpegSubtitleStream) {
+            LanguageAlpha3Code language = ((FfmpegSubtitleStream) subtitleOption).getLanguage();
+            return language != null ? language.toString() : "unknown";
+        } else {
+            throw new IllegalStateException();
+        }
+    }
+
+    private static Optional<RequiredAndAvailableSpace> getRequiredAndAvailableTempSpace(
+            List<FileMergeInfo> filesMergeInfo,
+            List<FileInfo> filesInfo,
+            GuiSettings settings,
+            BackgroundRunnerManager runnerManager
+    ) {
+        if (settings.getMergeMode() != GuiSettings.MergeMode.ORIGINAL_VIDEOS) {
+            return Optional.empty();
+        }
+
+        runnerManager.setIndeterminateProgress();
+        runnerManager.setCancellationPossible(false);
+        runnerManager.updateMessage("Calculating required temporary space...");
+
+        RequiredAndAvailableSpace result = null;
+        for (FileMergeInfo fileMergeInfo : filesMergeInfo) {
+            if (fileMergeInfo.getStatus() != FileMergeStatus.OK) {
+                continue;
+            }
+
+            FileInfo fileInfo = FileInfo.getById(fileMergeInfo.getId(), filesInfo);
+
+            long requiredSpace = fileInfo.getFile().length();
+            long freeSpace = fileInfo.getFile().getFreeSpace();
+
+            if (result == null) {
+                result = new RequiredAndAvailableSpace(requiredSpace, freeSpace);
+            } else if (result.getRequiredSpace() < requiredSpace) {
+                result = new RequiredAndAvailableSpace(requiredSpace, freeSpace);
+            }
+        }
+
+        return Optional.ofNullable(result);
+    }
+
+    private static Optional<Long> getRequiredPermanentSpace(
+            List<FileMergeInfo> filesMergeInfo,
+            List<FileInfo> filesInfo,
+            GuiSettings settings,
+            BackgroundRunnerManager runnerManager
+    ) {
+        if (settings.getMergeMode() != GuiSettings.MergeMode.VIDEO_COPIES) {
+            return Optional.empty();
+        }
+
+        runnerManager.setIndeterminateProgress();
+        runnerManager.setCancellationPossible(false);
+        runnerManager.updateMessage("Calculating required permanent space...");
+
+        long result = 0;
+        for (FileMergeInfo fileMergeInfo : filesMergeInfo) {
+            if (fileMergeInfo.getStatus() != FileMergeStatus.OK) {
+                continue;
+            }
+
+            FileInfo fileInfo = FileInfo.getById(fileMergeInfo.getId(), filesInfo);
+
+            result += fileInfo.getFile().length();
+        }
+
+        return Optional.of(result);
+    }
+
+    private static List<File> getFilesToOverwrite(
+            List<FileMergeInfo> filesMergeInfo,
+            BackgroundRunnerManager runnerManager
+    ) {
+        runnerManager.setIndeterminateProgress();
+        runnerManager.setCancellationPossible(false);
+        runnerManager.updateMessage("Getting files to overwrite...");
+
+        List<File> result = new ArrayList<>();
+        for (FileMergeInfo fileMergeInfo : filesMergeInfo) {
+            if (fileMergeInfo.getFileToOverwrite() != null) {
+                result.add(fileMergeInfo.getFileToOverwrite());
+            }
+        }
+
+        return result;
+    }
+
     @Getter
-    public static class Result {
+    public static class Result extends BackgroundResult {
+        private int filesWithoutSelectionCount;
+
         private Long requiredTempSpace;
 
         private Long availableTempSpace;
@@ -117,5 +456,51 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         private Long requiredPermanentSpace;
 
         private List<File> filesToOverwrite;
+
+        private List<FileMergeInfo> filesMergeInfo;
+
+        public Result(
+                boolean cancelled,
+                int filesWithoutSelectionCount,
+                Long requiredTempSpace,
+                Long availableTempSpace,
+                Long requiredPermanentSpace,
+                List<File> filesToOverwrite,
+                List<FileMergeInfo> filesMergeInfo
+        ) {
+            super(cancelled);
+            this.filesWithoutSelectionCount = filesWithoutSelectionCount;
+            this.requiredTempSpace = requiredTempSpace;
+            this.availableTempSpace = availableTempSpace;
+            this.requiredPermanentSpace = requiredPermanentSpace;
+            this.filesToOverwrite = filesToOverwrite;
+            this.filesMergeInfo = filesMergeInfo;
+        }
+    }
+
+    @AllArgsConstructor
+    @Getter
+    public static class FileMergeInfo {
+        private String id;
+
+        private FileMergeStatus status;
+
+        private Subtitles mergedSubtitles;
+
+        private File fileToOverwrite;
+    }
+
+    private enum FileMergeStatus {
+        FAILED_TO_LOAD_SUBTITLES,
+        DUPLICATE,
+        OK
+    }
+
+    @AllArgsConstructor
+    @Getter
+    private static class RequiredAndAvailableSpace {
+        private long requiredSpace;
+
+        private long availableSpace;
     }
 }

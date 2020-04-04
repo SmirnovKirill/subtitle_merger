@@ -70,9 +70,5 @@ public class BackgroundRunnerManager {
     void cancel() {
         task.cancel();
     }
-
-    public boolean isCancelled() {
-        return task.isCancelled();
-    }
 }
 

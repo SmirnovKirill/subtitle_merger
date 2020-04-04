@@ -61,10 +61,6 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
         runnerManager.setCancellationPossible(true);
 
         for (TableFileInfo tableFileInfo : selectedTableFilesInfo) {
-            if (runnerManager.isCancelled()) {
-                break;
-            }
-
             runnerManager.updateMessage(
                     VideoTabBackgroundUtils.getProcessFileProgressMessage(processedCount, allFileCount, tableFileInfo)
             );
