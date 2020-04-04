@@ -2,13 +2,25 @@ package kirill.subtitlemerger.gui.util.custom_forms;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
-import lombok.Getter;
+import kirill.subtitlemerger.gui.util.GuiUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class AgreementPopupController {
     @FXML
     private Label textLabel;
+
+    @FXML
+    private Pane applyToAllPane;
+
+    @FXML
+    private CheckBox applyToAllCheckBox;
+
+    @FXML
+    private Label applyToAllLabel;
 
     @FXML
     private Button yesButton;
@@ -16,13 +28,24 @@ public class AgreementPopupController {
     @FXML
     private Button noButton;
 
-    @Getter
     private Boolean agreed;
 
-    public void initialize(String messageText, String yesText, String noText, Stage stage) {
+    public void initialize(
+            String messageText,
+            String yesText,
+            String noText,
+            String applyToAllText,
+            Stage stage
+    ) {
         textLabel.setText(messageText);
         yesButton.setText(yesText);
         noButton.setText(noText);
+
+        if (StringUtils.isBlank(applyToAllText)) {
+            GuiUtils.setVisibleAndManaged(applyToAllPane, false);
+        } else {
+            applyToAllLabel.setText(applyToAllText);
+        }
 
         yesButton.setOnAction(event -> {
             agreed = true;
@@ -33,5 +56,31 @@ public class AgreementPopupController {
             agreed = false;
             stage.close();
         });
+    }
+
+    public Result getResult() {
+        if (agreed == null) {
+            return Result.CANCELED;
+        } else if (agreed) {
+            if (applyToAllCheckBox.isSelected()) {
+                return Result.YES_TO_ALL;
+            } else {
+                return Result.YES;
+            }
+        } else {
+            if (applyToAllCheckBox.isSelected()) {
+                return Result.NO_TO_ALL;
+            } else {
+                return Result.NO;
+            }
+        }
+    }
+
+    public enum Result {
+        CANCELED,
+        YES,
+        YES_TO_ALL,
+        NO,
+        NO_TO_ALL
     }
 }

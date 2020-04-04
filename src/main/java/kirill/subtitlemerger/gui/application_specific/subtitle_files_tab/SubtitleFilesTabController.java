@@ -553,29 +553,17 @@ public class SubtitleFilesTabController extends AbstractController {
                 0,
                 32
         );
-        String parentName = "-";
-        if (mergedFileInfo.getParent() != null) {
-            parentName = GuiUtils.getShortenedStringIfNecessary(
-                    mergedFileInfo.getParent().getName(),
-                    0,
-                    32
-            );
-        }
 
-        NodeAndController nodeAndController = GuiUtils.loadNodeAndController(
-                "/gui/application_specific/subtitle_files_tab/fileExistsDialog.fxml"
+        boolean result = GuiUtils.showAgreementPopup(
+                "File '" + fileName + "' already exists. Do you want to overwrite it?",
+                "Yes",
+                "No",
+                stage
         );
-
-        Stage popupStage = GuiUtils.createPopupStage("File exists!", nodeAndController.getNode(), stage);
-
-        FileExistsDialogController controller = nodeAndController.getController();
-        controller.initialize(fileName, parentName, popupStage);
-
-        popupStage.showAndWait();
 
         agreeToOverwriteInProgress = false;
 
-        return controller.isAgreeToOverwrite();
+        return result;
     }
 
     @FXML

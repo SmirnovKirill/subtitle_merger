@@ -880,7 +880,7 @@ public class ContentPaneController extends AbstractController {
 
             List<File> confirmedFilesToOverwrite = null;
             if (!CollectionUtils.isEmpty(preparationResult.getFilesToOverwrite())) {
-                confirmedFilesToOverwrite = getConfirmedFilesToOverwrite(preparationResult.getFilesToOverwrite());
+                confirmedFilesToOverwrite = getConfirmedFilesToOverwrite(preparationResult);
             }
         };
 
@@ -926,12 +926,19 @@ public class ContentPaneController extends AbstractController {
       }
     }
 
-    private static List<File> getConfirmedFilesToOverwrite(List<File> allFilesToOverwrite) {
-        for (File file : allFilesToOverwrite) {
-
+    private static List<File> getConfirmedFilesToOverwrite(MergePreparationRunner.Result mergePreparationResult) {
+        if (CollectionUtils.isEmpty(mergePreparationResult.getFilesToOverwrite())) {
+            return new ArrayList<>();
         }
 
-        return new ArrayList<>();
+        List<File> result = new ArrayList<>();
+
+        int filesToOverwriteLeft = mergePreparationResult.getFilesToOverwrite().size();
+        for (File fileToOverwrite : mergePreparationResult.getFilesToOverwrite()) {
+            filesToOverwriteLeft--;
+        }
+
+        return result;
     }
 
     @FXML

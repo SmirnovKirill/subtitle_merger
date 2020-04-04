@@ -19,7 +19,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -84,7 +84,8 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
                 boolean loadedSuccessfully = loadStreamsIfNecessary(
                         tableFileInfo,
                         fileInfo,
-                        CollectionUtils.union(matchingUpperSubtitles, matchingLowerSubtitles),
+                        matchingUpperSubtitles,
+                        matchingLowerSubtitles,
                         processedCount,
                         allFileCount,
                         runnerManager
@@ -147,12 +148,21 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
     private boolean loadStreamsIfNecessary(
             TableFileInfo tableFileInfo,
             FileInfo fileInfo,
-            Collection<FfmpegSubtitleStream> ffmpegStreams,
+            List<FfmpegSubtitleStream> matchingUpperSubtitles,
+            List<FfmpegSubtitleStream> matchingLowerSubtitles,
             int processedCount,
             int allFileCount,
             BackgroundRunnerManager runnerManager
     ) throws FfmpegException {
         boolean result = true;
+
+        List<FfmpegSubtitleStream> ffmpegStreams = new ArrayList<>();
+        if (matchingUpperSubtitles.size() > 1) {
+            ffmpegStreams.addAll(matchingUpperSubtitles);
+        }
+        if (matchingLowerSubtitles.size() > 1) {
+            ffmpegStreams.addAll(matchingLowerSubtitles);
+        }
 
         int failedToLoadForFile = 0;
 

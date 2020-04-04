@@ -106,7 +106,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                 requiredAndAvailableSpace != null ? requiredAndAvailableSpace.getRequiredSpace() : null,
                 requiredAndAvailableSpace != null ? requiredAndAvailableSpace.getAvailableSpace() : null,
                 requiredPermanentSpace,
-                getFilesToOverwrite(filesMergeInfo, runnerManager),
+                getFilesToOverwrite(filesMergeInfo, context.getSettings(), runnerManager),
                 filesMergeInfo
         );
     }
@@ -154,7 +154,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                         fileInfo.getId(),
                         FileMergeStatus.FAILED_TO_LOAD_SUBTITLES,
                         null,
-                        null
+                        getFileWithResult(fileInfo, upperOption, lowerOption, context.getSettings())
                 );
             }
 
@@ -172,14 +172,14 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                         fileInfo.getId(),
                         FileMergeStatus.DUPLICATE,
                         mergedSubtitles,
-                        null
+                        getFileWithResult(fileInfo, upperOption, lowerOption, context.getSettings())
                 );
             } else {
                 return new FileMergeInfo(
                         fileInfo.getId(),
                         FileMergeStatus.OK,
                         mergedSubtitles,
-                        getFileToOverwrite(fileInfo, upperOption, lowerOption, context.getSettings()).orElse(null)
+                        getFileWithResult(fileInfo, upperOption, lowerOption, context.getSettings())
                 );
             }
         } catch (FfmpegException e) {
@@ -193,7 +193,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
 
     private static String getProgressMessagePrefix(int processedCount, int allFileCount, TableFileInfo fileInfo) {
         String progressPrefix = allFileCount > 1
-                ? String.format("%d/%d ", processedCount + 1, allFileCount) + " processing file "
+                ? String.format("%d/%d ", processedCount + 1, allFileCount) + "processing file "
                 : "Processing file ";
 
         return progressPrefix + fileInfo.getFilePath();
@@ -317,37 +317,26 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         return false;
     }
 
-    private static Optional<File> getFileToOverwrite(
+    private static File getFileWithResult(
             FileInfo fileInfo,
             SubtitleOption upperOption,
             SubtitleOption lowerOption,
             GuiSettings settings
     ) {
         if (settings.getMergeMode() == GuiSettings.MergeMode.ORIGINAL_VIDEOS) {
-            return Optional.empty();
+            return fileInfo.getFile();
         } else if (settings.getMergeMode() == GuiSettings.MergeMode.VIDEO_COPIES) {
-            File fileCopy = new File(
+            return new File(
                     FilenameUtils.removeExtension(fileInfo.getFile().getAbsolutePath())
                             + "_merged_copy"
                             + FilenameUtils.getExtension(fileInfo.getFile().getAbsolutePath())
             );
-
-            if (fileCopy.exists()) {
-                return Optional.of(fileCopy);
-            } else {
-                return Optional.empty();
-            }
         } else if (settings.getMergeMode() == GuiSettings.MergeMode.SEPARATE_SUBTITLE_FILES) {
-            File fileWithSubtitles = new File(
+            return new File(
                     FilenameUtils.removeExtension(fileInfo.getFile().getAbsolutePath())
                             + "_" + getStreamTitleForFile(upperOption) + "-" + getStreamTitleForFile(lowerOption)
                             + ".srt"
             );
-            if (fileWithSubtitles.exists()) {
-                return Optional.of(fileWithSubtitles);
-            } else {
-                return Optional.empty();
-            }
         } else {
             throw new IllegalStateException();
         }
@@ -429,16 +418,21 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
 
     private static List<File> getFilesToOverwrite(
             List<FileMergeInfo> filesMergeInfo,
+            GuiSettings settings,
             BackgroundRunnerManager runnerManager
     ) {
+        if (settings.getMergeMode() == GuiSettings.MergeMode.ORIGINAL_VIDEOS) {
+            return new ArrayList<>();
+        }
+
         runnerManager.setIndeterminateProgress();
         runnerManager.setCancellationPossible(false);
         runnerManager.updateMessage("Getting files to overwrite...");
 
         List<File> result = new ArrayList<>();
         for (FileMergeInfo fileMergeInfo : filesMergeInfo) {
-            if (fileMergeInfo.getFileToOverwrite() != null) {
-                result.add(fileMergeInfo.getFileToOverwrite());
+            if (fileMergeInfo.getFileWithResult().exists()) {
+                result.add(fileMergeInfo.getFileWithResult());
             }
         }
 
@@ -487,7 +481,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
 
         private Subtitles mergedSubtitles;
 
-        private File fileToOverwrite;
+        private File fileWithResult;
     }
 
     private enum FileMergeStatus {

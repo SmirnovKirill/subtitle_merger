@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.gui.application_specific.subtitle_files_tab;
+package kirill.subtitlemerger.gui.application_specific.videos_tab;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -6,10 +6,8 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import lombok.Getter;
-import lombok.extern.apachecommons.CommonsLog;
 
-@CommonsLog
-public class FileExistsDialogController extends VBox {
+public class OverwriteFileDialogController extends VBox {
     @FXML
     private Label firstLineLabel;
 

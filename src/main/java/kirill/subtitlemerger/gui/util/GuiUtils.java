@@ -251,11 +251,36 @@ public class GuiUtils {
         );
 
         AgreementPopupController controller = nodeAndController.getController();
-        controller.initialize(message, yesText, noText, popupStage);
+        controller.initialize(message, yesText, noText, null, popupStage);
 
         popupStage.showAndWait();
 
-        return Boolean.TRUE.equals(controller.getAgreed());
+        return controller.getResult() == AgreementPopupController.Result.YES;
+    }
+
+    public static AgreementPopupController.Result showAgreementPopup(
+            String message,
+            String yesText,
+            String noText,
+            String applyToAllText,
+            Stage ownerStage
+    ) {
+        NodeAndController nodeAndController = GuiUtils.loadNodeAndController(
+                "/gui/utils/custom_forms/agreementPopup.fxml"
+        );
+
+        Stage popupStage = GuiUtils.createPopupStage(
+                "Please confirm",
+                nodeAndController.getNode(),
+                ownerStage
+        );
+
+        AgreementPopupController controller = nodeAndController.getController();
+        controller.initialize(message, yesText, noText, applyToAllText, popupStage);
+
+        popupStage.showAndWait();
+
+        return controller.getResult();
     }
 
     /*

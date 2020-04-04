@@ -6,9 +6,10 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.image.Image?>
+<?import javafx.scene.control.CheckBox?>
 <VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="kirill.subtitlemerger.gui.util.custom_forms.AgreementPopupController"
-      spacing="20" prefWidth="450"
+      spacing="10" prefWidth="600"
 >
     <padding>
         <Insets top="10" left="10" right="10" bottom="10"/>
@@ -23,7 +24,13 @@
                 </graphic>
             </Label>
         </HBox>
-        <Label fx:id="textLabel" wrapText="true"/>
+        <VBox spacing="10">
+            <Label fx:id="textLabel" wrapText="true"/>
+            <HBox fx:id="applyToAllPane" spacing="5">
+                <CheckBox fx:id="applyToAllCheckBox"/>
+                <Label fx:id="applyToAllLabel"/>
+            </HBox>
+        </VBox>
     </HBox>
     <HBox alignment="CENTER" spacing="10">
         <Region HBox.hgrow="ALWAYS"/>
