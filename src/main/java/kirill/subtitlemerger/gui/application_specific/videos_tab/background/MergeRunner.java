@@ -4,28 +4,35 @@ import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.application.Platform;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
+import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableSubtitleOption;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.util.GuiUtils;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.gui.util.entities.ActionResult;
 import kirill.subtitlemerger.logic.core.SubtitleWriter;
+import kirill.subtitlemerger.logic.core.entities.Subtitles;
+import kirill.subtitlemerger.logic.work_with_files.FileInfoGetter;
 import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileWithSubtitles;
 import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleOption;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
+import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffprobe;
+import kirill.subtitlemerger.logic.work_with_files.ffmpeg.json.JsonFfprobeFileInfo;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Objects;
 
 @AllArgsConstructor
-public class MergeRunner implements BackgroundRunner<ActionResult> {
+public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
     private List<MergePreparationRunner.FileMergeInfo> filesMergeInfo;
 
     private List<File> confirmedFilesToOverwrite;
@@ -36,12 +43,14 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
 
     private TableWithFiles tableWithFiles;
 
+    private Ffprobe ffprobe;
+
     private Ffmpeg ffmpeg;
 
     private GuiSettings settings;
 
     @Override
-    public ActionResult run(BackgroundRunnerManager runnerManager) {
+    public Result run(BackgroundRunnerManager runnerManager) {
         int allFileCount = filesMergeInfo.size();
         int processedCount = 0;
         int finishedSuccessfullyCount = 0;
@@ -91,6 +100,25 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
                                     fileInfo,
                                     fileMergeInfo.getFileWithResult()
                             );
+
+                            if (settings.getMergeMode() == GuiSettings.MergeMode.ORIGINAL_VIDEOS) {
+                                try {
+                                    updateFileInfo(
+                                            fileMergeInfo.getMergedSubtitles(),
+                                            fileInfo,
+                                            tableFileInfo,
+                                            ffprobe,
+                                            settings
+                                    );
+                                } catch (FfmpegException e) {
+                                    String message = "Subtitles have been merged but failed to update stream list";
+                                    Platform.runLater(
+                                            () -> tableWithFiles.setActionResult(
+                                                    ActionResult.onlyWarn(message), tableFileInfo
+                                            )
+                                    );
+                                }
+                            }
                         } else if (settings.getMergeMode() == GuiSettings.MergeMode.SEPARATE_SUBTITLE_FILES) {
                             FileUtils.writeStringToFile(
                                     fileMergeInfo.getFileWithResult(),
@@ -126,13 +154,28 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
             processedCount++;
         }
 
-        return generateActionResult(
-                allFileCount,
-                processedCount,
-                finishedSuccessfullyCount,
-                noAgreementCount,
-                alreadyMergedCount,
-                failedCount
+        List<TableFileInfo> filesToShowInfo = VideoTabBackgroundUtils.getSortedFilesInfo(
+                displayedTableFilesInfo,
+                settings.getSortBy(),
+                settings.getSortDirection(),
+                runnerManager
+        );
+
+        return new Result(
+                new TableFilesToShowInfo(
+                        filesToShowInfo,
+                        tableWithFiles.getAllSelectableCount(),
+                        tableWithFiles.getSelectedAvailableCount(),
+                        tableWithFiles.getSelectedUnavailableCount()
+                ),
+                generateActionResult(
+                        allFileCount,
+                        processedCount,
+                        finishedSuccessfullyCount,
+                        noAgreementCount,
+                        alreadyMergedCount,
+                        failedCount
+                )
         );
     }
 
@@ -168,6 +211,43 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
             return language != null ? language.toString() : "unknown";
         } else {
             throw new IllegalStateException();
+        }
+    }
+
+    private static void updateFileInfo(
+            Subtitles merged,
+            FileInfo fileInfo,
+            TableFileInfo tableFileInfo,
+            Ffprobe ffprobe,
+            GuiSettings settings
+    ) throws FfmpegException {
+        int expectedMergedIndex = fileInfo.getNewFfmpegStreamIndex();
+
+        JsonFfprobeFileInfo ffprobeInfo = ffprobe.getFileInfo(fileInfo.getFile());
+        List<FfmpegSubtitleStream> subtitleOptions = FileInfoGetter.getSubtitleOptions(ffprobeInfo);
+        for (FfmpegSubtitleStream subtitleOption : subtitleOptions) {
+            boolean wasAdded = fileInfo.getSubtitleOptions().stream()
+                    .anyMatch(option -> Objects.equals(option.getId(), subtitleOption.getId()));
+            if (wasAdded) {
+                continue;
+            }
+
+            if (expectedMergedIndex == subtitleOption.getFfmpegIndex()) {
+                subtitleOption.setSubtitles(merged);
+            }
+
+            fileInfo.getSubtitleOptions().add(subtitleOption);
+            fileInfo.updateSizeAndLastModified();
+
+            boolean haveHideableOptions = tableFileInfo.getSubtitleOptions().stream()
+                    .anyMatch(TableSubtitleOption::isHideable);
+            TableSubtitleOption newSubtitleOption = VideoTabBackgroundUtils.tableSubtitleOptionFrom(
+                    subtitleOption,
+                    haveHideableOptions,
+                    settings
+            );
+
+            tableFileInfo.addSubtitleOption(newSubtitleOption);
         }
     }
 
@@ -264,5 +344,13 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
         }
 
         return new ActionResult(success, warn, error);
+    }
+
+    @AllArgsConstructor
+    @Getter
+    public static class Result {
+        private TableFilesToShowInfo tableFilesToShowInfo;
+
+        private ActionResult actionResult;
     }
 }

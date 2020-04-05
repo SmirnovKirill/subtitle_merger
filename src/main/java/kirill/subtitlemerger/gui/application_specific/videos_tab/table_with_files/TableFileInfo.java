@@ -258,6 +258,19 @@ public class TableFileInfo {
                 .findFirst().orElseThrow(IllegalStateException::new);
     }
 
+    public void addSubtitleOption(TableSubtitleOption subtitleOption) {
+        subtitleOptions.add(subtitleOption);
+
+        hideableOptionCount = calculateHideableOptionCount(subtitleOptions);
+        setOptionsWithUnknownSizeCount(calculateOptionsWithUnknownSizeCount(subtitleOptions));
+        setVisibleOptionCount(calculateVisibleOptionCount(subtitleOptions));
+    }
+
+    public void updateFileInfo(long size, LocalDateTime lastModified) {
+        this.size = size;
+        this.lastModified = lastModified;
+    }
+
     public enum UnavailabilityReason {
         NO_EXTENSION,
         NOT_ALLOWED_EXTENSION,

@@ -135,7 +135,7 @@ class VideoTabBackgroundUtils {
         );
     }
 
-    private static TableSubtitleOption tableSubtitleOptionFrom(
+    static TableSubtitleOption tableSubtitleOptionFrom(
             FfmpegSubtitleStream subtitleStream,
             boolean hideableOptionsPossible,
             GuiSettings settings

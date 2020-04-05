@@ -51,6 +51,11 @@ class FileInfo {
         this.mergedSubtitleInfo = mergedSubtitleInfo;
     }
 
+    public void updateSizeAndLastModified() {
+        lastModified = new LocalDateTime(file.lastModified());
+        size = file.length();
+    }
+
     public static FileInfo getById(String id, List<FileInfo> filesInfo) {
         return filesInfo.stream()
                 .filter(fileInfo -> Objects.equals(fileInfo.getId(), id))

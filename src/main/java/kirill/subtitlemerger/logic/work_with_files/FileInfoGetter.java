@@ -80,11 +80,17 @@ public class FileInfoGetter {
             return new FileInfo(file, null, NOT_ALLOWED_CONTAINER, null, null);
         }
 
-        return new FileInfo(file, videoFormat, null, getSubtitleOptions(ffprobeInfo), null);
+        return new FileInfo(
+                file,
+                videoFormat,
+                null,
+                new ArrayList<>(getSubtitleOptions(ffprobeInfo)),
+                null
+        );
     }
 
-    private static List<SubtitleOption> getSubtitleOptions(JsonFfprobeFileInfo ffprobeInfo) {
-        List<SubtitleOption> result = new ArrayList<>();
+    public static List<FfmpegSubtitleStream> getSubtitleOptions(JsonFfprobeFileInfo ffprobeInfo) {
+        List<FfmpegSubtitleStream> result = new ArrayList<>();
 
         for (JsonStream stream : ffprobeInfo.getStreams()) {
             if (!"subtitle".equals(stream.getCodecType())) {

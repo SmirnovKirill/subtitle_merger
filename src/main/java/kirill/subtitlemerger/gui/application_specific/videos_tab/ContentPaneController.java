@@ -899,11 +899,25 @@ public class ContentPaneController extends AbstractController {
                     tableWithFiles.getItems(),
                     filesInfo,
                     tableWithFiles,
+                    context.getFfprobe(),
                     context.getFfmpeg(),
                     context.getSettings()
             );
 
-            BackgroundRunnerCallback<ActionResult> mergeCallback = actionResult -> generalResult.set(actionResult);
+            BackgroundRunnerCallback<MergeRunner.Result> mergeCallback = result -> {
+                generalResult.set(result.getActionResult());
+
+                tableWithFiles.setFilesInfo(
+                        result.getTableFilesToShowInfo().getFilesInfo(),
+                        getTableSortBy(context.getSettings()),
+                        getTableSortDirection(context.getSettings()),
+                        result.getTableFilesToShowInfo().getAllSelectableCount(),
+                        result.getTableFilesToShowInfo().getSelectedAvailableCount(),
+                        result.getTableFilesToShowInfo().getSelectedUnavailableCount(),
+                        tableWithFiles.getMode(),
+                        true
+                );
+            };
 
             runInBackground(mergeRunner, mergeCallback);
         };

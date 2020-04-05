@@ -56,6 +56,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
     private CheckBox allSelectedCheckBox;
 
+    @Getter
     private int allSelectableCount;
 
     @Getter
