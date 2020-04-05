@@ -90,7 +90,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         cellCache = new HashMap<>();
 
         allSelectedCount = new ReadOnlyIntegerWrapper();
-        allSelectedCheckBox = generateAlSelectedCheckBox();
+        allSelectedCheckBox = generateAllSelectedCheckBox();
         allSelectedHandler = new SimpleObjectProperty<>();
 
         sortByGroup = new ToggleGroup();
@@ -117,7 +117,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         setSelectionModel(null);
     }
 
-    private CheckBox generateAlSelectedCheckBox() {
+    private CheckBox generateAllSelectedCheckBox() {
         CheckBox result = new CheckBox();
 
         result.setOnAction(event -> {
