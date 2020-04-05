@@ -36,6 +36,14 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
                 runnerManager
         );
 
+        //todo
+        // duplicate - "These subtitles have already been merged"
+        //failed to load   String message = GuiUtils.getTextDependingOnTheCount(
+        //                failedToLoadForFile,
+        //                "Merge is unavailable because failed to load subtitles",
+        //                "Merge is unavailable because failed to load %d subtitles"
+        //        );
+
         int allFileCount = selectedTableFilesInfo.size();
 
         int filesWithoutSelectionCount = getFilesWithoutSelectionCount(selectedTableFilesInfo, runnerManager);

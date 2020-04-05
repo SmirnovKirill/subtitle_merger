@@ -20,10 +20,14 @@ import kirill.subtitlemerger.gui.util.GuiUtils;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunnerCallback;
 import kirill.subtitlemerger.gui.util.custom_controls.ActionResultLabels;
+import kirill.subtitlemerger.gui.util.custom_forms.AgreementPopupController;
 import kirill.subtitlemerger.gui.util.entities.ActionResult;
 import kirill.subtitlemerger.gui.util.entities.FileOrigin;
 import kirill.subtitlemerger.gui.util.entities.NodeAndController;
-import kirill.subtitlemerger.logic.work_with_files.entities.*;
+import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
+import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
+import kirill.subtitlemerger.logic.work_with_files.entities.FileWithSubtitles;
+import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleOption;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.EnumUtils;
@@ -874,13 +878,18 @@ public class ContentPaneController extends AbstractController {
             String agreementMessage = getFreeSpaceAgreementMessage(preparationResult).orElse(null);
             if (agreementMessage != null) {
                 if (!GuiUtils.showAgreementPopup(agreementMessage, "yes", "no", stage)) {
+                    generalResult.setOnlyWarn("Merge has been cancelled");
                     return;
                 }
             }
 
             List<File> confirmedFilesToOverwrite = null;
             if (!CollectionUtils.isEmpty(preparationResult.getFilesToOverwrite())) {
-                confirmedFilesToOverwrite = getConfirmedFilesToOverwrite(preparationResult);
+                confirmedFilesToOverwrite = getConfirmedFilesToOverwrite(preparationResult, stage).orElse(null);
+                if (confirmedFilesToOverwrite == null) {
+                    generalResult.setOnlyWarn("Merge has been cancelled");
+                    return;
+                }
             }
         };
 
@@ -926,19 +935,57 @@ public class ContentPaneController extends AbstractController {
       }
     }
 
-    private static List<File> getConfirmedFilesToOverwrite(MergePreparationRunner.Result mergePreparationResult) {
+    private static Optional<List<File>> getConfirmedFilesToOverwrite(
+            MergePreparationRunner.Result mergePreparationResult,
+            Stage stage
+    ) {
         if (CollectionUtils.isEmpty(mergePreparationResult.getFilesToOverwrite())) {
-            return new ArrayList<>();
+            return Optional.of(new ArrayList<>());
         }
 
         List<File> result = new ArrayList<>();
 
         int filesToOverwriteLeft = mergePreparationResult.getFilesToOverwrite().size();
         for (File fileToOverwrite : mergePreparationResult.getFilesToOverwrite()) {
+            String fileName = GuiUtils.getShortenedStringIfNecessary(
+                    fileToOverwrite.getName(),
+                    0,
+                    32
+            );
+
+            String applyToAllText;
+            if (filesToOverwriteLeft == 1) {
+                applyToAllText = null;
+            } else {
+                applyToAllText = String.format("Apply to all (%d left)", filesToOverwriteLeft);
+            }
+
+            AgreementPopupController.Result agreementResult = GuiUtils.showAgreementPopup(
+                    "File '" + fileName + "' already exists. Do you want to overwrite it?",
+                    "Yes",
+                    "No",
+                    applyToAllText,
+                    stage
+            );
+            if (agreementResult == AgreementPopupController.Result.CANCELED) {
+                return Optional.empty();
+            } else if (agreementResult == AgreementPopupController.Result.YES) {
+                result.add(fileToOverwrite);
+            } else if (agreementResult == AgreementPopupController.Result.YES_TO_ALL) {
+                List<File> filesLeft = mergePreparationResult.getFilesToOverwrite().subList(
+                        mergePreparationResult.getFilesToOverwrite().size() - filesToOverwriteLeft,
+                        mergePreparationResult.getFilesToOverwrite().size()
+                );
+                result.addAll(filesLeft);
+                return Optional.of(result);
+            } else if (agreementResult == AgreementPopupController.Result.NO_TO_ALL) {
+                return Optional.of(result);
+            }
+
             filesToOverwriteLeft--;
         }
 
-        return result;
+        return Optional.of(result);
     }
 
     @FXML

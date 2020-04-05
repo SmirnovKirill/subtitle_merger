@@ -11,7 +11,6 @@ import kirill.subtitlemerger.gui.util.GuiUtils;
 import kirill.subtitlemerger.gui.util.background.BackgroundResult;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
-import kirill.subtitlemerger.gui.util.entities.ActionResult;
 import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
@@ -142,17 +141,18 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         try {
             Set<LanguageAlpha3Code> usedLanguages = getUsedLanguages(upperOption, lowerOption);
 
-            boolean loadedSuccessfully = loadStreamsIfNecessary(
+            int failedToLoadCount = loadStreamsIfNecessary(
                     tableFileInfo,
                     fileInfo,
                     usedLanguages,
                     progressMessagePrefix,
                     runnerManager
             );
-            if (!loadedSuccessfully) {
+            if (failedToLoadCount != 0) {
                 return new FileMergeInfo(
                         fileInfo.getId(),
                         FileMergeStatus.FAILED_TO_LOAD_SUBTITLES,
+                        failedToLoadCount,
                         null,
                         getFileWithResult(fileInfo, upperOption, lowerOption, context.getSettings())
                 );
@@ -165,12 +165,10 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
             );
 
             if (isDuplicate(mergedSubtitles, usedLanguages, fileInfo)) {
-                String message = "These subtitles have already been merged";
-                Platform.runLater(() -> tableWithFiles.setActionResult(ActionResult.onlyWarn(message), tableFileInfo));
-
                 return new FileMergeInfo(
                         fileInfo.getId(),
                         FileMergeStatus.DUPLICATE,
+                        0,
                         mergedSubtitles,
                         getFileWithResult(fileInfo, upperOption, lowerOption, context.getSettings())
                 );
@@ -178,6 +176,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                 return new FileMergeInfo(
                         fileInfo.getId(),
                         FileMergeStatus.OK,
+                        0,
                         mergedSubtitles,
                         getFileWithResult(fileInfo, upperOption, lowerOption, context.getSettings())
                 );
@@ -213,16 +212,14 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         return result;
     }
 
-    private boolean loadStreamsIfNecessary(
+    private int loadStreamsIfNecessary(
             TableFileInfo tableFileInfo,
             FileInfo fileInfo,
             Set<LanguageAlpha3Code> usedLanguages,
             String progressMessagePrefix,
             BackgroundRunnerManager runnerManager
     ) throws FfmpegException {
-        boolean result = true;
-
-        int failedToLoadForFile = 0;
+        int failedToLoad = 0;
 
         List<FfmpegSubtitleStream> streamsToLoad = fileInfo.getFfmpegSubtitleStreams().stream()
                 .filter(stream -> usedLanguages.contains(stream.getLanguage()))
@@ -258,51 +255,28 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                 );
             } catch (FfmpegException e) {
                 if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
-                    setFileInfoErrorIfNecessary(failedToLoadForFile, tableFileInfo, tableWithFiles);
                     throw e;
                 }
 
-                result = false;
                 Platform.runLater(
                         () -> tableWithFiles.failedToLoadSubtitles(
                                 VideoTabBackgroundUtils.failedToLoadReasonFrom(e.getCode()),
                                 tableSubtitleOption
                         )
                 );
-                failedToLoadForFile++;
+                failedToLoad++;
             } catch (SubtitleParser.IncorrectFormatException e) {
-                result = false;
                 Platform.runLater(
                         () -> tableWithFiles.failedToLoadSubtitles(
                                 VideoTabBackgroundUtils.FAILED_TO_LOAD_STREAM_INCORRECT_FORMAT,
                                 tableSubtitleOption
                         )
                 );
-                failedToLoadForFile++;
+                failedToLoad++;
             }
         }
 
-        setFileInfoErrorIfNecessary(failedToLoadForFile, tableFileInfo, tableWithFiles);
-
-        return result;
-    }
-
-    private static void setFileInfoErrorIfNecessary(
-            int failedToLoadForFile,
-            TableFileInfo fileInfo,
-            TableWithFiles tableWithFiles
-    ) {
-        if (failedToLoadForFile == 0) {
-            return;
-        }
-
-        String message = GuiUtils.getTextDependingOnTheCount(
-                failedToLoadForFile,
-                "Merge is unavailable because failed to load subtitles",
-                "Merge is unavailable because failed to load %d subtitles"
-        );
-
-        Platform.runLater(() -> tableWithFiles.setActionResult(ActionResult.onlyError(message), fileInfo));
+        return failedToLoad;
     }
 
     private static boolean isDuplicate(Subtitles merged, Set<LanguageAlpha3Code> usedLanguages, FileInfo fileInfo) {
@@ -478,6 +452,8 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         private String id;
 
         private FileMergeStatus status;
+
+        private int failedToLoadSubtitlesCount;
 
         private Subtitles mergedSubtitles;
 
