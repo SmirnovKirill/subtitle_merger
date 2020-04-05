@@ -192,8 +192,8 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
 
     private static String getProgressMessagePrefix(int processedCount, int allFileCount, TableFileInfo fileInfo) {
         String progressPrefix = allFileCount > 1
-                ? String.format("%d/%d ", processedCount + 1, allFileCount) + "processing file "
-                : "Processing file ";
+                ? String.format("%d/%d ", processedCount + 1, allFileCount) + "stage 1 of 2: processing file "
+                : "Stage 1 of 2: processing file ";
 
         return progressPrefix + fileInfo.getFilePath();
     }
@@ -460,7 +460,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         private File fileWithResult;
     }
 
-    private enum FileMergeStatus {
+    public enum FileMergeStatus {
         FAILED_TO_LOAD_SUBTITLES,
         DUPLICATE,
         OK

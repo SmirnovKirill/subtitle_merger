@@ -252,7 +252,7 @@ public class TableFileInfo {
         this.actionResult.set(actionResult);
     }
 
-    static TableFileInfo getById(String id, Collection<TableFileInfo> filesInfo) {
+    public static TableFileInfo getById(String id, Collection<TableFileInfo> filesInfo) {
         return filesInfo.stream()
                 .filter(fileInfo -> Objects.equals(fileInfo.getId(), id))
                 .findFirst().orElseThrow(IllegalStateException::new);

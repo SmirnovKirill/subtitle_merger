@@ -873,6 +873,7 @@ public class ContentPaneController extends AbstractController {
                                 tableWithFiles.getAllSelectedCount()
                         )
                 );
+                return;
             }
 
             String agreementMessage = getFreeSpaceAgreementMessage(preparationResult).orElse(null);
@@ -883,7 +884,7 @@ public class ContentPaneController extends AbstractController {
                 }
             }
 
-            List<File> confirmedFilesToOverwrite = null;
+            List<File> confirmedFilesToOverwrite = new ArrayList<>();
             if (!CollectionUtils.isEmpty(preparationResult.getFilesToOverwrite())) {
                 confirmedFilesToOverwrite = getConfirmedFilesToOverwrite(preparationResult, stage).orElse(null);
                 if (confirmedFilesToOverwrite == null) {
@@ -891,6 +892,20 @@ public class ContentPaneController extends AbstractController {
                     return;
                 }
             }
+
+            MergeRunner mergeRunner = new MergeRunner(
+                    preparationResult.getFilesMergeInfo(),
+                    confirmedFilesToOverwrite,
+                    tableWithFiles.getItems(),
+                    filesInfo,
+                    tableWithFiles,
+                    context.getFfmpeg(),
+                    context.getSettings()
+            );
+
+            BackgroundRunnerCallback<ActionResult> mergeCallback = actionResult -> generalResult.set(actionResult);
+
+            runInBackground(mergeRunner, mergeCallback);
         };
 
         runInBackground(preparationRunner, callback);
@@ -927,7 +942,7 @@ public class ContentPaneController extends AbstractController {
       } else if (preparationResult.getRequiredPermanentSpace() != null) {
           return Optional.of(
                   "Approximately "
-                          + GuiUtils.getFileSizeTextual(preparationResult.getRequiredTempSpace(), false)
+                          + GuiUtils.getFileSizeTextual(preparationResult.getRequiredPermanentSpace(), false)
                           + " of free disk space will be used, do you want to proceed?"
           );
       } else {
