@@ -19,6 +19,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @CommonsLog
 public class Ffmpeg {
@@ -108,14 +109,23 @@ public class Ffmpeg {
             String title,
             LanguageAlpha3Code mainLanguage,
             boolean makeDefault,
-            FileInfo fileInfo
+            FileInfo fileInfo,
+            File desiredOutputFile
     ) throws FfmpegException {
-        /*
-         * Ffmpeg can't add subtitles on the fly. So we need to add subtitles to some temporary file
-         * and then rename it. Later we'll also check that the size of the new file is bigger than the size of the
-         * original one because it's important not to spoil the original video file, it may be valuable.
-         */
-        File outputTemp = new File(fileInfo.getFile().getParentFile(), "temp_" + fileInfo.getFile().getName());
+        File outputFile;
+        boolean injectToOriginalVideo;
+        if (Objects.equals(fileInfo.getFile(), desiredOutputFile)) {
+            /*
+             * Ffmpeg can't add subtitles on the fly. So we need to add subtitles to some temporary file
+             * and then rename it. Later we'll also check that the size of the new file is bigger than the size of the
+             * original one because it's important not to spoil the original video file, it may be valuable.
+             */
+            outputFile = new File(fileInfo.getFile().getParentFile(), "temp_" + fileInfo.getFile().getName());
+            injectToOriginalVideo = true;
+        } else {
+            outputFile = desiredOutputFile;
+            injectToOriginalVideo = false;
+        }
 
         try {
             FileUtils.writeStringToFile(
@@ -136,7 +146,7 @@ public class Ffmpeg {
                         mainLanguage,
                         makeDefault,
                         fileInfo,
-                        outputTemp
+                        outputFile
                 );
 
                 log.debug("run ffmpeg " + StringUtils.join(arguments, " "));
@@ -151,15 +161,17 @@ public class Ffmpeg {
                 throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, e.getConsoleOutput());
             }
 
-            if (outputTemp.length() <= fileInfo.getFile().length()) {
+            if (injectToOriginalVideo && outputFile.length() <= fileInfo.getFile().length()) {
                 log.error("resulting file size is less than the original one");
                 throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, consoleOutput);
             }
 
-            overwriteOriginalVideo(outputTemp, fileInfo.getFile(), consoleOutput);
+            if (injectToOriginalVideo) {
+                overwriteOriginalVideo(outputFile, fileInfo.getFile(), consoleOutput);
+            }
         } finally {
-            if (outputTemp.exists() && !outputTemp.delete()) {
-                log.warn("failed to delete temp video file " + outputTemp.getAbsolutePath());
+            if (injectToOriginalVideo && outputFile.exists() && !outputFile.delete()) {
+                log.warn("failed to delete temp video file " + outputFile.getAbsolutePath());
             }
         }
     }
@@ -169,7 +181,7 @@ public class Ffmpeg {
             LanguageAlpha3Code mainLanguage,
             boolean makeDefault,
             FileInfo fileInfo,
-            File outputTemp
+            File outputFile
     ) {
         List<String> result = new ArrayList<>();
 
@@ -215,13 +227,13 @@ public class Ffmpeg {
 
         result.addAll(Arrays.asList("-map", "0"));
         result.addAll(Arrays.asList("-map", "1"));
-        result.add(outputTemp.getAbsolutePath());
+        result.add(outputFile.getAbsolutePath());
 
         return result;
     }
 
     private static void overwriteOriginalVideo(
-            File outputTemp,
+            File outputFile,
             File videoFile,
             String consoleOutput
     ) throws FfmpegException {
@@ -237,7 +249,7 @@ public class Ffmpeg {
         }
 
         try {
-            Files.move(outputTemp.toPath(), videoFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            Files.move(outputFile.toPath(), videoFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             log.warn("failed to move temp video: " + ExceptionUtils.getStackTrace(e));
             throw new FfmpegException(FfmpegException.Code.FAILED_TO_MOVE_TEMP_VIDEO, consoleOutput);

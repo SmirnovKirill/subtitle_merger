@@ -303,7 +303,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
             return new File(
                     FilenameUtils.removeExtension(fileInfo.getFile().getAbsolutePath())
                             + "_merged_copy"
-                            + FilenameUtils.getExtension(fileInfo.getFile().getAbsolutePath())
+                            + "." + FilenameUtils.getExtension(fileInfo.getFile().getAbsolutePath())
             );
         } else if (settings.getMergeMode() == GuiSettings.MergeMode.SEPARATE_SUBTITLE_FILES) {
             return new File(

@@ -81,7 +81,8 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
                                     null,
                                     fileMergeInfo.getMergedSubtitles().getLanguage(),
                                     settings.isMarkMergedStreamAsDefault(),
-                                    fileInfo
+                                    fileInfo,
+                                    fileMergeInfo.getFileWithResult()
                             );
                         } else if (settings.getMergeMode() == GuiSettings.MergeMode.SEPARATE_SUBTITLE_FILES) {
                             FileUtils.writeStringToFile(
