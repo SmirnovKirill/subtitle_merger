@@ -1013,6 +1013,8 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         allSelectedCheckBox.setSelected(getAllSelectedCount() > 0 && getAllSelectedCount() == allSelectableCount);
         this.mode = mode;
         setItems(FXCollections.observableArrayList(filesInfo));
+
+        refresh();
     }
 
     private void clearCache() {

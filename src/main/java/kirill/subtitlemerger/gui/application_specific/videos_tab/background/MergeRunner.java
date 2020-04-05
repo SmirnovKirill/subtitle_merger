@@ -29,7 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Objects;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
@@ -110,7 +110,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
                                             ffprobe,
                                             settings
                                     );
-                                } catch (FfmpegException e) {
+                                } catch (FfmpegException | IllegalStateException e) {
                                     String message = "Subtitles have been merged but failed to update stream list";
                                     Platform.runLater(
                                             () -> tableWithFiles.setActionResult(
@@ -221,34 +221,35 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
             Ffprobe ffprobe,
             GuiSettings settings
     ) throws FfmpegException {
-        int expectedMergedIndex = fileInfo.getNewFfmpegStreamIndex();
-
         JsonFfprobeFileInfo ffprobeInfo = ffprobe.getFileInfo(fileInfo.getFile());
         List<FfmpegSubtitleStream> subtitleOptions = FileInfoGetter.getSubtitleOptions(ffprobeInfo);
-        for (FfmpegSubtitleStream subtitleOption : subtitleOptions) {
-            boolean wasAdded = fileInfo.getSubtitleOptions().stream()
-                    .anyMatch(option -> Objects.equals(option.getId(), subtitleOption.getId()));
-            if (wasAdded) {
-                continue;
-            }
 
-            if (expectedMergedIndex == subtitleOption.getFfmpegIndex()) {
-                subtitleOption.setSubtitles(merged);
-            }
-
-            fileInfo.getSubtitleOptions().add(subtitleOption);
-            fileInfo.updateSizeAndLastModified();
-
-            boolean haveHideableOptions = tableFileInfo.getSubtitleOptions().stream()
-                    .anyMatch(TableSubtitleOption::isHideable);
-            TableSubtitleOption newSubtitleOption = VideoTabBackgroundUtils.tableSubtitleOptionFrom(
-                    subtitleOption,
-                    haveHideableOptions,
-                    settings
-            );
-
-            tableFileInfo.addSubtitleOption(newSubtitleOption);
+        List<String> currentOptionsIds = fileInfo.getSubtitleOptions().stream()
+                .map(SubtitleOption::getId)
+                .collect(Collectors.toList());
+        List<FfmpegSubtitleStream> newSubtitleOptions = subtitleOptions.stream()
+                .filter(option -> !currentOptionsIds.contains(option.getId()))
+                .collect(Collectors.toList());
+        if (newSubtitleOptions.size() != 1) {
+            throw new IllegalStateException();
         }
+
+        FfmpegSubtitleStream subtitleOption = newSubtitleOptions.get(0);
+        subtitleOption.setSubtitles(merged);
+
+        fileInfo.getSubtitleOptions().add(subtitleOption);
+        fileInfo.updateSizeAndLastModified();
+
+        boolean haveHideableOptions = tableFileInfo.getSubtitleOptions().stream()
+                .anyMatch(TableSubtitleOption::isHideable);
+        TableSubtitleOption newSubtitleOption = VideoTabBackgroundUtils.tableSubtitleOptionFrom(
+                subtitleOption,
+                haveHideableOptions,
+                settings
+        );
+
+        tableFileInfo.addSubtitleOption(newSubtitleOption);
+        tableFileInfo.updateSizeAndLastModified(fileInfo.getSize(), fileInfo.getLastModified());
     }
 
     private static ActionResult generateActionResult(
@@ -279,7 +280,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
             );
         } else if (alreadyMergedCount == allFileCount) {
             warn = GuiUtils.getTextDependingOnTheCount(
-                    failedCount,
+                    alreadyMergedCount,
                     "Selected subtitles have already been merged",
                     "Selected subtitles have already been merged for all %d files"
             );

@@ -266,6 +266,11 @@ public class TableFileInfo {
         setVisibleOptionCount(calculateVisibleOptionCount(subtitleOptions));
     }
 
+    public void updateSizeAndLastModified(long size, LocalDateTime lastModified) {
+        this.size = size;
+        this.lastModified = lastModified;
+    }
+
     public void updateFileInfo(long size, LocalDateTime lastModified) {
         this.size = size;
         this.lastModified = lastModified;
