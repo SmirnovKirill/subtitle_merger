@@ -135,11 +135,11 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
 
         TableSubtitleOption tableUpperOption = tableFileInfo.getUpperOption();
         TableSubtitleOption tableLowerOption = tableFileInfo.getLowerOption();
-        SubtitleOption upperOption = SubtitleOption.getById(tableUpperOption.getId(), fileInfo.getSubtitleOptions());
-        SubtitleOption lowerOption = SubtitleOption.getById(tableLowerOption.getId(), fileInfo.getSubtitleOptions());
+        SubtitleOption upperSubtitles = SubtitleOption.getById(tableUpperOption.getId(), fileInfo.getSubtitleOptions());
+        SubtitleOption lowerSubtitles = SubtitleOption.getById(tableLowerOption.getId(), fileInfo.getSubtitleOptions());
 
         try {
-            Set<LanguageAlpha3Code> usedLanguages = getUsedLanguages(upperOption, lowerOption);
+            Set<LanguageAlpha3Code> usedLanguages = getUsedLanguages(upperSubtitles, lowerSubtitles);
 
             int failedToLoadCount = loadStreamsIfNecessary(
                     tableFileInfo,
@@ -153,15 +153,17 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                         fileInfo.getId(),
                         FileMergeStatus.FAILED_TO_LOAD_SUBTITLES,
                         failedToLoadCount,
+                        upperSubtitles,
+                        lowerSubtitles,
                         null,
-                        getFileWithResult(fileInfo, upperOption, lowerOption, context.getSettings())
+                        getFileWithResult(fileInfo, upperSubtitles, lowerSubtitles, context.getSettings())
                 );
             }
 
             runnerManager.updateMessage(progressMessagePrefix + ": merging subtitles...");
             Subtitles mergedSubtitles = SubtitleMerger.mergeSubtitles(
-                    upperOption.getSubtitles(),
-                    lowerOption.getSubtitles()
+                    upperSubtitles.getSubtitles(),
+                    lowerSubtitles.getSubtitles()
             );
 
             if (isDuplicate(mergedSubtitles, usedLanguages, fileInfo)) {
@@ -169,16 +171,20 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                         fileInfo.getId(),
                         FileMergeStatus.DUPLICATE,
                         0,
+                        upperSubtitles,
+                        lowerSubtitles,
                         mergedSubtitles,
-                        getFileWithResult(fileInfo, upperOption, lowerOption, context.getSettings())
+                        getFileWithResult(fileInfo, upperSubtitles, lowerSubtitles, context.getSettings())
                 );
             } else {
                 return new FileMergeInfo(
                         fileInfo.getId(),
                         FileMergeStatus.OK,
                         0,
+                        upperSubtitles,
+                        lowerSubtitles,
                         mergedSubtitles,
-                        getFileWithResult(fileInfo, upperOption, lowerOption, context.getSettings())
+                        getFileWithResult(fileInfo, upperSubtitles, lowerSubtitles, context.getSettings())
                 );
             }
         } catch (FfmpegException e) {
@@ -308,7 +314,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         } else if (settings.getMergeMode() == GuiSettings.MergeMode.SEPARATE_SUBTITLE_FILES) {
             return new File(
                     FilenameUtils.removeExtension(fileInfo.getFile().getAbsolutePath())
-                            + "_" + getStreamTitleForFile(upperOption) + "-" + getStreamTitleForFile(lowerOption)
+                            + "_" + getOptionTitleForFile(upperOption) + "-" + getOptionTitleForFile(lowerOption)
                             + ".srt"
             );
         } else {
@@ -316,7 +322,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         }
     }
 
-    private static String getStreamTitleForFile(SubtitleOption subtitleOption) {
+    private static String getOptionTitleForFile(SubtitleOption subtitleOption) {
         if (subtitleOption instanceof FileWithSubtitles) {
             return "external";
         } else if (subtitleOption instanceof FfmpegSubtitleStream) {
@@ -454,6 +460,10 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         private FileMergeStatus status;
 
         private int failedToLoadSubtitlesCount;
+
+        private SubtitleOption upperSubtitles;
+
+        private SubtitleOption lowerSubtitles;
 
         private Subtitles mergedSubtitles;
 

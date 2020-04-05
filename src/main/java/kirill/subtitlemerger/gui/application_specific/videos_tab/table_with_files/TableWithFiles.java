@@ -803,7 +803,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
     private static ActionResultLabels generateActionResultLabels(TableFileInfo fileInfo) {
         ActionResultLabels result = new ActionResultLabels();
 
-        result.setAlignment(Pos.CENTER);
+        result.setAlignment(Pos.CENTER_LEFT);
         result.setWrapText(true);
 
         setActionResultLabels(result, fileInfo);

@@ -1,5 +1,6 @@
 package kirill.subtitlemerger.gui.application_specific.videos_tab.background;
 
+import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.application.Platform;
 import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
@@ -9,7 +10,10 @@ import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.gui.util.entities.ActionResult;
 import kirill.subtitlemerger.logic.core.SubtitleWriter;
+import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
+import kirill.subtitlemerger.logic.work_with_files.entities.FileWithSubtitles;
+import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleOption;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
 import lombok.AllArgsConstructor;
@@ -60,16 +64,18 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
                         "Merge is unavailable because failed to load %d subtitles"
                 );
 
-                tableWithFiles.setActionResult(ActionResult.onlyError(message), tableFileInfo);
+                Platform.runLater(() -> tableWithFiles.setActionResult(ActionResult.onlyError(message), tableFileInfo));
                 failedCount++;
             } else if (fileMergeInfo.getStatus() == MergePreparationRunner.FileMergeStatus.DUPLICATE) {
                 String message = "These subtitles have already been merged";
-                tableWithFiles.setActionResult(ActionResult.onlyWarn(message), tableFileInfo);
+                Platform.runLater(() -> tableWithFiles.setActionResult(ActionResult.onlyWarn(message), tableFileInfo));
                 alreadyMergedCount++;
             } else if (fileMergeInfo.getStatus() == MergePreparationRunner.FileMergeStatus.OK) {
                 if (noPermission(fileMergeInfo, confirmedFilesToOverwrite, settings)) {
                     String message = "Merge is unavailable because you need to agree to the file overwriting";
-                    tableWithFiles.setActionResult(ActionResult.onlyWarn(message), tableFileInfo);
+                    Platform.runLater(
+                            () -> tableWithFiles.setActionResult(ActionResult.onlyWarn(message), tableFileInfo)
+                    );
                     noAgreementCount++;
                 } else {
                     try {
@@ -78,7 +84,8 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
                         if (injectInVideos) {
                             ffmpeg.injectSubtitlesToFile(
                                     fileMergeInfo.getMergedSubtitles(),
-                                    null,
+                                    "merged-" + getOptionTitleForFfmpeg(fileMergeInfo.getUpperSubtitles())
+                                            + "-" + getOptionTitleForFfmpeg(fileMergeInfo.getLowerSubtitles()),
                                     fileMergeInfo.getMergedSubtitles().getLanguage(),
                                     settings.isMarkMergedStreamAsDefault(),
                                     fileInfo,
@@ -153,6 +160,17 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
         return fileWithResult.exists() && !confirmedFilesToOverwrite.contains(fileWithResult);
     }
 
+    private static String getOptionTitleForFfmpeg(SubtitleOption subtitleOption) {
+        if (subtitleOption instanceof FileWithSubtitles) {
+            return "external";
+        } else if (subtitleOption instanceof FfmpegSubtitleStream) {
+            LanguageAlpha3Code language = ((FfmpegSubtitleStream) subtitleOption).getLanguage();
+            return language != null ? language.toString() : "unknown";
+        } else {
+            throw new IllegalStateException();
+        }
+    }
+
     private static ActionResult generateActionResult(
             int allFileCount,
             int processedCount,
@@ -216,7 +234,7 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
                 if (processedCount != allFileCount) {
                     warn += String.format(", no agreement for %d/%d", noAgreementCount, allFileCount);
                 } else if (finishedSuccessfullyCount != 0) {
-                    warn = String.format("not agreement for %d/%d", noAgreementCount, allFileCount);
+                    warn = String.format("no agreement for %d/%d", noAgreementCount, allFileCount);
                 } else {
                     warn = String.format(
                             "No agreement for %d/%d files",

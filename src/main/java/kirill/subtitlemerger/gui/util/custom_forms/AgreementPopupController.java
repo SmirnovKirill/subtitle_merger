@@ -4,7 +4,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
-import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.util.GuiUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -14,13 +13,7 @@ public class AgreementPopupController {
     private Label textLabel;
 
     @FXML
-    private Pane applyToAllPane;
-
-    @FXML
     private CheckBox applyToAllCheckBox;
-
-    @FXML
-    private Label applyToAllLabel;
 
     @FXML
     private Button yesButton;
@@ -42,9 +35,9 @@ public class AgreementPopupController {
         noButton.setText(noText);
 
         if (StringUtils.isBlank(applyToAllText)) {
-            GuiUtils.setVisibleAndManaged(applyToAllPane, false);
+            GuiUtils.setVisibleAndManaged(applyToAllCheckBox, false);
         } else {
-            applyToAllLabel.setText(applyToAllText);
+            applyToAllCheckBox.setText(applyToAllText);
         }
 
         yesButton.setOnAction(event -> {

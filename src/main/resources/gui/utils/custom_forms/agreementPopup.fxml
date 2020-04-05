@@ -26,10 +26,7 @@
         </HBox>
         <VBox spacing="10">
             <Label fx:id="textLabel" wrapText="true"/>
-            <HBox fx:id="applyToAllPane" spacing="5">
-                <CheckBox fx:id="applyToAllCheckBox"/>
-                <Label fx:id="applyToAllLabel"/>
-            </HBox>
+            <CheckBox fx:id="applyToAllCheckBox"/>
         </VBox>
     </HBox>
     <HBox alignment="CENTER" spacing="10">
