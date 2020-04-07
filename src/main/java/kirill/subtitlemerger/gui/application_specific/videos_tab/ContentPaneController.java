@@ -953,12 +953,6 @@ public class ContentPaneController extends AbstractController {
                           + GuiUtils.getFileSizeTextual(preparationResult.getAvailableTempSpace(), false)
                           + " is available, proceed anyway?"
           );
-      } else if (preparationResult.getRequiredPermanentSpace() != null) {
-          return Optional.of(
-                  "Approximately "
-                          + GuiUtils.getFileSizeTextual(preparationResult.getRequiredPermanentSpace(), false)
-                          + " of free disk space will be used, do you want to proceed?"
-          );
       } else {
           return Optional.empty();
       }

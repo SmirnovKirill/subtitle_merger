@@ -94,7 +94,7 @@
                 </GridPane.margin>
             </Label>
 
-            <GridPane hgap="20" vgap="15" GridPane.rowIndex="5" GridPane.columnIndex="1">
+            <GridPane hgap="40" vgap="15" GridPane.rowIndex="5" GridPane.columnIndex="1">
                 <gridLinesVisible><GuiConstants fx:constant="DEBUG"/></gridLinesVisible>
 
                 <GridPane.margin>
@@ -109,20 +109,10 @@
                         the subtitle list. This approach requires extra disk space during the merge process (equal to the
                         size of the largest video to process) because application will create a temporary file first and then
                         will overwrite the original video with this temporary one. Note that the original files will be
-                        overwritten! And if something goes wrong during the merge you will lose your video files.
+                        overwritten! And if something goes wrong during the merge you may lose your video files.
                     </tooltip>
                 </MergeModeOption>
                 <MergeModeOption toggleGroup="$mergeModeToggleGroup" GridPane.rowIndex="0" GridPane.columnIndex="1">
-                    <text><SettingsTabController fx:constant="MERGE_MODE_VIDEO_COPIES"/></text>
-                    <tooltip>
-                        With this option application will make copies of original videos and inject merged subtitles
-                        into these copies. This option is still pretty convenient because all you have to do after the merge
-                        is open the copy of the video and subtitles will be there. Also this option is safe because original
-                        files won't be modified in any way. But you will end up with twice as much files as before, it's
-                        extremely disk space consuming.
-                    </tooltip>
-                </MergeModeOption>
-                <MergeModeOption toggleGroup="$mergeModeToggleGroup" GridPane.rowIndex="0" GridPane.columnIndex="2">
                     <text><SettingsTabController fx:constant="MERGE_MODE_SEPARATE_SUBTITLE_FILES"/></text>
                     <tooltip>
                         With this option application will create separate subtitle files next to the videos. This option is
@@ -141,14 +131,6 @@
                     <diskUsageStyleClass>orange</diskUsageStyleClass>
                 </MergeModeCharacteristicTable>
                 <MergeModeCharacteristicTable GridPane.rowIndex="1" GridPane.columnIndex="1">
-                    <convenienceText>MEDIUM</convenienceText>
-                    <convenienceStyleClass>orange</convenienceStyleClass>
-                    <safetyText>YES</safetyText>
-                    <safetyStyleClass>green</safetyStyleClass>
-                    <diskUsageText>VERY HIGH</diskUsageText>
-                    <diskUsageStyleClass>red</diskUsageStyleClass>
-                </MergeModeCharacteristicTable>
-                <MergeModeCharacteristicTable GridPane.rowIndex="1" GridPane.columnIndex="2">
                     <convenienceText>LOW</convenienceText>
                     <convenienceStyleClass>red</convenienceStyleClass>
                     <safetyText>YES</safetyText>

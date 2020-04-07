@@ -9,7 +9,7 @@
 <?import javafx.util.Duration?>
 <fx:root xmlns:fx="http://javafx.com/fxml" type="javafx.scene.layout.HBox" alignment="CENTER_LEFT">
     <Label fx:id="label"/>
-    <Region minWidth="10" HBox.hgrow="ALWAYS"/>
+    <Region minWidth="10" maxWidth="10"/>
     <Label alignment="CENTER">
         <graphic>
             <ImageView fitHeight="16" fitWidth="16">

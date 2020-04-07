@@ -583,7 +583,6 @@ class GuiSettings {
 
     public enum MergeMode {
         ORIGINAL_VIDEOS,
-        VIDEO_COPIES,
         SEPARATE_SUBTITLE_FILES
     }
 

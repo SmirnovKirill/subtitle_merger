@@ -55,7 +55,6 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                     null,
                     null,
                     null,
-                    null,
                     null
             );
         }
@@ -79,7 +78,6 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                         null,
                         null,
                         null,
-                        null,
                         filesMergeInfo
                 );
             }
@@ -92,19 +90,11 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                 runnerManager
         ).orElse(null);
 
-        Long requiredPermanentSpace = getRequiredPermanentSpace(
-                filesMergeInfo,
-                filesInfo,
-                context.getSettings(),
-                runnerManager
-        ).orElse(null);
-
         return new Result(
                 false,
                 filesWithoutSelectionCount,
                 requiredAndAvailableSpace != null ? requiredAndAvailableSpace.getRequiredSpace() : null,
                 requiredAndAvailableSpace != null ? requiredAndAvailableSpace.getAvailableSpace() : null,
-                requiredPermanentSpace,
                 getFilesToOverwrite(filesMergeInfo, context.getSettings(), runnerManager),
                 filesMergeInfo
         );
@@ -305,12 +295,6 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
     ) {
         if (settings.getMergeMode() == GuiSettings.MergeMode.ORIGINAL_VIDEOS) {
             return fileInfo.getFile();
-        } else if (settings.getMergeMode() == GuiSettings.MergeMode.VIDEO_COPIES) {
-            return new File(
-                    FilenameUtils.removeExtension(fileInfo.getFile().getAbsolutePath())
-                            + "_merged_copy"
-                            + "." + FilenameUtils.getExtension(fileInfo.getFile().getAbsolutePath())
-            );
         } else if (settings.getMergeMode() == GuiSettings.MergeMode.SEPARATE_SUBTITLE_FILES) {
             return new File(
                     FilenameUtils.removeExtension(fileInfo.getFile().getAbsolutePath())
@@ -368,34 +352,6 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         return Optional.ofNullable(result);
     }
 
-    private static Optional<Long> getRequiredPermanentSpace(
-            List<FileMergeInfo> filesMergeInfo,
-            List<FileInfo> filesInfo,
-            GuiSettings settings,
-            BackgroundRunnerManager runnerManager
-    ) {
-        if (settings.getMergeMode() != GuiSettings.MergeMode.VIDEO_COPIES) {
-            return Optional.empty();
-        }
-
-        runnerManager.setIndeterminateProgress();
-        runnerManager.setCancellationPossible(false);
-        runnerManager.updateMessage("Calculating required permanent space...");
-
-        long result = 0;
-        for (FileMergeInfo fileMergeInfo : filesMergeInfo) {
-            if (fileMergeInfo.getStatus() != FileMergeStatus.OK) {
-                continue;
-            }
-
-            FileInfo fileInfo = FileInfo.getById(fileMergeInfo.getId(), filesInfo);
-
-            result += fileInfo.getFile().length();
-        }
-
-        return Optional.of(result);
-    }
-
     private static List<File> getFilesToOverwrite(
             List<FileMergeInfo> filesMergeInfo,
             GuiSettings settings,
@@ -427,8 +383,6 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
 
         private Long availableTempSpace;
 
-        private Long requiredPermanentSpace;
-
         private List<File> filesToOverwrite;
 
         private List<FileMergeInfo> filesMergeInfo;
@@ -438,7 +392,6 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                 int filesWithoutSelectionCount,
                 Long requiredTempSpace,
                 Long availableTempSpace,
-                Long requiredPermanentSpace,
                 List<File> filesToOverwrite,
                 List<FileMergeInfo> filesMergeInfo
         ) {
@@ -446,7 +399,6 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
             this.filesWithoutSelectionCount = filesWithoutSelectionCount;
             this.requiredTempSpace = requiredTempSpace;
             this.availableTempSpace = availableTempSpace;
-            this.requiredPermanentSpace = requiredPermanentSpace;
             this.filesToOverwrite = filesToOverwrite;
             this.filesMergeInfo = filesMergeInfo;
         }

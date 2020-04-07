@@ -31,11 +31,9 @@ import java.util.Optional;
 
 @CommonsLog
 public class SettingsTabController {
-    public static final String MERGE_MODE_ORIGINAL_VIDEOS = "Original videos";
+    public static final String MERGE_MODE_ORIGINAL_VIDEOS = "Modify original videos";
 
-    public static final String MERGE_MODE_VIDEO_COPIES = "Copies of the videos";
-
-    public static final String MERGE_MODE_SEPARATE_SUBTITLE_FILES = "Separate subtitle files";
+    public static final String MERGE_MODE_SEPARATE_SUBTITLE_FILES = "Create separate subtitle files";
 
     private static final LanguageCodeStringConverter LANGUAGE_CODE_STRING_CONVERTER = new LanguageCodeStringConverter();
 
@@ -283,9 +281,6 @@ public class SettingsTabController {
             case ORIGINAL_VIDEOS:
                 value = MERGE_MODE_ORIGINAL_VIDEOS;
                 break;
-            case VIDEO_COPIES:
-                value = MERGE_MODE_VIDEO_COPIES;
-                break;
             case SEPARATE_SUBTITLE_FILES:
                 value = MERGE_MODE_SEPARATE_SUBTITLE_FILES;
                 break;
@@ -306,9 +301,7 @@ public class SettingsTabController {
 
     private void setMarkCheckBoxVisibility() {
         GuiSettings.MergeMode mergeMode = context.getSettings().getMergeMode();
-        setMarkStreamCheckBoxVisible(
-                mergeMode == GuiSettings.MergeMode.ORIGINAL_VIDEOS || mergeMode == GuiSettings.MergeMode.VIDEO_COPIES
-        );
+        setMarkStreamCheckBoxVisible(mergeMode == GuiSettings.MergeMode.ORIGINAL_VIDEOS);
     }
 
     private void mergeModeChanged(ObservableValue<? extends Toggle> observable, Toggle oldValue, Toggle newValue) {
@@ -318,9 +311,6 @@ public class SettingsTabController {
         switch (radioButton.getText()) {
             case MERGE_MODE_ORIGINAL_VIDEOS:
                 mergeMode = GuiSettings.MergeMode.ORIGINAL_VIDEOS;
-                break;
-            case MERGE_MODE_VIDEO_COPIES:
-                mergeMode = GuiSettings.MergeMode.VIDEO_COPIES;
                 break;
             case MERGE_MODE_SEPARATE_SUBTITLE_FILES:
                 mergeMode = GuiSettings.MergeMode.SEPARATE_SUBTITLE_FILES;
