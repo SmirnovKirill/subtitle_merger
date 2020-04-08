@@ -108,6 +108,7 @@ public class Ffmpeg {
             String title,
             LanguageAlpha3Code mainLanguage,
             boolean makeDefault,
+            File directoryForTempFile,
             FileInfo fileInfo
     ) throws FfmpegException {
         /*
@@ -115,7 +116,7 @@ public class Ffmpeg {
          * and then rename it. Later we'll also check that the size of the new file is bigger than the size of the
          * original one because it's important not to spoil the original video file, it may be valuable.
          */
-        File outputTemp = new File(fileInfo.getFile().getParentFile(), "temp_" + fileInfo.getFile().getName());
+        File outputTemp = new File(directoryForTempFile, "temp_" + fileInfo.getFile().getName());
 
         try {
             FileUtils.writeStringToFile(

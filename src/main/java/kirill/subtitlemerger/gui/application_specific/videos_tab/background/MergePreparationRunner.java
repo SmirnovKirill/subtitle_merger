@@ -55,6 +55,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                     null,
                     null,
                     null,
+                    null,
                     null
             );
         }
@@ -78,6 +79,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                         null,
                         null,
                         null,
+                        null,
                         filesMergeInfo
                 );
             }
@@ -95,6 +97,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                 filesWithoutSelectionCount,
                 requiredAndAvailableSpace != null ? requiredAndAvailableSpace.getRequiredSpace() : null,
                 requiredAndAvailableSpace != null ? requiredAndAvailableSpace.getAvailableSpace() : null,
+                requiredAndAvailableSpace != null ? requiredAndAvailableSpace.getDirectoryForTempFile() : null,
                 getFilesToOverwrite(filesMergeInfo, context.getSettings(), runnerManager),
                 filesMergeInfo
         );
@@ -331,7 +334,10 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         runnerManager.setCancellationPossible(false);
         runnerManager.updateMessage("Calculating required temporary space...");
 
-        RequiredAndAvailableSpace result = null;
+        Long requiredSpace = null;
+        Long availableSpace = null;
+        File directoryForTempFile = null;
+
         for (FileMergeInfo fileMergeInfo : filesMergeInfo) {
             if (fileMergeInfo.getStatus() != FileMergeStatus.OK) {
                 continue;
@@ -339,17 +345,24 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
 
             FileInfo fileInfo = FileInfo.getById(fileMergeInfo.getId(), filesInfo);
 
-            long requiredSpace = fileInfo.getFile().length();
-            long freeSpace = fileInfo.getFile().getFreeSpace();
+            long currentRequiredSpace = fileInfo.getFile().length();
+            long currentAvailableSpace = fileInfo.getFile().getFreeSpace();
 
-            if (result == null) {
-                result = new RequiredAndAvailableSpace(requiredSpace, freeSpace);
-            } else if (result.getRequiredSpace() < requiredSpace) {
-                result = new RequiredAndAvailableSpace(requiredSpace, freeSpace);
+            if (requiredSpace == null || requiredSpace < currentAvailableSpace) {
+                requiredSpace = currentRequiredSpace;
+            }
+
+            if (availableSpace == null || availableSpace < currentAvailableSpace) {
+                availableSpace = currentAvailableSpace;
+                directoryForTempFile = fileInfo.getFile().getParentFile();
             }
         }
 
-        return Optional.ofNullable(result);
+        if (requiredSpace == null) {
+            return Optional.empty();
+        }
+
+        return Optional.of(new RequiredAndAvailableSpace(requiredSpace, availableSpace, directoryForTempFile));
     }
 
     private static List<File> getFilesToOverwrite(
@@ -383,6 +396,8 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
 
         private Long availableTempSpace;
 
+        private File directoryForTempFile;
+
         private List<File> filesToOverwrite;
 
         private List<FileMergeInfo> filesMergeInfo;
@@ -392,6 +407,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                 int filesWithoutSelectionCount,
                 Long requiredTempSpace,
                 Long availableTempSpace,
+                File directoryForTempFile,
                 List<File> filesToOverwrite,
                 List<FileMergeInfo> filesMergeInfo
         ) {
@@ -399,6 +415,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
             this.filesWithoutSelectionCount = filesWithoutSelectionCount;
             this.requiredTempSpace = requiredTempSpace;
             this.availableTempSpace = availableTempSpace;
+            this.directoryForTempFile = directoryForTempFile;
             this.filesToOverwrite = filesToOverwrite;
             this.filesMergeInfo = filesMergeInfo;
         }
@@ -434,5 +451,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         private long requiredSpace;
 
         private long availableSpace;
+
+        private File directoryForTempFile;
     }
 }

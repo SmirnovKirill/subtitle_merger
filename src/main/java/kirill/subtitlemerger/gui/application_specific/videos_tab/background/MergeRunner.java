@@ -37,6 +37,8 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
 
     private List<File> confirmedFilesToOverwrite;
 
+    private File directoryForTempFile;
+
     private List<TableFileInfo> displayedTableFilesInfo;
 
     private List<FileInfo> allFilesInfo;
@@ -89,30 +91,43 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
                 } else {
                     try {
                         if (settings.getMergeMode() == GuiSettings.MergeMode.ORIGINAL_VIDEOS) {
-                            ffmpeg.injectSubtitlesToFile(
-                                    fileMergeInfo.getMergedSubtitles(),
-                                    "merged-" + getOptionTitleForFfmpeg(fileMergeInfo.getUpperSubtitles())
-                                            + "-" + getOptionTitleForFfmpeg(fileMergeInfo.getLowerSubtitles()),
-                                    fileMergeInfo.getMergedSubtitles().getLanguage(),
-                                    settings.isMarkMergedStreamAsDefault(),
-                                    fileInfo
-                            );
-
-                            try {
-                                updateFileInfo(
-                                        fileMergeInfo.getMergedSubtitles(),
-                                        fileInfo,
-                                        tableFileInfo,
-                                        ffprobe,
-                                        settings
-                                );
-                            } catch (FfmpegException | IllegalStateException e) {
-                                String message = "Subtitles have been merged but failed to update stream list";
+                            if (directoryForTempFile == null) {
+                                String message = "Failed to get the directory for temp files";
                                 Platform.runLater(
                                         () -> tableWithFiles.setActionResult(
-                                                ActionResult.onlyWarn(message), tableFileInfo
+                                                ActionResult.onlyError(message), tableFileInfo
                                         )
                                 );
+                                failedCount++;
+                            } else {
+                                ffmpeg.injectSubtitlesToFile(
+                                        fileMergeInfo.getMergedSubtitles(),
+                                        "merged-" + getOptionTitleForFfmpeg(fileMergeInfo.getUpperSubtitles())
+                                                + "-" + getOptionTitleForFfmpeg(fileMergeInfo.getLowerSubtitles()),
+                                        fileMergeInfo.getMergedSubtitles().getLanguage(),
+                                        settings.isMarkMergedStreamAsDefault(),
+                                        directoryForTempFile,
+                                        fileInfo
+                                );
+
+                                try {
+                                    updateFileInfo(
+                                            fileMergeInfo.getMergedSubtitles(),
+                                            fileInfo,
+                                            tableFileInfo,
+                                            ffprobe,
+                                            settings
+                                    );
+                                } catch (FfmpegException | IllegalStateException e) {
+                                    String message = "Subtitles have been merged but failed to update stream list";
+                                    Platform.runLater(
+                                            () -> tableWithFiles.setActionResult(
+                                                    ActionResult.onlyWarn(message), tableFileInfo
+                                            )
+                                    );
+                                }
+
+                                finishedSuccessfullyCount++;
                             }
                         } else if (settings.getMergeMode() == GuiSettings.MergeMode.SEPARATE_SUBTITLE_FILES) {
                             FileUtils.writeStringToFile(
@@ -120,10 +135,11 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
                                     SubtitleWriter.toSubRipText(fileMergeInfo.getMergedSubtitles()),
                                     StandardCharsets.UTF_8
                             );
+
+                            finishedSuccessfullyCount++;
                         } else {
                             throw new IllegalStateException();
                         }
-                        finishedSuccessfullyCount++;
                     } catch (IOException e) {
                         String message = "Failed to write the result, probably there is no access to the file";
                         Platform.runLater(

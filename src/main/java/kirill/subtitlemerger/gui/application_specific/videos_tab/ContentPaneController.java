@@ -896,6 +896,7 @@ public class ContentPaneController extends AbstractController {
             MergeRunner mergeRunner = new MergeRunner(
                     preparationResult.getFilesMergeInfo(),
                     confirmedFilesToOverwrite,
+                    preparationResult.getDirectoryForTempFile(),
                     tableWithFiles.getItems(),
                     filesInfo,
                     tableWithFiles,
