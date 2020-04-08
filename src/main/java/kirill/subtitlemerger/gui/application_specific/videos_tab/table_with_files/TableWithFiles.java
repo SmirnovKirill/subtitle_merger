@@ -1012,9 +1012,15 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
         allSelectedCheckBox.setSelected(getAllSelectedCount() > 0 && getAllSelectedCount() == allSelectableCount);
         this.mode = mode;
-        setItems(FXCollections.observableArrayList(filesInfo));
 
-        refresh();
+        /*
+         * Have to set items this way because otherwise table may not be refreshed
+         * https://stackoverflow.com/questions/11065140/javafx-2-1-tableview-refresh-items
+         * I tried to use refresh() method instead but it works incorrectly - sometimes after the call first row
+         * is truncated.
+         */
+        getItems().removeAll(getItems());
+        setItems(FXCollections.observableArrayList(filesInfo));
     }
 
     private void clearCache() {
