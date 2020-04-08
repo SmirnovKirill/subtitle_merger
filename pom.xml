@@ -159,7 +159,7 @@
                             <jar>${project.build.finalName}.jar</jar>
                             <dontWrapJar>true</dontWrapJar>
                             <headerType>gui</headerType>
-                            <icon>gui/icons/icon.ico</icon>
+                            <icon>src/main/resources/gui/icons/icon.ico</icon>
                             <outfile>${project.build.directory}/subtitle-merger.exe</outfile>
                             <jre>
                                 <path>jre</path>
