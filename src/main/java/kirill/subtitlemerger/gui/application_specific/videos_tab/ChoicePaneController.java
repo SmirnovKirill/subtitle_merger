@@ -77,9 +77,7 @@ public class ChoicePaneController {
 
         fileChooser.setTitle("choose videos");
         fileChooser.setInitialDirectory(settings.getLastDirectoryWithVideos());
-        fileChooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("mkv files (*.mkv)", "*.mkv")
-        );
+        fileChooser.getExtensionFilters().add(GuiConstants.VIDEO_EXTENSION_FILTER);
 
         return fileChooser.showOpenMultipleDialog(stage);
     }

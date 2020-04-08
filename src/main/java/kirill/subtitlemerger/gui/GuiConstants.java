@@ -1,5 +1,7 @@
 package kirill.subtitlemerger.gui;
 
+import javafx.stage.FileChooser;
+
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -60,5 +62,9 @@ public class GuiConstants {
             Charset.forName("windows-1253"),
             Charset.forName("windows-1254"),
             Charset.forName("windows-1257")
+    );
+
+    public static final FileChooser.ExtensionFilter VIDEO_EXTENSION_FILTER = new FileChooser.ExtensionFilter(
+            "mkv files (*.mkv)", "*.mkv"
     );
 }
