@@ -363,7 +363,7 @@ class GuiSettings {
         if (SystemUtils.IS_OS_LINUX) {
             result = new File(folderWithJar, "ffmpeg/ffprobe");
         } else if (SystemUtils.IS_OS_WINDOWS) {
-            result = new File(folderWithJar, "ffmpeg/ffprobe.exe");
+            result = new File(folderWithJar, "ffmpeg/bin/ffprobe.exe");
         } else {
             return Optional.empty();
         }
@@ -404,7 +404,7 @@ class GuiSettings {
         if (SystemUtils.IS_OS_LINUX) {
             result = new File(folderWithJar, "ffmpeg/ffmpeg");
         } else if (SystemUtils.IS_OS_WINDOWS) {
-            result = new File(folderWithJar, "ffmpeg/ffmpeg.exe");
+            result = new File(folderWithJar, "ffmpeg/bin/ffmpeg.exe");
         } else {
             return Optional.empty();
         }
