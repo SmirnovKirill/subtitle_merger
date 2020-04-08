@@ -80,10 +80,10 @@ public class ContentPaneController extends AbstractController {
     private Button loadAllSubtitlesButton;
 
     @FXML
-    private Pane goButtonWrapper;
+    private Pane mergeButtonWrapper;
 
     @FXML
-    private Button goButton;
+    private Button mergeButton;
 
     @FXML
     private TableWithFiles tableWithFiles;
@@ -160,8 +160,8 @@ public class ContentPaneController extends AbstractController {
         loadAllSubtitlesButton.setDisable(disable);
         Tooltip.install(loadAllSubtitlesButtonWrapper, tooltip);
 
-        goButton.setDisable(disable);
-        Tooltip.install(goButtonWrapper, tooltip);
+        mergeButton.setDisable(disable);
+        Tooltip.install(mergeButtonWrapper, tooltip);
     }
 
     private void selectedCountChanged(Observable observable) {
@@ -849,7 +849,7 @@ public class ContentPaneController extends AbstractController {
     }
 
     @FXML
-    private void goButtonClicked() {
+    private void mergeButtonClicked() {
         generalResult.clear();
         lastProcessedFileInfo = null;
 

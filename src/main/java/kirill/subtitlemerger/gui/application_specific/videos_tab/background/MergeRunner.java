@@ -78,7 +78,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
                 Platform.runLater(() -> tableWithFiles.setActionResult(ActionResult.onlyError(message), tableFileInfo));
                 failedCount++;
             } else if (fileMergeInfo.getStatus() == MergePreparationRunner.FileMergeStatus.DUPLICATE) {
-                String message = "These subtitles have already been merged";
+                String message = "Selected subtitles have already been merged";
                 Platform.runLater(() -> tableWithFiles.setActionResult(ActionResult.onlyWarn(message), tableFileInfo));
                 alreadyMergedCount++;
             } else if (fileMergeInfo.getStatus() == MergePreparationRunner.FileMergeStatus.OK) {
@@ -341,7 +341,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
                     warn = String.format("already merged for %d/%d", alreadyMergedCount, allFileCount);
                 } else {
                     warn = String.format(
-                            "Already merged for %d/%d files",
+                            "Subtitles have already been merged for %d/%d files",
                             alreadyMergedCount,
                             allFileCount
                     );

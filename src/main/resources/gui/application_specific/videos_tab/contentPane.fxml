@@ -51,11 +51,11 @@
                         </graphic>
                     </Button>
                 </HBox>
-                <HBox fx:id="goButtonWrapper" alignment="CENTER">
-                    <Button fx:id="goButton" onAction="#goButtonClicked" text="Go!">
+                <HBox fx:id="mergeButtonWrapper" alignment="CENTER">
+                    <Button fx:id="mergeButton" onAction="#mergeButtonClicked" text="Merge">
                         <graphic>
                             <ImageView fitHeight="16" fitWidth="16">
-                                <Image url="/gui/icons/go.png"/>
+                                <Image url="/gui/icons/merge.png"/>
                             </ImageView>
                         </graphic>
                     </Button>
