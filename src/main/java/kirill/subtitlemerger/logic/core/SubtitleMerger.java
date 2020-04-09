@@ -31,7 +31,7 @@ public class SubtitleMerger {
         return convert(result, upperSubtitles, lowerSubtitles);
     }
 
-    /**
+    /*
      * The first and the simplest stage of the merge - we make a list of all seen points of time and for each segment we
      * see whether there are subtitles from any source and if there are we add this segment and its lines.
      */
@@ -43,6 +43,8 @@ public class SubtitleMerger {
 
         List<LocalTime> uniqueSortedPointsOfTime = getUniqueSortedPointsOfTime(upperSubtitles, lowerSubtitles);
 
+        int upperIndex = 0;
+        int lowerIndex = 0;
         int subtitleNumber = 1;
         for (int i = 0; i < uniqueSortedPointsOfTime.size() - 1; i++) {
             if (Thread.interrupted()) {
@@ -52,8 +54,20 @@ public class SubtitleMerger {
             LocalTime from = uniqueSortedPointsOfTime.get(i);
             LocalTime to = uniqueSortedPointsOfTime.get(i + 1);
 
-            Subtitle upperSubtitle = findSubtitleForPeriod(from, to, upperSubtitles).orElse(null);
-            Subtitle lowerSubtitle = findSubtitleForPeriod(from, to, lowerSubtitles).orElse(null);
+            Subtitle upperSubtitle = null;
+            Integer matchingUpperIndex = getIndexMatchingTime(upperIndex, upperSubtitles, from, to).orElse(null);
+            if (matchingUpperIndex != null) {
+                upperIndex = matchingUpperIndex;
+                upperSubtitle = upperSubtitles.getSubtitles().get(upperIndex);
+            }
+
+            Subtitle lowerSubtitle = null;
+            Integer matchingLowerIndex = getIndexMatchingTime(lowerIndex, lowerSubtitles, from, to).orElse(null);
+            if (matchingLowerIndex != null) {
+                lowerIndex = matchingLowerIndex;
+                lowerSubtitle = lowerSubtitles.getSubtitles().get(lowerIndex);
+            }
+
             if (upperSubtitle != null || lowerSubtitle != null) {
                 List<MergerSubtitleLine> subtitleLines = new ArrayList<>();
 
@@ -103,24 +117,35 @@ public class SubtitleMerger {
         return new ArrayList<>(result);
     }
 
-    private static Optional<Subtitle> findSubtitleForPeriod(
+    /*
+     * We should check only current index and the next one (if there is one) because subtitles go consequentially.
+     */
+    private static Optional<Integer> getIndexMatchingTime(
+            int currentIndex,
+            Subtitles subtitles,
             LocalTime from,
-            LocalTime to,
-            Subtitles subtitles
-    ) throws InterruptedException {
-        for (Subtitle subtitle : subtitles.getSubtitles()) {
-            if (Thread.interrupted()) {
-                throw new InterruptedException();
+            LocalTime to
+    ) {
+        if (subtitleMatchesTime(subtitles.getSubtitles().get(currentIndex), from, to)) {
+            return Optional.of(currentIndex);
+        } else {
+            if (currentIndex == subtitles.getSubtitles().size() - 1) {
+                return Optional.empty();
             }
 
-            boolean fromInside = !from.isBefore(subtitle.getFrom()) && !from.isAfter(subtitle.getTo());
-            boolean toInside = !to.isBefore(subtitle.getFrom()) && !to.isAfter(subtitle.getTo());
-            if (fromInside && toInside) {
-                return Optional.of(subtitle);
+            if (subtitleMatchesTime(subtitles.getSubtitles().get(currentIndex + 1), from, to)) {
+                return Optional.of(currentIndex + 1);
+            } else {
+                return Optional.empty();
             }
         }
+    }
 
-        return Optional.empty();
+    private static boolean subtitleMatchesTime(Subtitle subtitle, LocalTime from, LocalTime to) {
+        boolean fromInside = !from.isBefore(subtitle.getFrom()) && !from.isAfter(subtitle.getTo());
+        boolean toInside = !to.isBefore(subtitle.getFrom()) && !to.isAfter(subtitle.getTo());
+
+        return fromInside && toInside;
     }
 
     /*
@@ -171,7 +196,7 @@ public class SubtitleMerger {
         return result;
     }
 
-    /**
+    /*
      * Checks whether lines of the subtitle with the given index always go "alone", without lines from the other
      * source. To do this we have to go back to the index where these lines first appear and start from there
      * because if we simply start from the given index we will get incorrect result when lines from the other source
@@ -306,7 +331,7 @@ public class SubtitleMerger {
         }
     }
 
-    /**
+    /*
      * This method combines consecutive subtitles that have the same lines (to simply make the result more compact).
      */
     private static List<MergerSubtitle> getCombinedSubtitles(
