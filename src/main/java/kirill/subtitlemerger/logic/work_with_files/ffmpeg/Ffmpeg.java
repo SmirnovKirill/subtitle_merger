@@ -1,7 +1,7 @@
 package kirill.subtitlemerger.logic.work_with_files.ffmpeg;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
-import kirill.subtitlemerger.logic.core.SubtitleWriter;
+import kirill.subtitlemerger.logic.core.SubRipWriter;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
@@ -121,7 +121,7 @@ public class Ffmpeg {
         try {
             FileUtils.writeStringToFile(
                     TEMP_SUBTITLE_FILE,
-                    SubtitleWriter.toSubRipText(subtitles),
+                    SubRipWriter.toText(subtitles),
                     StandardCharsets.UTF_8
             );
         } catch (IOException e) {

@@ -15,8 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @CommonsLog
-public class SubtitleParser {
-    public static Subtitles fromSubRipText(String text, LanguageAlpha3Code language) throws SubtitleFormatException {
+public class SubRipParser {
+    public static Subtitles from(String text, LanguageAlpha3Code language) throws SubtitleFormatException {
         List<Subtitle> result = new ArrayList<>();
 
         /* Remove BOM if it's present. */

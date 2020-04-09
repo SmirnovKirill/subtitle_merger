@@ -1,7 +1,7 @@
 package kirill.subtitlemerger.logic.core.entities;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
-import kirill.subtitlemerger.logic.core.SubtitleWriter;
+import kirill.subtitlemerger.logic.core.SubRipWriter;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -20,7 +20,7 @@ public class Subtitles {
     public Subtitles(List<Subtitle> subtitles, LanguageAlpha3Code language) {
         this.subtitles = subtitles;
         this.language = language;
-        this.text = SubtitleWriter.toSubRipText(this);
+        this.text = SubRipWriter.toText(this);
     }
 
     @Override

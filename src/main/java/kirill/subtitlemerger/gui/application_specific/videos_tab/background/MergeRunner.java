@@ -10,7 +10,7 @@ import kirill.subtitlemerger.gui.util.GuiUtils;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.gui.util.entities.ActionResult;
-import kirill.subtitlemerger.logic.core.SubtitleWriter;
+import kirill.subtitlemerger.logic.core.SubRipWriter;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.work_with_files.FileInfoGetter;
 import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
@@ -132,7 +132,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
                         } else if (settings.getMergeMode() == GuiSettings.MergeMode.SEPARATE_SUBTITLE_FILES) {
                             FileUtils.writeStringToFile(
                                     fileMergeInfo.getFileWithResult(),
-                                    SubtitleWriter.toSubRipText(fileMergeInfo.getMergedSubtitles()),
+                                    SubRipWriter.toText(fileMergeInfo.getMergedSubtitles()),
                                     StandardCharsets.UTF_8
                             );
 

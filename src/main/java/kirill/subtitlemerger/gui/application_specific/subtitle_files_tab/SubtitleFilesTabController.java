@@ -18,8 +18,8 @@ import kirill.subtitlemerger.gui.util.entities.ActionResult;
 import kirill.subtitlemerger.gui.util.entities.FileOrigin;
 import kirill.subtitlemerger.gui.util.entities.NodeAndController;
 import kirill.subtitlemerger.logic.core.SubtitleMerger;
-import kirill.subtitlemerger.logic.core.SubtitleParser;
-import kirill.subtitlemerger.logic.core.SubtitleWriter;
+import kirill.subtitlemerger.logic.core.SubRipParser;
+import kirill.subtitlemerger.logic.core.SubRipWriter;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.utils.file_validation.FileValidator;
@@ -182,7 +182,7 @@ public class SubtitleFilesTabController extends AbstractController {
         }
 
         try {
-            Subtitles subtitles = SubtitleParser.fromSubRipText(
+            Subtitles subtitles = SubRipParser.from(
                     new String(validatorFileInfo.getContent(), StandardCharsets.UTF_8),
                     null
             );
@@ -791,7 +791,7 @@ public class SubtitleFilesTabController extends AbstractController {
             try {
                 FileUtils.writeStringToFile(
                         filesInfo.getMergedFileInfo().getFile(),
-                        SubtitleWriter.toSubRipText(mergedSubtitles),
+                        SubRipWriter.toText(mergedSubtitles),
                         StandardCharsets.UTF_8
                 );
 

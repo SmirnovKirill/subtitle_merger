@@ -4,8 +4,8 @@ import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.core.entities.Subtitle;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 
-public class SubtitleWriter {
-    public static String toSubRipText(Subtitles subtitles) {
+public class SubRipWriter {
+    public static String toText(Subtitles subtitles) {
         StringBuilder result = new StringBuilder();
 
         for (int i = 0; i < subtitles.getSubtitles().size(); i++) {

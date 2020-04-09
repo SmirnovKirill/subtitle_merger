@@ -9,7 +9,7 @@ import kirill.subtitlemerger.gui.util.background.BackgroundResult;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.logic.core.SubtitleMerger;
-import kirill.subtitlemerger.logic.core.SubtitleParser;
+import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
@@ -128,7 +128,7 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
 
             try {
                 String subtitleText = ffmpeg.getSubtitleText(ffmpegStream.getFfmpegIndex(), fileInfo.getFile());
-                ffmpegStream.setSubtitles(SubtitleParser.fromSubRipText(subtitleText, ffmpegStream.getLanguage()));
+                ffmpegStream.setSubtitles(SubRipParser.from(subtitleText, ffmpegStream.getLanguage()));
 
                 Platform.runLater(
                         () -> tableWithFiles.subtitlesLoadedSuccessfully(

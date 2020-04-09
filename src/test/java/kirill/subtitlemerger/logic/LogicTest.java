@@ -2,8 +2,8 @@ package kirill.subtitlemerger.logic;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.logic.core.SubtitleMerger;
-import kirill.subtitlemerger.logic.core.SubtitleParser;
-import kirill.subtitlemerger.logic.core.SubtitleWriter;
+import kirill.subtitlemerger.logic.core.SubRipParser;
+import kirill.subtitlemerger.logic.core.SubRipWriter;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import org.apache.commons.io.IOUtils;
@@ -17,7 +17,7 @@ import static com.google.common.truth.Truth.assertThat;
 public class LogicTest {
     @Test
     public void testParseFromFileToSubtitles() throws IOException, SubtitleFormatException {
-        Subtitles subtitles = SubtitleParser.fromSubRipText(
+        Subtitles subtitles = SubRipParser.from(
                 IOUtils.toString(
                         LogicTest.class.getResourceAsStream("/MainTest/testParseFromFileToSubtitles/sub.srt"),
                         StandardCharsets.UTF_8
@@ -33,14 +33,14 @@ public class LogicTest {
 
     @Test
     public void testMerge() throws IOException, SubtitleFormatException, InterruptedException {
-        Subtitles upperSubtitles = SubtitleParser.fromSubRipText(
+        Subtitles upperSubtitles = SubRipParser.from(
                 IOUtils.toString(
                         LogicTest.class.getResourceAsStream("/MainTest/testMerged/upper.srt"),
                         StandardCharsets.UTF_8
                 ),
                 LanguageAlpha3Code.rus
         );
-        Subtitles lowerSubtitles = SubtitleParser.fromSubRipText(
+        Subtitles lowerSubtitles = SubRipParser.from(
                 IOUtils.toString(
                         LogicTest.class.getResourceAsStream("/MainTest/testMerged/lower.srt"),
                         StandardCharsets.UTF_8
@@ -54,6 +54,6 @@ public class LogicTest {
                 StandardCharsets.UTF_8
         );
 
-        assertThat(SubtitleWriter.toSubRipText(merged)).isEqualTo(expected);
+        assertThat(SubRipWriter.toText(merged)).isEqualTo(expected);
     }
 }

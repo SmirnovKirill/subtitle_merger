@@ -7,7 +7,7 @@ import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_file
 import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.gui.util.entities.ActionResult;
-import kirill.subtitlemerger.logic.core.SubtitleParser;
+import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
@@ -57,7 +57,7 @@ public class SingleFileAllSubtitleLoader implements BackgroundRunner<ActionResul
 
             try {
                 String subtitleText = ffmpeg.getSubtitleText(ffmpegStream.getFfmpegIndex(), fileInfo.getFile());
-                ffmpegStream.setSubtitles(SubtitleParser.fromSubRipText(subtitleText, ffmpegStream.getLanguage()));
+                ffmpegStream.setSubtitles(SubRipParser.from(subtitleText, ffmpegStream.getLanguage()));
 
                 Platform.runLater(
                         () -> tableWithFiles.subtitlesLoadedSuccessfully(

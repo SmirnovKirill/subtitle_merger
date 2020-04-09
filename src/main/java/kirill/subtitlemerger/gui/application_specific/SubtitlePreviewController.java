@@ -20,8 +20,8 @@ import kirill.subtitlemerger.gui.util.custom_controls.ActionResultLabels;
 import kirill.subtitlemerger.gui.util.entities.ActionResult;
 import kirill.subtitlemerger.gui.util.entities.NoSelectionModel;
 import kirill.subtitlemerger.logic.LogicConstants;
-import kirill.subtitlemerger.logic.core.SubtitleParser;
-import kirill.subtitlemerger.logic.core.SubtitleWriter;
+import kirill.subtitlemerger.logic.core.SubRipParser;
+import kirill.subtitlemerger.logic.core.SubRipWriter;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import lombok.AllArgsConstructor;
@@ -192,7 +192,7 @@ public class SubtitlePreviewController extends AbstractController {
         String text = new String(data, encoding);
         Subtitles subtitles;
         try {
-            subtitles = SubtitleParser.fromSubRipText(text, null);
+            subtitles = SubRipParser.from(text, null);
         } catch (SubtitleFormatException e) {
             subtitles = null;
         }
@@ -202,7 +202,7 @@ public class SubtitlePreviewController extends AbstractController {
 
     private static PreviewInfo getPreviewInfo(Subtitles subtitles, String subtitleText) {
         if (subtitleText == null) {
-            subtitleText = SubtitleWriter.toSubRipText(subtitles);
+            subtitleText = SubRipWriter.toText(subtitles);
         }
 
         List<String> lines = new ArrayList<>();

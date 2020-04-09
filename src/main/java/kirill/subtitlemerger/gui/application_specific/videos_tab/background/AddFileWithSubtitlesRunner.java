@@ -4,7 +4,7 @@ import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
-import kirill.subtitlemerger.logic.core.SubtitleParser;
+import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.utils.file_validation.FileValidator;
@@ -54,7 +54,7 @@ public class AddFileWithSubtitlesRunner implements BackgroundRunner<AddFileWithS
 
         Subtitles subtitles;
         try {
-            subtitles = SubtitleParser.fromSubRipText(
+            subtitles = SubRipParser.from(
                     new String(validatorFileInfo.getContent(), StandardCharsets.UTF_8),
                     null
             );
