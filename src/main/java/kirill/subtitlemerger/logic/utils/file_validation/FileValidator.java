@@ -1,7 +1,5 @@
-package kirill.subtitlemerger.logic.utils;
+package kirill.subtitlemerger.logic.utils.file_validation;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -134,47 +132,5 @@ public class FileValidator {
         }
 
         return Optional.of(new OutputFileInfo(file, parent, null));
-    }
-
-    @AllArgsConstructor
-    @Getter
-    public static class InputFileInfo {
-        private File file;
-
-        private File parent;
-
-        private IncorrectInputFileReason incorrectFileReason;
-
-        private byte[] content;
-    }
-
-    public enum IncorrectInputFileReason {
-        PATH_IS_TOO_LONG,
-        INVALID_PATH,
-        IS_A_DIRECTORY,
-        DOES_NOT_EXIST,
-        FAILED_TO_GET_PARENT_DIRECTORY,
-        EXTENSION_IS_NOT_VALID,
-        FILE_IS_EMPTY,
-        FILE_IS_TOO_BIG,
-        FAILED_TO_READ_CONTENT
-    }
-
-    @AllArgsConstructor
-    @Getter
-    public static class OutputFileInfo {
-        private File file;
-
-        private File parent;
-
-        private IncorrectOutputFileReason incorrectFileReason;
-    }
-
-    public enum IncorrectOutputFileReason {
-        PATH_IS_TOO_LONG,
-        INVALID_PATH,
-        IS_A_DIRECTORY,
-        DOES_NOT_EXIST,
-        EXTENSION_IS_NOT_VALID
     }
 }

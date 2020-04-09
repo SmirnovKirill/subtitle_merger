@@ -8,7 +8,7 @@ import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_file
 import kirill.subtitlemerger.gui.util.GuiUtils;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
-import kirill.subtitlemerger.logic.utils.FileValidator;
+import kirill.subtitlemerger.logic.utils.file_validation.FileValidator;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -20,7 +20,7 @@ public class Subtitles {
     public Subtitles(List<Subtitle> subtitles, LanguageAlpha3Code language) {
         this.subtitles = subtitles;
         this.language = language;
-        this.text = SubtitleWriter.toSubRipText(this);;
+        this.text = SubtitleWriter.toSubRipText(this);
     }
 
     @Override

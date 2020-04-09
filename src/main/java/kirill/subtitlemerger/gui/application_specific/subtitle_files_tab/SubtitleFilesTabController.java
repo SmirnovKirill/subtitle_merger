@@ -22,7 +22,9 @@ import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.core.SubtitleWriter;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
-import kirill.subtitlemerger.logic.utils.FileValidator;
+import kirill.subtitlemerger.logic.utils.file_validation.FileValidator;
+import kirill.subtitlemerger.logic.utils.file_validation.IncorrectOutputFileReason;
+import kirill.subtitlemerger.logic.utils.file_validation.OutputFileInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -151,7 +153,7 @@ public class SubtitleFilesTabController extends AbstractController {
             FileOrigin fileOrigin,
             FilesInfo filesInfo
     ) {
-        FileValidator.InputFileInfo validatorFileInfo = FileValidator.getInputFileInfo(
+        kirill.subtitlemerger.logic.utils.file_validation.InputFileInfo validatorFileInfo = FileValidator.getInputFileInfo(
                 path,
                 Collections.singletonList("srt"),
                 false,
@@ -520,7 +522,7 @@ public class SubtitleFilesTabController extends AbstractController {
     }
 
     private static Optional<MergedFileInfo> getMergedFileInfo(String path, FileOrigin fileOrigin) {
-        FileValidator.OutputFileInfo validatorFileInfo = FileValidator.getOutputFileInfo(
+        OutputFileInfo validatorFileInfo = FileValidator.getOutputFileInfo(
                 path,
                 Collections.singletonList("srt"),
                 true
@@ -851,7 +853,7 @@ public class SubtitleFilesTabController extends AbstractController {
         @Setter
         private IncorrectInputFileReason incorrectFileReason;
 
-        static IncorrectInputFileReason from(FileValidator.IncorrectInputFileReason reason) {
+        static IncorrectInputFileReason from(kirill.subtitlemerger.logic.utils.file_validation.IncorrectInputFileReason reason) {
             switch (reason) {
                 case PATH_IS_TOO_LONG:
                     return SubtitleFilesTabController.IncorrectInputFileReason.PATH_IS_TOO_LONG;
@@ -903,7 +905,7 @@ public class SubtitleFilesTabController extends AbstractController {
 
         private IncorrectMergedFileReason incorrectFileReason;
 
-        static IncorrectMergedFileReason from(FileValidator.IncorrectOutputFileReason reason) {
+        static IncorrectMergedFileReason from(IncorrectOutputFileReason reason) {
             switch (reason) {
                 case PATH_IS_TOO_LONG:
                     return IncorrectMergedFileReason.PATH_IS_TOO_LONG;

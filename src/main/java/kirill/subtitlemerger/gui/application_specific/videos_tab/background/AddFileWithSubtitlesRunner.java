@@ -7,7 +7,9 @@ import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
-import kirill.subtitlemerger.logic.utils.FileValidator;
+import kirill.subtitlemerger.logic.utils.file_validation.FileValidator;
+import kirill.subtitlemerger.logic.utils.file_validation.IncorrectInputFileReason;
+import kirill.subtitlemerger.logic.utils.file_validation.InputFileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileWithSubtitles;
 import lombok.AllArgsConstructor;
@@ -34,7 +36,7 @@ public class AddFileWithSubtitlesRunner implements BackgroundRunner<AddFileWithS
         runnerManager.setIndeterminateProgress();
         runnerManager.updateMessage("Processing file " + fileWithSubtitlesToAdd.getAbsolutePath() + "...");
 
-        FileValidator.InputFileInfo validatorFileInfo = FileValidator.getInputFileInfo(
+        InputFileInfo validatorFileInfo = FileValidator.getInputFileInfo(
                 fileWithSubtitlesToAdd.getAbsolutePath(),
                 Collections.singletonList("srt"),
                 false,
@@ -75,7 +77,7 @@ public class AddFileWithSubtitlesRunner implements BackgroundRunner<AddFileWithS
     }
 
     private static TableWithFiles.FileWithSubtitlesUnavailabilityReason unavailabilityReasonFrom(
-            FileValidator.IncorrectInputFileReason incorrectFileReason
+            IncorrectInputFileReason incorrectFileReason
     ) {
         return EnumUtils.getEnum(
                 TableWithFiles.FileWithSubtitlesUnavailabilityReason.class,

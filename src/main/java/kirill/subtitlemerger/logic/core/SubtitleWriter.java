@@ -3,8 +3,6 @@ package kirill.subtitlemerger.logic.core;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.core.entities.Subtitle;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 
 public class SubtitleWriter {
     public static String toSubRipText(Subtitles subtitles) {
