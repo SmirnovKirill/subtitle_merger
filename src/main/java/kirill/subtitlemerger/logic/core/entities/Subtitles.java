@@ -33,8 +33,8 @@ public class Subtitles {
             return false;
         }
 
-        Subtitles subtitles1 = (Subtitles) o;
-        return Objects.equals(text, subtitles1.text);
+        Subtitles other = (Subtitles) o;
+        return Objects.equals(text, other.text);
     }
 
     @Override
