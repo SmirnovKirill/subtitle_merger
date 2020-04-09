@@ -21,7 +21,7 @@ public class FileValidator {
             boolean loadContent
     ) {
         if (StringUtils.isBlank(path)) {
-            new InputFileInfo(null, null, InputFileNotValidReason.PATH_IS_EMPTY, null);
+            return new InputFileInfo(null, null, InputFileNotValidReason.PATH_IS_EMPTY, null);
         }
 
         if (path.length() > PATH_LENGTH_LIMIT) {
