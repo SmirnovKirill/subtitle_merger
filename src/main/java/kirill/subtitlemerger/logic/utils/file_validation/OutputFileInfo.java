@@ -12,5 +12,5 @@ public class OutputFileInfo {
 
     private File parent;
 
-    private IncorrectOutputFileReason incorrectFileReason;
+    private OutputFileNotValidReason notValidReason;
 }

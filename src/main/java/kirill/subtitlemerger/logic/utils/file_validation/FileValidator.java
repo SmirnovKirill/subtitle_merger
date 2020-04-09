@@ -9,12 +9,11 @@ import java.io.IOException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Optional;
 
 public class FileValidator {
     public static final int PATH_LENGTH_LIMIT = 4096;
 
-    public static Optional<InputFileInfo> getInputFileInfo(
+    public static InputFileInfo getInputFileInfo(
             String path,
             Collection<String> allowedExtensions,
             boolean allowEmpty,
@@ -22,61 +21,44 @@ public class FileValidator {
             boolean loadContent
     ) {
         if (StringUtils.isBlank(path)) {
-            return Optional.empty();
+            new InputFileInfo(null, null, InputFileNotValidReason.PATH_IS_EMPTY, null);
         }
 
         if (path.length() > PATH_LENGTH_LIMIT) {
-            return Optional.of(
-                    new InputFileInfo(null, null, IncorrectInputFileReason.PATH_IS_TOO_LONG, null)
-            );
+            return new InputFileInfo(null, null, InputFileNotValidReason.PATH_IS_TOO_LONG, null);
         }
 
         try {
             Path.of(path);
         } catch (InvalidPathException e) {
-            return Optional.of(
-                    new InputFileInfo(null, null, IncorrectInputFileReason.INVALID_PATH, null)
-            );
+            return new InputFileInfo(null, null, InputFileNotValidReason.INVALID_PATH, null);
         }
 
         File file = new File(path);
         if (file.isDirectory()) {
-            return Optional.of(
-                    new InputFileInfo(file, null, IncorrectInputFileReason.IS_A_DIRECTORY, null)
-            );
+            return new InputFileInfo(file, null, InputFileNotValidReason.IS_A_DIRECTORY, null);
         }
 
         if (!file.exists()) {
-            return Optional.of(
-                    new InputFileInfo(file, null, IncorrectInputFileReason.DOES_NOT_EXIST, null)
-            );
+            return new InputFileInfo(file, null, InputFileNotValidReason.DOES_NOT_EXIST, null);
         }
 
         File parent = file.getParentFile();
         if (parent == null || !parent.isDirectory()) {
-            return Optional.of(
-                    new InputFileInfo(
-                            file,
-                            null,
-                            IncorrectInputFileReason.FAILED_TO_GET_PARENT_DIRECTORY,
-                            null
-                    )
-            );
+            return new InputFileInfo(file, null, InputFileNotValidReason.FAILED_TO_GET_PARENT, null);
         }
 
         String extension = FilenameUtils.getExtension(file.getAbsolutePath());
         if (!allowedExtensions.contains(extension)) {
-            return Optional.of(
-                    new InputFileInfo(file, parent, IncorrectInputFileReason.EXTENSION_IS_NOT_VALID, null)
-            );
+            return new InputFileInfo(file, parent, InputFileNotValidReason.EXTENSION_IS_NOT_VALID, null);
         }
 
         if (!allowEmpty && file.length() == 0) {
-            return Optional.of(new InputFileInfo(file, parent, IncorrectInputFileReason.FILE_IS_EMPTY, null));
+            return new InputFileInfo(file, parent, InputFileNotValidReason.FILE_IS_EMPTY, null);
         }
 
         if (file.length() > maxAllowedSize) {
-            return Optional.of(new InputFileInfo(file, parent, IncorrectInputFileReason.FILE_IS_TOO_BIG, null));
+            return new InputFileInfo(file, parent, InputFileNotValidReason.FILE_IS_TOO_BIG, null);
         }
 
         byte[] content = null;
@@ -84,37 +66,35 @@ public class FileValidator {
             try {
                 content = FileUtils.readFileToByteArray(file);
             } catch (IOException e) {
-                return Optional.of(
-                        new InputFileInfo(file, parent, IncorrectInputFileReason.FAILED_TO_READ_CONTENT, null)
-                );
+                return new InputFileInfo(file, parent, InputFileNotValidReason.FAILED_TO_READ_CONTENT, null);
             }
         }
 
-        return Optional.of(new InputFileInfo(file, parent, null, content));
+        return new InputFileInfo(file, parent, null, content);
     }
 
-    public static Optional<OutputFileInfo> getOutputFileInfo(
+    public static OutputFileInfo getOutputFileInfo(
             String path,
             Collection<String> allowedExtensions,
             boolean allowNonExistent
     ) {
         if (StringUtils.isBlank(path)) {
-            return Optional.empty();
+            return new OutputFileInfo(null, null, OutputFileNotValidReason.PATH_IS_EMPTY);
         }
 
         if (path.length() > PATH_LENGTH_LIMIT) {
-            return Optional.of(new OutputFileInfo(null, null, IncorrectOutputFileReason.PATH_IS_TOO_LONG));
+            return new OutputFileInfo(null, null, OutputFileNotValidReason.PATH_IS_TOO_LONG);
         }
 
         try {
             Path.of(path);
         } catch (InvalidPathException e) {
-            return Optional.of(new OutputFileInfo(null, null, IncorrectOutputFileReason.INVALID_PATH));
+            return new OutputFileInfo(null, null, OutputFileNotValidReason.INVALID_PATH);
         }
 
         File file = new File(path);
         if (file.isDirectory()) {
-            return Optional.of(new OutputFileInfo(file, null, IncorrectOutputFileReason.IS_A_DIRECTORY));
+            return new OutputFileInfo(file, null, OutputFileNotValidReason.IS_A_DIRECTORY);
         }
 
         File parent = file.getParentFile();
@@ -123,14 +103,14 @@ public class FileValidator {
         }
 
         if (!allowNonExistent && !file.exists()) {
-            return Optional.of(new OutputFileInfo(file, parent, IncorrectOutputFileReason.DOES_NOT_EXIST));
+            return new OutputFileInfo(file, parent, OutputFileNotValidReason.DOES_NOT_EXIST);
         }
 
         String extension = FilenameUtils.getExtension(file.getAbsolutePath());
         if (!allowedExtensions.contains(extension)) {
-            return Optional.of(new OutputFileInfo(file, parent, IncorrectOutputFileReason.EXTENSION_IS_NOT_VALID));
+            return new OutputFileInfo(file, parent, OutputFileNotValidReason.EXTENSION_IS_NOT_ALLOWED);
         }
 
-        return Optional.of(new OutputFileInfo(file, parent, null));
+        return new OutputFileInfo(file, parent, null);
     }
 }

@@ -8,7 +8,7 @@ import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.utils.file_validation.FileValidator;
-import kirill.subtitlemerger.logic.utils.file_validation.IncorrectInputFileReason;
+import kirill.subtitlemerger.logic.utils.file_validation.InputFileNotValidReason;
 import kirill.subtitlemerger.logic.utils.file_validation.InputFileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileWithSubtitles;
@@ -42,10 +42,10 @@ public class AddFileWithSubtitlesRunner implements BackgroundRunner<AddFileWithS
                 false,
                 GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES * 1024 * 1024,
                 true
-        ).orElseThrow(IllegalStateException::new);
+        );
 
-        if (validatorFileInfo.getIncorrectFileReason() != null) {
-            return Result.createUnavailable(unavailabilityReasonFrom(validatorFileInfo.getIncorrectFileReason()));
+        if (validatorFileInfo.getNotValidReason() != null) {
+            return Result.createUnavailable(unavailabilityReasonFrom(validatorFileInfo.getNotValidReason()));
         }
 
         if (isDuplicate(fileWithSubtitlesToAdd, videoFileInfo)) {
@@ -77,8 +77,12 @@ public class AddFileWithSubtitlesRunner implements BackgroundRunner<AddFileWithS
     }
 
     private static TableWithFiles.FileWithSubtitlesUnavailabilityReason unavailabilityReasonFrom(
-            IncorrectInputFileReason incorrectFileReason
+            InputFileNotValidReason incorrectFileReason
     ) {
+        if (incorrectFileReason == InputFileNotValidReason.PATH_IS_EMPTY) {
+            throw new IllegalStateException();
+        }
+
         return EnumUtils.getEnum(
                 TableWithFiles.FileWithSubtitlesUnavailabilityReason.class,
                 incorrectFileReason.toString()

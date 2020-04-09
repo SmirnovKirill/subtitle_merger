@@ -12,7 +12,7 @@ public class InputFileInfo {
 
     private File parent;
 
-    private IncorrectInputFileReason incorrectFileReason;
+    private InputFileNotValidReason notValidReason;
 
     private byte[] content;
 }

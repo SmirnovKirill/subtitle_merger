@@ -23,7 +23,8 @@ import kirill.subtitlemerger.logic.core.SubtitleWriter;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.utils.file_validation.FileValidator;
-import kirill.subtitlemerger.logic.utils.file_validation.IncorrectOutputFileReason;
+import kirill.subtitlemerger.logic.utils.file_validation.OutputFileNotValidReason;
+import kirill.subtitlemerger.logic.utils.file_validation.InputFileNotValidReason;
 import kirill.subtitlemerger.logic.utils.file_validation.OutputFileInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -159,12 +160,12 @@ public class SubtitleFilesTabController extends AbstractController {
                 false,
                 GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES * 1024 * 1024,
                 true
-        ).orElse(null);
-        if (validatorFileInfo == null) {
+        );
+        if (validatorFileInfo.getNotValidReason() == InputFileNotValidReason.PATH_IS_EMPTY) {
             return Optional.empty();
         }
 
-        if (validatorFileInfo.getIncorrectFileReason() != null) {
+        if (validatorFileInfo.getNotValidReason() != null) {
             return Optional.of(
                     new InputFileInfo(
                             path,
@@ -175,7 +176,7 @@ public class SubtitleFilesTabController extends AbstractController {
                             validatorFileInfo.getContent(),
                             null,
                             null,
-                            SubtitleFilesTabController.InputFileInfo.from(validatorFileInfo.getIncorrectFileReason())
+                            SubtitleFilesTabController.InputFileInfo.from(validatorFileInfo.getNotValidReason())
                     )
             );
         }
@@ -526,8 +527,8 @@ public class SubtitleFilesTabController extends AbstractController {
                 path,
                 Collections.singletonList("srt"),
                 true
-        ).orElse(null);
-        if (validatorFileInfo == null) {
+        );
+        if (validatorFileInfo.getNotValidReason() == OutputFileNotValidReason.PATH_IS_EMPTY) {
             return Optional.empty();
         }
 
@@ -537,8 +538,8 @@ public class SubtitleFilesTabController extends AbstractController {
                         validatorFileInfo.getFile(),
                         validatorFileInfo.getParent(),
                         fileOrigin,
-                        validatorFileInfo.getIncorrectFileReason() != null
-                                ? MergedFileInfo.from(validatorFileInfo.getIncorrectFileReason())
+                        validatorFileInfo.getNotValidReason() != null
+                                ? MergedFileInfo.from(validatorFileInfo.getNotValidReason())
                                 : null
                 )
         );
@@ -853,7 +854,7 @@ public class SubtitleFilesTabController extends AbstractController {
         @Setter
         private IncorrectInputFileReason incorrectFileReason;
 
-        static IncorrectInputFileReason from(kirill.subtitlemerger.logic.utils.file_validation.IncorrectInputFileReason reason) {
+        static IncorrectInputFileReason from(InputFileNotValidReason reason) {
             switch (reason) {
                 case PATH_IS_TOO_LONG:
                     return SubtitleFilesTabController.IncorrectInputFileReason.PATH_IS_TOO_LONG;
@@ -863,7 +864,7 @@ public class SubtitleFilesTabController extends AbstractController {
                     return SubtitleFilesTabController.IncorrectInputFileReason.IS_A_DIRECTORY;
                 case DOES_NOT_EXIST:
                     return SubtitleFilesTabController.IncorrectInputFileReason.DOES_NOT_EXIST;
-                case FAILED_TO_GET_PARENT_DIRECTORY:
+                case FAILED_TO_GET_PARENT:
                     return SubtitleFilesTabController.IncorrectInputFileReason.FAILED_TO_GET_PARENT_DIRECTORY;
                 case EXTENSION_IS_NOT_VALID:
                     return SubtitleFilesTabController.IncorrectInputFileReason.EXTENSION_IS_NOT_VALID;
@@ -905,7 +906,7 @@ public class SubtitleFilesTabController extends AbstractController {
 
         private IncorrectMergedFileReason incorrectFileReason;
 
-        static IncorrectMergedFileReason from(IncorrectOutputFileReason reason) {
+        static IncorrectMergedFileReason from(OutputFileNotValidReason reason) {
             switch (reason) {
                 case PATH_IS_TOO_LONG:
                     return IncorrectMergedFileReason.PATH_IS_TOO_LONG;
@@ -913,7 +914,7 @@ public class SubtitleFilesTabController extends AbstractController {
                     return IncorrectMergedFileReason.INVALID_PATH;
                 case IS_A_DIRECTORY:
                     return IncorrectMergedFileReason.IS_A_DIRECTORY;
-                case EXTENSION_IS_NOT_VALID:
+                case EXTENSION_IS_NOT_ALLOWED:
                     return IncorrectMergedFileReason.EXTENSION_IS_NOT_VALID;
                 default:
                     throw new IllegalStateException();
