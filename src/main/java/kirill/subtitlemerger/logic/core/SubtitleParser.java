@@ -3,49 +3,40 @@ package kirill.subtitlemerger.logic.core;
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.core.entities.Subtitle;
+import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.LocalTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @CommonsLog
 public class SubtitleParser {
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("HH:mm:ss,SSS");
-
-    public static Subtitles fromSubRipText(
-            String subRipText,
-            LanguageAlpha3Code language
-    ) throws IncorrectFormatException {
+    public static Subtitles fromSubRipText(String text, LanguageAlpha3Code language) throws SubtitleFormatException {
         List<Subtitle> result = new ArrayList<>();
 
-        Subtitle currentSubtitle = null;
+        /* Remove BOM if it's present. */
+        if (text.startsWith("\uFEFF")) {
+            text = text.substring(1);
+        }
+
+        CurrentSubtitle currentSubtitle = null;
         ParsingStage parsingStage = ParsingStage.HAVE_NOT_STARTED;
 
-        for (String currentLine : LogicConstants.LINE_SEPARATOR_PATTERN.split(subRipText)) {
-            /*
-             * This special character can be found at the beginning of the very first line so we have to remove it
-             * in order to parse int correctly.
-             */
-            currentLine = currentLine.replace("\uFEFF", "").trim();
+        for (String currentLine : LogicConstants.LINE_SEPARATOR_PATTERN.split(text)) {
+            currentLine = currentLine.trim();
+
             if (parsingStage == ParsingStage.HAVE_NOT_STARTED) {
                 if (StringUtils.isBlank(currentLine)) {
                     continue;
                 }
 
-                int subtitleNumber;
-                try {
-                    subtitleNumber = Integer.parseInt(currentLine);
-                } catch (NumberFormatException e) {
-                    throw new IncorrectFormatException();
-                }
-
-                currentSubtitle = new Subtitle();
-                currentSubtitle.setNumber(subtitleNumber);
+                currentSubtitle = new CurrentSubtitle();
+                currentSubtitle.setNumber(getSubtitleNumber(currentLine));
                 parsingStage = ParsingStage.PARSED_NUMBER;
             } else if (parsingStage == ParsingStage.PARSED_NUMBER) {
                 if (StringUtils.isBlank(currentLine)) {
@@ -66,7 +57,7 @@ public class SubtitleParser {
                 parsingStage = ParsingStage.PARSED_FIRST_LINE;
             } else {
                 if (StringUtils.isBlank(currentLine)) {
-                    result.add(currentSubtitle);
+                    result.add(subtitleFrom(currentSubtitle));
 
                     currentSubtitle = null;
                     parsingStage = ParsingStage.HAVE_NOT_STARTED;
@@ -77,46 +68,63 @@ public class SubtitleParser {
         }
 
         if (parsingStage != ParsingStage.HAVE_NOT_STARTED && parsingStage != ParsingStage.PARSED_FIRST_LINE) {
-            throw new IncorrectFormatException();
+            throw new SubtitleFormatException();
         }
 
         if (parsingStage == ParsingStage.PARSED_FIRST_LINE) {
-            result.add(currentSubtitle);
+            result.add(subtitleFrom(currentSubtitle));
         }
 
         return new Subtitles(result, language);
     }
 
-    private static LocalTime getFromTime(String currentLine) throws IncorrectFormatException {
-        int delimiterIndex = currentLine.indexOf("-");
-        if (delimiterIndex == -1) {
-            throw new IncorrectFormatException();
-        }
-
-        String fromText = currentLine.substring(0, delimiterIndex).trim();
+    private static int getSubtitleNumber(String line) throws SubtitleFormatException {
         try {
-            return TIME_FORMATTER.parseLocalTime(fromText);
-        } catch (IllegalArgumentException e) {
-            throw new IncorrectFormatException();
+            return Integer.parseInt(line);
+        } catch (NumberFormatException e) {
+            throw new SubtitleFormatException();
         }
     }
 
-    private static LocalTime getToTime(String currentLine) throws IncorrectFormatException {
-        int delimiterIndex = currentLine.indexOf(">");
+    private static LocalTime getFromTime(String line) throws SubtitleFormatException {
+        int delimiterIndex = line.indexOf("-");
         if (delimiterIndex == -1) {
-            throw new IncorrectFormatException();
+            throw new SubtitleFormatException();
         }
 
-        if ((delimiterIndex + 1) >= currentLine.length()) {
-            throw new IncorrectFormatException();
-        }
-
-        String toText = currentLine.substring(delimiterIndex + 1).trim();
+        String fromText = line.substring(0, delimiterIndex).trim();
         try {
-            return TIME_FORMATTER.parseLocalTime(toText);
+            return LogicConstants.SUBRIP_TIME_FORMATTER.parseLocalTime(fromText);
         } catch (IllegalArgumentException e) {
-            throw new IncorrectFormatException();
+            throw new SubtitleFormatException();
         }
+    }
+
+    private static LocalTime getToTime(String line) throws SubtitleFormatException {
+        int delimiterIndex = line.indexOf(">");
+        if (delimiterIndex == -1) {
+            throw new SubtitleFormatException();
+        }
+
+        if ((delimiterIndex + 1) >= line.length()) {
+            throw new SubtitleFormatException();
+        }
+
+        String toText = line.substring(delimiterIndex + 1).trim();
+        try {
+            return LogicConstants.SUBRIP_TIME_FORMATTER.parseLocalTime(toText);
+        } catch (IllegalArgumentException e) {
+            throw new SubtitleFormatException();
+        }
+    }
+
+    private static Subtitle subtitleFrom(CurrentSubtitle currentSubtitle) {
+        return new Subtitle(
+                currentSubtitle.getNumber(),
+                currentSubtitle.getFrom(),
+                currentSubtitle.getTo(),
+                currentSubtitle.getLines()
+        );
     }
 
     private enum ParsingStage {
@@ -126,6 +134,15 @@ public class SubtitleParser {
         PARSED_FIRST_LINE,
     }
 
-    public static class IncorrectFormatException extends Exception {
+    @Getter
+    @Setter
+    private static class CurrentSubtitle {
+        private int number;
+
+        private LocalTime from;
+
+        private LocalTime to;
+
+        private List<String> lines;
     }
 }

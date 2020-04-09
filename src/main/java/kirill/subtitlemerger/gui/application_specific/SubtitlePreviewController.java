@@ -22,6 +22,7 @@ import kirill.subtitlemerger.gui.util.entities.NoSelectionModel;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.core.SubtitleWriter;
+import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -192,7 +193,7 @@ public class SubtitlePreviewController extends AbstractController {
         Subtitles subtitles;
         try {
             subtitles = SubtitleParser.fromSubRipText(text, null);
-        } catch (SubtitleParser.IncorrectFormatException e) {
+        } catch (SubtitleFormatException e) {
             subtitles = null;
         }
 

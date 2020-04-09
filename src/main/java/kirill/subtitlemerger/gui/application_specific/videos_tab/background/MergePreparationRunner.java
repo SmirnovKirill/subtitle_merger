@@ -13,6 +13,7 @@ import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
+import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
@@ -247,7 +248,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
 
                 Platform.runLater(
                         () -> tableWithFiles.subtitlesLoadedSuccessfully(
-                                ffmpegStream.getSubtitles().getSize(),
+                                ffmpegStream.getSubtitles().getTextSize(),
                                 tableSubtitleOption,
                                 tableFileInfo
                         )
@@ -264,7 +265,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                         )
                 );
                 failedToLoad++;
-            } catch (SubtitleParser.IncorrectFormatException e) {
+            } catch (SubtitleFormatException e) {
                 Platform.runLater(
                         () -> tableWithFiles.failedToLoadSubtitles(
                                 VideoTabBackgroundUtils.FAILED_TO_LOAD_STREAM_INCORRECT_FORMAT,

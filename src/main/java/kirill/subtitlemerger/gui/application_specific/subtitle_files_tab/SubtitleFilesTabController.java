@@ -20,6 +20,7 @@ import kirill.subtitlemerger.gui.util.entities.NodeAndController;
 import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.core.SubtitleWriter;
+import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.utils.FileValidator;
 import lombok.AllArgsConstructor;
@@ -196,7 +197,7 @@ public class SubtitleFilesTabController extends AbstractController {
                             null
                     )
             );
-        } catch (SubtitleParser.IncorrectFormatException e) {
+        } catch (SubtitleFormatException e) {
             return Optional.of(
                     new InputFileInfo(
                             path,

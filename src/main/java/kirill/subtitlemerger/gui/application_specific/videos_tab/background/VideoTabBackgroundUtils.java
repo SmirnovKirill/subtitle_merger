@@ -147,7 +147,7 @@ class VideoTabBackgroundUtils {
                 false,
                 false,
                 subtitleStream.getSubtitles() != null
-                        ? subtitleStream.getSubtitles().getSize()
+                        ? subtitleStream.getSubtitles().getTextSize()
                         : TableSubtitleOption.UNKNOWN_SIZE,
                 null,
                 tableUnavailabilityReasonFrom(subtitleStream.getUnavailabilityReason()),

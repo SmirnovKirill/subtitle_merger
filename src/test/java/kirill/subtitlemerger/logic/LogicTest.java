@@ -4,6 +4,7 @@ import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
 import kirill.subtitlemerger.logic.core.SubtitleWriter;
+import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
@@ -15,7 +16,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 public class LogicTest {
     @Test
-    public void testParseFromFileToSubtitles() throws IOException, SubtitleParser.IncorrectFormatException {
+    public void testParseFromFileToSubtitles() throws IOException, SubtitleFormatException {
         Subtitles subtitles = SubtitleParser.fromSubRipText(
                 IOUtils.toString(
                         LogicTest.class.getResourceAsStream("/MainTest/testParseFromFileToSubtitles/sub.srt"),
@@ -31,7 +32,7 @@ public class LogicTest {
     }
 
     @Test
-    public void testMerge() throws IOException, SubtitleParser.IncorrectFormatException, InterruptedException {
+    public void testMerge() throws IOException, SubtitleFormatException, InterruptedException {
         Subtitles upperSubtitles = SubtitleParser.fromSubRipText(
                 IOUtils.toString(
                         LogicTest.class.getResourceAsStream("/MainTest/testMerged/upper.srt"),

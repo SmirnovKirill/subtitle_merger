@@ -1,13 +1,12 @@
 package kirill.subtitlemerger.logic.core;
 
+import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.core.entities.Subtitle;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 public class SubtitleWriter {
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("HH:mm:ss,SSS");
-
     public static String toSubRipText(Subtitles subtitles) {
         StringBuilder result = new StringBuilder();
 
@@ -17,9 +16,9 @@ public class SubtitleWriter {
             result.append(subtitle.getNumber());
             result.append(System.lineSeparator());
 
-            result.append(TIME_FORMATTER.print(subtitle.getFrom()));
+            result.append(LogicConstants.SUBRIP_TIME_FORMATTER.print(subtitle.getFrom()));
             result.append(" --> ");
-            result.append(TIME_FORMATTER.print(subtitle.getTo()));
+            result.append(LogicConstants.SUBRIP_TIME_FORMATTER.print(subtitle.getTo()));
             result.append(System.lineSeparator());
 
             for (int j = 0; j < subtitle.getLines().size(); j++) {

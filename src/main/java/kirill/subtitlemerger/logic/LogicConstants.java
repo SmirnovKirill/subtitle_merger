@@ -1,6 +1,8 @@
 package kirill.subtitlemerger.logic;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,6 +17,8 @@ public class LogicConstants {
     public static final List<String> ALLOWED_VIDEO_MIME_TYPES = Collections.singletonList("video/x-matroska");
 
     public static final List<LanguageAlpha3Code> ALLOWED_LANGUAGE_CODES = getAllLanguageCodes();
+
+    public static final DateTimeFormatter SUBRIP_TIME_FORMATTER = DateTimeFormat.forPattern("HH:mm:ss,SSS");
 
     public static final Pattern LINE_SEPARATOR_PATTERN = Pattern.compile("\\r?\\n");
 

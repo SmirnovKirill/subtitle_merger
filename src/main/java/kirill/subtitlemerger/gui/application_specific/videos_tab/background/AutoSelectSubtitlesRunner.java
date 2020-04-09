@@ -10,6 +10,7 @@ import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.gui.util.entities.ActionResult;
 import kirill.subtitlemerger.logic.core.SubtitleParser;
+import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffmpeg;
@@ -27,7 +28,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult> {
     private static final Comparator<FfmpegSubtitleStream> STREAM_COMPARATOR = Comparator.comparing(
-            (FfmpegSubtitleStream stream) -> stream.getSubtitles().getSize()
+            (FfmpegSubtitleStream stream) -> stream.getSubtitles().getTextSize()
     ).reversed();
 
     private List<TableFileInfo> displayedTableFilesInfo;
@@ -186,7 +187,7 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
 
                 Platform.runLater(
                         () -> tableWithFiles.subtitlesLoadedSuccessfully(
-                                ffmpegStream.getSubtitles().getSize(),
+                                ffmpegStream.getSubtitles().getTextSize(),
                                 tableSubtitleOption,
                                 tableFileInfo
                         )
@@ -205,7 +206,7 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
                         )
                 );
                 failedToLoadForFile++;
-            } catch (SubtitleParser.IncorrectFormatException e) {
+            } catch (SubtitleFormatException e) {
                 result = false;
                 Platform.runLater(
                         () -> tableWithFiles.failedToLoadSubtitles(

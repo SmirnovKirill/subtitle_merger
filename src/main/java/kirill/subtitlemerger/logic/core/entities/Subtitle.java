@@ -8,10 +8,8 @@ import org.joda.time.LocalTime;
 
 import java.util.List;
 
-@NoArgsConstructor
 @AllArgsConstructor
 @Getter
-@Setter
 public class Subtitle {
     private int number;
 

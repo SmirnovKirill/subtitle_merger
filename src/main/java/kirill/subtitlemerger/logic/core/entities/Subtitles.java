@@ -42,7 +42,7 @@ public class Subtitles {
         return Objects.hash(text);
     }
 
-    public int getSize() {
+    public int getTextSize() {
         return text.getBytes().length;
     }
 }
