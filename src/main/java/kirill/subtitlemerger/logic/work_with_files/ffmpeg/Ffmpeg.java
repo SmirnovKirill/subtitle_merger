@@ -176,7 +176,7 @@ public class Ffmpeg {
     ) {
         List<String> result = new ArrayList<>();
 
-        int newStreamIndex = fileInfo.getNewFfmpegStreamIndex();
+        int newStreamIndex = fileInfo.getFfmpegSubtitleStreams().size();
 
         result.add(ffmpegFile.getAbsolutePath());
         result.add("-y");

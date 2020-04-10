@@ -43,15 +43,14 @@ class FileInfo {
     ) {
         this.id = file.getAbsolutePath();
         this.file = file;
-        lastModified = new LocalDateTime(file.lastModified());
-        size = file.length();
+        setCurrentSizeAndLastModified();
         this.videoContainer = videoContainer;
         this.unavailabilityReason = unavailabilityReason;
         this.subtitleOptions = subtitleOptions;
         this.mergedSubtitleInfo = mergedSubtitleInfo;
     }
 
-    public void updateSizeAndLastModified() {
+    public void setCurrentSizeAndLastModified() {
         lastModified = new LocalDateTime(file.lastModified());
         size = file.length();
     }
@@ -82,10 +81,6 @@ class FileInfo {
                 .filter(option -> option instanceof FileWithSubtitles)
                 .map(FileWithSubtitles.class::cast)
                 .collect(Collectors.toList());
-    }
-
-    public int getNewFfmpegStreamIndex() {
-        return getFfmpegSubtitleStreams().size();
     }
 
     public enum UnavailabilityReason {

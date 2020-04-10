@@ -9,6 +9,6 @@
         <Root level="info">
             <AppenderRef ref="console"/>
         </Root>
-        <Logger name="kirill.subtitlemerger.logic.work_with_files.ffmpeg.ProcessRunner" level="all"/>
+        <Logger name="kirill.subtitlemerger.logic.utils.process.ProcessRunner" level="all"/>
     </Loggers>
 </Configuration>

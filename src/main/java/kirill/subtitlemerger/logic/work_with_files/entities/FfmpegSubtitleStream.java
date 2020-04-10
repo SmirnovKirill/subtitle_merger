@@ -52,4 +52,8 @@ public class FfmpegSubtitleStream extends SubtitleOption {
         this.title = title;
         this.defaultDisposition = defaultDisposition;
     }
+
+    public void setSubtitles(Subtitles subtitles) {
+        this.subtitles = subtitles;
+    }
 }

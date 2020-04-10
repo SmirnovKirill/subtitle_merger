@@ -376,8 +376,10 @@ public class ContentPaneController extends AbstractController {
             if (subtitleOption instanceof FileWithSubtitles) {
                 FileWithSubtitles fileWithSubtitles = (FileWithSubtitles) subtitleOption;
 
-                fileWithSubtitles.setEncoding(controller.getUserSelection().getEncoding());
-                fileWithSubtitles.setSubtitles(controller.getUserSelection().getSubtitles());
+                fileWithSubtitles.changeEncoding(
+                        controller.getUserSelection().getEncoding(),
+                        controller.getUserSelection().getSubtitles()
+                );
 
                 tableWithFiles.subtitleOptionPreviewClosed(
                         controller.getUserSelection().getSubtitles() != null

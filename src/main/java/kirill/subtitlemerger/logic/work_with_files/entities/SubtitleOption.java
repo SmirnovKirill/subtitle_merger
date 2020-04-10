@@ -3,7 +3,6 @@ package kirill.subtitlemerger.logic.work_with_files.entities;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.nio.charset.Charset;
 import java.util.List;
@@ -14,8 +13,7 @@ import java.util.Objects;
 public abstract class SubtitleOption {
     private String id;
 
-    @Setter
-    private Subtitles subtitles;
+    protected Subtitles subtitles;
 
     protected Charset encoding;
 
@@ -25,11 +23,24 @@ public abstract class SubtitleOption {
      */
     private UnavailabilityReason unavailabilityReason;
 
-    @Setter
     private boolean selectedAsUpper;
 
-    @Setter
     private boolean selectedAsLower;
+
+    public void selectAsUpper() {
+        selectedAsUpper = true;
+        selectedAsLower = false;
+    }
+
+    public void selectAsLower() {
+        selectedAsUpper = false;
+        selectedAsLower = true;
+    }
+
+    public void unselect() {
+        selectedAsUpper = false;
+        selectedAsLower = false;
+    }
 
     public static <T extends SubtitleOption> T getById(String id, List<T> subtitleOptions) {
         return subtitleOptions.stream()

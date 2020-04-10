@@ -33,7 +33,8 @@ public class FileWithSubtitles extends SubtitleOption {
         this.rawData = rawData;
     }
 
-    public void setEncoding(Charset encoding) {
+    public void changeEncoding(Charset encoding, Subtitles subtitles) {
         this.encoding = encoding;
+        this.subtitles = subtitles;
     }
 }

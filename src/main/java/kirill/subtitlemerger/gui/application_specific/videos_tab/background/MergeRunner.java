@@ -247,7 +247,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
         subtitleOption.setSubtitles(merged);
 
         fileInfo.getSubtitleOptions().add(subtitleOption);
-        fileInfo.updateSizeAndLastModified();
+        fileInfo.setCurrentSizeAndLastModified();
 
         boolean haveHideableOptions = tableFileInfo.getSubtitleOptions().stream()
                 .anyMatch(TableSubtitleOption::isHideable);
