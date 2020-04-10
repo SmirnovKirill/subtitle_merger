@@ -31,7 +31,7 @@ public class SubtitleMerger {
         return convert(result, upperSubtitles, lowerSubtitles);
     }
 
-    /*
+    /**
      * The first and the simplest stage of the merge - we make a list of all seen points of time and for each segment we
      * see whether there are subtitles from any source and if there are we add this segment and its lines.
      */
@@ -129,6 +129,7 @@ public class SubtitleMerger {
         if (subtitleMatchesTime(subtitles.getSubtitles().get(currentIndex), from, to)) {
             return Optional.of(currentIndex);
         } else {
+            /* Means that it's the last subtitle and we can't check the next one. */
             if (currentIndex == subtitles.getSubtitles().size() - 1) {
                 return Optional.empty();
             }
@@ -148,7 +149,7 @@ public class SubtitleMerger {
         return fromInside && toInside;
     }
 
-    /*
+    /**
      * This method fixes "jumps" that appear after splitting into smaller segments. If for example for some segment
      * there are lines from only one source (upper) and on the next segment lines from the other source (lower)
      * are added it looks like the jump of the lines from the upper source because for some period of time they go alone
@@ -175,7 +176,7 @@ public class SubtitleMerger {
                 throw new IllegalStateException();
             }
 
-            if (sources.size() == 2 || linesAlwaysGoInOneSource(subtitle.getLines(), i, subtitles)) {
+            if (sources.size() == 2 || subtitleAlwaysHasOneSource(subtitle, i, subtitles)) {
                 result.add(subtitle);
                 i++;
                 continue;
@@ -196,61 +197,73 @@ public class SubtitleMerger {
         return result;
     }
 
-    /*
-     * Checks whether lines of the subtitle with the given index always go "alone", without lines from the other
-     * source. To do this we have to go back to the index where these lines first appear and start from there
-     * because if we simply start from the given index we will get incorrect result when lines from the other source
-     * go before the provided index.
+    /**
+     * Checks whether the subtitle with the given index always has one source, without lines from the other source. To
+     * do this we have to check subtitles to the left and to the right of the given one.
      */
-    private static boolean linesAlwaysGoInOneSource(
-            List<MergerSubtitleLine> lines,
+    private static boolean subtitleAlwaysHasOneSource(
+            MergerSubtitle subtitle,
             int subtitleIndex,
             List<MergerSubtitle> subtitles
     ) throws InterruptedException {
-        Source linesSource = lines.get(0).getSource();
+        Source source = subtitle.getLines().get(0).getSource();
 
-        int startIndex = -1;
-        for (int i = subtitleIndex; i >= 0; i--) {
+        for (int i = subtitleIndex - 1; i >= 0; i--) {
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
 
-            List<MergerSubtitleLine> linesFromOriginalSource = subtitles.get(i).getLines().stream()
-                    .filter(line -> Objects.equals(line.getSource(), linesSource))
-                    .collect(Collectors.toList());
-
-            if (!Objects.equals(lines, linesFromOriginalSource)) {
-                break;
-            } else {
-                startIndex = i;
-            }
-        }
-
-        if (startIndex == -1) {
-            throw new IllegalStateException();
-        }
-
-        for (int i = startIndex; i < subtitles.size(); i++) {
-            if (Thread.interrupted()) {
-                throw new InterruptedException();
-            }
-
-            if (!Objects.equals(subtitles.get(i).getLines(), lines)) {
+            if (subtitlesEqualForSource(subtitles.get(i), subtitles.get(i + 1), source)) {
                 /*
-                 * If we got here it means that lines have changed. It can be because the lines from the original source
-                 * have changed and in that case we return true because it means that with all previous indices lines
-                 * from the source were the same and there weren't any lines from the other source. Or if lines from the
-                 * original source stay the same it means that lines from the other source were added so the method has
-                 * to return false.
+                 * If we got here it means that subtitles have the same text for the source. Now if the lines are
+                 * equal no matter what the source is it means that it's just another segment of the subtitle and we
+                 * should keep going, but if the lines differ it means that there are lines from the other source
+                 * and we should return false.
                  */
-                List<MergerSubtitleLine> linesFromOriginalSource = subtitles.get(i).getLines().stream()
-                        .filter(line -> Objects.equals(line.getSource(), linesSource))
-                        .collect(Collectors.toList());
-                return !Objects.equals(linesFromOriginalSource, lines);
+                if (!Objects.equals(subtitles.get(i).getLines(), subtitles.get(i + 1).getLines())) {
+                    return false;
+                }
+            } else {
+                break;
+            }
+        }
+
+        for (int i = subtitleIndex + 1; i < subtitles.size(); i++) {
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+
+            if (subtitlesEqualForSource(subtitles.get(i - 1), subtitles.get(i), source)) {
+                /*
+                 * If we got here it means that subtitles have the same text for the source. Now if the lines are
+                 * equal no matter what the source is it means that it's just another segment of the subtitle and we
+                 * should keep going, but if the lines differ it means that there are lines from the other source
+                 * and we should return false.
+                 */
+                if (!Objects.equals(subtitles.get(i - 1).getLines(), subtitles.get(i).getLines())) {
+                    return false;
+                }
+            } else {
+                break;
             }
         }
 
         return true;
+    }
+
+    /**
+     * Subtitles are considered to be equal if they are strictly consequential (the next one starts right where the
+     * previous ends) and the lines for the given source are the same.
+     */
+    private static boolean subtitlesEqualForSource(MergerSubtitle previous, MergerSubtitle next, Source source) {
+        if (!Objects.equals(previous.getTo(), next.getFrom())) {
+            return false;
+        }
+
+        return Objects.equals(
+                previous.getLines().stream().filter(line -> line.getSource() == source).collect(Collectors.toList()),
+                next.getLines().stream().filter(line -> line.getSource() == source).collect(Collectors.toList())
+        );
     }
 
     private static List<MergerSubtitleLine> getClosestLinesFromOtherSource(
@@ -331,8 +344,8 @@ public class SubtitleMerger {
         }
     }
 
-    /*
-     * This method combines consecutive subtitles that have the same lines (to simply make the result more compact).
+    /**
+     * Combines consecutive subtitles that have the same lines (to simply make the result more compact).
      */
     private static List<MergerSubtitle> getCombinedSubtitles(
             List<MergerSubtitle> subtitles
