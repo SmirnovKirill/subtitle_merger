@@ -21,7 +21,7 @@ public abstract class SubtitleOption {
      * We will keep track of all options for the file even if they can't be used for subtitle merging (for better
      * diagnostics). Enum contains the reason why this option can't be used for subtitle merging.
      */
-    private UnavailabilityReason unavailabilityReason;
+    private SubtitleOptionUnavailabilityReason unavailabilityReason;
 
     private boolean selectedAsUpper;
 
@@ -46,9 +46,5 @@ public abstract class SubtitleOption {
         return subtitleOptions.stream()
                 .filter(option -> Objects.equals(option.getId(), id))
                 .findFirst().orElseThrow(IllegalAccessError::new);
-    }
-
-    public enum UnavailabilityReason {
-        NOT_ALLOWED_CODEC
     }
 }

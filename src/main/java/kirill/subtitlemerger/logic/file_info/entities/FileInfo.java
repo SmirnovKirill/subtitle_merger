@@ -11,8 +11,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Getter
-public
-class FileInfo {
+public class FileInfo {
     private String id;
 
     private File file;
@@ -21,13 +20,13 @@ class FileInfo {
 
     private long size;
 
-    private VideoFormat videoContainer;
+    private VideoFormat format;
 
     /**
-     * We will keep track of all files from the selected directory even if they can't be used for subtitle merging
-     * (for better diagnostics). Enum contains the reason why this file can't be used for subtitle merging.
+     * We will keep track of all the selected files even if they can't be used for subtitle merging (for better
+     * diagnostics). Enum contains the reason why this file can't be used for subtitle merging.
      */
-    private UnavailabilityReason unavailabilityReason;
+    private FileUnavailabilityReason unavailabilityReason;
 
     private List<SubtitleOption> subtitleOptions;
 
@@ -36,15 +35,15 @@ class FileInfo {
 
     public FileInfo(
             File file,
-            VideoFormat videoContainer,
-            UnavailabilityReason unavailabilityReason,
+            VideoFormat format,
+            FileUnavailabilityReason unavailabilityReason,
             List<SubtitleOption> subtitleOptions,
             MergedSubtitleInfo mergedSubtitleInfo
     ) {
         this.id = file.getAbsolutePath();
         this.file = file;
         setCurrentSizeAndLastModified();
-        this.videoContainer = videoContainer;
+        this.format = format;
         this.unavailabilityReason = unavailabilityReason;
         this.subtitleOptions = subtitleOptions;
         this.mergedSubtitleInfo = mergedSubtitleInfo;
@@ -81,14 +80,5 @@ class FileInfo {
                 .filter(option -> option instanceof FileWithSubtitles)
                 .map(FileWithSubtitles.class::cast)
                 .collect(Collectors.toList());
-    }
-
-    public enum UnavailabilityReason {
-        NO_EXTENSION,
-        NOT_ALLOWED_EXTENSION,
-        FAILED_TO_GET_MIME_TYPE,
-        NOT_ALLOWED_MIME_TYPE,
-        FAILED_TO_GET_FFPROBE_INFO,
-        NOT_ALLOWED_CONTAINER
     }
 }

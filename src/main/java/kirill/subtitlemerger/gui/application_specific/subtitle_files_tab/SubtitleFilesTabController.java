@@ -457,7 +457,9 @@ public class SubtitleFilesTabController extends AbstractController {
                 return "File '" + path + "' doesn't exist";
             case FAILED_TO_GET_PARENT_DIRECTORY:
                 return path + ": failed to get parent directory";
-            case EXTENSION_IS_NOT_VALID:
+            case NO_EXTENSION:
+                return "File '" + path + "' has no extension";
+            case NOT_ALLOWED_EXTENSION:
                 return "File '" + path + "' has an incorrect extension";
             case FILE_IS_EMPTY:
                 return "File '" + path + "' is empty";
@@ -488,7 +490,9 @@ public class SubtitleFilesTabController extends AbstractController {
                 return "File path is invalid";
             case IS_A_DIRECTORY:
                 return path + " is a directory, not a file";
-            case EXTENSION_IS_NOT_VALID:
+            case NO_EXTENSION:
+                return "File '" + path + "' has no extension";
+            case NOT_ALLOWED_EXTENSION:
                 return "File '" + path + "' has an incorrect extension";
             default:
                 throw new IllegalStateException();
@@ -866,8 +870,10 @@ public class SubtitleFilesTabController extends AbstractController {
                     return SubtitleFilesTabController.IncorrectInputFileReason.DOES_NOT_EXIST;
                 case FAILED_TO_GET_PARENT:
                     return SubtitleFilesTabController.IncorrectInputFileReason.FAILED_TO_GET_PARENT_DIRECTORY;
-                case EXTENSION_IS_NOT_VALID:
-                    return SubtitleFilesTabController.IncorrectInputFileReason.EXTENSION_IS_NOT_VALID;
+                case NO_EXTENSION:
+                    return SubtitleFilesTabController.IncorrectInputFileReason.NO_EXTENSION;
+                case NOT_ALLOWED_EXTENSION:
+                    return SubtitleFilesTabController.IncorrectInputFileReason.NOT_ALLOWED_EXTENSION;
                 case FILE_IS_EMPTY:
                     return SubtitleFilesTabController.IncorrectInputFileReason.FILE_IS_EMPTY;
                 case FILE_IS_TOO_BIG:
@@ -886,7 +892,8 @@ public class SubtitleFilesTabController extends AbstractController {
         IS_A_DIRECTORY,
         DOES_NOT_EXIST,
         FAILED_TO_GET_PARENT_DIRECTORY,
-        EXTENSION_IS_NOT_VALID,
+        NO_EXTENSION,
+        NOT_ALLOWED_EXTENSION,
         FILE_IS_EMPTY,
         FILE_IS_TOO_BIG,
         FAILED_TO_READ_CONTENT,
@@ -914,8 +921,10 @@ public class SubtitleFilesTabController extends AbstractController {
                     return IncorrectMergedFileReason.INVALID_PATH;
                 case IS_A_DIRECTORY:
                     return IncorrectMergedFileReason.IS_A_DIRECTORY;
-                case EXTENSION_IS_NOT_ALLOWED:
-                    return IncorrectMergedFileReason.EXTENSION_IS_NOT_VALID;
+                case NO_EXTENSION:
+                    return IncorrectMergedFileReason.NO_EXTENSION;
+                case NOT_ALLOWED_EXTENSION:
+                    return IncorrectMergedFileReason.NOT_ALLOWED_EXTENSION;
                 default:
                     throw new IllegalStateException();
             }
@@ -926,7 +935,8 @@ public class SubtitleFilesTabController extends AbstractController {
         PATH_IS_TOO_LONG,
         INVALID_PATH,
         IS_A_DIRECTORY,
-        EXTENSION_IS_NOT_VALID
+        NO_EXTENSION,
+        NOT_ALLOWED_EXTENSION
     }
 
     @AllArgsConstructor

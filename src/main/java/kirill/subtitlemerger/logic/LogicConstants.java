@@ -14,8 +14,6 @@ import java.util.stream.Collectors;
 public class LogicConstants {
     public static final List<String> ALLOWED_VIDEO_EXTENSIONS = Collections.singletonList("mkv");
 
-    public static final List<String> ALLOWED_VIDEO_MIME_TYPES = Collections.singletonList("video/x-matroska");
-
     public static final List<LanguageAlpha3Code> ALLOWED_LANGUAGE_CODES = getAllLanguageCodes();
 
     public static final DateTimeFormatter SUBRIP_TIME_FORMATTER = DateTimeFormat.forPattern("HH:mm:ss,SSS");

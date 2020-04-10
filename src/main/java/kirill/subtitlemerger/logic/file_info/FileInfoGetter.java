@@ -1,83 +1,58 @@
 package kirill.subtitlemerger.logic.file_info;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
-import kirill.subtitlemerger.logic.file_info.entities.FfmpegSubtitleStream;
-import kirill.subtitlemerger.logic.file_info.entities.FileInfo;
-import kirill.subtitlemerger.logic.file_info.entities.SubtitleOption;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
 import kirill.subtitlemerger.logic.ffmpeg.SubtitleCodec;
 import kirill.subtitlemerger.logic.ffmpeg.VideoFormat;
 import kirill.subtitlemerger.logic.ffmpeg.json.JsonFfprobeFileInfo;
 import kirill.subtitlemerger.logic.ffmpeg.json.JsonStream;
+import kirill.subtitlemerger.logic.file_info.entities.FfmpegSubtitleStream;
+import kirill.subtitlemerger.logic.file_info.entities.FileInfo;
+import kirill.subtitlemerger.logic.file_info.entities.SubtitleOptionUnavailabilityReason;
+import kirill.subtitlemerger.logic.utils.file_validation.FileValidator;
+import kirill.subtitlemerger.logic.utils.file_validation.InputFileInfo;
+import kirill.subtitlemerger.logic.utils.file_validation.InputFileNotValidReason;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.MapUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static kirill.subtitlemerger.logic.file_info.entities.FileInfo.UnavailabilityReason.*;
+import static kirill.subtitlemerger.logic.file_info.entities.FileUnavailabilityReason.*;
 
 @CommonsLog
 public class FileInfoGetter {
-    public static FileInfo getFileInfoWithoutSubtitles(
-            File file,
-            List<String> allowedVideoExtensions,
-            List<String> allowedVideoMimeTypes,
-            Ffprobe ffprobe
-    ) {
-        if (!file.isFile()) {
-            log.error("passed file is not an actual file: " + file.getAbsolutePath());
-            throw new IllegalArgumentException();
-        }
-
-        String extension = FilenameUtils.getExtension(file.getName());
-        if (StringUtils.isBlank(extension)) {
+    public static FileInfo getFileInfoWithoutSubtitles(File file, List<String> allowedExtensions, Ffprobe ffprobe) {
+        InputFileInfo inputFileInfo = FileValidator.getInputFileInfo(
+                file.getAbsolutePath(),
+                allowedExtensions,
+                true,
+                Long.MAX_VALUE,
+                false
+        );
+        if (inputFileInfo.getNotValidReason() == InputFileNotValidReason.NO_EXTENSION) {
             return new FileInfo(file, null, NO_EXTENSION, null, null);
-        }
-
-        if (!allowedVideoExtensions.contains(extension.toLowerCase())) {
+        } else if (inputFileInfo.getNotValidReason() == InputFileNotValidReason.NOT_ALLOWED_EXTENSION) {
             return new FileInfo(file, null, NOT_ALLOWED_EXTENSION, null, null);
-        }
-
-        String mimeType;
-        try {
-            mimeType = Files.probeContentType(file.toPath());
-        } catch (IOException e) {
-            log.warn("failed to get mime type of file " + file.getAbsolutePath() + ": "
-                    + ExceptionUtils.getStackTrace(e)
-            );
-
-            return new FileInfo(file, null, FAILED_TO_GET_MIME_TYPE, null, null);
-        }
-
-        if (!allowedVideoMimeTypes.contains(mimeType)) {
-            return new FileInfo(file, null, NOT_ALLOWED_MIME_TYPE, null, null);
+        } else if (inputFileInfo.getNotValidReason() != null) {
+            log.error("something is wrong with the file: " + inputFileInfo.getNotValidReason());
+            throw new IllegalArgumentException();
         }
 
         JsonFfprobeFileInfo ffprobeInfo;
         try {
             ffprobeInfo = ffprobe.getFileInfo(file);
         } catch (FfmpegException e) {
-            return new FileInfo(file, null, FAILED_TO_GET_FFPROBE_INFO, null, null);
-        } catch (Exception e) {
-            log.warn("failed to get ffprobe info for file " + file.getAbsolutePath() + ": "
-                    + ExceptionUtils.getStackTrace(e)
-            );
-
-            return new FileInfo(file, null, FAILED_TO_GET_FFPROBE_INFO, null, null);
+            return new FileInfo(file, null, FFPROBE_FAILED, null, null);
         }
 
         VideoFormat videoFormat = VideoFormat.from(ffprobeInfo.getFormat().getFormatName()).orElse(null);
         if (videoFormat == null) {
-            return new FileInfo(file, null, NOT_ALLOWED_CONTAINER, null, null);
+            return new FileInfo(file, null, NOT_ALLOWED_FORMAT, null, null);
         }
 
         return new FileInfo(
@@ -99,9 +74,9 @@ public class FileInfoGetter {
 
             SubtitleCodec codec = SubtitleCodec.from(stream.getCodecName()).orElse(null);
 
-            SubtitleOption.UnavailabilityReason unavailabilityReason = null;
+            SubtitleOptionUnavailabilityReason unavailabilityReason = null;
             if (codec != SubtitleCodec.SUBRIP) {
-                unavailabilityReason = SubtitleOption.UnavailabilityReason.NOT_ALLOWED_CODEC;
+                unavailabilityReason = SubtitleOptionUnavailabilityReason.NOT_ALLOWED_FORMAT;
             }
 
             result.add(

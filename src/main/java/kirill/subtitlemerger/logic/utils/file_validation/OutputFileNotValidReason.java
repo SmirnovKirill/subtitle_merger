@@ -6,5 +6,6 @@ public enum OutputFileNotValidReason {
     INVALID_PATH,
     IS_A_DIRECTORY,
     DOES_NOT_EXIST,
-    EXTENSION_IS_NOT_ALLOWED
+    NO_EXTENSION,
+    NOT_ALLOWED_EXTENSION
 }

@@ -10,11 +10,13 @@ import kirill.subtitlemerger.gui.util.GuiUtils;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.gui.util.entities.ActionResult;
 import kirill.subtitlemerger.logic.LogicConstants;
+import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
+import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
 import kirill.subtitlemerger.logic.file_info.FileInfoGetter;
 import kirill.subtitlemerger.logic.file_info.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.file_info.entities.FileInfo;
-import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
-import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
+import kirill.subtitlemerger.logic.file_info.entities.FileUnavailabilityReason;
+import kirill.subtitlemerger.logic.file_info.entities.SubtitleOptionUnavailabilityReason;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.EnumUtils;
@@ -48,7 +50,6 @@ class VideoTabBackgroundUtils {
                         FileInfoGetter.getFileInfoWithoutSubtitles(
                                 file,
                                 LogicConstants.ALLOWED_VIDEO_EXTENSIONS,
-                                LogicConstants.ALLOWED_VIDEO_MIME_TYPES,
                                 ffprobe
                         )
                 );
@@ -173,7 +174,7 @@ class VideoTabBackgroundUtils {
     }
 
     private static TableSubtitleOption.UnavailabilityReason tableUnavailabilityReasonFrom(
-            FfmpegSubtitleStream.UnavailabilityReason reason
+            SubtitleOptionUnavailabilityReason reason
     ) {
         if (reason == null) {
             return null;
@@ -182,9 +183,7 @@ class VideoTabBackgroundUtils {
         return EnumUtils.getEnum(TableSubtitleOption.UnavailabilityReason.class, reason.toString());
     }
 
-    private static TableFileInfo.UnavailabilityReason tableUnavailabilityReasonFrom(
-            FileInfo.UnavailabilityReason reason
-    ) {
+    private static TableFileInfo.UnavailabilityReason tableUnavailabilityReasonFrom(FileUnavailabilityReason reason) {
         if (reason == null) {
             return null;
         }

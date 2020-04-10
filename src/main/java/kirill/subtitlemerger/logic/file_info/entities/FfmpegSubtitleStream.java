@@ -24,12 +24,13 @@ public class FfmpegSubtitleStream extends SubtitleOption {
 
     private String title;
 
+    //todo change!
     private boolean defaultDisposition;
 
     public FfmpegSubtitleStream(
             int ffmpegIndex,
             Subtitles subtitles,
-            UnavailabilityReason unavailabilityReason,
+            SubtitleOptionUnavailabilityReason unavailabilityReason,
             boolean selectedAsUpper,
             boolean selectedAsLower,
             SubtitleCodec codec,

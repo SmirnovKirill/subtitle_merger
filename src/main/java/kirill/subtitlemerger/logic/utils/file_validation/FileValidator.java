@@ -49,8 +49,11 @@ public class FileValidator {
         }
 
         String extension = FilenameUtils.getExtension(file.getAbsolutePath());
+        if (StringUtils.isBlank(extension)) {
+            return new InputFileInfo(file, parent, InputFileNotValidReason.NO_EXTENSION, null);
+        }
         if (!allowedExtensions.contains(extension)) {
-            return new InputFileInfo(file, parent, InputFileNotValidReason.EXTENSION_IS_NOT_VALID, null);
+            return new InputFileInfo(file, parent, InputFileNotValidReason.NOT_ALLOWED_EXTENSION, null);
         }
 
         if (!allowEmpty && file.length() == 0) {
@@ -107,8 +110,11 @@ public class FileValidator {
         }
 
         String extension = FilenameUtils.getExtension(file.getAbsolutePath());
+        if (StringUtils.isBlank(extension)) {
+            return new OutputFileInfo(file, parent, OutputFileNotValidReason.NO_EXTENSION);
+        }
         if (!allowedExtensions.contains(extension)) {
-            return new OutputFileInfo(file, parent, OutputFileNotValidReason.EXTENSION_IS_NOT_ALLOWED);
+            return new OutputFileInfo(file, parent, OutputFileNotValidReason.NOT_ALLOWED_EXTENSION);
         }
 
         return new OutputFileInfo(file, parent, null);
