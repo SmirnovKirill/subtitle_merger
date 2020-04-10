@@ -11,10 +11,10 @@ import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.gui.util.entities.ActionResult;
 import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
-import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
-import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
-import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffmpeg;
-import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
+import kirill.subtitlemerger.logic.file_info.entities.FfmpegSubtitleStream;
+import kirill.subtitlemerger.logic.file_info.entities.FileInfo;
+import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
+import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import lombok.AllArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 

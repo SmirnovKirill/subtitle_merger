@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.logic.work_with_files.ffmpeg.json;
+package kirill.subtitlemerger.logic.ffmpeg.json;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

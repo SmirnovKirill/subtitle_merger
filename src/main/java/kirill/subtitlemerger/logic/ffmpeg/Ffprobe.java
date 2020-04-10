@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.logic.work_with_files.ffmpeg;
+package kirill.subtitlemerger.logic.ffmpeg;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kirill.subtitlemerger.logic.utils.process.ProcessException;
 import kirill.subtitlemerger.logic.utils.process.ProcessRunner;
-import kirill.subtitlemerger.logic.work_with_files.ffmpeg.json.JsonFfprobeFileInfo;
+import kirill.subtitlemerger.logic.ffmpeg.json.JsonFfprobeFileInfo;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;

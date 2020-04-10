@@ -2,9 +2,9 @@ package kirill.subtitlemerger.gui;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffmpeg;
-import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
-import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffprobe;
+import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
+import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
+import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;

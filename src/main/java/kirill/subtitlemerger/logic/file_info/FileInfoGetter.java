@@ -1,15 +1,15 @@
-package kirill.subtitlemerger.logic.work_with_files;
+package kirill.subtitlemerger.logic.file_info;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
-import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
-import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
-import kirill.subtitlemerger.logic.work_with_files.entities.SubtitleOption;
-import kirill.subtitlemerger.logic.work_with_files.ffmpeg.FfmpegException;
-import kirill.subtitlemerger.logic.work_with_files.ffmpeg.Ffprobe;
-import kirill.subtitlemerger.logic.work_with_files.ffmpeg.SubtitleCodec;
-import kirill.subtitlemerger.logic.work_with_files.ffmpeg.VideoFormat;
-import kirill.subtitlemerger.logic.work_with_files.ffmpeg.json.JsonFfprobeFileInfo;
-import kirill.subtitlemerger.logic.work_with_files.ffmpeg.json.JsonStream;
+import kirill.subtitlemerger.logic.file_info.entities.FfmpegSubtitleStream;
+import kirill.subtitlemerger.logic.file_info.entities.FileInfo;
+import kirill.subtitlemerger.logic.file_info.entities.SubtitleOption;
+import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
+import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
+import kirill.subtitlemerger.logic.ffmpeg.SubtitleCodec;
+import kirill.subtitlemerger.logic.ffmpeg.VideoFormat;
+import kirill.subtitlemerger.logic.ffmpeg.json.JsonFfprobeFileInfo;
+import kirill.subtitlemerger.logic.ffmpeg.json.JsonStream;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static kirill.subtitlemerger.logic.work_with_files.entities.FileInfo.UnavailabilityReason.*;
+import static kirill.subtitlemerger.logic.file_info.entities.FileInfo.UnavailabilityReason.*;
 
 @CommonsLog
 public class FileInfoGetter {

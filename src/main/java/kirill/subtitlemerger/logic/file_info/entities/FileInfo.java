@@ -1,6 +1,6 @@
-package kirill.subtitlemerger.logic.work_with_files.entities;
+package kirill.subtitlemerger.logic.file_info.entities;
 
-import kirill.subtitlemerger.logic.work_with_files.ffmpeg.VideoFormat;
+import kirill.subtitlemerger.logic.ffmpeg.VideoFormat;
 import lombok.Getter;
 import lombok.Setter;
 import org.joda.time.LocalDateTime;

@@ -1,8 +1,8 @@
-package kirill.subtitlemerger.logic.work_with_files.entities;
+package kirill.subtitlemerger.logic.file_info.entities;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
-import kirill.subtitlemerger.logic.work_with_files.ffmpeg.SubtitleCodec;
+import kirill.subtitlemerger.logic.ffmpeg.SubtitleCodec;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
 

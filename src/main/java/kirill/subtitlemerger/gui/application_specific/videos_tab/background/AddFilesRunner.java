@@ -9,7 +9,7 @@ import kirill.subtitlemerger.gui.util.GuiUtils;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.gui.util.entities.ActionResult;
-import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
+import kirill.subtitlemerger.logic.file_info.entities.FileInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
