@@ -2,13 +2,10 @@ package kirill.subtitlemerger.logic.work_with_files.ffmpeg.json;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 import java.util.Map;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 public class JsonStream {
     private int index;
@@ -18,7 +15,7 @@ public class JsonStream {
     private String codecName;
 
     /*
-     * Ffmpeg uses ISO 639-2 for language codes, below is the SO answer of one of the ffmpeg's developers.
+     * Ffmpeg uses ISO 639-2 for language codes, below is the SO answer from one of the ffmpeg's developers.
      * https://stackoverflow.com/questions/44351606/ffmpeg-set-the-language-of-an-audio-stream.
      * Later it turned out that there's more to the format, it's possible to use hyphens as well, see the documentation
      * https://www.ffmpeg.org/ffmpeg-formats.html#matroska.

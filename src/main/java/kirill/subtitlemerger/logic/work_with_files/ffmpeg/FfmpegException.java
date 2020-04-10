@@ -1,18 +1,14 @@
 package kirill.subtitlemerger.logic.work_with_files.ffmpeg;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+@AllArgsConstructor
 @Getter
 public class FfmpegException extends Exception {
     private Code code;
 
     private String consoleOutput;
-
-    FfmpegException(Code code, String consoleOutput) {
-        super();
-        this.code = code;
-        this.consoleOutput = consoleOutput;
-    }
 
     public enum Code {
         INCORRECT_FFPROBE_PATH,
