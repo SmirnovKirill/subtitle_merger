@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.logic.work_with_files.ffmpeg;
+package kirill.subtitlemerger.logic.utils.process;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.IOUtils;
@@ -17,15 +17,18 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @CommonsLog
-class ProcessRunner {
+public class ProcessRunner {
     /**
+     * This is a helper method to run native processes. The main feature of this class is work with the console output.
+     * Output is handled in a separate thread so the process can be properly interrupted. If output is being read in
+     * the main thread, interruption will have no effect because Reader::read method ignores interruptions.
      *
      * @param arguments command line arguments to start the process
      * @return string containing the console output (standard and error streams are combined, it's convenient
      * for out goals)
      * @throws ProcessException with different codes inside when errors happen
      */
-    static String run(List<String> arguments) throws ProcessException {
+    public static String run(List<String> arguments) throws ProcessException {
         Process process = startProcess(arguments);
         String consoleOutput = readAllConsoleOutput(process);
         waitForProcessTermination(process, consoleOutput);
@@ -86,7 +89,6 @@ class ProcessRunner {
                 log.warn("failed to read console output: " + ExceptionUtils.getStackTrace(executionException));
             }
 
-            Thread.currentThread().interrupt();
             log.debug("interruption has been handled successfully");
             throw new ProcessException(ProcessException.Code.INTERRUPTED, result);
         } catch (ExecutionException e) {
@@ -124,9 +126,6 @@ class ProcessRunner {
             }
         } catch (InterruptedException e) {
             log.debug("interrupted when waiting for process termination");
-
-            Thread.currentThread().interrupt();
-
             throw new ProcessException(ProcessException.Code.INTERRUPTED, consoleOutput);
         }
     }

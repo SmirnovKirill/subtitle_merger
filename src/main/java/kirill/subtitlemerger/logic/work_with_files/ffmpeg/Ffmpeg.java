@@ -3,6 +3,8 @@ package kirill.subtitlemerger.logic.work_with_files.ffmpeg;
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.logic.core.SubRipWriter;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
+import kirill.subtitlemerger.logic.utils.process.ProcessException;
+import kirill.subtitlemerger.logic.utils.process.ProcessRunner;
 import kirill.subtitlemerger.logic.work_with_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.work_with_files.entities.FileInfo;
 import lombok.extern.apachecommons.CommonsLog;
