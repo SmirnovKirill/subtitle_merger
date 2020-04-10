@@ -13,7 +13,6 @@ public class ProcessException extends Exception {
     public enum Code {
         FAILED_TO_START,
         FAILED_TO_READ_OUTPUT,
-        INTERRUPTED,
         PROCESS_KILLED,
         EXIT_VALUE_NOT_ZERO
     }

@@ -9,10 +9,10 @@ import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.gui.util.entities.ActionResult;
 import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
-import kirill.subtitlemerger.logic.file_info.entities.FfmpegSubtitleStream;
-import kirill.subtitlemerger.logic.file_info.entities.FileInfo;
 import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
+import kirill.subtitlemerger.logic.file_info.entities.FfmpegSubtitleStream;
+import kirill.subtitlemerger.logic.file_info.entities.FileInfo;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
@@ -59,18 +59,14 @@ public class LoadSingleSubtitlesRunner implements BackgroundRunner<ActionResult>
 
             return ActionResult.onlySuccess("Subtitles have been loaded successfully");
         } catch (FfmpegException e) {
-            if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
-                return ActionResult.onlyWarn("Task has been cancelled");
-            } else {
-                Platform.runLater(
-                        () -> tableWithFiles.failedToLoadSubtitles(
-                                VideoTabBackgroundUtils.failedToLoadReasonFrom(e.getCode()),
-                                tableSubtitleOption
-                        )
-                );
+            Platform.runLater(
+                    () -> tableWithFiles.failedToLoadSubtitles(
+                            VideoTabBackgroundUtils.failedToLoadReasonFrom(e.getCode()),
+                            tableSubtitleOption
+                    )
+            );
 
-                return ActionResult.onlyError("Failed to load subtitles");
-            }
+            return ActionResult.onlyError("Failed to load subtitles");
         } catch (SubtitleFormatException e) {
             Platform.runLater(
                     () -> tableWithFiles.failedToLoadSubtitles(
@@ -80,6 +76,8 @@ public class LoadSingleSubtitlesRunner implements BackgroundRunner<ActionResult>
             );
 
             return ActionResult.onlyError("Failed to load subtitles");
+        } catch (InterruptedException e) {
+            return ActionResult.onlyWarn("Task has been cancelled");
         }
     }
 }

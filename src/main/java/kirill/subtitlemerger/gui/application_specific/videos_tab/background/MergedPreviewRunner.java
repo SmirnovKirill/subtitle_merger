@@ -8,16 +8,16 @@ import kirill.subtitlemerger.gui.util.GuiUtils;
 import kirill.subtitlemerger.gui.util.background.BackgroundResult;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
-import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.SubRipParser;
+import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
+import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
+import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.file_info.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.file_info.entities.FileInfo;
 import kirill.subtitlemerger.logic.file_info.entities.MergedSubtitleInfo;
 import kirill.subtitlemerger.logic.file_info.entities.SubtitleOption;
-import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
-import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
@@ -52,12 +52,8 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
 
         try {
             loadStreamsIfNecessary(runnerManager);
-        } catch (FfmpegException e) {
-            if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
-                return new Result(true, null);
-            }
-
-            throw new IllegalStateException();
+        } catch (InterruptedException e) {
+            return new Result(true, null);
         }
 
         runnerManager.updateMessage("Merging subtitles...");
@@ -105,7 +101,7 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
         return true;
     }
 
-    private void loadStreamsIfNecessary(BackgroundRunnerManager runnerManager) throws FfmpegException {
+    private void loadStreamsIfNecessary(BackgroundRunnerManager runnerManager) throws InterruptedException {
         List<FfmpegSubtitleStream> streamsToLoad = new ArrayList<>();
         if (upperOption instanceof FfmpegSubtitleStream) {
             streamsToLoad.add((FfmpegSubtitleStream) upperOption);
@@ -138,10 +134,6 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
                         )
                 );
             } catch (FfmpegException e) {
-                if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
-                    throw e;
-                }
-
                 Platform.runLater(
                         () -> tableWithFiles.failedToLoadSubtitles(
                                 VideoTabBackgroundUtils.failedToLoadReasonFrom(e.getCode()),

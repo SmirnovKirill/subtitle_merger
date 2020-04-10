@@ -31,13 +31,13 @@ public class Ffmpeg {
 
     private File ffmpegFile;
 
-    public Ffmpeg(File ffmpegFile) throws FfmpegException {
+    public Ffmpeg(File ffmpegFile) throws FfmpegException, InterruptedException {
         validate(ffmpegFile);
 
         this.ffmpegFile = ffmpegFile;
     }
 
-    public static void validate(File ffmpegFile) throws FfmpegException {
+    public static void validate(File ffmpegFile) throws FfmpegException, InterruptedException {
         try {
             List<String> arguments = Arrays.asList(
                     ffmpegFile.getAbsolutePath(),
@@ -53,10 +53,6 @@ public class Ffmpeg {
                 throw new FfmpegException(FfmpegException.Code.INCORRECT_FFMPEG_PATH, consoleOutput);
             }
         } catch (ProcessException e) {
-            if (e.getCode() == ProcessException.Code.INTERRUPTED) {
-                throw  new FfmpegException(FfmpegException.Code.INTERRUPTED, e.getConsoleOutput());
-            }
-
             log.warn("failed to check ffmpeg: " + e.getCode());
             throw new FfmpegException(FfmpegException.Code.INCORRECT_FFMPEG_PATH, e.getConsoleOutput());
         }
@@ -65,7 +61,10 @@ public class Ffmpeg {
     /*
      * Synchronized because we use one temporary file with subtitles.
      */
-    public synchronized String getSubtitleText(int ffmpegStreamIndex, File videoFile) throws FfmpegException {
+    public synchronized String getSubtitleText(
+            int ffmpegStreamIndex,
+            File videoFile
+    ) throws FfmpegException, InterruptedException {
         String consoleOutput;
         try {
             /*
@@ -86,10 +85,6 @@ public class Ffmpeg {
             consoleOutput = ProcessRunner.run(arguments);
             log.debug("ffmpeg console output: " + consoleOutput);
         } catch (ProcessException e) {
-            if (e.getCode() == ProcessException.Code.INTERRUPTED) {
-                throw  new FfmpegException(FfmpegException.Code.INTERRUPTED, e.getConsoleOutput());
-            }
-
             log.warn("failed to extract subtitles with ffmpeg: " + e.getCode());
             throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, e.getConsoleOutput());
         }
@@ -112,7 +107,7 @@ public class Ffmpeg {
             boolean makeDefault,
             File directoryForTempFile,
             FileInfo fileInfo
-    ) throws FfmpegException {
+    ) throws FfmpegException, InterruptedException {
         /*
          * Ffmpeg can't add subtitles on the fly. So we need to add subtitles to some temporary file
          * and then rename it. Later we'll also check that the size of the new file is bigger than the size of the
@@ -146,10 +141,6 @@ public class Ffmpeg {
                 consoleOutput = ProcessRunner.run(arguments);
                 log.debug("ffmpeg console output: " + consoleOutput);
             } catch (ProcessException e) {
-                if (e.getCode() == ProcessException.Code.INTERRUPTED) {
-                    throw  new FfmpegException(FfmpegException.Code.INTERRUPTED, e.getConsoleOutput());
-                }
-
                 log.warn("failed to inject subtitles with ffmpeg: " + e.getCode());
                 throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, e.getConsoleOutput());
             }

@@ -11,10 +11,10 @@ import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.gui.util.entities.ActionResult;
 import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
-import kirill.subtitlemerger.logic.file_info.entities.FfmpegSubtitleStream;
-import kirill.subtitlemerger.logic.file_info.entities.FileInfo;
 import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
+import kirill.subtitlemerger.logic.file_info.entities.FfmpegSubtitleStream;
+import kirill.subtitlemerger.logic.file_info.entities.FileInfo;
 import lombok.AllArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -89,20 +89,14 @@ public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionRe
 
                     loadedSuccessfullyCount++;
                 } catch (FfmpegException e) {
-                    if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
-                        setFileInfoErrorIfNecessary(failedToLoadForFile, tableFileInfo, tableWithFiles);
-
-                        break mainLoop;
-                    } else {
-                        Platform.runLater(
-                                () -> tableWithFiles.failedToLoadSubtitles(
-                                        VideoTabBackgroundUtils.failedToLoadReasonFrom(e.getCode()),
-                                        tableSubtitleOption
-                                )
-                        );
-                        failedToLoadCount++;
-                        failedToLoadForFile++;
-                    }
+                    Platform.runLater(
+                            () -> tableWithFiles.failedToLoadSubtitles(
+                                    VideoTabBackgroundUtils.failedToLoadReasonFrom(e.getCode()),
+                                    tableSubtitleOption
+                            )
+                    );
+                    failedToLoadCount++;
+                    failedToLoadForFile++;
                 } catch (SubtitleFormatException e) {
                     Platform.runLater(
                             () -> tableWithFiles.failedToLoadSubtitles(
@@ -112,6 +106,9 @@ public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionRe
                     );
                     failedToLoadCount++;
                     failedToLoadForFile++;
+                } catch (InterruptedException e) {
+                    setFileInfoErrorIfNecessary(failedToLoadForFile, tableFileInfo, tableWithFiles);
+                    break mainLoop;
                 }
 
                 processedCount++;

@@ -147,15 +147,13 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
                         );
                         failedCount++;
                     } catch (FfmpegException e) {
-                        if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
-                            break;
-                        } else {
-                            String message = "Ffmpeg returned an error";
-                            Platform.runLater(
-                                    () -> tableWithFiles.setActionResult(ActionResult.onlyError(message), tableFileInfo)
-                            );
-                            failedCount++;
-                        }
+                        String message = "Ffmpeg returned an error";
+                        Platform.runLater(
+                                () -> tableWithFiles.setActionResult(ActionResult.onlyError(message), tableFileInfo)
+                        );
+                        failedCount++;
+                    } catch (InterruptedException e) {
+                        break;
                     }
                 }
             } else {
@@ -229,7 +227,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
             TableFileInfo tableFileInfo,
             Ffprobe ffprobe,
             GuiSettings settings
-    ) throws FfmpegException {
+    ) throws FfmpegException, InterruptedException {
         JsonFfprobeFileInfo ffprobeInfo = ffprobe.getFileInfo(fileInfo.getFile());
         List<FfmpegSubtitleStream> subtitleOptions = FileInfoGetter.getSubtitleOptions(ffprobeInfo);
 

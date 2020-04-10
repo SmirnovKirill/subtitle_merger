@@ -48,6 +48,9 @@ public class FileInfoGetter {
             ffprobeInfo = ffprobe.getFileInfo(file);
         } catch (FfmpegException e) {
             return new FileInfo(file, null, FFPROBE_FAILED, null, null);
+        } catch (InterruptedException e) {
+            log.error("something's not right, process can't be interrupted");
+            throw new IllegalStateException();
         }
 
         VideoFormat videoFormat = VideoFormat.from(ffprobeInfo.getFormat().getFormatName()).orElse(null);

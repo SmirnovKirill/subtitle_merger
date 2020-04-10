@@ -4,9 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kirill.subtitlemerger.logic.ffmpeg.json.JsonFfprobeFileInfo;
 import kirill.subtitlemerger.logic.utils.process.ProcessException;
 import kirill.subtitlemerger.logic.utils.process.ProcessRunner;
-import kirill.subtitlemerger.logic.ffmpeg.json.JsonFfprobeFileInfo;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -31,13 +31,13 @@ public class Ffprobe {
         JSON_OBJECT_MAPPER.configure(MapperFeature.AUTO_DETECT_CREATORS, false);
     }
 
-    public Ffprobe(File ffprobeFile) throws FfmpegException {
+    public Ffprobe(File ffprobeFile) throws FfmpegException, InterruptedException {
         validate(ffprobeFile);
 
         this.ffprobeFile = ffprobeFile;
     }
 
-    public static void validate(File ffprobeFile) throws FfmpegException {
+    public static void validate(File ffprobeFile) throws FfmpegException, InterruptedException {
         try {
             List<String> arguments = Arrays.asList(
                     ffprobeFile.getAbsolutePath(),
@@ -53,16 +53,12 @@ public class Ffprobe {
                 throw new FfmpegException(FfmpegException.Code.INCORRECT_FFPROBE_PATH, consoleOutput);
             }
         } catch (ProcessException e) {
-            if (e.getCode() == ProcessException.Code.INTERRUPTED) {
-                throw  new FfmpegException(FfmpegException.Code.INTERRUPTED, e.getConsoleOutput());
-            }
-
             log.warn("failed to check ffprobe: " + e.getCode());
             throw new FfmpegException(FfmpegException.Code.INCORRECT_FFPROBE_PATH, e.getConsoleOutput());
         }
     }
 
-    public JsonFfprobeFileInfo getFileInfo(File file) throws FfmpegException {
+    public JsonFfprobeFileInfo getFileInfo(File file) throws FfmpegException, InterruptedException {
         String consoleOutput;
         try {
             List<String> arguments = Arrays.asList(
@@ -80,10 +76,6 @@ public class Ffprobe {
             consoleOutput = ProcessRunner.run(arguments);
             log.debug("ffprobe console output: " + consoleOutput);
         } catch (ProcessException e) {
-            if (e.getCode() == ProcessException.Code.INTERRUPTED) {
-                throw  new FfmpegException(FfmpegException.Code.INTERRUPTED, e.getConsoleOutput());
-            }
-
             log.warn("failed to get file info with ffprobe: " + e.getCode());
             throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, e.getConsoleOutput());
         }

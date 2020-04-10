@@ -167,6 +167,9 @@ public class SettingsTabController {
                 ffprobeSetButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
 
                 actionResultLabels.setOnlyError("Incorrect path to ffprobe");
+            } catch (InterruptedException e) {
+                log.error("something's not right, process can't be interrupted");
+                throw new IllegalStateException();
             }
         }
 
@@ -213,6 +216,9 @@ public class SettingsTabController {
                 ffmpegSetButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
 
                 actionResultLabels.setOnlyError("Incorrect path to ffmpeg");
+            } catch (InterruptedException e) {
+                log.error("something's not right, process can't be interrupted");
+                throw new IllegalStateException();
             }
         }
 

@@ -28,7 +28,7 @@ public class ProcessRunner {
      * for out goals)
      * @throws ProcessException with different codes inside when errors happen
      */
-    public static String run(List<String> arguments) throws ProcessException {
+    public static String run(List<String> arguments) throws ProcessException, InterruptedException {
         Process process = startProcess(arguments);
         String consoleOutput = readAllConsoleOutput(process);
         waitForProcessTermination(process, consoleOutput);
@@ -56,7 +56,7 @@ public class ProcessRunner {
         }
     }
 
-    private static String readAllConsoleOutput(Process process) throws ProcessException {
+    private static String readAllConsoleOutput(Process process) throws ProcessException, InterruptedException {
         ReadAllConsoleOutputTask task = new ReadAllConsoleOutputTask(process);
 
         Thread thread = new Thread(task);
@@ -80,7 +80,7 @@ public class ProcessRunner {
             log.debug("destroyForcibly has been called on a process");
 
             try {
-                result = task.get(1000, TimeUnit.MILLISECONDS);
+                task.get(500, TimeUnit.MILLISECONDS);
             } catch (TimeoutException timeoutException) {
                 log.error("failed to wait for the thread after closing the streams, something is wrong");
             } catch (InterruptedException ignored) {
@@ -90,7 +90,7 @@ public class ProcessRunner {
             }
 
             log.debug("interruption has been handled successfully");
-            throw new ProcessException(ProcessException.Code.INTERRUPTED, result);
+            throw e;
         } catch (ExecutionException e) {
             process.destroyForcibly();
             log.debug("destroyForcibly has been called on a process");
@@ -116,7 +116,10 @@ public class ProcessRunner {
         }
     }
 
-    private static void waitForProcessTermination(Process process, String consoleOutput) throws ProcessException {
+    private static void waitForProcessTermination(
+            Process process,
+            String consoleOutput
+    ) throws ProcessException, InterruptedException {
         try {
             if (!process.waitFor(5000, TimeUnit.MILLISECONDS)) {
                 log.error("process has not been finished in 5 seconds, that's weird");
@@ -126,7 +129,7 @@ public class ProcessRunner {
             }
         } catch (InterruptedException e) {
             log.debug("interrupted when waiting for process termination");
-            throw new ProcessException(ProcessException.Code.INTERRUPTED, consoleOutput);
+            throw e;
         }
     }
 

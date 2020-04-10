@@ -11,10 +11,10 @@ import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.gui.util.entities.ActionResult;
 import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
-import kirill.subtitlemerger.logic.file_info.entities.FfmpegSubtitleStream;
-import kirill.subtitlemerger.logic.file_info.entities.FileInfo;
 import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
+import kirill.subtitlemerger.logic.file_info.entities.FfmpegSubtitleStream;
+import kirill.subtitlemerger.logic.file_info.entities.FileInfo;
 import lombok.AllArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -118,12 +118,8 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
 
                 finishedSuccessfullyCount++;
                 processedCount++;
-            } catch (FfmpegException e) {
-                if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
-                    break;
-                } else {
-                    throw new IllegalStateException();
-                }
+            } catch (InterruptedException e) {
+                break;
             }
         }
 
@@ -154,7 +150,7 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
             int processedCount,
             int allFileCount,
             BackgroundRunnerManager runnerManager
-    ) throws FfmpegException {
+    ) throws InterruptedException {
         boolean result = true;
 
         List<FfmpegSubtitleStream> ffmpegStreams = new ArrayList<>();
@@ -193,11 +189,6 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
                         )
                 );
             } catch (FfmpegException e) {
-                if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
-                    setFileInfoErrorIfNecessary(failedToLoadForFile, tableFileInfo, tableWithFiles);
-                    throw e;
-                }
-
                 result = false;
                 Platform.runLater(
                         () -> tableWithFiles.failedToLoadSubtitles(
@@ -215,6 +206,9 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
                         )
                 );
                 failedToLoadForFile++;
+            } catch (InterruptedException e) {
+                setFileInfoErrorIfNecessary(failedToLoadForFile, tableFileInfo, tableWithFiles);
+                throw e;
             }
         }
 

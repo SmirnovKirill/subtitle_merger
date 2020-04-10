@@ -14,7 +14,6 @@ public class FfmpegException extends Exception {
         INCORRECT_FFPROBE_PATH,
         INCORRECT_FFMPEG_PATH,
         FAILED_TO_MOVE_TEMP_VIDEO,
-        GENERAL_ERROR,
-        INTERRUPTED
+        GENERAL_ERROR
     }
 }

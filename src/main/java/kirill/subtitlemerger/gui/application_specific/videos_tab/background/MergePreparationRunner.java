@@ -11,15 +11,15 @@ import kirill.subtitlemerger.gui.util.GuiUtils;
 import kirill.subtitlemerger.gui.util.background.BackgroundResult;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
-import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.SubRipParser;
+import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
+import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.file_info.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.file_info.entities.FileInfo;
 import kirill.subtitlemerger.logic.file_info.entities.FileWithSubtitles;
 import kirill.subtitlemerger.logic.file_info.entities.SubtitleOption;
-import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.apache.commons.io.FilenameUtils;
@@ -132,61 +132,53 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         SubtitleOption upperSubtitles = SubtitleOption.getById(tableUpperOption.getId(), fileInfo.getSubtitleOptions());
         SubtitleOption lowerSubtitles = SubtitleOption.getById(tableLowerOption.getId(), fileInfo.getSubtitleOptions());
 
-        try {
-            Set<LanguageAlpha3Code> usedLanguages = getUsedLanguages(upperSubtitles, lowerSubtitles);
+        Set<LanguageAlpha3Code> usedLanguages = getUsedLanguages(upperSubtitles, lowerSubtitles);
 
-            int failedToLoadCount = loadStreamsIfNecessary(
-                    tableFileInfo,
-                    fileInfo,
-                    usedLanguages,
-                    progressMessagePrefix,
-                    runnerManager
+        int failedToLoadCount = loadStreamsIfNecessary(
+                tableFileInfo,
+                fileInfo,
+                usedLanguages,
+                progressMessagePrefix,
+                runnerManager
+        );
+        if (failedToLoadCount != 0) {
+            return new FileMergeInfo(
+                    fileInfo.getId(),
+                    FileMergeStatus.FAILED_TO_LOAD_SUBTITLES,
+                    failedToLoadCount,
+                    upperSubtitles,
+                    lowerSubtitles,
+                    null,
+                    getFileWithResult(fileInfo, upperSubtitles, lowerSubtitles, context.getSettings())
             );
-            if (failedToLoadCount != 0) {
-                return new FileMergeInfo(
-                        fileInfo.getId(),
-                        FileMergeStatus.FAILED_TO_LOAD_SUBTITLES,
-                        failedToLoadCount,
-                        upperSubtitles,
-                        lowerSubtitles,
-                        null,
-                        getFileWithResult(fileInfo, upperSubtitles, lowerSubtitles, context.getSettings())
-                );
-            }
+        }
 
-            runnerManager.updateMessage(progressMessagePrefix + ": merging subtitles...");
-            Subtitles mergedSubtitles = SubtitleMerger.mergeSubtitles(
-                    upperSubtitles.getSubtitles(),
-                    lowerSubtitles.getSubtitles()
+        runnerManager.updateMessage(progressMessagePrefix + ": merging subtitles...");
+        Subtitles mergedSubtitles = SubtitleMerger.mergeSubtitles(
+                upperSubtitles.getSubtitles(),
+                lowerSubtitles.getSubtitles()
+        );
+
+        if (isDuplicate(mergedSubtitles, usedLanguages, fileInfo)) {
+            return new FileMergeInfo(
+                    fileInfo.getId(),
+                    FileMergeStatus.DUPLICATE,
+                    0,
+                    upperSubtitles,
+                    lowerSubtitles,
+                    mergedSubtitles,
+                    getFileWithResult(fileInfo, upperSubtitles, lowerSubtitles, context.getSettings())
             );
-
-            if (isDuplicate(mergedSubtitles, usedLanguages, fileInfo)) {
-                return new FileMergeInfo(
-                        fileInfo.getId(),
-                        FileMergeStatus.DUPLICATE,
-                        0,
-                        upperSubtitles,
-                        lowerSubtitles,
-                        mergedSubtitles,
-                        getFileWithResult(fileInfo, upperSubtitles, lowerSubtitles, context.getSettings())
-                );
-            } else {
-                return new FileMergeInfo(
-                        fileInfo.getId(),
-                        FileMergeStatus.OK,
-                        0,
-                        upperSubtitles,
-                        lowerSubtitles,
-                        mergedSubtitles,
-                        getFileWithResult(fileInfo, upperSubtitles, lowerSubtitles, context.getSettings())
-                );
-            }
-        } catch (FfmpegException e) {
-            if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
-                throw new InterruptedException();
-            } else {
-                throw new IllegalStateException();
-            }
+        } else {
+            return new FileMergeInfo(
+                    fileInfo.getId(),
+                    FileMergeStatus.OK,
+                    0,
+                    upperSubtitles,
+                    lowerSubtitles,
+                    mergedSubtitles,
+                    getFileWithResult(fileInfo, upperSubtitles, lowerSubtitles, context.getSettings())
+            );
         }
     }
 
@@ -218,7 +210,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
             Set<LanguageAlpha3Code> usedLanguages,
             String progressMessagePrefix,
             BackgroundRunnerManager runnerManager
-    ) throws FfmpegException {
+    ) throws InterruptedException {
         int failedToLoad = 0;
 
         List<FfmpegSubtitleStream> streamsToLoad = fileInfo.getFfmpegSubtitleStreams().stream()
@@ -254,10 +246,6 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                         )
                 );
             } catch (FfmpegException e) {
-                if (e.getCode() == FfmpegException.Code.INTERRUPTED) {
-                    throw e;
-                }
-
                 Platform.runLater(
                         () -> tableWithFiles.failedToLoadSubtitles(
                                 VideoTabBackgroundUtils.failedToLoadReasonFrom(e.getCode()),
