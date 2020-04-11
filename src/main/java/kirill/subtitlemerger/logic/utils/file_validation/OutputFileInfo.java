@@ -10,7 +10,5 @@ import java.io.File;
 public class OutputFileInfo {
     private File file;
 
-    private File parent;
-
     private OutputFileNotValidReason notValidReason;
 }

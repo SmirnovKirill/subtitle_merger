@@ -15,49 +15,44 @@ public class FileValidator {
 
     public static InputFileInfo getInputFileInfo(String path, InputFileValidationOptions validationOptions) {
         if (StringUtils.isBlank(path)) {
-            return new InputFileInfo(null, null, InputFileNotValidReason.PATH_IS_EMPTY, null);
+            return new InputFileInfo(null, InputFileNotValidReason.PATH_IS_EMPTY, null);
         }
 
         if (path.length() > PATH_LENGTH_LIMIT) {
-            return new InputFileInfo(null, null, InputFileNotValidReason.PATH_IS_TOO_LONG, null);
+            return new InputFileInfo(null, InputFileNotValidReason.PATH_IS_TOO_LONG, null);
         }
 
         try {
             Path.of(path);
         } catch (InvalidPathException e) {
-            return new InputFileInfo(null, null, InputFileNotValidReason.INVALID_PATH, null);
+            return new InputFileInfo(null, InputFileNotValidReason.INVALID_PATH, null);
         }
 
         File file = new File(path);
         if (file.isDirectory()) {
-            return new InputFileInfo(file, null, InputFileNotValidReason.IS_A_DIRECTORY, null);
+            return new InputFileInfo(file, InputFileNotValidReason.IS_A_DIRECTORY, null);
         }
 
         if (!file.exists()) {
-            return new InputFileInfo(file, null, InputFileNotValidReason.DOES_NOT_EXIST, null);
-        }
-
-        File parent = file.getParentFile();
-        if (parent == null || !parent.isDirectory()) {
-            return new InputFileInfo(file, null, InputFileNotValidReason.FAILED_TO_GET_PARENT, null);
+            return new InputFileInfo(file, InputFileNotValidReason.DOES_NOT_EXIST, null);
         }
 
         if (!CollectionUtils.isEmpty(validationOptions.getAllowedExtensions())) {
             String extension = FilenameUtils.getExtension(file.getAbsolutePath());
             if (StringUtils.isBlank(extension)) {
-                return new InputFileInfo(file, parent, InputFileNotValidReason.NO_EXTENSION, null);
+                return new InputFileInfo(file, InputFileNotValidReason.NO_EXTENSION, null);
             }
             if (!validationOptions.getAllowedExtensions().contains(extension)) {
-                return new InputFileInfo(file, parent, InputFileNotValidReason.NOT_ALLOWED_EXTENSION, null);
+                return new InputFileInfo(file, InputFileNotValidReason.NOT_ALLOWED_EXTENSION, null);
             }
         }
 
         if (!validationOptions.isAllowEmpty() && file.length() == 0) {
-            return new InputFileInfo(file, parent, InputFileNotValidReason.FILE_IS_EMPTY, null);
+            return new InputFileInfo(file, InputFileNotValidReason.FILE_IS_EMPTY, null);
         }
 
         if (validationOptions.getMaxAllowedSize() != null && file.length() > validationOptions.getMaxAllowedSize()) {
-            return new InputFileInfo(file, parent, InputFileNotValidReason.FILE_IS_TOO_BIG, null);
+            return new InputFileInfo(file, InputFileNotValidReason.FILE_IS_TOO_BIG, null);
         }
 
         byte[] content = null;
@@ -65,52 +60,47 @@ public class FileValidator {
             try {
                 content = FileUtils.readFileToByteArray(file);
             } catch (IOException e) {
-                return new InputFileInfo(file, parent, InputFileNotValidReason.FAILED_TO_READ_CONTENT, null);
+                return new InputFileInfo(file, InputFileNotValidReason.FAILED_TO_READ_CONTENT, null);
             }
         }
 
-        return new InputFileInfo(file, parent, null, content);
+        return new InputFileInfo(file, null, content);
     }
 
     public static OutputFileInfo getOutputFileInfo(String path, OutputFileValidationOptions validationOptions) {
         if (StringUtils.isBlank(path)) {
-            return new OutputFileInfo(null, null, OutputFileNotValidReason.PATH_IS_EMPTY);
+            return new OutputFileInfo(null, OutputFileNotValidReason.PATH_IS_EMPTY);
         }
 
         if (path.length() > PATH_LENGTH_LIMIT) {
-            return new OutputFileInfo(null, null, OutputFileNotValidReason.PATH_IS_TOO_LONG);
+            return new OutputFileInfo(null, OutputFileNotValidReason.PATH_IS_TOO_LONG);
         }
 
         try {
             Path.of(path);
         } catch (InvalidPathException e) {
-            return new OutputFileInfo(null, null, OutputFileNotValidReason.INVALID_PATH);
+            return new OutputFileInfo(null, OutputFileNotValidReason.INVALID_PATH);
         }
 
         File file = new File(path);
         if (file.isDirectory()) {
-            return new OutputFileInfo(file, null, OutputFileNotValidReason.IS_A_DIRECTORY);
-        }
-
-        File parent = file.getParentFile();
-        if (parent != null && !parent.isDirectory()) {
-            parent = null;
+            return new OutputFileInfo(file, OutputFileNotValidReason.IS_A_DIRECTORY);
         }
 
         if (!validationOptions.isAllowNonExistent() && !file.exists()) {
-            return new OutputFileInfo(file, parent, OutputFileNotValidReason.DOES_NOT_EXIST);
+            return new OutputFileInfo(file, OutputFileNotValidReason.DOES_NOT_EXIST);
         }
 
         if (!CollectionUtils.isEmpty(validationOptions.getAllowedExtensions())) {
             String extension = FilenameUtils.getExtension(file.getAbsolutePath());
             if (StringUtils.isBlank(extension)) {
-                return new OutputFileInfo(file, parent, OutputFileNotValidReason.NO_EXTENSION);
+                return new OutputFileInfo(file, OutputFileNotValidReason.NO_EXTENSION);
             }
             if (!validationOptions.getAllowedExtensions().contains(extension)) {
-                return new OutputFileInfo(file, parent, OutputFileNotValidReason.NOT_ALLOWED_EXTENSION);
+                return new OutputFileInfo(file, OutputFileNotValidReason.NOT_ALLOWED_EXTENSION);
             }
         }
 
-        return new OutputFileInfo(file, parent, null);
+        return new OutputFileInfo(file, null);
     }
 }

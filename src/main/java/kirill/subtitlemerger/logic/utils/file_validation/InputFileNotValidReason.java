@@ -6,7 +6,6 @@ public enum InputFileNotValidReason {
     INVALID_PATH,
     IS_A_DIRECTORY,
     DOES_NOT_EXIST,
-    FAILED_TO_GET_PARENT,
     NO_EXTENSION,
     NOT_ALLOWED_EXTENSION,
     FILE_IS_EMPTY,

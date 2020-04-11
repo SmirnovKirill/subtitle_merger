@@ -22,6 +22,7 @@ import kirill.subtitlemerger.logic.core.SubRipWriter;
 import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
+import kirill.subtitlemerger.logic.utils.Utils;
 import kirill.subtitlemerger.logic.utils.file_validation.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -119,8 +120,12 @@ public class SubtitleFilesTabController extends AbstractController {
         BackgroundRunnerCallback<InputFileInfo> callback = inputFileInfo -> {
             updateFilesInfo(inputFileInfo, fileType, filesInfo);
             markOtherFileNotDuplicate(fileType, filesInfo);
-            if (fileOrigin == FileOrigin.FILE_CHOOSER && inputFileInfo != null && inputFileInfo.getParent() != null) {
-                saveLastDirectoryInConfig(fileType.getExtendedFileType(), inputFileInfo.getParent(), settings);
+            if (fileOrigin == FileOrigin.FILE_CHOOSER && inputFileInfo != null) {
+                @SuppressWarnings("SimplifyOptionalCallChains")
+                File parent = Utils.getParentDirectory(inputFileInfo.getFile()).orElse(null);
+                if (parent != null) {
+                    saveLastDirectoryInConfig(fileType.getExtendedFileType(), parent, settings);
+                }
             }
             filesInfo.setMergedSubtitles(null);
 
@@ -170,7 +175,6 @@ public class SubtitleFilesTabController extends AbstractController {
                     new InputFileInfo(
                             path,
                             validatorFileInfo.getFile(),
-                            validatorFileInfo.getParent(),
                             fileOrigin,
                             isDuplicate(path, validatorFileInfo.getFile(), fileType, filesInfo),
                             validatorFileInfo.getContent(),
@@ -188,7 +192,6 @@ public class SubtitleFilesTabController extends AbstractController {
                     new InputFileInfo(
                             path,
                             validatorFileInfo.getFile(),
-                            validatorFileInfo.getParent(),
                             fileOrigin,
                             isDuplicate(path, validatorFileInfo.getFile(), fileType, filesInfo),
                             validatorFileInfo.getContent(),
@@ -202,7 +205,6 @@ public class SubtitleFilesTabController extends AbstractController {
                     new InputFileInfo(
                             path,
                             validatorFileInfo.getFile(),
-                            validatorFileInfo.getParent(),
                             fileOrigin,
                             isDuplicate(path, validatorFileInfo.getFile(), fileType, filesInfo),
                             validatorFileInfo.getContent(),
@@ -452,8 +454,6 @@ public class SubtitleFilesTabController extends AbstractController {
                 return path + " is a directory, not a file";
             case DOES_NOT_EXIST:
                 return "File '" + path + "' doesn't exist";
-            case FAILED_TO_GET_PARENT_DIRECTORY:
-                return path + ": failed to get parent directory";
             case NO_EXTENSION:
                 return "File '" + path + "' has no extension";
             case NOT_ALLOWED_EXTENSION:
@@ -516,8 +516,12 @@ public class SubtitleFilesTabController extends AbstractController {
         }
 
         filesInfo.setMergedFileInfo(mergedFileInfo);
-        if (fileOrigin == FileOrigin.FILE_CHOOSER && mergedFileInfo != null && mergedFileInfo.getParent() != null) {
-            saveLastDirectoryInConfig(ExtendedFileType.MERGED_SUBTITLES, mergedFileInfo.getParent(), settings);
+        if (fileOrigin == FileOrigin.FILE_CHOOSER && mergedFileInfo != null) {
+            @SuppressWarnings("SimplifyOptionalCallChains")
+            File parent = Utils.getParentDirectory(mergedFileInfo.getFile()).orElse(null);
+            if (parent != null) {
+                saveLastDirectoryInConfig(ExtendedFileType.MERGED_SUBTITLES, parent, settings);
+            }
         }
 
         updateScene(fileOrigin);
@@ -537,7 +541,6 @@ public class SubtitleFilesTabController extends AbstractController {
                 new MergedFileInfo(
                         path,
                         validatorFileInfo.getFile(),
-                        validatorFileInfo.getParent(),
                         fileOrigin,
                         validatorFileInfo.getNotValidReason() != null
                                 ? MergedFileInfo.from(validatorFileInfo.getNotValidReason())
@@ -837,8 +840,6 @@ public class SubtitleFilesTabController extends AbstractController {
 
         private File file;
 
-        private File parent;
-
         private FileOrigin fileOrigin;
 
         @Setter
@@ -865,8 +866,6 @@ public class SubtitleFilesTabController extends AbstractController {
                     return SubtitleFilesTabController.IncorrectInputFileReason.IS_A_DIRECTORY;
                 case DOES_NOT_EXIST:
                     return SubtitleFilesTabController.IncorrectInputFileReason.DOES_NOT_EXIST;
-                case FAILED_TO_GET_PARENT:
-                    return SubtitleFilesTabController.IncorrectInputFileReason.FAILED_TO_GET_PARENT_DIRECTORY;
                 case NO_EXTENSION:
                     return SubtitleFilesTabController.IncorrectInputFileReason.NO_EXTENSION;
                 case NOT_ALLOWED_EXTENSION:
@@ -888,7 +887,6 @@ public class SubtitleFilesTabController extends AbstractController {
         INVALID_PATH,
         IS_A_DIRECTORY,
         DOES_NOT_EXIST,
-        FAILED_TO_GET_PARENT_DIRECTORY,
         NO_EXTENSION,
         NOT_ALLOWED_EXTENSION,
         FILE_IS_EMPTY,
@@ -903,8 +901,6 @@ public class SubtitleFilesTabController extends AbstractController {
         private String path;
 
         private File file;
-
-        private File parent;
 
         private FileOrigin fileOrigin;
 

@@ -384,7 +384,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
         result.getChildren().add(generateOptionTitleLabel(subtitleOption));
 
-        //noinspection SimplifyOptionalCallChains
+        @SuppressWarnings("SimplifyOptionalCallChains")
         Button removeButton = generateRemoveButton(
                 subtitleOption,
                 fileInfo,
@@ -660,7 +660,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         result.setMinWidth(OPTION_TITLE_PANE_MIN_WIDTH);
         result.setSpacing(25);
 
-        //noinspection SimplifyOptionalCallChains
+        @SuppressWarnings("SimplifyOptionalCallChains")
         Hyperlink showHideLink = generateShowHideLink(fileInfo).orElse(null);
         if (showHideLink != null) {
             result.getChildren().add(showHideLink);

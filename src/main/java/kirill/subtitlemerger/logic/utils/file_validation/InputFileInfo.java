@@ -10,8 +10,6 @@ import java.io.File;
 public class InputFileInfo {
     private File file;
 
-    private File parent;
-
     private InputFileNotValidReason notValidReason;
 
     private byte[] content;
