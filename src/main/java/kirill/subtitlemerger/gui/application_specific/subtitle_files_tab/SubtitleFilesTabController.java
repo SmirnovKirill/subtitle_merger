@@ -7,7 +7,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
-import kirill.subtitlemerger.gui.GuiSettings;
+import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.gui.application_specific.AbstractController;
 import kirill.subtitlemerger.gui.application_specific.SubtitlePreviewController;
 import kirill.subtitlemerger.gui.util.GuiUtils;
@@ -22,6 +22,7 @@ import kirill.subtitlemerger.logic.core.SubRipWriter;
 import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
+import kirill.subtitlemerger.logic.settings.SettingException;
 import kirill.subtitlemerger.logic.utils.Utils;
 import kirill.subtitlemerger.logic.utils.file_validation.*;
 import lombok.AllArgsConstructor;
@@ -44,7 +45,7 @@ import java.util.*;
 public class SubtitleFilesTabController extends AbstractController {
     private Stage stage;
 
-    private GuiSettings settings;
+    private Settings settings;
 
     @FXML
     private Button upperChooseButton;
@@ -272,7 +273,7 @@ public class SubtitleFilesTabController extends AbstractController {
         }
     }
 
-    private static void saveLastDirectoryInConfig(ExtendedFileType fileType, File parent, GuiSettings settings) {
+    private static void saveLastDirectoryInConfig(ExtendedFileType fileType, File parent, Settings settings) {
         try {
             switch (fileType) {
                 case UPPER_SUBTITLES:
@@ -287,7 +288,7 @@ public class SubtitleFilesTabController extends AbstractController {
                 default:
                     throw new IllegalStateException();
             }
-        } catch (GuiSettings.ConfigException e) {
+        } catch (SettingException e) {
             log.warn(
                     "failed to save last directory " + parent.getAbsolutePath() + ": "
                             + ExceptionUtils.getStackTrace(e)
@@ -635,7 +636,7 @@ public class SubtitleFilesTabController extends AbstractController {
         processInputFilePath(file.getAbsolutePath(), InputFileType.UPPER_SUBTITLES, FileOrigin.FILE_CHOOSER);
     }
 
-    private static Optional<File> getInputFile(InputFileType fileType, Stage stage, GuiSettings settings) {
+    private static Optional<File> getInputFile(InputFileType fileType, Stage stage, Settings settings) {
         FileChooser fileChooser = new FileChooser();
 
         String chooserTitle;
@@ -751,7 +752,7 @@ public class SubtitleFilesTabController extends AbstractController {
         processMergedFilePath(file.getAbsolutePath(), FileOrigin.FILE_CHOOSER);
     }
 
-    private static Optional<File> getMergedFile(Stage stage, GuiSettings settings) {
+    private static Optional<File> getMergedFile(Stage stage, Settings settings) {
         FileChooser fileChooser = new FileChooser();
 
         fileChooser.setTitle("Please choose where to save the result");

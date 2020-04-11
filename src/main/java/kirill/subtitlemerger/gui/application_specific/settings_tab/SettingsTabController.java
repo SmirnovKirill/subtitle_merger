@@ -12,7 +12,6 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
-import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.util.GuiUtils;
 import kirill.subtitlemerger.gui.util.custom_controls.ActionResultLabels;
 import kirill.subtitlemerger.gui.util.entities.FileOrigin;
@@ -20,6 +19,9 @@ import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
+import kirill.subtitlemerger.logic.settings.MergeMode;
+import kirill.subtitlemerger.logic.settings.Settings;
+import kirill.subtitlemerger.logic.settings.SettingException;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -41,7 +43,7 @@ public class SettingsTabController {
 
     private GuiContext context;
 
-    private GuiSettings settings;
+    private Settings settings;
 
     @FXML
     private Pane unavailablePane;
@@ -159,7 +161,7 @@ public class SettingsTabController {
                 } else {
                     actionResultLabels.setOnlySuccess("Path to ffprobe has been saved successfully");
                 }
-            } catch (GuiSettings.ConfigException | FfmpegException e) {
+            } catch (SettingException | FfmpegException e) {
                 settings.clearFfprobeFile();
                 context.setFfprobe(null);
 
@@ -208,7 +210,7 @@ public class SettingsTabController {
                 } else {
                     actionResultLabels.setOnlySuccess("Path to ffmpeg has been saved successfully");
                 }
-            } catch (GuiSettings.ConfigException | FfmpegException e) {
+            } catch (SettingException | FfmpegException e) {
                 settings.clearFfmpegFile();
                 context.setFfmpeg(null);
 
@@ -277,7 +279,7 @@ public class SettingsTabController {
     }
 
     private void setMergeModeInitialValue() {
-        GuiSettings.MergeMode mergeMode = context.getSettings().getMergeMode();
+        MergeMode mergeMode = context.getSettings().getMergeMode();
         if (mergeMode == null) {
             return;
         }
@@ -306,20 +308,20 @@ public class SettingsTabController {
     }
 
     private void setMarkCheckBoxVisibility() {
-        GuiSettings.MergeMode mergeMode = context.getSettings().getMergeMode();
-        setMarkStreamCheckBoxVisible(mergeMode == GuiSettings.MergeMode.ORIGINAL_VIDEOS);
+        MergeMode mergeMode = context.getSettings().getMergeMode();
+        setMarkStreamCheckBoxVisible(mergeMode == MergeMode.ORIGINAL_VIDEOS);
     }
 
     private void mergeModeChanged(ObservableValue<? extends Toggle> observable, Toggle oldValue, Toggle newValue) {
         RadioButton radioButton = (RadioButton) newValue;
 
-        GuiSettings.MergeMode mergeMode;
+        MergeMode mergeMode;
         switch (radioButton.getText()) {
             case MERGE_MODE_ORIGINAL_VIDEOS:
-                mergeMode = GuiSettings.MergeMode.ORIGINAL_VIDEOS;
+                mergeMode = MergeMode.ORIGINAL_VIDEOS;
                 break;
             case MERGE_MODE_SEPARATE_SUBTITLE_FILES:
-                mergeMode = GuiSettings.MergeMode.SEPARATE_SUBTITLE_FILES;
+                mergeMode = MergeMode.SEPARATE_SUBTITLE_FILES;
                 break;
             default:
                 throw new IllegalStateException();
@@ -330,7 +332,7 @@ public class SettingsTabController {
             setMarkCheckBoxVisibility();
 
             actionResultLabels.setOnlySuccess("Merge mode has been saved successfully");
-        } catch (GuiSettings.ConfigException e) {
+        } catch (SettingException e) {
             log.error("merge mode hasn't been saved: " + ExceptionUtils.getStackTrace(e));
 
             actionResultLabels.setOnlyError("Something bad has happened, merge mode hasn't been saved");
@@ -350,7 +352,7 @@ public class SettingsTabController {
             } else {
                 actionResultLabels.setOnlySuccess("Flag has been unset successfully");
             }
-        } catch (GuiSettings.ConfigException e) {
+        } catch (SettingException e) {
             log.error("failed to save mark stream as default flag: " + ExceptionUtils.getStackTrace(e));
 
             actionResultLabels.setOnlyError("Something bad has happened, flag value hasn't been saved");
@@ -382,7 +384,7 @@ public class SettingsTabController {
         processFfprobePath(ffprobeFile.getAbsolutePath(), FileOrigin.FILE_CHOOSER);
     }
 
-    private static Optional<File> getFfprobeFile(String currentPath, Stage stage, GuiSettings settings) {
+    private static Optional<File> getFfprobeFile(String currentPath, Stage stage, Settings settings) {
         FileChooser fileChooser = new FileChooser();
 
         String title;
@@ -438,7 +440,7 @@ public class SettingsTabController {
         processFfmpegPath(ffmpegFile.getAbsolutePath(), FileOrigin.FILE_CHOOSER);
     }
 
-    private static Optional<File> getFfmpegFile(String currentPath, Stage stage, GuiSettings settings) {
+    private static Optional<File> getFfmpegFile(String currentPath, Stage stage, Settings settings) {
         FileChooser fileChooser = new FileChooser();
 
         String title;
@@ -486,7 +488,7 @@ public class SettingsTabController {
             } else {
                 actionResultLabels.setOnlySuccess("Language for upper subtitles has been saved successfully");
             }
-        } catch (GuiSettings.ConfigException e) {
+        } catch (SettingException e) {
             log.error("language for upper subtitles has not been saved: " + ExceptionUtils.getStackTrace(e));
 
             actionResultLabels.setOnlyError("Something bad has happened, language hasn't been saved");
@@ -506,7 +508,7 @@ public class SettingsTabController {
             lowerLanguageComboBox.getSelectionModel().select(oldUpperLanguage);
 
             actionResultLabels.setOnlySuccess("Languages have been swapped successfully");
-        } catch (GuiSettings.ConfigException e) {
+        } catch (SettingException e) {
             log.error("languages haven't been swapped: " + ExceptionUtils.getStackTrace(e));
 
             actionResultLabels.setOnlyError("Something bad has happened, languages haven't been swapped");
@@ -537,7 +539,7 @@ public class SettingsTabController {
             } else {
                 actionResultLabels.setOnlySuccess("Language for lower subtitles has been saved successfully");
             }
-        } catch (GuiSettings.ConfigException e) {
+        } catch (SettingException e) {
             log.error("language for lower subtitles has not been saved: " + ExceptionUtils.getStackTrace(e));
 
             actionResultLabels.setOnlyError("Something bad has happened, language hasn't been saved");

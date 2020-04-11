@@ -3,7 +3,8 @@ package kirill.subtitlemerger.gui.application_specific.videos_tab.background;
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.application.Platform;
 import kirill.subtitlemerger.gui.GuiContext;
-import kirill.subtitlemerger.gui.GuiSettings;
+import kirill.subtitlemerger.logic.settings.MergeMode;
+import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableSubtitleOption;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
@@ -287,11 +288,11 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
             FileInfo fileInfo,
             SubtitleOption upperOption,
             SubtitleOption lowerOption,
-            GuiSettings settings
+            Settings settings
     ) {
-        if (settings.getMergeMode() == GuiSettings.MergeMode.ORIGINAL_VIDEOS) {
+        if (settings.getMergeMode() == MergeMode.ORIGINAL_VIDEOS) {
             return fileInfo.getFile();
-        } else if (settings.getMergeMode() == GuiSettings.MergeMode.SEPARATE_SUBTITLE_FILES) {
+        } else if (settings.getMergeMode() == MergeMode.SEPARATE_SUBTITLE_FILES) {
             return new File(
                     FilenameUtils.removeExtension(fileInfo.getFile().getAbsolutePath())
                             + "_" + getOptionTitleForFile(upperOption) + "-" + getOptionTitleForFile(lowerOption)
@@ -316,10 +317,10 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
     private static Optional<RequiredAndAvailableSpace> getRequiredAndAvailableTempSpace(
             List<FileMergeInfo> filesMergeInfo,
             List<FileInfo> filesInfo,
-            GuiSettings settings,
+            Settings settings,
             BackgroundRunnerManager runnerManager
     ) {
-        if (settings.getMergeMode() != GuiSettings.MergeMode.ORIGINAL_VIDEOS) {
+        if (settings.getMergeMode() != MergeMode.ORIGINAL_VIDEOS) {
             return Optional.empty();
         }
 
@@ -360,10 +361,10 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
 
     private static List<File> getFilesToOverwrite(
             List<FileMergeInfo> filesMergeInfo,
-            GuiSettings settings,
+            Settings settings,
             BackgroundRunnerManager runnerManager
     ) {
-        if (settings.getMergeMode() == GuiSettings.MergeMode.ORIGINAL_VIDEOS) {
+        if (settings.getMergeMode() == MergeMode.ORIGINAL_VIDEOS) {
             return new ArrayList<>();
         }
 

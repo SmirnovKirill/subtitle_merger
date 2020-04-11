@@ -4,7 +4,7 @@ import javafx.beans.InvalidationListener;
 import javafx.fxml.FXML;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiContext;
-import kirill.subtitlemerger.gui.GuiSettings;
+import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.gui.application_specific.MainPaneController;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
@@ -36,7 +36,7 @@ public class VideosTabController {
         setActivePane(haveMissingSettings(context.getSettings()) ? ActivePane.MISSING_SETTINGS : ActivePane.CHOICE);
     }
 
-    private static boolean haveMissingSettings(GuiSettings settings) {
+    private static boolean haveMissingSettings(Settings settings) {
         return !CollectionUtils.isEmpty(settings.getMissingSettings());
     }
 

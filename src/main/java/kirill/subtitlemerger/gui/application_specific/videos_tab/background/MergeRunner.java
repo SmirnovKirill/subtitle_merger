@@ -2,7 +2,8 @@ package kirill.subtitlemerger.gui.application_specific.videos_tab.background;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.application.Platform;
-import kirill.subtitlemerger.gui.GuiSettings;
+import kirill.subtitlemerger.logic.settings.MergeMode;
+import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableSubtitleOption;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
@@ -53,7 +54,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
 
     private Ffmpeg ffmpeg;
 
-    private GuiSettings settings;
+    private Settings settings;
 
     @Override
     public Result run(BackgroundRunnerManager runnerManager) {
@@ -94,7 +95,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
                     noAgreementCount++;
                 } else {
                     try {
-                        if (settings.getMergeMode() == GuiSettings.MergeMode.ORIGINAL_VIDEOS) {
+                        if (settings.getMergeMode() == MergeMode.ORIGINAL_VIDEOS) {
                             if (directoryForTempFile == null) {
                                 String message = "Failed to get the directory for temp files";
                                 Platform.runLater(
@@ -143,7 +144,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
 
                                 finishedSuccessfullyCount++;
                             }
-                        } else if (settings.getMergeMode() == GuiSettings.MergeMode.SEPARATE_SUBTITLE_FILES) {
+                        } else if (settings.getMergeMode() == MergeMode.SEPARATE_SUBTITLE_FILES) {
                             FileUtils.writeStringToFile(
                                     fileMergeInfo.getFileWithResult(),
                                     SubRipWriter.toText(fileMergeInfo.getMergedSubtitles()),
@@ -214,9 +215,9 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
     private static boolean noPermission(
             MergePreparationRunner.FileMergeInfo fileMergeInfo,
             List<File> confirmedFilesToOverwrite,
-            GuiSettings settings
+            Settings settings
     ) {
-        if (settings.getMergeMode() != GuiSettings.MergeMode.SEPARATE_SUBTITLE_FILES) {
+        if (settings.getMergeMode() != MergeMode.SEPARATE_SUBTITLE_FILES) {
             return false;
         }
 
@@ -252,7 +253,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
             FileInfo fileInfo,
             TableFileInfo tableFileInfo,
             Ffprobe ffprobe,
-            GuiSettings settings
+            Settings settings
     ) throws FfmpegException, InterruptedException {
         //todo diagnostics
         JsonFfprobeFileInfo ffprobeInfo = ffprobe.getFileInfo(fileInfo.getFile());

@@ -2,7 +2,7 @@ package kirill.subtitlemerger.gui.application_specific.videos_tab.background;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.application.Platform;
-import kirill.subtitlemerger.gui.GuiSettings;
+import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableSubtitleOption;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
@@ -17,6 +17,8 @@ import kirill.subtitlemerger.logic.file_info.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.file_info.entities.FileInfo;
 import kirill.subtitlemerger.logic.file_info.entities.FileUnavailabilityReason;
 import kirill.subtitlemerger.logic.file_info.entities.SubtitleOptionUnavailabilityReason;
+import kirill.subtitlemerger.logic.settings.SortBy;
+import kirill.subtitlemerger.logic.settings.SortDirection;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.EnumUtils;
@@ -68,7 +70,7 @@ class VideoTabBackgroundUtils {
             boolean showFullPath,
             boolean selectByDefault,
             BackgroundRunnerManager runnerManager,
-            GuiSettings settings
+            Settings settings
     ) {
         runnerManager.setIndeterminateProgress();
 
@@ -87,7 +89,7 @@ class VideoTabBackgroundUtils {
             FileInfo fileInfo,
             boolean showFullPath,
             boolean selected,
-            GuiSettings settings
+            Settings settings
     ) {
         String pathToDisplay = showFullPath ? fileInfo.getFile().getAbsolutePath() : fileInfo.getFile().getName();
 
@@ -139,7 +141,7 @@ class VideoTabBackgroundUtils {
     static TableSubtitleOption tableSubtitleOptionFrom(
             FfmpegSubtitleStream subtitleStream,
             boolean hideableOptionsPossible,
-            GuiSettings settings
+            Settings settings
     ) {
         return new TableSubtitleOption(
                 subtitleStream.getId(),
@@ -167,7 +169,7 @@ class VideoTabBackgroundUtils {
         return result;
     }
 
-    private static boolean isOptionHideable(FfmpegSubtitleStream subtitleStream, GuiSettings settings) {
+    private static boolean isOptionHideable(FfmpegSubtitleStream subtitleStream, Settings settings) {
         LanguageAlpha3Code streamLanguage = subtitleStream.getLanguage();
 
         return streamLanguage != settings.getUpperLanguage() && streamLanguage != settings.getLowerLanguage();
@@ -205,8 +207,8 @@ class VideoTabBackgroundUtils {
 
     static List<TableFileInfo> getSortedFilesInfo(
             List<TableFileInfo> allFilesInfo,
-            GuiSettings.SortBy sortBy,
-            GuiSettings.SortDirection sortDirection,
+            SortBy sortBy,
+            SortDirection sortDirection,
             BackgroundRunnerManager runnerManager
     ) {
         runnerManager.setIndeterminateProgress();
@@ -227,7 +229,7 @@ class VideoTabBackgroundUtils {
                 throw new IllegalStateException();
         }
 
-        if (sortDirection == GuiSettings.SortDirection.DESCENDING) {
+        if (sortDirection == SortDirection.DESCENDING) {
             comparator = comparator.reversed();
         }
 

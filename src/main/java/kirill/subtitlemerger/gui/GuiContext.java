@@ -2,6 +2,7 @@ package kirill.subtitlemerger.gui;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
@@ -13,7 +14,7 @@ import lombok.extern.apachecommons.CommonsLog;
 @CommonsLog
 @Getter
 public class GuiContext {
-    private GuiSettings settings;
+    private Settings settings;
 
     @Setter
     private Ffprobe ffprobe;
@@ -25,7 +26,7 @@ public class GuiContext {
     private BooleanProperty workWithVideosInProgress = new SimpleBooleanProperty(false);
 
     public GuiContext() {
-        settings = new GuiSettings();
+        settings = new Settings();
         if (settings.getFfprobeFile() != null) {
             try {
                 ffprobe = new Ffprobe(settings.getFfprobeFile());

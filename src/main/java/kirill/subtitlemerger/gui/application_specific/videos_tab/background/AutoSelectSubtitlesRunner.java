@@ -1,7 +1,7 @@
 package kirill.subtitlemerger.gui.application_specific.videos_tab.background;
 
 import javafx.application.Platform;
-import kirill.subtitlemerger.gui.GuiSettings;
+import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableSubtitleOption;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
@@ -41,7 +41,7 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
 
     private Ffmpeg ffmpeg;
 
-    private GuiSettings settings;
+    private Settings settings;
 
     @Override
     public ActionResult run(BackgroundRunnerManager runnerManager) {
@@ -130,14 +130,14 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
         );
     }
 
-    private static List<FfmpegSubtitleStream> getMatchingUpperSubtitles(FileInfo fileInfo, GuiSettings settings) {
+    private static List<FfmpegSubtitleStream> getMatchingUpperSubtitles(FileInfo fileInfo, Settings settings) {
         return fileInfo.getFfmpegSubtitleStreams().stream()
                 .filter(stream -> stream.getUnavailabilityReason() == null)
                 .filter(stream -> stream.getLanguage() == settings.getUpperLanguage())
                 .collect(Collectors.toList());
     }
 
-    private static List<FfmpegSubtitleStream> getMatchingLowerSubtitles(FileInfo fileInfo, GuiSettings settings) {
+    private static List<FfmpegSubtitleStream> getMatchingLowerSubtitles(FileInfo fileInfo, Settings settings) {
         return fileInfo.getFfmpegSubtitleStreams().stream()
                 .filter(stream -> stream.getUnavailabilityReason() == null)
                 .filter(stream -> stream.getLanguage() == settings.getLowerLanguage())

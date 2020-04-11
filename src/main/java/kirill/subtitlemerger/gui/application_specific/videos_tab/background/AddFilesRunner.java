@@ -2,7 +2,6 @@ package kirill.subtitlemerger.gui.application_specific.videos_tab.background;
 
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
-import kirill.subtitlemerger.gui.GuiSettings;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.util.GuiUtils;
@@ -10,6 +9,8 @@ import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.gui.util.entities.ActionResult;
 import kirill.subtitlemerger.logic.file_info.entities.FileInfo;
+import kirill.subtitlemerger.logic.settings.SortBy;
+import kirill.subtitlemerger.logic.settings.SortDirection;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -30,9 +31,9 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
 
     private boolean hideUnavailable;
 
-    private GuiSettings.SortBy sortBy;
+    private SortBy sortBy;
 
-    private GuiSettings.SortDirection sortDirection;
+    private SortDirection sortDirection;
 
     private GuiContext context;
 

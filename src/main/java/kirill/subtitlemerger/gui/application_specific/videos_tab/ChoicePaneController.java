@@ -7,7 +7,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
-import kirill.subtitlemerger.gui.GuiSettings;
+import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.gui.util.GuiUtils;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
@@ -72,7 +72,7 @@ public class ChoicePaneController {
         contentPaneController.handleChosenFiles(files);
     }
 
-    private static List<File> getFiles(Stage stage, GuiSettings settings) {
+    private static List<File> getFiles(Stage stage, Settings settings) {
         FileChooser fileChooser = new FileChooser();
 
         fileChooser.setTitle("choose videos");
@@ -93,7 +93,7 @@ public class ChoicePaneController {
         contentPaneController.handleChosenDirectory(directory);
     }
 
-    private static Optional<File> getDirectory(Stage stage, GuiSettings settings) {
+    private static Optional<File> getDirectory(Stage stage, Settings settings) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
 
         directoryChooser.setTitle("choose directory with videos");

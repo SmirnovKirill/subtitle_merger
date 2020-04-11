@@ -5,7 +5,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import kirill.subtitlemerger.gui.GuiContext;
-import kirill.subtitlemerger.gui.GuiSettings;
+import kirill.subtitlemerger.logic.settings.SettingType;
 import org.apache.commons.collections4.CollectionUtils;
 
 public class MissingSettingsPaneController {
@@ -34,12 +34,12 @@ public class MissingSettingsPaneController {
             return;
         }
 
-        for (GuiSettings.SettingType settingType : context.getSettings().getMissingSettings()) {
+        for (SettingType settingType : context.getSettings().getMissingSettings()) {
             labelsPane.getChildren().add(new Label("\u2022 " + getText(settingType)));
         }
     }
 
-    private static String getText(GuiSettings.SettingType settingType) {
+    private static String getText(SettingType settingType) {
         switch (settingType) {
             case FFPROBE_PATH:
                 return "path to ffprobe";

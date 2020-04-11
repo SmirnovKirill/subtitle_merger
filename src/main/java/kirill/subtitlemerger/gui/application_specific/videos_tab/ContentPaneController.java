@@ -9,7 +9,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
-import kirill.subtitlemerger.gui.GuiSettings;
+import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.gui.application_specific.AbstractController;
 import kirill.subtitlemerger.gui.application_specific.SubtitlePreviewController;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.background.*;
@@ -28,6 +28,9 @@ import kirill.subtitlemerger.logic.file_info.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.file_info.entities.FileInfo;
 import kirill.subtitlemerger.logic.file_info.entities.FileWithSubtitles;
 import kirill.subtitlemerger.logic.file_info.entities.SubtitleOption;
+import kirill.subtitlemerger.logic.settings.SettingException;
+import kirill.subtitlemerger.logic.settings.SortBy;
+import kirill.subtitlemerger.logic.settings.SortDirection;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.EnumUtils;
@@ -213,7 +216,7 @@ public class ContentPaneController extends AbstractController {
 
             try {
                 context.getSettings().saveSortBy(sortByFrom(tableSortBy).toString());
-            } catch (GuiSettings.ConfigException e) {
+            } catch (SettingException e) {
                 log.error("failed to save sort by, should not happen: " + ExceptionUtils.getStackTrace(e));
             }
 
@@ -247,15 +250,15 @@ public class ContentPaneController extends AbstractController {
         }
     }
 
-    private static GuiSettings.SortBy sortByFrom(TableWithFiles.SortBy tableSortBy) {
-        return EnumUtils.getEnum(GuiSettings.SortBy.class, tableSortBy.toString());
+    private static SortBy sortByFrom(TableWithFiles.SortBy tableSortBy) {
+        return EnumUtils.getEnum(SortBy.class, tableSortBy.toString());
     }
 
-    private static TableWithFiles.SortBy getTableSortBy(GuiSettings settings) {
+    private static TableWithFiles.SortBy getTableSortBy(Settings settings) {
         return EnumUtils.getEnum(TableWithFiles.SortBy.class, settings.getSortBy().toString());
     }
 
-    private static TableWithFiles.SortDirection getTableSortDirection(GuiSettings settings) {
+    private static TableWithFiles.SortDirection getTableSortDirection(Settings settings) {
         return EnumUtils.getEnum(TableWithFiles.SortDirection.class, settings.getSortDirection().toString());
     }
 
@@ -266,7 +269,7 @@ public class ContentPaneController extends AbstractController {
 
             try {
                 context.getSettings().saveSortDirection(sortDirectionFrom(tableSortDirection).toString());
-            } catch (GuiSettings.ConfigException e) {
+            } catch (SettingException e) {
                 log.error("failed to save sort direction, should not happen: " + ExceptionUtils.getStackTrace(e));
             }
 
@@ -294,8 +297,8 @@ public class ContentPaneController extends AbstractController {
         });
     }
 
-    private static GuiSettings.SortDirection sortDirectionFrom(TableWithFiles.SortDirection tableSortDirection) {
-        return EnumUtils.getEnum(GuiSettings.SortDirection.class, tableSortDirection.toString());
+    private static SortDirection sortDirectionFrom(TableWithFiles.SortDirection tableSortDirection) {
+        return EnumUtils.getEnum(SortDirection.class, tableSortDirection.toString());
     }
 
     private void setRemoveSubtitleOptionHandler(TableWithFiles tableWithFiles) {
@@ -444,7 +447,7 @@ public class ContentPaneController extends AbstractController {
                 if (fileWithSubtitlesToAdd.getParent() != null) {
                     context.getSettings().saveLastDirectoryWithExternalSubtitles(fileWithSubtitlesToAdd.getParent());
                 }
-            } catch (GuiSettings.ConfigException e) {
+            } catch (SettingException e) {
                 log.error(
                         "failed to save last directory , file " + fileWithSubtitlesToAdd.getAbsolutePath() + ": "
                                 + ExceptionUtils.getStackTrace(e)
@@ -476,7 +479,7 @@ public class ContentPaneController extends AbstractController {
         });
     }
 
-    private Optional<File> getFile(FileInfo fileInfo, Stage stage, GuiSettings settings) {
+    private Optional<File> getFile(FileInfo fileInfo, Stage stage, Settings settings) {
         FileChooser fileChooser = new FileChooser();
 
         fileChooser.setTitle("Please choose a file with the subtitles");
@@ -603,7 +606,7 @@ public class ContentPaneController extends AbstractController {
     void handleChosenFiles(List<File> files) {
         try {
             context.getSettings().saveLastDirectoryWithVideos(files.get(0).getParent());
-        } catch (GuiSettings.ConfigException e) {
+        } catch (SettingException e) {
             log.error(
                     "failed to save last directory with videos, shouldn't happen: "
                             + ExceptionUtils.getStackTrace(e)
@@ -669,7 +672,7 @@ public class ContentPaneController extends AbstractController {
             if (fileOrigin == FileOrigin.FILE_CHOOSER) {
                 context.getSettings().saveLastDirectoryWithVideos(path);
             }
-        } catch (GuiSettings.ConfigException e) {
+        } catch (SettingException e) {
             log.error(
                     "failed to save last directory with videos, shouldn't happen: "
                             + ExceptionUtils.getStackTrace(e)
@@ -1068,7 +1071,7 @@ public class ContentPaneController extends AbstractController {
 
         try {
             context.getSettings().saveLastDirectoryWithVideos(filesToAdd.get(0).getParent());
-        } catch (GuiSettings.ConfigException e) {
+        } catch (SettingException e) {
             log.error(
                     "failed to save last directory with videos, that shouldn't happen: "
                             + ExceptionUtils.getStackTrace(e)
@@ -1111,7 +1114,7 @@ public class ContentPaneController extends AbstractController {
         runInBackground(backgroundRunner, callback);
     }
 
-    private static List<File> getFiles(Stage stage, GuiSettings settings) {
+    private static List<File> getFiles(Stage stage, Settings settings) {
         FileChooser fileChooser = new FileChooser();
 
         fileChooser.setTitle("choose videos");
