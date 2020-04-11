@@ -17,6 +17,7 @@ import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.util.GuiUtils;
 import kirill.subtitlemerger.gui.util.custom_controls.ActionResultLabels;
 import kirill.subtitlemerger.gui.util.entities.ActionResult;
+import kirill.subtitlemerger.logic.LogicConstants;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
@@ -249,7 +250,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         GridPane result = new GridPane();
 
         result.setHgap(30);
-        result.setGridLinesVisible(GuiConstants.DEBUG);
+        result.setGridLinesVisible(GuiConstants.GRID_LINES_VISIBLE);
 
         Label sizeTitle = new Label("size");
         Label lastModifiedTitle = new Label("last modified");
@@ -1152,7 +1153,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
             case FILE_IS_EMPTY:
                 return "File is empty";
             case FILE_IS_TOO_BIG:
-                return "File is too big (>" + GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)";
+                return "File is too big (>" + LogicConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)";
             case FAILED_TO_READ_CONTENT:
                 return "Failed to read the file";
             default:

@@ -23,7 +23,7 @@
 
     <StackPane stylesheets="/gui/application_specific/settings_tab/settingsTab.css">
         <GridPane fx:id="settingsPane" hgap="35">
-            <gridLinesVisible><GuiConstants fx:constant="DEBUG"/></gridLinesVisible>
+            <gridLinesVisible><GuiConstants fx:constant="GRID_LINES_VISIBLE"/></gridLinesVisible>
 
             <padding>
                 <Insets top="20" right="20" bottom="20" left="20"/>
@@ -95,7 +95,7 @@
             </Label>
 
             <GridPane hgap="40" vgap="15" GridPane.rowIndex="5" GridPane.columnIndex="1">
-                <gridLinesVisible><GuiConstants fx:constant="DEBUG"/></gridLinesVisible>
+                <gridLinesVisible><GuiConstants fx:constant="GRID_LINES_VISIBLE"/></gridLinesVisible>
 
                 <GridPane.margin>
                     <Insets top="40" bottom="40"/>

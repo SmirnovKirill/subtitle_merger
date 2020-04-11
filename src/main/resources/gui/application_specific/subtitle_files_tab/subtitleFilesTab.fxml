@@ -11,7 +11,7 @@
      text="Subtitle files">
     <StackPane>
         <GridPane fx:id="mainPane" hgap="35" vgap="40" stylesheets="/gui/application_specific/subtitle_files_tab/subtitleFilesTab.css">
-            <gridLinesVisible><GuiConstants fx:constant="DEBUG"/></gridLinesVisible>
+            <gridLinesVisible><GuiConstants fx:constant="GRID_LINES_VISIBLE"/></gridLinesVisible>
 
             <padding>
                 <Insets top="20" right="20" bottom="20" left="20"/>

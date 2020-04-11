@@ -7,7 +7,6 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
-import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.gui.application_specific.AbstractController;
 import kirill.subtitlemerger.gui.application_specific.SubtitlePreviewController;
 import kirill.subtitlemerger.gui.util.GuiUtils;
@@ -17,12 +16,14 @@ import kirill.subtitlemerger.gui.util.custom_controls.ActionResultLabels;
 import kirill.subtitlemerger.gui.util.entities.ActionResult;
 import kirill.subtitlemerger.gui.util.entities.FileOrigin;
 import kirill.subtitlemerger.gui.util.entities.NodeAndController;
+import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.SubRipWriter;
 import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.settings.SettingException;
+import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.logic.utils.Utils;
 import kirill.subtitlemerger.logic.utils.file_validation.*;
 import lombok.AllArgsConstructor;
@@ -160,7 +161,7 @@ public class SubtitleFilesTabController extends AbstractController {
         InputFileValidationOptions validationOptions = InputFileValidationOptions.builder()
                 .allowedExtensions( Collections.singletonList("srt"))
                 .allowEmpty(false)
-                .maxAllowedSize(GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES * 1024 * 1024L)
+                .maxAllowedSize(LogicConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES * 1024 * 1024L)
                 .loadContent(true)
                 .build();
         kirill.subtitlemerger.logic.utils.file_validation.InputFileInfo validatorFileInfo = FileValidator.getInputFileInfo(
@@ -463,7 +464,7 @@ public class SubtitleFilesTabController extends AbstractController {
                 return "File '" + path + "' is empty";
             case FILE_IS_TOO_BIG:
                 return "File '" + path + "' is too big (>"
-                        + GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)";
+                        + LogicConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)";
             case FAILED_TO_READ_CONTENT:
                 return path + ": failed to read the file";
             case INCORRECT_SUBTITLE_FORMAT:

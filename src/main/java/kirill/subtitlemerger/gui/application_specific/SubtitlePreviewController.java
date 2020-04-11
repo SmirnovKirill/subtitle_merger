@@ -154,7 +154,7 @@ public class SubtitlePreviewController extends AbstractController {
         GuiUtils.setVisibleAndManaged(mergedUpperPane, false);
         GuiUtils.setVisibleAndManaged(mergedLowerPane, false);
         encodingComboBox.setConverter(CHARSET_STRING_CONVERTER);
-        encodingComboBox.getItems().setAll(GuiConstants.SUPPORTED_ENCODINGS);
+        encodingComboBox.getItems().setAll(LogicConstants.SUPPORTED_ENCODINGS);
         encodingComboBox.getSelectionModel().select(originalEncoding);
         listView.setSelectionModel(new NoSelectionModel<>());
         GuiUtils.setVisibleAndManaged(okPane, false);
