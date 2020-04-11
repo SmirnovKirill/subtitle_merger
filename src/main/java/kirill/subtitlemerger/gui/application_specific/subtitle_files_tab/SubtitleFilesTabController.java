@@ -17,15 +17,12 @@ import kirill.subtitlemerger.gui.util.custom_controls.ActionResultLabels;
 import kirill.subtitlemerger.gui.util.entities.ActionResult;
 import kirill.subtitlemerger.gui.util.entities.FileOrigin;
 import kirill.subtitlemerger.gui.util.entities.NodeAndController;
-import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.SubRipWriter;
+import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
-import kirill.subtitlemerger.logic.utils.file_validation.FileValidator;
-import kirill.subtitlemerger.logic.utils.file_validation.OutputFileNotValidReason;
-import kirill.subtitlemerger.logic.utils.file_validation.InputFileNotValidReason;
-import kirill.subtitlemerger.logic.utils.file_validation.OutputFileInfo;
+import kirill.subtitlemerger.logic.utils.file_validation.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -154,12 +151,15 @@ public class SubtitleFilesTabController extends AbstractController {
             FileOrigin fileOrigin,
             FilesInfo filesInfo
     ) {
+        InputFileValidationOptions validationOptions = InputFileValidationOptions.builder()
+                .allowedExtensions( Collections.singletonList("srt"))
+                .allowEmpty(false)
+                .maxAllowedSize(GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES * 1024 * 1024L)
+                .loadContent(true)
+                .build();
         kirill.subtitlemerger.logic.utils.file_validation.InputFileInfo validatorFileInfo = FileValidator.getInputFileInfo(
                 path,
-                Collections.singletonList("srt"),
-                false,
-                GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES * 1024 * 1024,
-                true
+                validationOptions
         );
         if (validatorFileInfo.getNotValidReason() == InputFileNotValidReason.PATH_IS_EMPTY) {
             return Optional.empty();
@@ -524,11 +524,11 @@ public class SubtitleFilesTabController extends AbstractController {
     }
 
     private static Optional<MergedFileInfo> getMergedFileInfo(String path, FileOrigin fileOrigin) {
-        OutputFileInfo validatorFileInfo = FileValidator.getOutputFileInfo(
-                path,
+        OutputFileValidationOptions validationOptions = new OutputFileValidationOptions(
                 Collections.singletonList("srt"),
                 true
         );
+        OutputFileInfo validatorFileInfo = FileValidator.getOutputFileInfo(path, validationOptions);
         if (validatorFileInfo.getNotValidReason() == OutputFileNotValidReason.PATH_IS_EMPTY) {
             return Optional.empty();
         }

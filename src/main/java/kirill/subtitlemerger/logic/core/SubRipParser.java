@@ -6,14 +6,12 @@ import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.LocalTime;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@CommonsLog
 public class SubRipParser {
     public static Subtitles from(String text) throws SubtitleFormatException {
         List<Subtitle> result = new ArrayList<>();

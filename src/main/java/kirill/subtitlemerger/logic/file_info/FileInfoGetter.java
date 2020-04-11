@@ -13,6 +13,7 @@ import kirill.subtitlemerger.logic.file_info.entities.SubtitleOptionUnavailabili
 import kirill.subtitlemerger.logic.utils.file_validation.FileValidator;
 import kirill.subtitlemerger.logic.utils.file_validation.InputFileInfo;
 import kirill.subtitlemerger.logic.utils.file_validation.InputFileNotValidReason;
+import kirill.subtitlemerger.logic.utils.file_validation.InputFileValidationOptions;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -27,13 +28,11 @@ import static kirill.subtitlemerger.logic.file_info.entities.FileUnavailabilityR
 @CommonsLog
 public class FileInfoGetter {
     public static FileInfo getWithoutLoadingSubtitles(File file, List<String> allowedExtensions, Ffprobe ffprobe) {
-        InputFileInfo inputFileInfo = FileValidator.getInputFileInfo(
-                file.getAbsolutePath(),
-                allowedExtensions,
-                true,
-                Long.MAX_VALUE,
-                false
-        );
+        InputFileValidationOptions validationOptions = InputFileValidationOptions.builder()
+                .allowedExtensions(allowedExtensions)
+                .allowEmpty(true)
+                .build();
+        InputFileInfo inputFileInfo = FileValidator.getInputFileInfo(file.getAbsolutePath(), validationOptions);
         if (inputFileInfo.getNotValidReason() == InputFileNotValidReason.NO_EXTENSION) {
             return new FileInfo(file, null, NO_EXTENSION, null, null);
         } else if (inputFileInfo.getNotValidReason() == InputFileNotValidReason.NOT_ALLOWED_EXTENSION) {

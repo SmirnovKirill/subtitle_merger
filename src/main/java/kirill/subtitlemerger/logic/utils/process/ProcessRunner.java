@@ -20,8 +20,8 @@ import java.util.concurrent.TimeoutException;
 public class ProcessRunner {
     /**
      * This is a helper method to run native processes. The main feature of this class is work with the console output.
-     * Output is handled in a separate thread so the process can be properly interrupted. If output is being read in
-     * the main thread, interruption will have no effect because Reader::read method ignores interruptions.
+     * Output is handled in a separate thread so the process can be properly interrupted. Otherwise if output is being
+     * read in the main thread, interruption will have no effect because Reader::read method ignores interruptions.
      *
      * @param arguments command line arguments to start the process
      * @return string containing the console output (standard and error streams are combined, it's convenient
@@ -72,35 +72,32 @@ public class ProcessRunner {
             result = task.get();
             return result;
         } catch (InterruptedException e) {
-            log.debug("interrupted when waiting for the console output");
+            log.info("process is going to be terminated because of the interruption");
 
             closeQuietly(process.getInputStream());
             closeQuietly(process.getErrorStream());
             process.destroyForcibly();
-            log.debug("destroyForcibly has been called on a process");
 
             try {
-                task.get(500, TimeUnit.MILLISECONDS);
+                task.get(1000, TimeUnit.MILLISECONDS);
             } catch (TimeoutException timeoutException) {
                 log.error("failed to wait for the thread after closing the streams, something is wrong");
             } catch (InterruptedException ignored) {
-                //We can ignore this exception because we already handle InterruptedException.
+                /* We can ignore this exception because we already handle InterruptedException. */
             } catch (ExecutionException executionException) {
-                log.warn("failed to read console output: " + ExceptionUtils.getStackTrace(executionException));
+                log.warn("failed to read the console output: " + ExceptionUtils.getStackTrace(executionException));
             }
 
-            log.debug("interruption has been handled successfully");
             throw e;
         } catch (ExecutionException e) {
             process.destroyForcibly();
-            log.debug("destroyForcibly has been called on a process");
 
             Throwable cause = e.getCause();
             if (cause instanceof ProcessException) {
                 throw (ProcessException) cause;
             }
 
-            log.error("unknown execution exception: " + ExceptionUtils.getStackTrace(cause));
+            log.error("process has failed for an unexpected reason: " + ExceptionUtils.getStackTrace(cause));
             throw new ProcessException(ProcessException.Code.FAILED_TO_READ_OUTPUT, null);
         } catch (IOException e) {
             log.warn("failed to close the streams: " + ExceptionUtils.getStackTrace(e));
@@ -112,7 +109,7 @@ public class ProcessRunner {
         try {
             inputStream.close();
         } catch (IOException e) {
-            log.warn("failed to close stream: " + ExceptionUtils.getStackTrace(e));
+            log.warn("failed to close the stream: " + ExceptionUtils.getStackTrace(e));
         }
     }
 
@@ -122,13 +119,12 @@ public class ProcessRunner {
     ) throws ProcessException, InterruptedException {
         try {
             if (!process.waitFor(5000, TimeUnit.MILLISECONDS)) {
-                log.error("process has not been finished in 5 seconds, that's weird");
+                log.error("process has not finished in 5 seconds after producing all the output, that's weird");
                 process.destroyForcibly();
-                log.debug("destroyForcibly has been called on a process");
                 throw new ProcessException(ProcessException.Code.PROCESS_KILLED, consoleOutput);
             }
         } catch (InterruptedException e) {
-            log.debug("interrupted when waiting for process termination");
+            log.info("interrupted while waiting for the process termination");
             throw e;
         }
     }

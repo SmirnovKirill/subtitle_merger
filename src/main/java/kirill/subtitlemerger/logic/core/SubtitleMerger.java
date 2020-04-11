@@ -6,7 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.joda.time.LocalTime;
 
@@ -15,7 +14,6 @@ import java.util.*;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
-@CommonsLog
 public class SubtitleMerger {
     public static Subtitles mergeSubtitles(
             Subtitles upperSubtitles,

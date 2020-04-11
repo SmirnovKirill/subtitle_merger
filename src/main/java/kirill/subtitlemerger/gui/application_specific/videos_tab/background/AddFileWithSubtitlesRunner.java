@@ -7,11 +7,12 @@ import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
-import kirill.subtitlemerger.logic.utils.file_validation.FileValidator;
-import kirill.subtitlemerger.logic.utils.file_validation.InputFileNotValidReason;
-import kirill.subtitlemerger.logic.utils.file_validation.InputFileInfo;
 import kirill.subtitlemerger.logic.file_info.entities.FileInfo;
 import kirill.subtitlemerger.logic.file_info.entities.FileWithSubtitles;
+import kirill.subtitlemerger.logic.utils.file_validation.FileValidator;
+import kirill.subtitlemerger.logic.utils.file_validation.InputFileInfo;
+import kirill.subtitlemerger.logic.utils.file_validation.InputFileNotValidReason;
+import kirill.subtitlemerger.logic.utils.file_validation.InputFileValidationOptions;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
@@ -36,12 +37,15 @@ public class AddFileWithSubtitlesRunner implements BackgroundRunner<AddFileWithS
         runnerManager.setIndeterminateProgress();
         runnerManager.updateMessage("Processing file " + fileWithSubtitlesToAdd.getAbsolutePath() + "...");
 
+        InputFileValidationOptions validationOptions = InputFileValidationOptions.builder()
+                .allowedExtensions( Collections.singletonList("srt"))
+                .allowEmpty(false)
+                .maxAllowedSize(GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES * 1024 * 1024L)
+                .loadContent(true)
+                .build();
         InputFileInfo validatorFileInfo = FileValidator.getInputFileInfo(
                 fileWithSubtitlesToAdd.getAbsolutePath(),
-                Collections.singletonList("srt"),
-                false,
-                GuiConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES * 1024 * 1024,
-                true
+                validationOptions
         );
 
         if (validatorFileInfo.getNotValidReason() != null) {
