@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.logic.file_info;
+package kirill.subtitlemerger.logic.files;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
@@ -7,9 +7,9 @@ import kirill.subtitlemerger.logic.ffmpeg.SubtitleFormat;
 import kirill.subtitlemerger.logic.ffmpeg.VideoFormat;
 import kirill.subtitlemerger.logic.ffmpeg.json.JsonFfprobeFileInfo;
 import kirill.subtitlemerger.logic.ffmpeg.json.JsonStream;
-import kirill.subtitlemerger.logic.file_info.entities.FfmpegSubtitleStream;
-import kirill.subtitlemerger.logic.file_info.entities.FileInfo;
-import kirill.subtitlemerger.logic.file_info.entities.SubtitleOptionUnavailabilityReason;
+import kirill.subtitlemerger.logic.files.entities.FfmpegSubtitleStream;
+import kirill.subtitlemerger.logic.files.entities.FileInfo;
+import kirill.subtitlemerger.logic.files.entities.SubtitleOptionUnavailabilityReason;
 import kirill.subtitlemerger.logic.utils.file_validation.FileValidator;
 import kirill.subtitlemerger.logic.utils.file_validation.InputFileInfo;
 import kirill.subtitlemerger.logic.utils.file_validation.InputFileNotValidReason;
@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static kirill.subtitlemerger.logic.file_info.entities.FileUnavailabilityReason.*;
+import static kirill.subtitlemerger.logic.files.entities.FileUnavailabilityReason.*;
 
 @CommonsLog
 public class FileInfoGetter {

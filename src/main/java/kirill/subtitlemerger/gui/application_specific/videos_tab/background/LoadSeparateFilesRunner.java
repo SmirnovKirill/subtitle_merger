@@ -4,7 +4,7 @@ import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
-import kirill.subtitlemerger.logic.file_info.entities.FileInfo;
+import kirill.subtitlemerger.logic.files.entities.FileInfo;
 import kirill.subtitlemerger.logic.settings.SortBy;
 import kirill.subtitlemerger.logic.settings.SortDirection;
 import lombok.AllArgsConstructor;

@@ -10,7 +10,7 @@ import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.logic.settings.SortBy;
 import kirill.subtitlemerger.logic.settings.SortDirection;
 import kirill.subtitlemerger.logic.utils.file_validation.FileValidator;
-import kirill.subtitlemerger.logic.file_info.entities.FileInfo;
+import kirill.subtitlemerger.logic.files.entities.FileInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;

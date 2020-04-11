@@ -8,7 +8,7 @@ import kirill.subtitlemerger.gui.util.GuiUtils;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.gui.util.entities.ActionResult;
-import kirill.subtitlemerger.logic.file_info.entities.FileInfo;
+import kirill.subtitlemerger.logic.files.entities.FileInfo;
 import kirill.subtitlemerger.logic.settings.SortBy;
 import kirill.subtitlemerger.logic.settings.SortDirection;
 import lombok.AllArgsConstructor;

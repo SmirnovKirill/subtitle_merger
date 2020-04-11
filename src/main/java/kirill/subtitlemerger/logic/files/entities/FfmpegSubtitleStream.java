@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.logic.file_info.entities;
+package kirill.subtitlemerger.logic.files.entities;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
