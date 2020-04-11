@@ -47,7 +47,7 @@ class VideoTabBackgroundUtils {
 
             if (file.isFile() && file.exists()) {
                 result.add(
-                        FileInfoGetter.getFileInfoWithoutSubtitles(
+                        FileInfoGetter.getWithoutLoadingSubtitles(
                                 file,
                                 LogicConstants.ALLOWED_VIDEO_EXTENSIONS,
                                 ffprobe
@@ -147,8 +147,8 @@ class VideoTabBackgroundUtils {
                 hideableOptionsPossible && isOptionHideable(subtitleStream, settings),
                 false,
                 false,
-                subtitleStream.getSubtitles() != null
-                        ? subtitleStream.getSubtitles().getTextSize()
+                subtitleStream.getSize() != null
+                        ? subtitleStream.getSize()
                         : TableSubtitleOption.UNKNOWN_SIZE,
                 null,
                 tableUnavailabilityReasonFrom(subtitleStream.getUnavailabilityReason()),

@@ -15,6 +15,8 @@ public abstract class SubtitleOption {
 
     protected Subtitles subtitles;
 
+    protected Integer size;
+
     protected Charset encoding;
 
     /**

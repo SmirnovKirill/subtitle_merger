@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult> {
     private static final Comparator<FfmpegSubtitleStream> STREAM_COMPARATOR = Comparator.comparing(
-            (FfmpegSubtitleStream stream) -> stream.getSubtitles().getTextSize()
+            FfmpegSubtitleStream::getSize
     ).reversed();
 
     private List<TableFileInfo> displayedTableFilesInfo;
@@ -179,11 +179,14 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
 
             try {
                 String subtitleText = ffmpeg.getSubtitleText(ffmpegStream.getFfmpegIndex(), fileInfo.getFile());
-                ffmpegStream.setSubtitles(SubRipParser.from(subtitleText, ffmpegStream.getLanguage()));
+                ffmpegStream.setSubtitlesAndSize(
+                        SubRipParser.from(subtitleText, ffmpegStream.getLanguage()),
+                        subtitleText.getBytes().length
+                );
 
                 Platform.runLater(
                         () -> tableWithFiles.subtitlesLoadedSuccessfully(
-                                ffmpegStream.getSubtitles().getTextSize(),
+                                ffmpegStream.getSize(),
                                 tableSubtitleOption,
                                 tableFileInfo
                         )

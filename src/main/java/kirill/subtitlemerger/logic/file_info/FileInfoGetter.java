@@ -3,7 +3,7 @@ package kirill.subtitlemerger.logic.file_info;
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
-import kirill.subtitlemerger.logic.ffmpeg.SubtitleCodec;
+import kirill.subtitlemerger.logic.ffmpeg.SubtitleFormat;
 import kirill.subtitlemerger.logic.ffmpeg.VideoFormat;
 import kirill.subtitlemerger.logic.ffmpeg.json.JsonFfprobeFileInfo;
 import kirill.subtitlemerger.logic.ffmpeg.json.JsonStream;
@@ -26,7 +26,7 @@ import static kirill.subtitlemerger.logic.file_info.entities.FileUnavailabilityR
 
 @CommonsLog
 public class FileInfoGetter {
-    public static FileInfo getFileInfoWithoutSubtitles(File file, List<String> allowedExtensions, Ffprobe ffprobe) {
+    public static FileInfo getWithoutLoadingSubtitles(File file, List<String> allowedExtensions, Ffprobe ffprobe) {
         InputFileInfo inputFileInfo = FileValidator.getInputFileInfo(
                 file.getAbsolutePath(),
                 allowedExtensions,
@@ -53,14 +53,14 @@ public class FileInfoGetter {
             throw new IllegalStateException();
         }
 
-        VideoFormat videoFormat = VideoFormat.from(ffprobeInfo.getFormat().getFormatName()).orElse(null);
-        if (videoFormat == null) {
+        VideoFormat format = VideoFormat.from(ffprobeInfo.getFormat().getFormatName()).orElse(null);
+        if (format == null) {
             return new FileInfo(file, null, NOT_ALLOWED_FORMAT, null, null);
         }
 
         return new FileInfo(
                 file,
-                videoFormat,
+                format,
                 null,
                 new ArrayList<>(getSubtitleOptions(ffprobeInfo)),
                 null
@@ -75,10 +75,10 @@ public class FileInfoGetter {
                 continue;
             }
 
-            SubtitleCodec codec = SubtitleCodec.from(stream.getCodecName()).orElse(null);
+            SubtitleFormat format = SubtitleFormat.from(stream.getCodecName()).orElse(null);
 
             SubtitleOptionUnavailabilityReason unavailabilityReason = null;
-            if (codec != SubtitleCodec.SUBRIP) {
+            if (format != SubtitleFormat.SUBRIP) {
                 unavailabilityReason = SubtitleOptionUnavailabilityReason.NOT_ALLOWED_FORMAT;
             }
 
@@ -86,10 +86,11 @@ public class FileInfoGetter {
                     new FfmpegSubtitleStream(
                             stream.getIndex(),
                             null,
+                            null,
                             unavailabilityReason,
                             false,
                             false,
-                            codec,
+                            format,
                             getLanguage(stream).orElse(null),
                             getTitle(stream).orElse(null),
                             isDefaultDisposition(stream)

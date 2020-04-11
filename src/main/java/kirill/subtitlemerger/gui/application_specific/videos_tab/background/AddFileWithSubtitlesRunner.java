@@ -66,6 +66,7 @@ public class AddFileWithSubtitlesRunner implements BackgroundRunner<AddFileWithS
                 new FileWithSubtitles(
                         fileWithSubtitlesToAdd,
                         subtitles,
+                        validatorFileInfo.getContent().length,
                         StandardCharsets.UTF_8,
                         false,
                         false,

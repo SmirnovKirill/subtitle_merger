@@ -2,7 +2,7 @@ package kirill.subtitlemerger.logic.file_info.entities;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
-import kirill.subtitlemerger.logic.ffmpeg.SubtitleCodec;
+import kirill.subtitlemerger.logic.ffmpeg.SubtitleFormat;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
 
@@ -18,7 +18,7 @@ public class FfmpegSubtitleStream extends SubtitleOption {
      */
     private int ffmpegIndex;
 
-    private SubtitleCodec codec;
+    private SubtitleFormat format;
 
     private LanguageAlpha3Code language;
 
@@ -30,10 +30,11 @@ public class FfmpegSubtitleStream extends SubtitleOption {
     public FfmpegSubtitleStream(
             int ffmpegIndex,
             Subtitles subtitles,
+            Integer size,
             SubtitleOptionUnavailabilityReason unavailabilityReason,
             boolean selectedAsUpper,
             boolean selectedAsLower,
-            SubtitleCodec codec,
+            SubtitleFormat format,
             LanguageAlpha3Code language,
             String title,
             boolean defaultDisposition
@@ -41,6 +42,7 @@ public class FfmpegSubtitleStream extends SubtitleOption {
         super(
                 "ffmpeg-" + ffmpegIndex,
                 subtitles,
+                size,
                 StandardCharsets.UTF_8,
                 unavailabilityReason,
                 selectedAsUpper,
@@ -48,13 +50,14 @@ public class FfmpegSubtitleStream extends SubtitleOption {
         );
 
         this.ffmpegIndex = ffmpegIndex;
-        this.codec = codec;
+        this.format = format;
         this.language = language;
         this.title = title;
         this.defaultDisposition = defaultDisposition;
     }
 
-    public void setSubtitles(Subtitles subtitles) {
+    public void setSubtitlesAndSize(Subtitles subtitles, int size) {
         this.subtitles = subtitles;
+        this.size = size;
     }
 }

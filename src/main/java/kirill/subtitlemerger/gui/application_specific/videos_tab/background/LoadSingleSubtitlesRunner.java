@@ -47,11 +47,14 @@ public class LoadSingleSubtitlesRunner implements BackgroundRunner<ActionResult>
 
         try {
             String subtitleText = ffmpeg.getSubtitleText(ffmpegStream.getFfmpegIndex(), fileInfo.getFile());
-            ffmpegStream.setSubtitles(SubRipParser.from(subtitleText, ffmpegStream.getLanguage()));
+            ffmpegStream.setSubtitlesAndSize(
+                    SubRipParser.from(subtitleText, ffmpegStream.getLanguage()),
+                    subtitleText.getBytes().length
+            );
 
             Platform.runLater(
                     () -> tableWithFiles.subtitlesLoadedSuccessfully(
-                            ffmpegStream.getSubtitles().getTextSize(),
+                            ffmpegStream.getSize(),
                             tableSubtitleOption,
                             tableFileInfo
                     )

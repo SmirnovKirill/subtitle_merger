@@ -15,6 +15,7 @@ public class FileWithSubtitles extends SubtitleOption {
     public FileWithSubtitles(
             File file,
             Subtitles subtitles,
+            int size,
             Charset encoding,
             boolean selectedAsUpper,
             boolean selectedAsLower,
@@ -23,6 +24,7 @@ public class FileWithSubtitles extends SubtitleOption {
         super(
                 "file-" + file.getAbsolutePath(),
                 subtitles,
+                size,
                 encoding,
                 null,
                 selectedAsUpper,

@@ -236,11 +236,14 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                         ffmpegStream.getFfmpegIndex(),
                         fileInfo.getFile()
                 );
-                ffmpegStream.setSubtitles(SubRipParser.from(subtitleText, ffmpegStream.getLanguage()));
+                ffmpegStream.setSubtitlesAndSize(
+                        SubRipParser.from(subtitleText, ffmpegStream.getLanguage()),
+                        subtitleText.getBytes().length
+                );
 
                 Platform.runLater(
                         () -> tableWithFiles.subtitlesLoadedSuccessfully(
-                                ffmpegStream.getSubtitles().getTextSize(),
+                                ffmpegStream.getSize(),
                                 tableSubtitleOption,
                                 tableFileInfo
                         )
@@ -270,6 +273,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
     private static boolean isDuplicate(Subtitles merged, Set<LanguageAlpha3Code> usedLanguages, FileInfo fileInfo) {
         for (FfmpegSubtitleStream subtitleStream : fileInfo.getFfmpegSubtitleStreams()) {
             if (usedLanguages.contains(subtitleStream.getLanguage())) {
+                //todo !!!
                 if (Objects.equals(merged, subtitleStream.getSubtitles())) {
                     return true;
                 }

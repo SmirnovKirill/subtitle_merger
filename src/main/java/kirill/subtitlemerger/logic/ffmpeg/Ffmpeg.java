@@ -1,12 +1,7 @@
 package kirill.subtitlemerger.logic.ffmpeg;
 
-import com.neovisionaries.i18n.LanguageAlpha3Code;
-import kirill.subtitlemerger.logic.core.SubRipWriter;
-import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.utils.process.ProcessException;
 import kirill.subtitlemerger.logic.utils.process.ProcessRunner;
-import kirill.subtitlemerger.logic.file_info.entities.FfmpegSubtitleStream;
-import kirill.subtitlemerger.logic.file_info.entities.FileInfo;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
@@ -101,26 +96,20 @@ public class Ffmpeg {
      * Synchronized because we use one temporary file with subtitles.
      */
     public synchronized void injectSubtitlesToFile(
-            Subtitles subtitles,
-            String title,
-            LanguageAlpha3Code mainLanguage,
-            boolean makeDefault,
-            File directoryForTempFile,
-            FileInfo fileInfo
+            FfmpegInjectInfo injectInfo
     ) throws FfmpegException, InterruptedException {
         /*
          * Ffmpeg can't add subtitles on the fly. So we need to add subtitles to some temporary file
          * and then rename it. Later we'll also check that the size of the new file is bigger than the size of the
-         * original one because it's important not to spoil the original video file, it may be valuable.
+         * original one because it's important not to spoil the original file with video.
          */
-        File outputTemp = new File(directoryForTempFile, "temp_" + fileInfo.getFile().getName());
+        File outputTemp = new File(
+                injectInfo.getDirectoryForTempFile(),
+                "temp_" + injectInfo.getFileWithVideo().getName()
+        );
 
         try {
-            FileUtils.writeStringToFile(
-                    TEMP_SUBTITLE_FILE,
-                    SubRipWriter.toText(subtitles),
-                    StandardCharsets.UTF_8
-            );
+            FileUtils.writeStringToFile(TEMP_SUBTITLE_FILE, injectInfo.getSubtitles(), StandardCharsets.UTF_8);
         } catch (IOException e) {
             log.warn("failed to write merged subtitles to the temp file: " + ExceptionUtils.getStackTrace(e));
             throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, null);
@@ -129,13 +118,7 @@ public class Ffmpeg {
         try {
             String consoleOutput;
             try {
-                List<String> arguments = getArgumentsInjectToFile(
-                        title,
-                        mainLanguage,
-                        makeDefault,
-                        fileInfo,
-                        outputTemp
-                );
+                List<String> arguments = getArgumentsInjectToFile(injectInfo, outputTemp);
 
                 log.debug("run ffmpeg " + StringUtils.join(arguments, " "));
                 consoleOutput = ProcessRunner.run(arguments);
@@ -145,12 +128,12 @@ public class Ffmpeg {
                 throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, e.getConsoleOutput());
             }
 
-            if (outputTemp.length() <= fileInfo.getFile().length()) {
+            if (outputTemp.length() <= injectInfo.getFileWithVideo().length()) {
                 log.error("resulting file size is less than the original one");
                 throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, consoleOutput);
             }
 
-            overwriteOriginalVideo(outputTemp, fileInfo.getFile(), consoleOutput);
+            overwriteOriginalVideo(outputTemp, injectInfo.getFileWithVideo(), consoleOutput);
         } finally {
             if (outputTemp.exists() && !outputTemp.delete()) {
                 log.warn("failed to delete temp video file " + outputTemp.getAbsolutePath());
@@ -158,16 +141,8 @@ public class Ffmpeg {
         }
     }
 
-    private List<String> getArgumentsInjectToFile(
-            String title,
-            LanguageAlpha3Code mainLanguage,
-            boolean makeDefault,
-            FileInfo fileInfo,
-            File outputTemp
-    ) {
+    private List<String> getArgumentsInjectToFile(FfmpegInjectInfo injectInfo, File outputTemp) {
         List<String> result = new ArrayList<>();
-
-        int newStreamIndex = fileInfo.getFfmpegSubtitleStreams().size();
 
         result.add(ffmpegFile.getAbsolutePath());
         result.add("-y");
@@ -179,7 +154,7 @@ public class Ffmpeg {
          */
         result.add("-copy_unknown");
 
-        result.addAll(Arrays.asList("-i", fileInfo.getFile().getAbsolutePath()));
+        result.addAll(Arrays.asList("-i", injectInfo.getFileWithVideo().getAbsolutePath()));
         result.addAll(Arrays.asList("-i", Ffmpeg.TEMP_SUBTITLE_FILE.getAbsolutePath()));
         result.addAll(Arrays.asList("-c", "copy"));
 
@@ -189,22 +164,22 @@ public class Ffmpeg {
          */
         result.addAll(Arrays.asList("-max_interleave_delta", "0"));
 
-        if (mainLanguage != null) {
-            result.addAll(Arrays.asList("-metadata:s:s:" + newStreamIndex, "language=" + mainLanguage));
+        if (injectInfo.getLanguage() != null) {
+            result.add("-metadata:s:s:" + injectInfo.getNewStreamIndex());
+            result.add("language=" + injectInfo.getLanguage());
         }
 
-        result.addAll(Arrays.asList("-metadata:s:s:" + newStreamIndex, "title=" + title));
+        result.add("-metadata:s:s:" + injectInfo.getNewStreamIndex());
+        result.add("title=" + injectInfo.getTitle());
 
-        if (makeDefault) {
-            if (!CollectionUtils.isEmpty(fileInfo.getFfmpegSubtitleStreams())) {
-                for (FfmpegSubtitleStream ffmpegStream : fileInfo.getFfmpegSubtitleStreams()) {
-                    if (ffmpegStream.isDefaultDisposition()) {
-                        result.addAll(Arrays.asList("-disposition:" + ffmpegStream.getFfmpegIndex(), "0"));
-                    }
+        if (injectInfo.isDefaultDisposition()) {
+            if (!CollectionUtils.isEmpty(injectInfo.getDefaultDispositionStreamIndices())) {
+                for (int index : injectInfo.getDefaultDispositionStreamIndices()) {
+                    result.addAll(Arrays.asList("-disposition:" + index, "0"));
                 }
             }
 
-            result.addAll(Arrays.asList("-disposition:s:" + newStreamIndex, "default"));
+            result.addAll(Arrays.asList("-disposition:s:" + injectInfo.getNewStreamIndex(), "default"));
         }
 
         result.addAll(Arrays.asList("-map", "0"));
@@ -216,30 +191,30 @@ public class Ffmpeg {
 
     private static void overwriteOriginalVideo(
             File outputTemp,
-            File videoFile,
+            File fileWithVideo,
             String consoleOutput
     ) throws FfmpegException {
         /*
          * Save this flag here to restore it at the end of the method. Because otherwise if the file has had only
          * read access initially we will give it write access as well before renaming, and leave it like that.
          */
-        boolean originallyWritable = videoFile.canWrite();
+        boolean originallyWritable = fileWithVideo.canWrite();
 
-        if (!videoFile.setWritable(true, true)) {
-            log.warn("failed to make video file " + videoFile.getAbsolutePath() + " writable");
-            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, consoleOutput);
+        if (!fileWithVideo.setWritable(true, true)) {
+            log.warn("failed to make video file " + fileWithVideo.getAbsolutePath() + " writable");
+            throw new FfmpegException(FfmpegException.Code.FAILED_TO_MOVE_TEMP_VIDEO, consoleOutput);
         }
 
         try {
-            Files.move(outputTemp.toPath(), videoFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            Files.move(outputTemp.toPath(), fileWithVideo.toPath(), StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             log.warn("failed to move temp video: " + ExceptionUtils.getStackTrace(e));
             throw new FfmpegException(FfmpegException.Code.FAILED_TO_MOVE_TEMP_VIDEO, consoleOutput);
         }
 
         if (!originallyWritable) {
-            if (!videoFile.setWritable(false, true)) {
-                log.warn("failed to make video file " + videoFile.getAbsolutePath() + " not writable");
+            if (!fileWithVideo.setWritable(false, true)) {
+                log.warn("failed to make video file " + fileWithVideo.getAbsolutePath() + " not writable");
             }
         }
     }

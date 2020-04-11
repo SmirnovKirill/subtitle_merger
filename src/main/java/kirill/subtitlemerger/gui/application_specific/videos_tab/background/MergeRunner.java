@@ -12,15 +12,16 @@ import kirill.subtitlemerger.gui.util.background.BackgroundRunnerManager;
 import kirill.subtitlemerger.gui.util.entities.ActionResult;
 import kirill.subtitlemerger.logic.core.SubRipWriter;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
+import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
+import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
+import kirill.subtitlemerger.logic.ffmpeg.FfmpegInjectInfo;
+import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
+import kirill.subtitlemerger.logic.ffmpeg.json.JsonFfprobeFileInfo;
 import kirill.subtitlemerger.logic.file_info.FileInfoGetter;
 import kirill.subtitlemerger.logic.file_info.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.file_info.entities.FileInfo;
 import kirill.subtitlemerger.logic.file_info.entities.FileWithSubtitles;
 import kirill.subtitlemerger.logic.file_info.entities.SubtitleOption;
-import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
-import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
-import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
-import kirill.subtitlemerger.logic.ffmpeg.json.JsonFfprobeFileInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.apache.commons.io.FileUtils;
@@ -29,7 +30,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 @AllArgsConstructor
 public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
@@ -100,19 +102,29 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
                                 );
                                 failedCount++;
                             } else {
-                                ffmpeg.injectSubtitlesToFile(
-                                        fileMergeInfo.getMergedSubtitles(),
+                                String subtitleText = SubRipWriter.toText(fileMergeInfo.getMergedSubtitles());
+
+                                FfmpegInjectInfo injectInfo = new FfmpegInjectInfo(
+                                        subtitleText,
+                                        fileInfo.getFfmpegSubtitleStreams().size(),
+                                        fileMergeInfo.getMergedSubtitles().getLanguage(),
                                         "merged-" + getOptionTitleForFfmpeg(fileMergeInfo.getUpperSubtitles())
                                                 + "-" + getOptionTitleForFfmpeg(fileMergeInfo.getLowerSubtitles()),
-                                        fileMergeInfo.getMergedSubtitles().getLanguage(),
                                         settings.isMarkMergedStreamAsDefault(),
-                                        directoryForTempFile,
-                                        fileInfo
+                                        fileInfo.getFfmpegSubtitleStreams().stream()
+                                                .filter(FfmpegSubtitleStream::isDefaultDisposition)
+                                                .map(FfmpegSubtitleStream::getFfmpegIndex)
+                                                .collect(toList()),
+                                        fileInfo.getFile(),
+                                        directoryForTempFile
                                 );
+
+                                ffmpeg.injectSubtitlesToFile(injectInfo);
 
                                 try {
                                     updateFileInfo(
                                             fileMergeInfo.getMergedSubtitles(),
+                                            subtitleText.getBytes().length,
                                             fileInfo,
                                             tableFileInfo,
                                             ffprobe,
@@ -222,7 +234,8 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
     }
 
     private static void updateFileInfo(
-            Subtitles merged,
+            Subtitles subtitles,
+            int subtitleSize,
             FileInfo fileInfo,
             TableFileInfo tableFileInfo,
             Ffprobe ffprobe,
@@ -233,16 +246,16 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
 
         List<String> currentOptionsIds = fileInfo.getSubtitleOptions().stream()
                 .map(SubtitleOption::getId)
-                .collect(Collectors.toList());
+                .collect(toList());
         List<FfmpegSubtitleStream> newSubtitleOptions = subtitleOptions.stream()
                 .filter(option -> !currentOptionsIds.contains(option.getId()))
-                .collect(Collectors.toList());
+                .collect(toList());
         if (newSubtitleOptions.size() != 1) {
             throw new IllegalStateException();
         }
 
         FfmpegSubtitleStream subtitleOption = newSubtitleOptions.get(0);
-        subtitleOption.setSubtitles(merged);
+        subtitleOption.setSubtitlesAndSize(subtitles, subtitleSize);
 
         fileInfo.getSubtitleOptions().add(subtitleOption);
         fileInfo.setCurrentSizeAndLastModified();
