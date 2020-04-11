@@ -30,7 +30,7 @@ public class GuiContext {
             try {
                 ffprobe = new Ffprobe(settings.getFfprobeFile());
             } catch (FfmpegException e) {
-                log.error("failed to initialize ffprobe");
+                log.error("failed to initialize ffprobe: " + e.getCode() + ", console output " + e.getConsoleOutput());
             } catch (InterruptedException e) {
                 log.error("something's not right, process can't be interrupted");
             }
@@ -39,7 +39,7 @@ public class GuiContext {
             try {
                 ffmpeg = new Ffmpeg(settings.getFfmpegFile());
             } catch (FfmpegException e) {
-                log.error("failed to initialize ffmpeg");
+                log.error("failed to initialize ffmpeg: " + e.getCode() + ", console output " + e.getConsoleOutput());
             } catch (InterruptedException e) {
                 log.error("something's not right, process can't be interrupted");
             }

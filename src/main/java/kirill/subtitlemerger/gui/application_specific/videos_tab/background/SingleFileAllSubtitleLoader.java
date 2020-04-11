@@ -14,7 +14,9 @@ import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.file_info.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.file_info.entities.FileInfo;
 import lombok.AllArgsConstructor;
+import lombok.extern.apachecommons.CommonsLog;
 
+@CommonsLog
 @AllArgsConstructor
 public class SingleFileAllSubtitleLoader implements BackgroundRunner<ActionResult> {
     private FileInfo fileInfo;
@@ -69,6 +71,7 @@ public class SingleFileAllSubtitleLoader implements BackgroundRunner<ActionResul
 
                 loadedSuccessfullyCount++;
             } catch (FfmpegException e) {
+                log.warn("failed to get subtitle text: " + e.getCode() + ", console output " + e.getConsoleOutput());
                 Platform.runLater(
                         () -> tableWithFiles.failedToLoadSubtitles(
                                 VideoTabBackgroundUtils.failedToLoadReasonFrom(e.getCode()),

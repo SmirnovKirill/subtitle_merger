@@ -16,6 +16,7 @@ import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.file_info.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.file_info.entities.FileInfo;
 import lombok.AllArgsConstructor;
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -25,6 +26,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@CommonsLog
 @AllArgsConstructor
 public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult> {
     private static final Comparator<FfmpegSubtitleStream> STREAM_COMPARATOR = Comparator.comparing(
@@ -189,6 +191,7 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
                         )
                 );
             } catch (FfmpegException e) {
+                log.warn("failed to get subtitle text: " + e.getCode() + ", console output " + e.getConsoleOutput());
                 result = false;
                 Platform.runLater(
                         () -> tableWithFiles.failedToLoadSubtitles(

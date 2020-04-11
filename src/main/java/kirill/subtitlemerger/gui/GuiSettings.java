@@ -194,6 +194,7 @@ class GuiSettings {
         try {
             Ffprobe.validate(result);
         } catch (FfmpegException e) {
+            log.warn("incorrect path to ffprobe: " + e.getCode() + ", console output " + e.getConsoleOutput());
             throw new ConfigException("file " + rawValue + " is not a valid path to ffprobe");
         } catch (InterruptedException e) {
             throw new ConfigException("something's not right, process can't be interrupted");
@@ -211,6 +212,7 @@ class GuiSettings {
         try {
             Ffmpeg.validate(result);
         } catch (FfmpegException e) {
+            log.warn("incorrect path to ffmpeg: " + e.getCode() + ", console output " + e.getConsoleOutput());
             throw new ConfigException("file " + rawValue + " is not a valid path to ffmpeg");
         } catch (InterruptedException e) {
             throw new ConfigException("something's not right, process can't be interrupted");

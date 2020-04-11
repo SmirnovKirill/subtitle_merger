@@ -37,15 +37,18 @@ public class FileInfoGetter {
             return new FileInfo(file, null, NO_EXTENSION, null, null);
         } else if (inputFileInfo.getNotValidReason() == InputFileNotValidReason.NOT_ALLOWED_EXTENSION) {
             return new FileInfo(file, null, NOT_ALLOWED_EXTENSION, null, null);
-        } else if (inputFileInfo.getNotValidReason() != null) {
-            log.error("something is wrong with the file: " + inputFileInfo.getNotValidReason());
-            throw new IllegalArgumentException();
         }
+        /*
+         * There can be other errors if the file is removed or turned into a directory between selection and validation
+         * but we'll just let them be and let ffprobe return an error. Because these errors can happen only if the user
+         * causes them on purpose, so I think it's not worthy to handle these situations in any special way.
+         */
 
         JsonFfprobeFileInfo ffprobeInfo;
         try {
             ffprobeInfo = ffprobe.getFileInfo(file);
         } catch (FfmpegException e) {
+            log.warn("failed to get ffprobe info: " + e.getCode() + ", console output " + e.getConsoleOutput());
             return new FileInfo(file, null, FFPROBE_FAILED, null, null);
         } catch (InterruptedException e) {
             log.error("something's not right, process can't be interrupted");
@@ -53,7 +56,7 @@ public class FileInfoGetter {
         }
 
         VideoFormat format = VideoFormat.from(ffprobeInfo.getFormat().getFormatName()).orElse(null);
-        if (format == null) {
+        if (format != VideoFormat.MATROSKA) {
             return new FileInfo(file, null, NOT_ALLOWED_FORMAT, null, null);
         }
 

@@ -5,7 +5,6 @@ import kirill.subtitlemerger.logic.utils.process.ProcessRunner;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
@@ -39,16 +38,11 @@ public class Ffmpeg {
                     "-version"
             );
 
-            log.debug("run ffmpeg " + StringUtils.join(arguments, " "));
             String consoleOutput = ProcessRunner.run(arguments);
-            log.debug("ffmpeg console output: " + consoleOutput);
-
             if (!consoleOutput.startsWith("ffmpeg version")) {
-                log.info("console output doesn't start with the ffmpeg version");
                 throw new FfmpegException(FfmpegException.Code.INCORRECT_FFMPEG_PATH, consoleOutput);
             }
         } catch (ProcessException e) {
-            log.warn("failed to check ffmpeg: " + e.getCode());
             throw new FfmpegException(FfmpegException.Code.INCORRECT_FFMPEG_PATH, e.getConsoleOutput());
         }
     }
@@ -63,8 +57,8 @@ public class Ffmpeg {
         String consoleOutput;
         try {
             /*
-             * We have to pass -y to agree with file overwriting, it's always required
-             * because java will have created temporary file by the time ffmpeg is called.
+             * We have to pass -y to agree with file overwriting, it's always required because java will have created
+             * temporary file by the time ffmpeg is called.
              */
             List<String> arguments = Arrays.asList(
                     ffmpegFile.getAbsolutePath(),
@@ -76,18 +70,15 @@ public class Ffmpeg {
                     TEMP_SUBTITLE_FILE.getAbsolutePath()
             );
 
-            log.debug("run ffmpeg " + StringUtils.join(arguments, " "));
             consoleOutput = ProcessRunner.run(arguments);
-            log.debug("ffmpeg console output: " + consoleOutput);
         } catch (ProcessException e) {
-            log.warn("failed to extract subtitles with ffmpeg: " + e.getCode());
             throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, e.getConsoleOutput());
         }
 
         try {
             return FileUtils.readFileToString(TEMP_SUBTITLE_FILE, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            log.error("failed to read subtitles from the file: " + ExceptionUtils.getStackTrace(e));
+            log.warn("failed to read subtitles from the file: " + ExceptionUtils.getStackTrace(e));
             throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, consoleOutput);
         }
     }
@@ -119,12 +110,8 @@ public class Ffmpeg {
             String consoleOutput;
             try {
                 List<String> arguments = getArgumentsInjectToFile(injectInfo, outputTemp);
-
-                log.debug("run ffmpeg " + StringUtils.join(arguments, " "));
                 consoleOutput = ProcessRunner.run(arguments);
-                log.debug("ffmpeg console output: " + consoleOutput);
             } catch (ProcessException e) {
-                log.warn("failed to inject subtitles with ffmpeg: " + e.getCode());
                 throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, e.getConsoleOutput());
             }
 

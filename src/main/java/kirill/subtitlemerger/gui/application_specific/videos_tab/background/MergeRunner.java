@@ -24,6 +24,7 @@ import kirill.subtitlemerger.logic.file_info.entities.FileWithSubtitles;
 import kirill.subtitlemerger.logic.file_info.entities.SubtitleOption;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -33,6 +34,7 @@ import java.util.List;
 
 import static java.util.stream.Collectors.toList;
 
+@CommonsLog
 @AllArgsConstructor
 public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
     private List<MergePreparationRunner.FileMergeInfo> filesMergeInfo;
@@ -159,6 +161,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
                         );
                         failedCount++;
                     } catch (FfmpegException e) {
+                        log.warn("failed to merge: " + e.getCode() + ", console output " + e.getConsoleOutput());
                         String message = "Ffmpeg returned an error";
                         Platform.runLater(
                                 () -> tableWithFiles.setActionResult(ActionResult.onlyError(message), tableFileInfo)
@@ -251,6 +254,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
             Ffprobe ffprobe,
             GuiSettings settings
     ) throws FfmpegException, InterruptedException {
+        //todo diagnostics
         JsonFfprobeFileInfo ffprobeInfo = ffprobe.getFileInfo(fileInfo.getFile());
         List<FfmpegSubtitleStream> subtitleOptions = FileInfoGetter.getSubtitleOptions(ffprobeInfo);
 

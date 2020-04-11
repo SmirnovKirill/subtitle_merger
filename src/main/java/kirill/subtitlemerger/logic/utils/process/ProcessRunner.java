@@ -3,6 +3,7 @@ package kirill.subtitlemerger.logic.utils.process;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.StringBuilderWriter;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.IOException;
@@ -29,6 +30,8 @@ public class ProcessRunner {
      * @throws ProcessException with different codes inside when errors happen
      */
     public static String run(List<String> arguments) throws ProcessException, InterruptedException {
+        log.debug("run process " + StringUtils.join(arguments, " "));
+
         Process process = startProcess(arguments);
         String consoleOutput = readAllConsoleOutput(process);
         waitForProcessTermination(process, consoleOutput);
@@ -70,6 +73,7 @@ public class ProcessRunner {
                 OutputStream ignored3 = process.getOutputStream()
         ) {
             result = task.get();
+            log.debug("process console output: " + result);
             return result;
         } catch (InterruptedException e) {
             log.info("process is going to be terminated because of the interruption");
@@ -79,7 +83,8 @@ public class ProcessRunner {
             process.destroyForcibly();
 
             try {
-                task.get(1000, TimeUnit.MILLISECONDS);
+                result = task.get(1000, TimeUnit.MILLISECONDS);
+                log.debug("process console output: " + result);
             } catch (TimeoutException timeoutException) {
                 log.error("failed to wait for the thread after closing the streams, something is wrong");
             } catch (InterruptedException ignored) {

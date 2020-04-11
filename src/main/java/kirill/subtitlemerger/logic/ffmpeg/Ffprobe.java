@@ -8,7 +8,6 @@ import kirill.subtitlemerger.logic.ffmpeg.json.JsonFfprobeFileInfo;
 import kirill.subtitlemerger.logic.utils.process.ProcessException;
 import kirill.subtitlemerger.logic.utils.process.ProcessRunner;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
@@ -44,16 +43,11 @@ public class Ffprobe {
                     "-version"
             );
 
-            log.debug("run ffprobe " + StringUtils.join(arguments, " "));
             String consoleOutput = ProcessRunner.run(arguments);
-            log.debug("ffprobe console output: " + consoleOutput);
-
             if (!consoleOutput.startsWith("ffprobe version")) {
-                log.info("console output doesn't start with the ffprobe version");
                 throw new FfmpegException(FfmpegException.Code.INCORRECT_FFPROBE_PATH, consoleOutput);
             }
         } catch (ProcessException e) {
-            log.warn("failed to check ffprobe: " + e.getCode());
             throw new FfmpegException(FfmpegException.Code.INCORRECT_FFPROBE_PATH, e.getConsoleOutput());
         }
     }
@@ -72,21 +66,17 @@ public class Ffprobe {
                     file.getAbsolutePath()
             );
 
-            log.debug("run ffprobe " + StringUtils.join(arguments, " "));
             consoleOutput = ProcessRunner.run(arguments);
-            log.debug("ffprobe console output: " + consoleOutput);
         } catch (ProcessException e) {
-            log.warn("failed to get file info with ffprobe: " + e.getCode());
             throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, e.getConsoleOutput());
         }
 
         try {
             return JSON_OBJECT_MAPPER.readValue(consoleOutput, JsonFfprobeFileInfo.class);
         } catch (JsonProcessingException e) {
-            log.error("failed to convert console output to json: "
-                    + ExceptionUtils.getStackTrace(e)
-                    + ", output is "
-                    + consoleOutput
+            log.error(
+                    "failed to convert console output to json: " + ExceptionUtils.getStackTrace(e)
+                            + ", console output " + consoleOutput
             );
             throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, consoleOutput);
         }
