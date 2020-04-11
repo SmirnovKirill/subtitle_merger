@@ -11,8 +11,8 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.joda.time.LocalTime;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 @CommonsLog
@@ -43,7 +43,6 @@ public class SubtitleMerger {
 
         int upperIndex = 0;
         int lowerIndex = 0;
-        int subtitleNumber = 1;
         for (int i = 0; i < uniqueSortedPointsOfTime.size() - 1; i++) {
             if (Thread.interrupted()) {
                 throw new InterruptedException();
@@ -73,7 +72,7 @@ public class SubtitleMerger {
                     subtitleLines.addAll(
                             upperSubtitle.getLines().stream()
                                     .map(line -> new MergerSubtitleLine(line, Source.UPPER_SUBTITLES))
-                                    .collect(Collectors.toList())
+                                    .collect(toList())
                     );
                 }
 
@@ -81,11 +80,11 @@ public class SubtitleMerger {
                     subtitleLines.addAll(
                             lowerSubtitle.getLines().stream()
                                     .map(line -> new MergerSubtitleLine(line, Source.LOWER_SUBTITLES))
-                                    .collect(Collectors.toList())
+                                    .collect(toList())
                     );
                 }
 
-                result.add(new MergerSubtitle(subtitleNumber++, from, to, subtitleLines));
+                result.add(new MergerSubtitle(from, to, subtitleLines));
             }
         }
 
@@ -187,7 +186,7 @@ public class SubtitleMerger {
             List<MergerSubtitleLine> subtitleLines = new ArrayList<>(subtitle.getLines());
             subtitleLines.addAll(getClosestLinesFromOtherSource(i, otherSource, subtitles));
 
-            result.add(new MergerSubtitle(subtitle.getNumber(), subtitle.getFrom(), subtitle.getTo(), subtitleLines));
+            result.add(new MergerSubtitle(subtitle.getFrom(), subtitle.getTo(), subtitleLines));
 
             i++;
         }
@@ -259,8 +258,8 @@ public class SubtitleMerger {
         }
 
         return Objects.equals(
-                previous.getLines().stream().filter(line -> line.getSource() == source).collect(Collectors.toList()),
-                next.getLines().stream().filter(line -> line.getSource() == source).collect(Collectors.toList())
+                previous.getLines().stream().filter(line -> line.getSource() == source).collect(toList()),
+                next.getLines().stream().filter(line -> line.getSource() == source).collect(toList())
         );
     }
 
@@ -319,7 +318,7 @@ public class SubtitleMerger {
 
         return result.stream()
                 .filter(line -> Objects.equals(line.getSource(), otherSource))
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
     private static void sortSubtitleLines(List<MergerSubtitle> subtitles) throws InterruptedException {
@@ -332,9 +331,7 @@ public class SubtitleMerger {
 
             for (Source source : Source.values()) {
                 orderedLines.addAll(
-                        subtitle.getLines().stream()
-                                .filter(line -> Objects.equals(line.getSource(), source))
-                                .collect(Collectors.toList())
+                        subtitle.getLines().stream().filter(line -> line.getSource() == source).collect(toList())
                 );
             }
 
@@ -369,7 +366,6 @@ public class SubtitleMerger {
             }
 
             if (shouldAddCurrentSubtitle) {
-                currentSubtitle.setNumber(result.size() + 1);
                 result.add(currentSubtitle);
             }
         }
@@ -387,12 +383,10 @@ public class SubtitleMerger {
 
             result.add(
                     new Subtitle(
-                            mergedSubtitle.getNumber(),
                             mergedSubtitle.getFrom(),
                             mergedSubtitle.getTo(),
-                            mergedSubtitle.getLines().stream()
-                                    .map(MergerSubtitleLine::getText)
-                                    .collect(Collectors.toList()))
+                            mergedSubtitle.getLines().stream().map(MergerSubtitleLine::getText).collect(toList())
+                    )
             );
         }
 
@@ -402,9 +396,6 @@ public class SubtitleMerger {
     @AllArgsConstructor
     @Getter
     private static class MergerSubtitle {
-        @Setter
-        private int number;
-
         private LocalTime from;
 
         @Setter

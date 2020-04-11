@@ -34,8 +34,8 @@ public class SubRipParser {
                     continue;
                 }
 
+                /* We can parse the number here but we don't actually need it. */
                 currentSubtitle = new CurrentSubtitle();
-                currentSubtitle.setNumber(getSubtitleNumber(currentLine));
                 parsingStage = ParsingStage.PARSED_NUMBER;
             } else if (parsingStage == ParsingStage.PARSED_NUMBER) {
                 if (StringUtils.isBlank(currentLine)) {
@@ -53,7 +53,7 @@ public class SubRipParser {
 
                 currentSubtitle.setLines(new ArrayList<>());
                 currentSubtitle.getLines().add(currentLine);
-                parsingStage = ParsingStage.PARSED_FIRST_LINE;
+                parsingStage = ParsingStage.LINES_STARTED;
             } else {
                 if (StringUtils.isBlank(currentLine)) {
                     result.add(subtitleFrom(currentSubtitle));
@@ -66,23 +66,15 @@ public class SubRipParser {
             }
         }
 
-        if (parsingStage != ParsingStage.HAVE_NOT_STARTED && parsingStage != ParsingStage.PARSED_FIRST_LINE) {
+        if (parsingStage != ParsingStage.HAVE_NOT_STARTED && parsingStage != ParsingStage.LINES_STARTED) {
             throw new SubtitleFormatException();
         }
 
-        if (parsingStage == ParsingStage.PARSED_FIRST_LINE) {
+        if (parsingStage == ParsingStage.LINES_STARTED) {
             result.add(subtitleFrom(currentSubtitle));
         }
 
         return new Subtitles(result);
-    }
-
-    private static int getSubtitleNumber(String line) throws SubtitleFormatException {
-        try {
-            return Integer.parseInt(line);
-        } catch (NumberFormatException e) {
-            throw new SubtitleFormatException();
-        }
     }
 
     private static LocalTime getFromTime(String line) throws SubtitleFormatException {
@@ -118,26 +110,19 @@ public class SubRipParser {
     }
 
     private static Subtitle subtitleFrom(CurrentSubtitle currentSubtitle) {
-        return new Subtitle(
-                currentSubtitle.getNumber(),
-                currentSubtitle.getFrom(),
-                currentSubtitle.getTo(),
-                currentSubtitle.getLines()
-        );
+        return new Subtitle(currentSubtitle.getFrom(), currentSubtitle.getTo(), currentSubtitle.getLines());
     }
 
     private enum ParsingStage {
         HAVE_NOT_STARTED,
         PARSED_NUMBER,
         PARSED_DURATION,
-        PARSED_FIRST_LINE,
+        LINES_STARTED,
     }
 
     @Getter
     @Setter
     private static class CurrentSubtitle {
-        private int number;
-
         private LocalTime from;
 
         private LocalTime to;

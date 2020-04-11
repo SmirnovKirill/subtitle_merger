@@ -11,7 +11,7 @@ public class SubRipWriter {
         for (int i = 0; i < subtitles.getSubtitles().size(); i++) {
             Subtitle subtitle = subtitles.getSubtitles().get(i);
 
-            result.append(subtitle.getNumber());
+            result.append(i + 1);
             result.append(System.lineSeparator());
 
             result.append(LogicConstants.SUBRIP_TIME_FORMATTER.print(subtitle.getFrom()));

@@ -9,8 +9,6 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 public class Subtitle {
-    private int number;
-
     private LocalTime from;
 
     private LocalTime to;
