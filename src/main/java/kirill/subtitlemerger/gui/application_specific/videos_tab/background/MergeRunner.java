@@ -107,7 +107,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
                                 FfmpegInjectInfo injectInfo = new FfmpegInjectInfo(
                                         subtitleText,
                                         fileInfo.getFfmpegSubtitleStreams().size(),
-                                        fileMergeInfo.getMergedSubtitles().getLanguage(),
+                                        getMergedSubtitleLanguage(fileMergeInfo),
                                         "merged-" + getOptionTitleForFfmpeg(fileMergeInfo.getUpperSubtitles())
                                                 + "-" + getOptionTitleForFfmpeg(fileMergeInfo.getLowerSubtitles()),
                                         settings.isMarkMergedStreamAsDefault(),
@@ -220,6 +220,16 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
         File fileWithResult = fileMergeInfo.getFileWithResult();
 
         return fileWithResult.exists() && !confirmedFilesToOverwrite.contains(fileWithResult);
+    }
+
+    private static LanguageAlpha3Code getMergedSubtitleLanguage(MergePreparationRunner.FileMergeInfo mergeInfo) {
+        if (mergeInfo.getUpperSubtitles() instanceof FfmpegSubtitleStream) {
+            return ((FfmpegSubtitleStream) mergeInfo.getUpperSubtitles()).getLanguage();
+        } else if (mergeInfo.getLowerSubtitles() instanceof FfmpegSubtitleStream) {
+            return ((FfmpegSubtitleStream) mergeInfo.getUpperSubtitles()).getLanguage();
+        } else {
+            return LanguageAlpha3Code.undefined;
+        }
     }
 
     private static String getOptionTitleForFfmpeg(SubtitleOption subtitleOption) {

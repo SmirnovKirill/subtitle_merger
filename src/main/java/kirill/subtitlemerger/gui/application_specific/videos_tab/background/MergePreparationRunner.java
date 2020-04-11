@@ -236,10 +236,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                         ffmpegStream.getFfmpegIndex(),
                         fileInfo.getFile()
                 );
-                ffmpegStream.setSubtitlesAndSize(
-                        SubRipParser.from(subtitleText, ffmpegStream.getLanguage()),
-                        subtitleText.getBytes().length
-                );
+                ffmpegStream.setSubtitlesAndSize(SubRipParser.from(subtitleText), subtitleText.getBytes().length);
 
                 Platform.runLater(
                         () -> tableWithFiles.subtitlesLoadedSuccessfully(

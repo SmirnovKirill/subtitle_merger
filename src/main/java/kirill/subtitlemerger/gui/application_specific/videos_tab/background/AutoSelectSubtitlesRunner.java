@@ -179,10 +179,7 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
 
             try {
                 String subtitleText = ffmpeg.getSubtitleText(ffmpegStream.getFfmpegIndex(), fileInfo.getFile());
-                ffmpegStream.setSubtitlesAndSize(
-                        SubRipParser.from(subtitleText, ffmpegStream.getLanguage()),
-                        subtitleText.getBytes().length
-                );
+                ffmpegStream.setSubtitlesAndSize(SubRipParser.from(subtitleText), subtitleText.getBytes().length);
 
                 Platform.runLater(
                         () -> tableWithFiles.subtitlesLoadedSuccessfully(

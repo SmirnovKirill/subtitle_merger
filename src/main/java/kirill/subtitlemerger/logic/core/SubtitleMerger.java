@@ -1,6 +1,5 @@
 package kirill.subtitlemerger.logic.core;
 
-import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.logic.core.entities.Subtitle;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import lombok.AllArgsConstructor;
@@ -9,7 +8,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.ObjectUtils;
 import org.joda.time.LocalTime;
 
 import java.util.*;
@@ -28,7 +26,7 @@ public class SubtitleMerger {
         sortSubtitleLines(result);
         result = getCombinedSubtitles(result);
 
-        return convert(result, upperSubtitles, lowerSubtitles);
+        return convert(result);
     }
 
     /**
@@ -379,11 +377,7 @@ public class SubtitleMerger {
         return result;
     }
 
-    private static Subtitles convert(
-            List<MergerSubtitle> mergedSubtitles,
-            Subtitles upper,
-            Subtitles lower
-    ) throws InterruptedException {
+    private static Subtitles convert(List<MergerSubtitle> mergedSubtitles) throws InterruptedException {
         List<Subtitle> result = new ArrayList<>();
 
         for (MergerSubtitle mergedSubtitle : mergedSubtitles) {
@@ -402,12 +396,7 @@ public class SubtitleMerger {
             );
         }
 
-        LanguageAlpha3Code mainLanguage = ObjectUtils.firstNonNull(
-                upper.getLanguage(),
-                lower.getLanguage()
-        );
-
-        return new Subtitles(result, mainLanguage);
+        return new Subtitles(result);
     }
 
     @AllArgsConstructor

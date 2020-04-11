@@ -57,10 +57,7 @@ public class SingleFileAllSubtitleLoader implements BackgroundRunner<ActionResul
 
             try {
                 String subtitleText = ffmpeg.getSubtitleText(ffmpegStream.getFfmpegIndex(), fileInfo.getFile());
-                ffmpegStream.setSubtitlesAndSize(
-                        SubRipParser.from(subtitleText, ffmpegStream.getLanguage()),
-                        subtitleText.getBytes().length
-                );
+                ffmpegStream.setSubtitlesAndSize(SubRipParser.from(subtitleText), subtitleText.getBytes().length);
 
                 Platform.runLater(
                         () -> tableWithFiles.subtitlesLoadedSuccessfully(

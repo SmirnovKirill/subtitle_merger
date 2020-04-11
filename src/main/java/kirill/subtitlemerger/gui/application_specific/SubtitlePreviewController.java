@@ -192,7 +192,7 @@ public class SubtitlePreviewController extends AbstractController {
         String text = new String(data, encoding);
         Subtitles subtitles;
         try {
-            subtitles = SubRipParser.from(text, null);
+            subtitles = SubRipParser.from(text);
         } catch (SubtitleFormatException e) {
             subtitles = null;
         }

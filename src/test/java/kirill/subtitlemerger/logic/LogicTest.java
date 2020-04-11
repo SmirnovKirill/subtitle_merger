@@ -1,9 +1,8 @@
 package kirill.subtitlemerger.logic;
 
-import com.neovisionaries.i18n.LanguageAlpha3Code;
-import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.SubRipWriter;
+import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import org.apache.commons.io.IOUtils;
@@ -21,8 +20,7 @@ public class LogicTest {
                 IOUtils.toString(
                         LogicTest.class.getResourceAsStream("/MainTest/testParseFromFileToSubtitles/sub.srt"),
                         StandardCharsets.UTF_8
-                ),
-                LanguageAlpha3Code.rus
+                )
         );
 
         assertThat(subtitles.getSubtitles()).hasSize(10);
@@ -37,15 +35,13 @@ public class LogicTest {
                 IOUtils.toString(
                         LogicTest.class.getResourceAsStream("/MainTest/testMerged/upper.srt"),
                         StandardCharsets.UTF_8
-                ),
-                LanguageAlpha3Code.rus
+                )
         );
         Subtitles lowerSubtitles = SubRipParser.from(
                 IOUtils.toString(
                         LogicTest.class.getResourceAsStream("/MainTest/testMerged/lower.srt"),
                         StandardCharsets.UTF_8
-                ),
-                LanguageAlpha3Code.eng
+                )
         );
 
         Subtitles merged = SubtitleMerger.mergeSubtitles(upperSubtitles, lowerSubtitles);

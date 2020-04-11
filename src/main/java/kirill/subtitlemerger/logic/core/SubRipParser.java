@@ -1,6 +1,5 @@
 package kirill.subtitlemerger.logic.core;
 
-import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.core.entities.Subtitle;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
@@ -16,7 +15,7 @@ import java.util.List;
 
 @CommonsLog
 public class SubRipParser {
-    public static Subtitles from(String text, LanguageAlpha3Code language) throws SubtitleFormatException {
+    public static Subtitles from(String text) throws SubtitleFormatException {
         List<Subtitle> result = new ArrayList<>();
 
         /* Remove BOM if it's present. */
@@ -75,7 +74,7 @@ public class SubRipParser {
             result.add(subtitleFrom(currentSubtitle));
         }
 
-        return new Subtitles(result, language);
+        return new Subtitles(result);
     }
 
     private static int getSubtitleNumber(String line) throws SubtitleFormatException {

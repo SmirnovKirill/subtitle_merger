@@ -54,10 +54,7 @@ public class AddFileWithSubtitlesRunner implements BackgroundRunner<AddFileWithS
 
         Subtitles subtitles;
         try {
-            subtitles = SubRipParser.from(
-                    new String(validatorFileInfo.getContent(), StandardCharsets.UTF_8),
-                    null
-            );
+            subtitles = SubRipParser.from(new String(validatorFileInfo.getContent(), StandardCharsets.UTF_8));
         } catch (SubtitleFormatException e) {
             subtitles = null;
         }

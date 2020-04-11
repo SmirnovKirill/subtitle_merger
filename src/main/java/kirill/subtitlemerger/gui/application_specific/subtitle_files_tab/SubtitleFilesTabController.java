@@ -182,10 +182,7 @@ public class SubtitleFilesTabController extends AbstractController {
         }
 
         try {
-            Subtitles subtitles = SubRipParser.from(
-                    new String(validatorFileInfo.getContent(), StandardCharsets.UTF_8),
-                    null
-            );
+            Subtitles subtitles = SubRipParser.from(new String(validatorFileInfo.getContent(), StandardCharsets.UTF_8));
 
             return Optional.of(
                     new InputFileInfo(
