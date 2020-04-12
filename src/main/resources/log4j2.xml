@@ -2,23 +2,23 @@
 <Configuration status="WARN" monitorInterval="300">
     <Appenders>
         <RollingFile name="file" fileName="logs/current.log" filePattern="logs/archive_%d{yyyy-MM-dd}.%i.log.gz">
-            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss,SSS} [%level] %C.%M(%F:%L) %n%msg%n" />
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss,SSS} [%level] %C.%M(%F:%L) %n%msg%n"/>
             <Policies>
-                <SizeBasedTriggeringPolicy size="10 MB" />
+                <SizeBasedTriggeringPolicy size="10 MB"/>
                 <TimeBasedTriggeringPolicy/>
             </Policies>
             <DefaultRolloverStrategy>
                 <Delete basePath="logs">
-                    <IfFileName glob="archive_*" />
+                    <IfFileName glob="archive_*"/>
                     <IfAny>
                         <IfAccumulatedFileCount exceeds="5"/>
-                        <IfAccumulatedFileSize exceeds="50 MB" />
+                        <IfAccumulatedFileSize exceeds="50 MB"/>
                     </IfAny>
                 </Delete>
             </DefaultRolloverStrategy>
         </RollingFile>
         <Console name="console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss,SSS} [%level] %C.%M(%F:%L) %n%msg%n" />
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss,SSS} [%level] %C.%M(%F:%L) %n%msg%n"/>
         </Console>
     </Appenders>
     <Loggers>

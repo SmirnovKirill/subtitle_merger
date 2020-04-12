@@ -132,6 +132,12 @@
                                     </includes>
                                 </filter>
                                 <filter>
+                                    <artifact>org.apache.logging.log4j</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
                                     <artifact>*:*</artifact>
                                     <excludes>
                                         <exclude>module-info.class</exclude>
@@ -248,12 +254,6 @@
     </build>
 
     <dependencies>
-	    <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.29</version>
-        </dependency>
-
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
