@@ -278,13 +278,13 @@ public class SubtitleFilesTabController extends AbstractController {
         try {
             switch (fileType) {
                 case UPPER_SUBTITLES:
-                    settings.saveUpperSubtitlesDirectory(parent.getAbsolutePath());
+                    settings.saveUpperDirectory(parent.getAbsolutePath());
                     return;
                 case LOWER_SUBTITLES:
-                    settings.saveLowerSubtitlesDirectory(parent.getAbsolutePath());
+                    settings.saveLowerDirectory(parent.getAbsolutePath());
                     return;
                 case MERGED_SUBTITLES:
-                    settings.saveMergedSubtitlesDirectory(parent.getAbsolutePath());
+                    settings.saveMergedDirectory(parent.getAbsolutePath());
                     return;
                 default:
                     throw new IllegalStateException();

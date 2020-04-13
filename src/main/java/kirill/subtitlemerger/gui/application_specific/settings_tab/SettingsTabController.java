@@ -351,7 +351,7 @@ public class SettingsTabController {
             Boolean newValue
     ) {
         try {
-            context.getSettings().saveMarkMergedStreamAsDefault(newValue.toString());
+            context.getSettings().saveMakeMergedStreamsDefault(newValue.toString());
 
             if (newValue) {
                 actionResultLabels.setOnlySuccess("Flag has been set successfully");

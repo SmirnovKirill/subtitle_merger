@@ -327,17 +327,17 @@ public class Settings {
         return Optional.of(result);
     }
 
-    public void saveUpperSubtitlesDirectory(String rawValue) throws SettingException {
+    public void saveUpperDirectory(String rawValue) throws SettingException {
         upperDirectory = getValidatedDirectory(rawValue);
         preferences.put(UPPER_DIRECTORY.getCode(), upperDirectory.getAbsolutePath());
     }
 
-    public void saveLowerSubtitlesDirectory(String rawValue) throws SettingException {
+    public void saveLowerDirectory(String rawValue) throws SettingException {
         lowerDirectory = getValidatedDirectory(rawValue);
         preferences.put(LOWER_DIRECTORY.getCode(), lowerDirectory.getAbsolutePath());
     }
 
-    public void saveMergedSubtitlesDirectory(String rawValue) throws SettingException {
+    public void saveMergedDirectory(String rawValue) throws SettingException {
         mergedDirectory = getValidatedDirectory(rawValue);
         preferences.put(MERGED_DIRECTORY.getCode(), mergedDirectory.getAbsolutePath());
     }
@@ -377,12 +377,12 @@ public class Settings {
         preferences.put(MERGE_MODE.getCode(), mergeMode.toString());
     }
 
-    public void saveMarkMergedStreamAsDefault(String rawValue) throws SettingException {
+    public void saveMakeMergedStreamsDefault(String rawValue) throws SettingException {
         makeMergedStreamsDefault = getValidatedBoolean(rawValue);
         preferences.put(MAKE_MERGED_STREAMS_DEFAULT.getCode(), Boolean.toString(makeMergedStreamsDefault));
     }
 
-    public void saveDirectoryWithVideos(String rawValue) throws SettingException {
+    public void saveVideosDirectory(String rawValue) throws SettingException {
         videosDirectory = getValidatedDirectory(rawValue);
         preferences.put(VIDEOS_DIRECTORY.getCode(), videosDirectory.getAbsolutePath());
     }
@@ -397,7 +397,7 @@ public class Settings {
         preferences.put(SORT_DIRECTION.getCode(), sortDirection.toString());
     }
 
-    public void saveDirectoryWithExternalSubtitles(String rawValue) throws SettingException {
+    public void saveExternalDirectory(String rawValue) throws SettingException {
         externalDirectory = getValidatedDirectory(rawValue);
         preferences.put(EXTERNAL_DIRECTORY.getCode(), externalDirectory.getAbsolutePath());
     }
