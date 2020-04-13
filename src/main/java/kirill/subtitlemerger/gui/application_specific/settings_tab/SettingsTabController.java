@@ -78,7 +78,7 @@ public class SettingsTabController {
     private ToggleGroup mergeModeToggleGroup;
 
     @FXML
-    private CheckBox markMergedStreamAsDefaultCheckBox;
+    private CheckBox makeMergedStreamsDefaultCheckBox;
 
     private BooleanProperty markStreamCheckBoxVisible;
 
@@ -125,7 +125,7 @@ public class SettingsTabController {
 
         setInitialValues();
         mergeModeToggleGroup.selectedToggleProperty().addListener(this::mergeModeChanged);
-        markMergedStreamAsDefaultCheckBox.selectedProperty().addListener(this::markStreamAsDefaultChanged);
+        makeMergedStreamsDefaultCheckBox.selectedProperty().addListener(this::markStreamAsDefaultChanged);
         context.workWithVideosInProgressProperty().addListener(this::workWithVideosProgressChanged);
     }
 
@@ -236,7 +236,7 @@ public class SettingsTabController {
         setMergeModeInitialValue();
         setMarkCheckBoxVisibility();
 
-        markMergedStreamAsDefaultCheckBox.setSelected(settings.isMarkMergedStreamAsDefault());
+        makeMergedStreamsDefaultCheckBox.setSelected(settings.isMakeMergedStreamsDefault());
     }
 
     private void setFfprobeInitialValue() {

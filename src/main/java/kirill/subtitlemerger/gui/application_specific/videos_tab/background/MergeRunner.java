@@ -113,7 +113,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
                                         getMergedSubtitleLanguage(fileMergeInfo),
                                         "merged-" + getOptionTitleForFfmpeg(fileMergeInfo.getUpperSubtitles())
                                                 + "-" + getOptionTitleForFfmpeg(fileMergeInfo.getLowerSubtitles()),
-                                        settings.isMarkMergedStreamAsDefault(),
+                                        settings.isMakeMergedStreamsDefault(),
                                         fileInfo.getFfmpegSubtitleStreams().stream()
                                                 .filter(FfmpegSubtitleStream::isDefaultDisposition)
                                                 .map(FfmpegSubtitleStream::getFfmpegIndex)

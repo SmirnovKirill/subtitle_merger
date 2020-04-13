@@ -448,10 +448,7 @@ public class ContentPaneController extends AbstractController {
                     context.getSettings().saveLastDirectoryWithExternalSubtitles(fileWithSubtitlesToAdd.getParent());
                 }
             } catch (SettingException e) {
-                log.error(
-                        "failed to save last directory , file " + fileWithSubtitlesToAdd.getAbsolutePath() + ": "
-                                + ExceptionUtils.getStackTrace(e)
-                );
+                log.warn("failed to save last directory:" + ExceptionUtils.getStackTrace(e));
             }
 
             AddFileWithSubtitlesRunner backgroundRunner = new AddFileWithSubtitlesRunner(
@@ -484,7 +481,7 @@ public class ContentPaneController extends AbstractController {
 
         fileChooser.setTitle("Please choose a file with the subtitles");
 
-        File initialDirectory = settings.getLastDirectoryWithExternalSubtitles();
+        File initialDirectory = settings.getExternalSubtitlesLastDirectory();
         if (initialDirectory == null) {
             File directoryWithFile = fileInfo.getFile().getParentFile();
             if (directoryWithFile != null && directoryWithFile.isDirectory()) {
@@ -607,10 +604,7 @@ public class ContentPaneController extends AbstractController {
         try {
             context.getSettings().saveLastDirectoryWithVideos(files.get(0).getParent());
         } catch (SettingException e) {
-            log.error(
-                    "failed to save last directory with videos, shouldn't happen: "
-                            + ExceptionUtils.getStackTrace(e)
-            );
+            log.warn("failed to save last directory with videos: " + ExceptionUtils.getStackTrace(e));
         }
 
         context.setWorkWithVideosInProgress(true);
@@ -673,10 +667,7 @@ public class ContentPaneController extends AbstractController {
                 context.getSettings().saveLastDirectoryWithVideos(path);
             }
         } catch (SettingException e) {
-            log.error(
-                    "failed to save last directory with videos, shouldn't happen: "
-                            + ExceptionUtils.getStackTrace(e)
-            );
+            log.warn("failed to save last directory with videos: " + ExceptionUtils.getStackTrace(e));
         }
 
         LoadDirectoryRunner backgroundRunner = new LoadDirectoryRunner(
@@ -1072,10 +1063,7 @@ public class ContentPaneController extends AbstractController {
         try {
             context.getSettings().saveLastDirectoryWithVideos(filesToAdd.get(0).getParent());
         } catch (SettingException e) {
-            log.error(
-                    "failed to save last directory with videos, that shouldn't happen: "
-                            + ExceptionUtils.getStackTrace(e)
-            );
+            log.warn("failed to save last directory with videos: " + ExceptionUtils.getStackTrace(e));
         }
 
         AddFilesRunner backgroundRunner = new AddFilesRunner(
@@ -1118,7 +1106,7 @@ public class ContentPaneController extends AbstractController {
         FileChooser fileChooser = new FileChooser();
 
         fileChooser.setTitle("choose videos");
-        fileChooser.setInitialDirectory(settings.getLastDirectoryWithVideos());
+        fileChooser.setInitialDirectory(settings.getVideosDirectory());
         fileChooser.getExtensionFilters().add(GuiConstants.VIDEO_EXTENSION_FILTER);
 
         return fileChooser.showOpenMultipleDialog(stage);

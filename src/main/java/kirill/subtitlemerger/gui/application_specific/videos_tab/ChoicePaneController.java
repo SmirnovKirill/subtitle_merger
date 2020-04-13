@@ -76,7 +76,7 @@ public class ChoicePaneController {
         FileChooser fileChooser = new FileChooser();
 
         fileChooser.setTitle("choose videos");
-        fileChooser.setInitialDirectory(settings.getLastDirectoryWithVideos());
+        fileChooser.setInitialDirectory(settings.getVideosDirectory());
         fileChooser.getExtensionFilters().add(GuiConstants.VIDEO_EXTENSION_FILTER);
 
         return fileChooser.showOpenMultipleDialog(stage);
@@ -97,7 +97,7 @@ public class ChoicePaneController {
         DirectoryChooser directoryChooser = new DirectoryChooser();
 
         directoryChooser.setTitle("choose directory with videos");
-        directoryChooser.setInitialDirectory(settings.getLastDirectoryWithVideos());
+        directoryChooser.setInitialDirectory(settings.getVideosDirectory());
 
         return Optional.ofNullable(directoryChooser.showDialog(stage));
     }

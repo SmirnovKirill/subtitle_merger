@@ -148,7 +148,7 @@
                     Merged subtitles will be displayed by the video player by default automatically
                 </tooltipText>
             </LabelWithQuestionMark>
-            <CheckBox fx:id="markMergedStreamAsDefaultCheckBox"
+            <CheckBox fx:id="makeMergedStreamsDefaultCheckBox"
                       visible="${controller.markStreamCheckBoxVisible}" managed="${controller.markStreamCheckBoxVisible}"
                       GridPane.rowIndex="6" GridPane.columnIndex="1"/>
 

@@ -21,6 +21,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.prefs.Preferences;
 
+import static kirill.subtitlemerger.logic.settings.SettingType.*;
+
 @CommonsLog
 @Getter
 public class Settings {
@@ -28,11 +30,11 @@ public class Settings {
 
     private Preferences preferences;
 
-    private File upperSubtitlesLastDirectory;
+    private File upperSubtitlesDirectory;
 
-    private File lowerSubtitlesLastDirectory;
+    private File lowerSubtitlesDirectory;
 
-    private File mergedSubtitlesLastDirectory;
+    private File mergedSubtitlesDirectory;
 
     private File ffprobeFile;
 
@@ -44,15 +46,15 @@ public class Settings {
 
     private MergeMode mergeMode;
 
-    private boolean markMergedStreamAsDefault;
+    private boolean makeMergedStreamsDefault;
 
-    private File lastDirectoryWithVideos;
+    private File videosDirectory;
 
     private SortBy sortBy;
 
     private SortDirection sortDirection;
 
-    private File lastDirectoryWithExternalSubtitles;
+    private File externalSubtitlesDirectory;
 
     /**
      * Settings required for merging in videos.
@@ -61,119 +63,79 @@ public class Settings {
 
     public Settings() {
         preferences = Preferences.userRoot().node(PREFERENCES_ROOT_NODE);
-
-        try {
-            upperSubtitlesLastDirectory = getValidatedDirectory(
-                    preferences.get(SettingType.UPPER_SUBTITLES_LAST_DIRECTORY.getCode(), "")
-            ).orElse(null);
-        } catch (SettingException e) {
-            log.warn("incorrect upper subtitles last directory in saved preferences: " + e.getMessage());
-        }
-
-        try {
-            lowerSubtitlesLastDirectory = getValidatedDirectory(
-                    preferences.get(SettingType.LOWER_SUBTITLES_LAST_DIRECTORY.getCode(), "")
-            ).orElse(null);
-        } catch (SettingException e) {
-            log.warn("incorrect lower subtitles last directory in saved preferences: " + e.getMessage());
-        }
-
-        try {
-            mergedSubtitlesLastDirectory = getValidatedDirectory(
-                    preferences.get(SettingType.MERGED_SUBTITLES_LAST_DIRECTORY.getCode(), "")
-            ).orElse(null);
-        } catch (SettingException e) {
-            log.warn("incorrect merged subtitles last directory in saved preferences: " + e.getMessage());
-        }
-
-        try {
-            ffprobeFile = getValidatedFfprobeFile(
-                    preferences.get(SettingType.FFPROBE_PATH.getCode(), "")
-            ).orElse(null);
-        } catch (SettingException e) {
-            log.warn("incorrect ffprobe path in saved preferences: " + e.getMessage());
-        }
-
-        try {
-            ffmpegFile = getValidatedFfmpegFile(
-                    preferences.get(SettingType.FFMPEG_PATH.getCode(), "")
-            ).orElse(null);
-        } catch (SettingException e) {
-            log.warn("incorrect ffmpeg path in saved preferences: " + e.getMessage());
-        }
-
-        try {
-            upperLanguage = getValidatedLanguage(
-                    preferences.get(SettingType.UPPER_LANGUAGE.getCode(), "")
-            ).orElse(null);
-        } catch (SettingException e) {
-            log.warn("incorrect upper language in saved preferences: " + e.getMessage());
-        }
-
-        try {
-            lowerLanguage = getValidatedLanguage(
-                    preferences.get(SettingType.LOWER_LANGUAGE.getCode(), "")
-            ).orElse(null);
-        } catch (SettingException e) {
-            log.warn("incorrect lower language in saved preferences: " + e.getMessage());
-        }
-
-        try {
-            mergeMode = getValidatedMergeMode(
-                    preferences.get(SettingType.MERGE_MODE.getCode(), "")
-            ).orElse(null);
-        } catch (SettingException e) {
-            log.warn("incorrect merge mode in saved preferences: " + e.getMessage());
-        }
-
-        try {
-            markMergedStreamAsDefault = getValidatedBoolean(
-                    preferences.get(SettingType.MARK_MERGED_STREAM_AS_DEFAULT.getCode(), "")
-            ).orElse(true);
-        } catch (SettingException e) {
-            log.warn("incorrect flag for marking stream as default in saved preferences: " + e.getMessage());
-        }
-
-        try {
-            lastDirectoryWithVideos = getValidatedDirectory(
-                    preferences.get(SettingType.LAST_DIRECTORY_WITH_VIDEOS.getCode(), "")
-            ).orElse(null);
-        } catch (SettingException e) {
-            log.warn("incorrect last directory with videos in saved preferences: " + e.getMessage());
-        }
-
-        try {
-            sortBy = getValidatedSortBy(
-                    preferences.get(SettingType.SORT_BY.getCode(), "")
-            ).orElse(null);
-        } catch (SettingException e) {
-            log.warn("incorrect sort by value in saved preferences: " + e.getMessage());
-        }
-
-        try {
-            sortDirection = getValidatedSortDirection(
-                    preferences.get(SettingType.SORT_DIRECTION.getCode(), "")
-            ).orElse(null);
-        } catch (SettingException e) {
-            log.warn("incorrect sort direction in saved preferences: " + e.getMessage());
-        }
-
-        try {
-            lastDirectoryWithExternalSubtitles = getValidatedDirectory(
-                    preferences.get(SettingType.LAST_DIRECTORY_WITH_EXTERNAL_SUBTITLES.getCode(), "")
-            ).orElse(null);
-        } catch (SettingException e) {
-            log.warn("incorrect last directory with external subtitles in saved preferences: " + e.getMessage());
-        }
+        initSavedSettings(preferences);
 
         missingSettings = generateMissingSettings();
 
         setDefaultSettingsIfNecessary();
     }
 
-    private static Optional<File> getValidatedDirectory(String rawValue) throws SettingException {
+    private void initSavedSettings(Preferences preferences) {
+        upperSubtitlesDirectory = getSetting(
+                UPPER_SUBTITLES_DIRECTORY,
+                Settings::getValidatedDirectory,
+                preferences
+        ).orElse(null);
+
+        lowerSubtitlesDirectory = getSetting(
+                LOWER_SUBTITLES_DIRECTORY,
+                Settings::getValidatedDirectory,
+                preferences
+        ).orElse(null);
+
+        mergedSubtitlesDirectory = getSetting(
+                MERGED_SUBTITLES_DIRECTORY,
+                Settings::getValidatedDirectory,
+                preferences
+        ).orElse(null);
+
+        ffprobeFile = getSetting(FFPROBE_PATH, Settings::getValidatedFfprobeFile, preferences).orElse(null);
+        ffmpegFile = getSetting(FFMPEG_PATH, Settings::getValidatedFfmpegFile, preferences).orElse(null);
+        upperLanguage = getSetting(UPPER_LANGUAGE, Settings::getValidatedLanguage, preferences).orElse(null);
+        lowerLanguage = getSetting(LOWER_LANGUAGE, Settings::getValidatedLanguage, preferences).orElse(null);
+        mergeMode = getSetting(MERGE_MODE, Settings::getValidatedMergeMode, preferences).orElse(null);
+
+        makeMergedStreamsDefault = getSetting(
+                MAKE_MERGED_STREAMS_DEFAULT,
+                Settings::getValidatedBoolean,
+                preferences
+        ).orElse(false);
+
+        videosDirectory = getSetting(VIDEOS_DIRECTORY, Settings::getValidatedDirectory, preferences).orElse(null);
+        sortBy = getSetting(SORT_BY, Settings::getValidatedSortBy, preferences).orElse(null);
+        sortDirection = getSetting(SORT_DIRECTION, Settings::getValidatedSortDirection, preferences).orElse(null);
+
+        externalSubtitlesDirectory = getSetting(
+                EXTERNAL_SUBTITLES_DIRECTORY,
+                Settings::getValidatedDirectory,
+                preferences
+        ).orElse(null);
+    }
+
+    /**
+     * @return value of the given type from the preferences if the value is not empty and is valid.
+     */
+    private static <T> Optional<T> getSetting(
+            SettingType settingType,
+            SettingValidator<T> validator,
+            Preferences preferences
+    ) {
+        String rawValue = preferences.get(settingType.getCode(), "");
         if (StringUtils.isBlank(rawValue)) {
             return Optional.empty();
+        }
+
+        try {
+            return Optional.of(validator.getValidatedValue(rawValue));
+        } catch (SettingException e) {
+            log.warn("incorrect value for " + settingType.getCode() + " in saved preferences: " + e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    private static File getValidatedDirectory(String rawValue) throws SettingException {
+        if (StringUtils.isBlank(rawValue)) {
+            throw new EmptyValueException();
         }
 
         File result = new File(rawValue);
@@ -181,12 +143,12 @@ public class Settings {
             throw new SettingException("file " + rawValue + " does not exist or is not a directory");
         }
 
-        return Optional.of(result);
+        return result;
     }
 
-    private static Optional<File> getValidatedFfprobeFile(String rawValue) throws SettingException {
+    private static File getValidatedFfprobeFile(String rawValue) throws SettingException {
         if (StringUtils.isBlank(rawValue)) {
-            return Optional.empty();
+            throw new EmptyValueException();
         }
 
         File result = new File(rawValue);
@@ -199,12 +161,12 @@ public class Settings {
             throw new SettingException("something's not right, process can't be interrupted");
         }
 
-        return Optional.of(result);
+        return result;
     }
 
-    private static Optional<File> getValidatedFfmpegFile(String rawValue) throws SettingException {
+    private static File getValidatedFfmpegFile(String rawValue) throws SettingException {
         if (StringUtils.isBlank(rawValue)) {
-            return Optional.empty();
+            throw new EmptyValueException();
         }
 
         File result = new File(rawValue);
@@ -217,12 +179,12 @@ public class Settings {
             throw new SettingException("something's not right, process can't be interrupted");
         }
 
-        return Optional.of(result);
+        return result;
     }
 
-    private static Optional<LanguageAlpha3Code> getValidatedLanguage(String rawValue) throws SettingException {
+    private static LanguageAlpha3Code getValidatedLanguage(String rawValue) throws SettingException {
         if (StringUtils.isBlank(rawValue)) {
-            return Optional.empty();
+            throw new EmptyValueException();
         }
 
         LanguageAlpha3Code result = LanguageAlpha3Code.getByCodeIgnoreCase(rawValue);
@@ -234,12 +196,12 @@ public class Settings {
             throw new SettingException("language code " + rawValue + " is not allowed");
         }
 
-        return Optional.of(result);
+        return result;
     }
 
-    private static Optional<MergeMode> getValidatedMergeMode(String rawValue) throws SettingException {
+    private static MergeMode getValidatedMergeMode(String rawValue) throws SettingException {
         if (StringUtils.isBlank(rawValue)) {
-            return Optional.empty();
+            throw new EmptyValueException();
         }
 
         MergeMode result = EnumUtils.getEnum(MergeMode.class, rawValue);
@@ -247,26 +209,26 @@ public class Settings {
             throw new SettingException("value " + rawValue + " is not a valid merge mode");
         }
 
-        return Optional.of(result);
+        return result;
     }
 
-    private static Optional<Boolean> getValidatedBoolean(String rawValue) throws SettingException {
+    private static Boolean getValidatedBoolean(String rawValue) throws SettingException {
         if (StringUtils.isBlank(rawValue)) {
-            return Optional.empty();
+            throw new EmptyValueException();
         }
 
         if ("true".equals(rawValue)) {
-            return Optional.of(true);
+            return true;
         } else if ("false".equals(rawValue)) {
-            return Optional.of(false);
+            return false;
         } else {
             throw new SettingException("value " + rawValue + " is not a valid boolean type");
         }
     }
 
-    private static Optional<SortBy> getValidatedSortBy(String rawValue) throws SettingException {
+    private static SortBy getValidatedSortBy(String rawValue) throws SettingException {
         if (StringUtils.isBlank(rawValue)) {
-            return Optional.empty();
+            throw new EmptyValueException();
         }
 
         SortBy result = EnumUtils.getEnum(SortBy.class, rawValue);
@@ -274,12 +236,12 @@ public class Settings {
             throw new SettingException("value " + rawValue + " is not a valid sort option");
         }
 
-        return Optional.of(result);
+        return result;
     }
 
-    private static Optional<SortDirection> getValidatedSortDirection(String rawValue) throws SettingException {
+    private static SortDirection getValidatedSortDirection(String rawValue) throws SettingException {
         if (StringUtils.isBlank(rawValue)) {
-            return Optional.empty();
+            throw new EmptyValueException();
         }
 
         SortDirection result = EnumUtils.getEnum(SortDirection.class, rawValue);
@@ -287,30 +249,30 @@ public class Settings {
             throw new SettingException("value " + rawValue + " is not a valid sort direction");
         }
 
-        return Optional.of(result);
+        return result;
     }
 
     private ObservableSet<SettingType> generateMissingSettings() {
         Set<SettingType> result = EnumSet.noneOf(SettingType.class);
 
         if (ffprobeFile == null) {
-            result.add(SettingType.FFPROBE_PATH);
+            result.add(FFPROBE_PATH);
         }
 
         if (ffmpegFile == null) {
-            result.add(SettingType.FFMPEG_PATH);
+            result.add(FFMPEG_PATH);
         }
 
         if (upperLanguage == null) {
-            result.add(SettingType.UPPER_LANGUAGE);
+            result.add(UPPER_LANGUAGE);
         }
 
         if (lowerLanguage == null) {
-            result.add(SettingType.LOWER_LANGUAGE);
+            result.add(LOWER_LANGUAGE);
         }
 
         if (mergeMode == null) {
-            result.add(SettingType.MERGE_MODE);
+            result.add(MERGE_MODE);
         }
 
         return FXCollections.observableSet(result);
@@ -333,11 +295,8 @@ public class Settings {
             File packedFfprobeFile = getPackedFfprobeFile().orElse(null);
             if (packedFfprobeFile != null) {
                 try {
-                    ffprobeFile = getValidatedFfprobeFile(packedFfprobeFile.getAbsolutePath())
-                            .orElseThrow(IllegalStateException::new);
-                    saveFfprobeFile(ffprobeFile.getAbsolutePath());
+                    saveFfprobeFile(packedFfprobeFile.getAbsolutePath());
                 } catch (SettingException e) {
-                    ffprobeFile = null;
                     log.error("failed to validate and save packed ffprobe: " + e.getMessage());
                 }
             }
@@ -347,11 +306,8 @@ public class Settings {
             File packedFfmpegFile = getPackedFfmpegFile().orElse(null);
             if (packedFfmpegFile != null) {
                 try {
-                    ffmpegFile = getValidatedFfmpegFile(packedFfmpegFile.getAbsolutePath())
-                            .orElseThrow(IllegalStateException::new);
-                    saveFfmpegFile(ffmpegFile.getAbsolutePath());
+                    saveFfmpegFile(packedFfmpegFile.getAbsolutePath());
                 } catch (SettingException e) {
-                    ffmpegFile = null;
                     log.error("failed to validate and save packed ffmpeg: " + e.getMessage());
                 }
             }
@@ -359,16 +315,18 @@ public class Settings {
     }
 
     private static Optional<File> getPackedFfprobeFile() {
-        File folderWithJar = getFolderWithJar().orElse(null);
-        if (folderWithJar == null) {
+        File directoryWithJar;
+        try {
+            directoryWithJar = getDirectoryWithJar();
+        } catch (IllegalStateException e) {
             return Optional.empty();
         }
 
         File result;
         if (SystemUtils.IS_OS_LINUX) {
-            result = new File(folderWithJar, "ffmpeg/ffprobe");
+            result = new File(directoryWithJar, "ffmpeg/ffprobe");
         } else if (SystemUtils.IS_OS_WINDOWS) {
-            result = new File(folderWithJar, "ffmpeg/bin/ffprobe.exe");
+            result = new File(directoryWithJar, "ffmpeg/bin/ffprobe.exe");
         } else {
             return Optional.empty();
         }
@@ -380,35 +338,41 @@ public class Settings {
         return Optional.of(result);
     }
 
-    private static Optional<File> getFolderWithJar() {
-        File result;
+    /**
+     * @return the directory containing jar file that is running.
+     * @throws IllegalStateException if directory can't be located for some reason
+     */
+    private static File getDirectoryWithJar() {
+        File jar;
         try {
-            result = new File(Settings.class.getProtectionDomain().getCodeSource().getLocation().toURI())
-                    .getParentFile();
+            jar = new File(Settings.class.getProtectionDomain().getCodeSource().getLocation().toURI());
         } catch (URISyntaxException e) {
             log.error("failed to get jar location: " + ExceptionUtils.getStackTrace(e));
-            return Optional.empty();
+            throw new IllegalStateException();
         }
 
+        File result = jar.getParentFile();
         if (result == null) {
             log.error("folder with jar is null, that shouldn't happen");
-            return Optional.empty();
+            throw new NullPointerException();
         }
 
-        return Optional.of(result);
+        return result;
     }
 
     private static Optional<File> getPackedFfmpegFile() {
-        File folderWithJar = getFolderWithJar().orElse(null);
-        if (folderWithJar == null) {
+        File directoryWithJar;
+        try {
+            directoryWithJar = getDirectoryWithJar();
+        } catch (IllegalStateException e) {
             return Optional.empty();
         }
 
         File result;
         if (SystemUtils.IS_OS_LINUX) {
-            result = new File(folderWithJar, "ffmpeg/ffmpeg");
+            result = new File(directoryWithJar, "ffmpeg/ffmpeg");
         } else if (SystemUtils.IS_OS_WINDOWS) {
-            result = new File(folderWithJar, "ffmpeg/bin/ffmpeg.exe");
+            result = new File(directoryWithJar, "ffmpeg/bin/ffmpeg.exe");
         } else {
             return Optional.empty();
         }
@@ -420,156 +384,96 @@ public class Settings {
         return Optional.of(result);
     }
 
-    public void saveUpperSubtitlesLastDirectory(String rawValue) throws SettingException {
-        File directory = getValidatedDirectory(rawValue).orElse(null);
-        if (directory == null) {
-            throw new EmptyValueException();
-        }
-
-        upperSubtitlesLastDirectory = directory;
-        preferences.put(SettingType.UPPER_SUBTITLES_LAST_DIRECTORY.getCode(), directory.getAbsolutePath());
+    public void saveUpperSubtitlesDirectory(String rawValue) throws SettingException {
+        upperSubtitlesDirectory = getValidatedDirectory(rawValue);
+        preferences.put(UPPER_SUBTITLES_DIRECTORY.getCode(), upperSubtitlesDirectory.getAbsolutePath());
     }
 
-    public void saveLowerSubtitlesLastDirectory(String rawValue) throws SettingException {
-        File directory = getValidatedDirectory(rawValue).orElse(null);
-        if (directory == null) {
-            throw new EmptyValueException();
-        }
-
-        lowerSubtitlesLastDirectory = directory;
-        preferences.put(SettingType.LOWER_SUBTITLES_LAST_DIRECTORY.getCode(), directory.getAbsolutePath());
+    public void saveLowerSubtitlesDirectory(String rawValue) throws SettingException {
+        lowerSubtitlesDirectory = getValidatedDirectory(rawValue);
+        preferences.put(LOWER_SUBTITLES_DIRECTORY.getCode(), lowerSubtitlesDirectory.getAbsolutePath());
     }
 
-    public void saveMergedSubtitlesLastDirectory(String rawValue) throws SettingException {
-        File directory = getValidatedDirectory(rawValue).orElse(null);
-        if (directory == null) {
-            throw new EmptyValueException();
-        }
-
-        mergedSubtitlesLastDirectory = directory;
-        preferences.put("merged_subtitles_last_directory", directory.getAbsolutePath());
+    public void saveMergedSubtitlesDirectory(String rawValue) throws SettingException {
+        mergedSubtitlesDirectory = getValidatedDirectory(rawValue);
+        preferences.put(MERGED_SUBTITLES_DIRECTORY.getCode(), mergedSubtitlesDirectory.getAbsolutePath());
     }
 
     public void saveFfprobeFile(String rawValue) throws SettingException {
-        File ffprobeFile = getValidatedFfprobeFile(rawValue).orElse(null);
-        if (ffprobeFile == null) {
-            throw new EmptyValueException();
-        }
-
-        this.ffprobeFile = ffprobeFile;
-        preferences.put(SettingType.FFPROBE_PATH.getCode(), ffprobeFile.getAbsolutePath());
-        missingSettings.remove(SettingType.FFPROBE_PATH);
+        ffprobeFile = getValidatedFfprobeFile(rawValue);
+        preferences.put(FFPROBE_PATH.getCode(), ffprobeFile.getAbsolutePath());
+        missingSettings.remove(FFPROBE_PATH);
     }
 
     public void clearFfprobeFile() {
         ffprobeFile = null;
-        preferences.remove(SettingType.FFPROBE_PATH.getCode());
-        missingSettings.add(SettingType.FFPROBE_PATH);
+        preferences.remove(FFPROBE_PATH.getCode());
+        missingSettings.add(FFPROBE_PATH);
     }
 
     public void saveFfmpegFile(String rawValue) throws SettingException {
-        File ffmpegFile = getValidatedFfmpegFile(rawValue).orElse(null);
-        if (ffmpegFile == null) {
-            throw new EmptyValueException();
-        }
-
-        this.ffmpegFile = ffmpegFile;
-        preferences.put(SettingType.FFMPEG_PATH.getCode(), ffmpegFile.getAbsolutePath());
-        missingSettings.remove(SettingType.FFMPEG_PATH);
+        ffmpegFile = getValidatedFfmpegFile(rawValue);
+        preferences.put(FFMPEG_PATH.getCode(), ffmpegFile.getAbsolutePath());
+        missingSettings.remove(FFMPEG_PATH);
     }
 
     public void clearFfmpegFile() {
         ffmpegFile = null;
-        preferences.remove(SettingType.FFMPEG_PATH.getCode());
-        missingSettings.add(SettingType.FFMPEG_PATH);
+        preferences.remove(FFMPEG_PATH.getCode());
+        missingSettings.add(FFMPEG_PATH);
     }
 
     public void saveUpperLanguage(String rawValue) throws SettingException {
-        LanguageAlpha3Code language = getValidatedLanguage(rawValue).orElse(null);
-        if (language == null) {
-            throw new EmptyValueException();
-        }
-
-        upperLanguage = language;
-        preferences.put(SettingType.UPPER_LANGUAGE.getCode(), upperLanguage.toString());
-        missingSettings.remove(SettingType.UPPER_LANGUAGE);
+        upperLanguage = getValidatedLanguage(rawValue);
+        preferences.put(UPPER_LANGUAGE.getCode(), upperLanguage.toString());
+        missingSettings.remove(UPPER_LANGUAGE);
     }
 
     public void saveLowerLanguage(String rawValue) throws SettingException {
-        LanguageAlpha3Code language = getValidatedLanguage(rawValue).orElse(null);
-        if (language == null) {
-            throw new EmptyValueException();
-        }
-
-        lowerLanguage = language;
-        preferences.put(SettingType.LOWER_LANGUAGE.getCode(), lowerLanguage.toString());
-        missingSettings.remove(SettingType.LOWER_LANGUAGE);
+        lowerLanguage = getValidatedLanguage(rawValue);
+        preferences.put(LOWER_LANGUAGE.getCode(), lowerLanguage.toString());
+        missingSettings.remove(LOWER_LANGUAGE);
     }
 
     public void saveMergeMode(String rawValue) throws SettingException {
-        MergeMode mergeMode = getValidatedMergeMode(rawValue).orElse(null);
-        if (mergeMode == null) {
-            throw new EmptyValueException();
-        }
-
-        this.mergeMode = mergeMode;
-        preferences.put(SettingType.MERGE_MODE.getCode(), mergeMode.toString());
-        missingSettings.remove(SettingType.MERGE_MODE);
+        mergeMode = getValidatedMergeMode(rawValue);
+        preferences.put(MERGE_MODE.getCode(), mergeMode.toString());
+        missingSettings.remove(MERGE_MODE);
     }
 
     public void saveMarkMergedStreamAsDefault(String rawValue) throws SettingException {
-        Boolean markMergedStreamAsDefault = getValidatedBoolean(rawValue).orElse(null);
-        if (markMergedStreamAsDefault == null) {
-            throw new EmptyValueException();
-        }
-
-        this.markMergedStreamAsDefault = markMergedStreamAsDefault;
-        preferences.put(SettingType.MARK_MERGED_STREAM_AS_DEFAULT.getCode(), markMergedStreamAsDefault.toString());
+        makeMergedStreamsDefault = getValidatedBoolean(rawValue);
+        preferences.put(MAKE_MERGED_STREAMS_DEFAULT.getCode(), Boolean.toString(makeMergedStreamsDefault));
     }
 
-    public void saveLastDirectoryWithVideos(String rawValue) throws SettingException {
-        File directory = getValidatedDirectory(rawValue).orElse(null);
-        if (directory == null) {
-            throw new EmptyValueException();
-        }
-
-        lastDirectoryWithVideos = directory;
-        preferences.put(SettingType.LAST_DIRECTORY_WITH_VIDEOS.getCode(), directory.getAbsolutePath());
+    public void saveDirectoryWithVideos(String rawValue) throws SettingException {
+        videosDirectory = getValidatedDirectory(rawValue);
+        preferences.put(VIDEOS_DIRECTORY.getCode(), videosDirectory.getAbsolutePath());
     }
 
     public void saveSortBy(String rawValue) throws SettingException {
-        SortBy sortBy = getValidatedSortBy(rawValue).orElse(null);
-        if (sortBy == null) {
-            throw new EmptyValueException();
-        }
-
-        this.sortBy = sortBy;
-        preferences.put(SettingType.SORT_BY.getCode(), sortBy.toString());
+        sortBy = getValidatedSortBy(rawValue);
+        preferences.put(SORT_BY.getCode(), sortBy.toString());
     }
 
     public void saveSortDirection(String rawValue) throws SettingException {
-        SortDirection sortDirection = getValidatedSortDirection(rawValue).orElse(null);
-        if (sortDirection == null) {
-            throw new EmptyValueException();
-        }
-
-        this.sortDirection = sortDirection;
-        preferences.put(SettingType.SORT_DIRECTION.getCode(), sortDirection.toString());
+        sortDirection = getValidatedSortDirection(rawValue);
+        preferences.put(SORT_DIRECTION.getCode(), sortDirection.toString());
     }
 
-    public void saveLastDirectoryWithExternalSubtitles(String rawValue) throws SettingException {
-        File directory = getValidatedDirectory(rawValue).orElse(null);
-        if (directory == null) {
-            throw new EmptyValueException();
-        }
-
-        lastDirectoryWithExternalSubtitles = directory;
-        preferences.put(SettingType.LAST_DIRECTORY_WITH_EXTERNAL_SUBTITLES.getCode(), directory.getAbsolutePath());
+    public void saveDirectoryWithExternalSubtitles(String rawValue) throws SettingException {
+        externalSubtitlesDirectory = getValidatedDirectory(rawValue);
+        preferences.put(EXTERNAL_SUBTITLES_DIRECTORY.getCode(), externalSubtitlesDirectory.getAbsolutePath());
     }
     
     private static class EmptyValueException extends SettingException {
         EmptyValueException() {
             super("empty value");
         }
+    }
+
+    @FunctionalInterface
+    private interface SettingValidator<T> {
+        T getValidatedValue(String rawValue) throws SettingException;
     }
 }
