@@ -24,17 +24,17 @@ public class MissingSettingsPaneController {
         this.context = context;
 
         updateLabels();
-        context.getSettings().getMissingSettings().addListener((InvalidationListener) observable -> updateLabels());
+        context.getMissingSettings().addListener((InvalidationListener) observable -> updateLabels());
     }
 
     private void updateLabels() {
         labelsPane.getChildren().clear();
 
-        if (CollectionUtils.isEmpty(context.getSettings().getMissingSettings())) {
+        if (CollectionUtils.isEmpty(context.getMissingSettings())) {
             return;
         }
 
-        for (SettingType settingType : context.getSettings().getMissingSettings()) {
+        for (SettingType settingType : context.getMissingSettings()) {
             labelsPane.getChildren().add(new Label("\u2022 " + getText(settingType)));
         }
     }

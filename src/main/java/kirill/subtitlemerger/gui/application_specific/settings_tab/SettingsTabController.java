@@ -20,8 +20,9 @@ import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
 import kirill.subtitlemerger.logic.settings.MergeMode;
-import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.logic.settings.SettingException;
+import kirill.subtitlemerger.logic.settings.SettingType;
+import kirill.subtitlemerger.logic.settings.Settings;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -151,6 +152,7 @@ public class SettingsTabController {
 
                 settings.saveFfprobeFile(path);
                 context.setFfprobe(new Ffprobe(settings.getFfprobeFile()));
+                context.getMissingSettings().remove(SettingType.FFPROBE_PATH);
 
                 if (previousValue != null) {
                     if (Objects.equals(settings.getFfprobeFile(), previousValue)) {
@@ -200,6 +202,7 @@ public class SettingsTabController {
 
                 settings.saveFfmpegFile(path);
                 context.setFfmpeg(new Ffmpeg(settings.getFfmpegFile()));
+                context.getMissingSettings().remove(SettingType.FFMPEG_PATH);
 
                 if (previousValue != null) {
                     if (Objects.equals(settings.getFfmpegFile(), previousValue)) {
@@ -328,7 +331,8 @@ public class SettingsTabController {
         }
 
         try {
-            context.getSettings().saveMergeMode(mergeMode.toString());
+            settings.saveMergeMode(mergeMode.toString());
+            context.getMissingSettings().remove(SettingType.MERGE_MODE);
             setMarkCheckBoxVisibility();
 
             actionResultLabels.setOnlySuccess("Merge mode has been saved successfully");
@@ -481,6 +485,7 @@ public class SettingsTabController {
 
         try {
             settings.saveUpperLanguage(value.toString());
+            context.getMissingSettings().remove(SettingType.UPPER_LANGUAGE);
             setSwapLanguagesButtonVisibility();
 
             if (hadValueBefore) {
@@ -532,6 +537,7 @@ public class SettingsTabController {
 
         try {
             settings.saveLowerLanguage(value.toString());
+            context.getMissingSettings().remove(SettingType.LOWER_LANGUAGE);
             setSwapLanguagesButtonVisibility();
 
             if (hadValueBefore) {

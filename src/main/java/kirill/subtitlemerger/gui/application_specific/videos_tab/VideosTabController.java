@@ -29,15 +29,15 @@ public class VideosTabController {
         this.choicePaneController.initialize(this, contentPaneController, stage, context);
         this.contentPaneController.initialize(this, stage, context);
 
-        context.getSettings().getMissingSettings().addListener((InvalidationListener) observable -> {
-            setActivePane(haveMissingSettings(context.getSettings()) ? ActivePane.MISSING_SETTINGS : ActivePane.CHOICE);
+        context.getMissingSettings().addListener((InvalidationListener) observable -> {
+            setActivePane(haveMissingSettings(context) ? ActivePane.MISSING_SETTINGS : ActivePane.CHOICE);
         });
 
-        setActivePane(haveMissingSettings(context.getSettings()) ? ActivePane.MISSING_SETTINGS : ActivePane.CHOICE);
+        setActivePane(haveMissingSettings(context) ? ActivePane.MISSING_SETTINGS : ActivePane.CHOICE);
     }
 
-    private static boolean haveMissingSettings(Settings settings) {
-        return !CollectionUtils.isEmpty(settings.getMissingSettings());
+    private static boolean haveMissingSettings(GuiContext context) {
+        return !CollectionUtils.isEmpty(context.getMissingSettings());
     }
 
     void setActivePane(ActivePane activePane) {

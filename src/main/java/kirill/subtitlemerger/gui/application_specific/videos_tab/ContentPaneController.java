@@ -445,7 +445,7 @@ public class ContentPaneController extends AbstractController {
 
             try {
                 if (fileWithSubtitlesToAdd.getParent() != null) {
-                    context.getSettings().saveLastDirectoryWithExternalSubtitles(fileWithSubtitlesToAdd.getParent());
+                    context.getSettings().saveDirectoryWithExternalSubtitles(fileWithSubtitlesToAdd.getParent());
                 }
             } catch (SettingException e) {
                 log.warn("failed to save last directory:" + ExceptionUtils.getStackTrace(e));
@@ -481,7 +481,7 @@ public class ContentPaneController extends AbstractController {
 
         fileChooser.setTitle("Please choose a file with the subtitles");
 
-        File initialDirectory = settings.getExternalSubtitlesLastDirectory();
+        File initialDirectory = settings.getExternalSubtitlesDirectory();
         if (initialDirectory == null) {
             File directoryWithFile = fileInfo.getFile().getParentFile();
             if (directoryWithFile != null && directoryWithFile.isDirectory()) {
@@ -602,7 +602,7 @@ public class ContentPaneController extends AbstractController {
 
     void handleChosenFiles(List<File> files) {
         try {
-            context.getSettings().saveLastDirectoryWithVideos(files.get(0).getParent());
+            context.getSettings().saveDirectoryWithVideos(files.get(0).getParent());
         } catch (SettingException e) {
             log.warn("failed to save last directory with videos: " + ExceptionUtils.getStackTrace(e));
         }
@@ -664,7 +664,7 @@ public class ContentPaneController extends AbstractController {
 
         try {
             if (fileOrigin == FileOrigin.FILE_CHOOSER) {
-                context.getSettings().saveLastDirectoryWithVideos(path);
+                context.getSettings().saveDirectoryWithVideos(path);
             }
         } catch (SettingException e) {
             log.warn("failed to save last directory with videos: " + ExceptionUtils.getStackTrace(e));
@@ -1061,7 +1061,7 @@ public class ContentPaneController extends AbstractController {
         }
 
         try {
-            context.getSettings().saveLastDirectoryWithVideos(filesToAdd.get(0).getParent());
+            context.getSettings().saveDirectoryWithVideos(filesToAdd.get(0).getParent());
         } catch (SettingException e) {
             log.warn("failed to save last directory with videos: " + ExceptionUtils.getStackTrace(e));
         }

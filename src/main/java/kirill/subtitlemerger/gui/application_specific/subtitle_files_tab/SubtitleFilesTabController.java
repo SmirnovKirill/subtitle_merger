@@ -126,7 +126,7 @@ public class SubtitleFilesTabController extends AbstractController {
                 @SuppressWarnings("SimplifyOptionalCallChains")
                 File parent = Utils.getParentDirectory(inputFileInfo.getFile()).orElse(null);
                 if (parent != null) {
-                    saveLastDirectoryInConfig(fileType.getExtendedFileType(), parent, settings);
+                    saveDirectoryInConfig(fileType.getExtendedFileType(), parent, settings);
                 }
             }
             filesInfo.setMergedSubtitles(null);
@@ -274,17 +274,17 @@ public class SubtitleFilesTabController extends AbstractController {
         }
     }
 
-    private static void saveLastDirectoryInConfig(ExtendedFileType fileType, File parent, Settings settings) {
+    private static void saveDirectoryInConfig(ExtendedFileType fileType, File parent, Settings settings) {
         try {
             switch (fileType) {
                 case UPPER_SUBTITLES:
-                    settings.saveUpperSubtitlesLastDirectory(parent.getAbsolutePath());
+                    settings.saveUpperSubtitlesDirectory(parent.getAbsolutePath());
                     return;
                 case LOWER_SUBTITLES:
-                    settings.saveLowerSubtitlesLastDirectory(parent.getAbsolutePath());
+                    settings.saveLowerSubtitlesDirectory(parent.getAbsolutePath());
                     return;
                 case MERGED_SUBTITLES:
-                    settings.saveMergedSubtitlesLastDirectory(parent.getAbsolutePath());
+                    settings.saveMergedSubtitlesDirectory(parent.getAbsolutePath());
                     return;
                 default:
                     throw new IllegalStateException();
@@ -522,7 +522,7 @@ public class SubtitleFilesTabController extends AbstractController {
             @SuppressWarnings("SimplifyOptionalCallChains")
             File parent = Utils.getParentDirectory(mergedFileInfo.getFile()).orElse(null);
             if (parent != null) {
-                saveLastDirectoryInConfig(ExtendedFileType.MERGED_SUBTITLES, parent, settings);
+                saveDirectoryInConfig(ExtendedFileType.MERGED_SUBTITLES, parent, settings);
             }
         }
 
@@ -645,16 +645,16 @@ public class SubtitleFilesTabController extends AbstractController {
         if (fileType == InputFileType.UPPER_SUBTITLES) {
             chooserTitle = "Please choose the file with the upper subtitles";
             chooserInitialDirectory = ObjectUtils.firstNonNull(
-                    settings.getUpperSubtitlesLastDirectory(),
-                    settings.getLowerSubtitlesLastDirectory(),
-                    settings.getMergedSubtitlesLastDirectory()
+                    settings.getUpperSubtitlesDirectory(),
+                    settings.getLowerSubtitlesDirectory(),
+                    settings.getMergedSubtitlesDirectory()
             );
         } else if (fileType == InputFileType.LOWER_SUBTITLES) {
             chooserTitle = "Please choose the file with the lower subtitles";
             chooserInitialDirectory = ObjectUtils.firstNonNull(
-                    settings.getLowerSubtitlesLastDirectory(),
-                    settings.getUpperSubtitlesLastDirectory(),
-                    settings.getMergedSubtitlesLastDirectory()
+                    settings.getLowerSubtitlesDirectory(),
+                    settings.getUpperSubtitlesDirectory(),
+                    settings.getMergedSubtitlesDirectory()
             );
         } else {
             throw new IllegalStateException();
@@ -759,9 +759,9 @@ public class SubtitleFilesTabController extends AbstractController {
         fileChooser.setTitle("Please choose where to save the result");
         fileChooser.setInitialDirectory(
                 ObjectUtils.firstNonNull(
-                        settings.getMergedSubtitlesLastDirectory(),
-                        settings.getUpperSubtitlesLastDirectory(),
-                        settings.getLowerSubtitlesLastDirectory()
+                        settings.getMergedSubtitlesDirectory(),
+                        settings.getUpperSubtitlesDirectory(),
+                        settings.getLowerSubtitlesDirectory()
                 )
         );
         fileChooser.getExtensionFilters().add(

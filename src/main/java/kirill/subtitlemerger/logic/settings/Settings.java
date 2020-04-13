@@ -56,16 +56,9 @@ public class Settings {
 
     private File externalSubtitlesDirectory;
 
-    /**
-     * Settings required for merging in videos.
-     */
-    private ObservableSet<SettingType> missingSettings;
-
     public Settings() {
         preferences = Preferences.userRoot().node(PREFERENCES_ROOT_NODE);
         initSavedSettings(preferences);
-
-        missingSettings = generateMissingSettings();
 
         setDefaultSettingsIfNecessary();
     }
@@ -402,43 +395,36 @@ public class Settings {
     public void saveFfprobeFile(String rawValue) throws SettingException {
         ffprobeFile = getValidatedFfprobeFile(rawValue);
         preferences.put(FFPROBE_PATH.getCode(), ffprobeFile.getAbsolutePath());
-        missingSettings.remove(FFPROBE_PATH);
     }
 
     public void clearFfprobeFile() {
         ffprobeFile = null;
         preferences.remove(FFPROBE_PATH.getCode());
-        missingSettings.add(FFPROBE_PATH);
     }
 
     public void saveFfmpegFile(String rawValue) throws SettingException {
         ffmpegFile = getValidatedFfmpegFile(rawValue);
         preferences.put(FFMPEG_PATH.getCode(), ffmpegFile.getAbsolutePath());
-        missingSettings.remove(FFMPEG_PATH);
     }
 
     public void clearFfmpegFile() {
         ffmpegFile = null;
         preferences.remove(FFMPEG_PATH.getCode());
-        missingSettings.add(FFMPEG_PATH);
     }
 
     public void saveUpperLanguage(String rawValue) throws SettingException {
         upperLanguage = getValidatedLanguage(rawValue);
         preferences.put(UPPER_LANGUAGE.getCode(), upperLanguage.toString());
-        missingSettings.remove(UPPER_LANGUAGE);
     }
 
     public void saveLowerLanguage(String rawValue) throws SettingException {
         lowerLanguage = getValidatedLanguage(rawValue);
         preferences.put(LOWER_LANGUAGE.getCode(), lowerLanguage.toString());
-        missingSettings.remove(LOWER_LANGUAGE);
     }
 
     public void saveMergeMode(String rawValue) throws SettingException {
         mergeMode = getValidatedMergeMode(rawValue);
         preferences.put(MERGE_MODE.getCode(), mergeMode.toString());
-        missingSettings.remove(MERGE_MODE);
     }
 
     public void saveMarkMergedStreamAsDefault(String rawValue) throws SettingException {
