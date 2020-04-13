@@ -645,16 +645,16 @@ public class SubtitleFilesTabController extends AbstractController {
         if (fileType == InputFileType.UPPER_SUBTITLES) {
             chooserTitle = "Please choose the file with the upper subtitles";
             chooserInitialDirectory = ObjectUtils.firstNonNull(
-                    settings.getUpperSubtitlesDirectory(),
-                    settings.getLowerSubtitlesDirectory(),
-                    settings.getMergedSubtitlesDirectory()
+                    settings.getUpperDirectory(),
+                    settings.getLowerDirectory(),
+                    settings.getMergedDirectory()
             );
         } else if (fileType == InputFileType.LOWER_SUBTITLES) {
             chooserTitle = "Please choose the file with the lower subtitles";
             chooserInitialDirectory = ObjectUtils.firstNonNull(
-                    settings.getLowerSubtitlesDirectory(),
-                    settings.getUpperSubtitlesDirectory(),
-                    settings.getMergedSubtitlesDirectory()
+                    settings.getLowerDirectory(),
+                    settings.getUpperDirectory(),
+                    settings.getMergedDirectory()
             );
         } else {
             throw new IllegalStateException();
@@ -759,9 +759,9 @@ public class SubtitleFilesTabController extends AbstractController {
         fileChooser.setTitle("Please choose where to save the result");
         fileChooser.setInitialDirectory(
                 ObjectUtils.firstNonNull(
-                        settings.getMergedSubtitlesDirectory(),
-                        settings.getUpperSubtitlesDirectory(),
-                        settings.getLowerSubtitlesDirectory()
+                        settings.getMergedDirectory(),
+                        settings.getUpperDirectory(),
+                        settings.getLowerDirectory()
                 )
         );
         fileChooser.getExtensionFilters().add(

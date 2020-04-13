@@ -481,7 +481,7 @@ public class ContentPaneController extends AbstractController {
 
         fileChooser.setTitle("Please choose a file with the subtitles");
 
-        File initialDirectory = settings.getExternalSubtitlesDirectory();
+        File initialDirectory = settings.getExternalDirectory();
         if (initialDirectory == null) {
             File directoryWithFile = fileInfo.getFile().getParentFile();
             if (directoryWithFile != null && directoryWithFile.isDirectory()) {

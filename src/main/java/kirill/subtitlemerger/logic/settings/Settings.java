@@ -26,11 +26,11 @@ public class Settings {
 
     private Preferences preferences;
 
-    private File upperSubtitlesDirectory;
+    private File upperDirectory;
 
-    private File lowerSubtitlesDirectory;
+    private File lowerDirectory;
 
-    private File mergedSubtitlesDirectory;
+    private File mergedDirectory;
 
     private File ffprobeFile;
 
@@ -50,7 +50,7 @@ public class Settings {
 
     private SortDirection sortDirection;
 
-    private File externalSubtitlesDirectory;
+    private File externalDirectory;
 
     public Settings() {
         preferences = Preferences.userRoot().node(PREFERENCES_ROOT_NODE);
@@ -60,30 +60,15 @@ public class Settings {
     }
 
     private void initSavedSettings(Preferences preferences) {
-        upperSubtitlesDirectory = getSetting(
-                UPPER_SUBTITLES_DIRECTORY,
-                Settings::getValidatedDirectory,
-                preferences
-        ).orElse(null);
-
-        lowerSubtitlesDirectory = getSetting(
-                LOWER_SUBTITLES_DIRECTORY,
-                Settings::getValidatedDirectory,
-                preferences
-        ).orElse(null);
-
-        mergedSubtitlesDirectory = getSetting(
-                MERGED_SUBTITLES_DIRECTORY,
-                Settings::getValidatedDirectory,
-                preferences
-        ).orElse(null);
+        upperDirectory = getSetting(UPPER_DIRECTORY, Settings::getValidatedDirectory, preferences).orElse(null);
+        lowerDirectory = getSetting(LOWER_DIRECTORY, Settings::getValidatedDirectory, preferences).orElse(null);
+        mergedDirectory = getSetting(MERGED_DIRECTORY, Settings::getValidatedDirectory, preferences).orElse(null);
 
         ffprobeFile = getSetting(FFPROBE_PATH, Settings::getValidatedFfprobeFile, preferences).orElse(null);
         ffmpegFile = getSetting(FFMPEG_PATH, Settings::getValidatedFfmpegFile, preferences).orElse(null);
         upperLanguage = getSetting(UPPER_LANGUAGE, Settings::getValidatedLanguage, preferences).orElse(null);
         lowerLanguage = getSetting(LOWER_LANGUAGE, Settings::getValidatedLanguage, preferences).orElse(null);
         mergeMode = getSetting(MERGE_MODE, Settings::getValidatedMergeMode, preferences).orElse(null);
-
         makeMergedStreamsDefault = getSetting(
                 MAKE_MERGED_STREAMS_DEFAULT,
                 Settings::getValidatedBoolean,
@@ -93,12 +78,7 @@ public class Settings {
         videosDirectory = getSetting(VIDEOS_DIRECTORY, Settings::getValidatedDirectory, preferences).orElse(null);
         sortBy = getSetting(SORT_BY, Settings::getValidatedSortBy, preferences).orElse(null);
         sortDirection = getSetting(SORT_DIRECTION, Settings::getValidatedSortDirection, preferences).orElse(null);
-
-        externalSubtitlesDirectory = getSetting(
-                EXTERNAL_SUBTITLES_DIRECTORY,
-                Settings::getValidatedDirectory,
-                preferences
-        ).orElse(null);
+        externalDirectory = getSetting(EXTERNAL_DIRECTORY, Settings::getValidatedDirectory, preferences).orElse(null);
     }
 
     /**
@@ -260,7 +240,7 @@ public class Settings {
                 try {
                     saveFfprobeFile(packedFfprobeFile.getAbsolutePath());
                 } catch (SettingException e) {
-                    log.error("failed to validate and save packed ffprobe: " + e.getMessage());
+                    log.warn("failed to validate and save packed ffprobe: " + e.getMessage());
                 }
             }
         }
@@ -271,7 +251,7 @@ public class Settings {
                 try {
                     saveFfmpegFile(packedFfmpegFile.getAbsolutePath());
                 } catch (SettingException e) {
-                    log.error("failed to validate and save packed ffmpeg: " + e.getMessage());
+                    log.warn("failed to validate and save packed ffmpeg: " + e.getMessage());
                 }
             }
         }
@@ -348,18 +328,18 @@ public class Settings {
     }
 
     public void saveUpperSubtitlesDirectory(String rawValue) throws SettingException {
-        upperSubtitlesDirectory = getValidatedDirectory(rawValue);
-        preferences.put(UPPER_SUBTITLES_DIRECTORY.getCode(), upperSubtitlesDirectory.getAbsolutePath());
+        upperDirectory = getValidatedDirectory(rawValue);
+        preferences.put(UPPER_DIRECTORY.getCode(), upperDirectory.getAbsolutePath());
     }
 
     public void saveLowerSubtitlesDirectory(String rawValue) throws SettingException {
-        lowerSubtitlesDirectory = getValidatedDirectory(rawValue);
-        preferences.put(LOWER_SUBTITLES_DIRECTORY.getCode(), lowerSubtitlesDirectory.getAbsolutePath());
+        lowerDirectory = getValidatedDirectory(rawValue);
+        preferences.put(LOWER_DIRECTORY.getCode(), lowerDirectory.getAbsolutePath());
     }
 
     public void saveMergedSubtitlesDirectory(String rawValue) throws SettingException {
-        mergedSubtitlesDirectory = getValidatedDirectory(rawValue);
-        preferences.put(MERGED_SUBTITLES_DIRECTORY.getCode(), mergedSubtitlesDirectory.getAbsolutePath());
+        mergedDirectory = getValidatedDirectory(rawValue);
+        preferences.put(MERGED_DIRECTORY.getCode(), mergedDirectory.getAbsolutePath());
     }
 
     public void saveFfprobeFile(String rawValue) throws SettingException {
@@ -418,8 +398,8 @@ public class Settings {
     }
 
     public void saveDirectoryWithExternalSubtitles(String rawValue) throws SettingException {
-        externalSubtitlesDirectory = getValidatedDirectory(rawValue);
-        preferences.put(EXTERNAL_SUBTITLES_DIRECTORY.getCode(), externalSubtitlesDirectory.getAbsolutePath());
+        externalDirectory = getValidatedDirectory(rawValue);
+        preferences.put(EXTERNAL_DIRECTORY.getCode(), externalDirectory.getAbsolutePath());
     }
     
     private static class EmptyValueException extends SettingException {
