@@ -146,6 +146,7 @@ public class SettingsTabController {
         if (StringUtils.isBlank(path)) {
             settings.clearFfprobeFile();
             context.setFfprobe(null);
+            context.getMissingSettings().add(SettingType.FFPROBE_PATH);
         } else {
             try {
                 File previousValue = settings.getFfprobeFile();
@@ -196,6 +197,7 @@ public class SettingsTabController {
         if (StringUtils.isBlank(path)) {
             settings.clearFfmpegFile();
             context.setFfmpeg(null);
+            context.getMissingSettings().add(SettingType.FFMPEG_PATH);
         } else {
             try {
                 File previousValue = settings.getFfmpegFile();

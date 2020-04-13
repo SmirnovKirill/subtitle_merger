@@ -1,8 +1,6 @@
 package kirill.subtitlemerger.logic.settings;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableSet;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
@@ -16,9 +14,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
 import java.net.URISyntaxException;
-import java.util.EnumSet;
 import java.util.Optional;
-import java.util.Set;
 import java.util.prefs.Preferences;
 
 import static kirill.subtitlemerger.logic.settings.SettingType.*;
@@ -26,7 +22,7 @@ import static kirill.subtitlemerger.logic.settings.SettingType.*;
 @CommonsLog
 @Getter
 public class Settings {
-    private static final String PREFERENCES_ROOT_NODE = "subtitle_merger";
+    private static final String PREFERENCES_ROOT_NODE = "subtitle-merger";
 
     private Preferences preferences;
 
@@ -243,32 +239,6 @@ public class Settings {
         }
 
         return result;
-    }
-
-    private ObservableSet<SettingType> generateMissingSettings() {
-        Set<SettingType> result = EnumSet.noneOf(SettingType.class);
-
-        if (ffprobeFile == null) {
-            result.add(FFPROBE_PATH);
-        }
-
-        if (ffmpegFile == null) {
-            result.add(FFMPEG_PATH);
-        }
-
-        if (upperLanguage == null) {
-            result.add(UPPER_LANGUAGE);
-        }
-
-        if (lowerLanguage == null) {
-            result.add(LOWER_LANGUAGE);
-        }
-
-        if (mergeMode == null) {
-            result.add(MERGE_MODE);
-        }
-
-        return FXCollections.observableSet(result);
     }
 
     private void setDefaultSettingsIfNecessary() {
