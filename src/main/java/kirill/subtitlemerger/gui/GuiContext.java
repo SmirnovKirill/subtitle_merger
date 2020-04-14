@@ -24,6 +24,11 @@ import static kirill.subtitlemerger.logic.settings.SettingType.*;
 public class GuiContext {
     private Settings settings;
 
+    /**
+     * Settings required for merging in videos.
+     */
+    private ObservableSet<SettingType> missingSettings;
+
     @Setter
     private Ffprobe ffprobe;
 
@@ -31,12 +36,7 @@ public class GuiContext {
     private Ffmpeg ffmpeg;
 
     @Getter(value = AccessLevel.NONE)
-    private BooleanProperty videosInProgress = new SimpleBooleanProperty(false);
-
-    /**
-     * Settings required for merging in videos.
-     */
-    private ObservableSet<SettingType> missingSettings;
+    private BooleanProperty videosInProgress;
 
     public GuiContext() {
         settings = new Settings();
@@ -61,6 +61,8 @@ public class GuiContext {
                 log.error("something's not right, process can't be interrupted");
             }
         }
+
+        videosInProgress = new SimpleBooleanProperty(false);
     }
 
     private static ObservableSet<SettingType> generateMissingSettings(Settings settings) {

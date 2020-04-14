@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import kirill.subtitlemerger.gui.GuiConstants?>
+<?import kirill.subtitlemerger.gui.settings_tab.*?>
+<?import kirill.subtitlemerger.gui.utils.forms_and_controls.ActionResultLabels?>
+<Tab xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+     fx:controller="kirill.subtitlemerger.gui.settings_tab.SettingsTabController"
+     text="Settings">
+    <fx:define>
+        <ToggleGroup fx:id="mergeModeToggleGroup"/>
+    </fx:define>
+
+    <graphic>
+        <ImageView fitHeight="16" fitWidth="16">
+            <Image url="/gui/icons/settings.png"/>
+        </ImageView>
+    </graphic>
+
+    <StackPane stylesheets="/gui/javafx/settings_tabngs_tab/settingsTab.css">
+        <GridPane fx:id="settingsPane" hgap="35">
+            <gridLinesVisible><GuiConstants fx:constant="GRID_LINES_VISIBLE"/></gridLinesVisible>
+
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
+
+            <columnConstraints>
+                <ColumnConstraints hgrow="NEVER"/>
+                <ColumnConstraints hgrow="ALWAYS"/>
+            </columnConstraints>
+
+            <Label text="Path to ffprobe" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <HBox spacing="20" GridPane.rowIndex="0" GridPane.columnIndex="1">
+                <TextField fx:id="ffprobePathField" HBox.hgrow="ALWAYS"/>
+                <Button fx:id="ffprobeSetButton" onAction="#ffprobeFileButtonClicked" text="Choose file"/>
+            </HBox>
+
+            <Label text="Path to ffmpeg" GridPane.rowIndex="1" GridPane.columnIndex="0">
+                <GridPane.margin>
+                    <Insets top="40" bottom="40"/>
+                </GridPane.margin>
+            </Label>
+            <HBox spacing="20" GridPane.rowIndex="1" GridPane.columnIndex="1">
+                <GridPane.margin>
+                    <Insets top="40" bottom="40"/>
+                </GridPane.margin>
+                <TextField fx:id="ffmpegPathField" HBox.hgrow="ALWAYS"/>
+                <Button fx:id="ffmpegSetButton" onAction="#ffmpegFileButtonClicked" text="Choose file"/>
+            </HBox>
+
+            <LabelWithQuestionMark GridPane.rowIndex="2" GridPane.columnIndex="0">
+                <labelText>Preferred language for upper subtitles</labelText>
+                <tooltipText>
+                    This setting will be used to auto-select subtitles to merge when working with videos
+                </tooltipText>
+            </LabelWithQuestionMark>
+            <ComboBox fx:id="upperLanguageComboBox" onAction="#upperLanguageChanged" maxWidth="Infinity"
+                      GridPane.rowIndex="2" GridPane.columnIndex="1">
+            </ComboBox>
+
+            <Region GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+            <Button fx:id="swapLanguagesButton" onAction="#swapLanguagesButtonClicked"
+                    GridPane.rowIndex="3" GridPane.columnIndex="1">
+                <GridPane.margin>
+                    <Insets top="8" bottom="8" left="10"/>
+                </GridPane.margin>
+                <padding>
+                    <Insets/>
+                </padding>
+                <graphic>
+                    <ImageView fitHeight="24" fitWidth="24">
+                        <Image url="/gui/icons/swap.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <LabelWithQuestionMark GridPane.rowIndex="4" GridPane.columnIndex="0">
+                <labelText>Preferred language for lower subtitles</labelText>
+                <tooltipText>
+                    This setting will be used to auto-select subtitles to merge when working with videos
+                </tooltipText>
+            </LabelWithQuestionMark>
+            <ComboBox fx:id="lowerLanguageComboBox" onAction="#lowerLanguageChanged" maxWidth="Infinity"
+                      GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+            <Label text="Video merge mode" GridPane.rowIndex="5" GridPane.columnIndex="0">
+                <GridPane.margin>
+                    <Insets top="40" bottom="40"/>
+                </GridPane.margin>
+            </Label>
+
+            <GridPane hgap="40" vgap="15" GridPane.rowIndex="5" GridPane.columnIndex="1">
+                <gridLinesVisible><GuiConstants fx:constant="GRID_LINES_VISIBLE"/></gridLinesVisible>
+
+                <GridPane.margin>
+                    <Insets top="40" bottom="40"/>
+                </GridPane.margin>
+
+                <MergeModeOption toggleGroup="$mergeModeToggleGroup" GridPane.rowIndex="0" GridPane.columnIndex="0">
+                    <text><SettingsTabController fx:constant="MERGE_MODE_ORIGINAL_VIDEOS"/></text>
+                    <tooltip>
+                        With this option application will inject merged subtitles into original video files. It is the
+                        most convenient option since everything will look as before except for the new merged subtitles in
+                        the subtitle list. This approach requires extra disk space during the merge process (equal to the
+                        size of the largest video to process) because application will create a temporary file first and then
+                        will overwrite the original video with this temporary one. Note that the original files will be
+                        overwritten! And if something goes wrong during the merge you may lose your video files.
+                    </tooltip>
+                </MergeModeOption>
+                <MergeModeOption toggleGroup="$mergeModeToggleGroup" GridPane.rowIndex="0" GridPane.columnIndex="1">
+                    <text><SettingsTabController fx:constant="MERGE_MODE_SEPARATE_SUBTITLE_FILES"/></text>
+                    <tooltip>
+                        With this option application will create separate subtitle files next to the videos. This option is
+                        the least convenient because after the merge you will have to add subtitle files manually when
+                        watching videos. But this option is safe because original files won't be modified in any way. And it
+                        also doesn't require almost any extra disk space.
+                    </tooltip>
+                </MergeModeOption>
+
+                <MergeModeCharacteristicTable GridPane.rowIndex="1" GridPane.columnIndex="0">
+                    <convenienceText>HIGH</convenienceText>
+                    <convenienceStyleClass>green</convenienceStyleClass>
+                    <safetyText>NO</safetyText>
+                    <safetyStyleClass>red</safetyStyleClass>
+                    <diskUsageText>MEDIUM</diskUsageText>
+                    <diskUsageStyleClass>orange</diskUsageStyleClass>
+                </MergeModeCharacteristicTable>
+                <MergeModeCharacteristicTable GridPane.rowIndex="1" GridPane.columnIndex="1">
+                    <convenienceText>LOW</convenienceText>
+                    <convenienceStyleClass>red</convenienceStyleClass>
+                    <safetyText>YES</safetyText>
+                    <safetyStyleClass>green</safetyStyleClass>
+                    <diskUsageText>VERY LOW</diskUsageText>
+                    <diskUsageStyleClass>green</diskUsageStyleClass>
+                </MergeModeCharacteristicTable>
+            </GridPane>
+
+            <LabelWithQuestionMark
+                    visible="${controller.markStreamCheckBoxVisible}" managed="${controller.markStreamCheckBoxVisible}"
+                                   GridPane.rowIndex="6" GridPane.columnIndex="0">
+                <labelText>Mark merged subtitles as default</labelText>
+                <tooltipText>
+                    Merged subtitles will be displayed by the video player by default automatically
+                </tooltipText>
+            </LabelWithQuestionMark>
+            <CheckBox fx:id="makeMergedStreamsDefaultCheckBox"
+                      visible="${controller.markStreamCheckBoxVisible}" managed="${controller.markStreamCheckBoxVisible}"
+                      GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+
+            <Region visible="${controller.markStreamCheckBoxVisible}" managed="${controller.markStreamCheckBoxVisible}"
+                    GridPane.rowIndex="7" GridPane.columnIndex="0" GridPane.columnSpan="2">
+                <GridPane.margin>
+                    <Insets top="20" bottom="20"/>
+                </GridPane.margin>
+            </Region>
+
+            <ActionResultLabels fx:id="actionResultLabels"
+                                GridPane.rowIndex="8" GridPane.columnIndex="0" GridPane.columnSpan="2"/>
+        </GridPane>
+        <HBox fx:id="unavailablePane" visible="false" alignment="TOP_CENTER">
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
+
+            <Label textAlignment="CENTER" styleClass="unavailable-description" wrapText="true" maxWidth="700">
+                Settings tab is unavailable when you work with videos. Please press the "back to selection" button on
+                the tab with videos if you want to change settings.
+            </Label>
+        </HBox>
+    </StackPane>
+</Tab>

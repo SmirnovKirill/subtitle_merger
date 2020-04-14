@@ -5,15 +5,16 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
-import kirill.subtitlemerger.gui.application_specific.MainPaneController;
-import kirill.subtitlemerger.gui.util.GuiUtils;
-import kirill.subtitlemerger.gui.util.entities.NodeInfo;
-import lombok.extern.apachecommons.CommonsLog;
+import kirill.subtitlemerger.gui.utils.GuiUtils;
+import kirill.subtitlemerger.gui.utils.entities.NodeInfo;
 
 import java.awt.*;
 
-@CommonsLog
 public class GuiLauncher extends Application {
+    static {
+        System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
+    }
+
     public static void main(String[] args) {
         launch();
     }
@@ -22,7 +23,7 @@ public class GuiLauncher extends Application {
     public void start(Stage stage) {
         Application.setUserAgentStylesheet(STYLESHEET_MODENA);
 
-        NodeInfo nodeInfo = GuiUtils.loadNode("/gui/application_specific/mainPane.fxml");
+        NodeInfo nodeInfo = GuiUtils.loadNode("/gui/javafx/mainPane.fxml");
 
         MainPaneController controller = nodeInfo.getController();
         controller.initialize(stage, new GuiContext());
@@ -54,7 +55,7 @@ public class GuiLauncher extends Application {
     private static Scene generateScene(Parent node) {
         Scene result = new Scene(node);
 
-        result.getStylesheets().add("/gui/style.css");
+        result.getStylesheets().add("/gui/javafx/style.css");
 
         return result;
     }
