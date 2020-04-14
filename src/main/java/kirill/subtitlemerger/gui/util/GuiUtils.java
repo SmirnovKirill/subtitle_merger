@@ -19,7 +19,7 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import kirill.subtitlemerger.gui.util.custom_forms.AgreementPopupController;
 import kirill.subtitlemerger.gui.util.custom_forms.ErrorPopupController;
-import kirill.subtitlemerger.gui.util.entities.NodeAndController;
+import kirill.subtitlemerger.gui.util.entities.NodeInfo;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -34,6 +34,41 @@ import java.util.function.Consumer;
 
 @CommonsLog
 public class GuiUtils {
+    /**
+     * Uses FXML loader to load provided fxml file.
+     *
+     * @param path path to the fxml file.
+     * @return a wrapper containing root node and its controller.
+     * @throws IllegalStateException if something goes wrong during the process.
+     */
+    public static NodeInfo loadNode(String path) {
+        FXMLLoader fxmlLoader = new FXMLLoader(GuiUtils.class.getResource(path));
+
+        Parent node;
+        try {
+            node = fxmlLoader.load();
+        } catch (IOException e) {
+            log.error("failed to load fxml " + path + ": " + ExceptionUtils.getStackTrace(e));
+            throw new IllegalStateException();
+        } catch (ClassCastException e) {
+            log.error("root object is not a node (not a parent to be more precise)");
+            throw new IllegalStateException();
+        }
+
+        Object controller;
+        try {
+            controller = Objects.requireNonNull(fxmlLoader.getController());
+        } catch (NullPointerException e) {
+            log.error("controller is not set");
+            throw new IllegalStateException();
+        } catch (ClassCastException e) {
+            log.error("controller has an incorrect class");
+            throw new IllegalStateException();
+        }
+
+        return new NodeInfo(node, controller);
+    }
+
     /**
      * Set change listeners so that the onChange method will be invoked each time Enter button is pressed or the focus
      * is lost.
@@ -157,31 +192,6 @@ public class GuiUtils {
         }
     }
 
-    public static NodeAndController loadNodeAndController(String path) {
-        FXMLLoader fxmlLoader = new FXMLLoader(GuiUtils.class.getResource(path));
-
-        Node node;
-        try {
-            node = fxmlLoader.load();
-        } catch (IOException e) {
-            log.error("failed to load fxml " + path + ": " + ExceptionUtils.getStackTrace(e));
-            throw new IllegalStateException();
-        }
-
-        Object controller;
-        try {
-            controller = Objects.requireNonNull(fxmlLoader.getController());
-        } catch (NullPointerException e) {
-            log.error("controller is not set");
-            throw new IllegalStateException();
-        } catch (ClassCastException e) {
-            log.error("controller has an incorrect class");
-            throw new IllegalStateException();
-        }
-
-        return new NodeAndController(node, controller);
-    }
-
     public static void setVisibleAndManaged(Node node, boolean value) {
         node.setVisible(value);
         node.setManaged(value);
@@ -206,7 +216,7 @@ public class GuiUtils {
         region.setMaxWidth(width);
     }
 
-    public static Stage createPopupStage(String title, Parent content, Stage ownerStage) {
+    public static Stage createPopupStage(String title, Parent node, Stage ownerStage) {
         Stage result = new Stage();
 
         //todo set stage parameters in the same manner everywhere
@@ -215,7 +225,7 @@ public class GuiUtils {
         result.initOwner(ownerStage);
         result.setResizable(false);
 
-        Scene scene = new Scene(content);
+        Scene scene = new Scene(node);
         scene.getStylesheets().add("/gui/style.css");
         result.setScene(scene);
 
@@ -223,34 +233,22 @@ public class GuiUtils {
     }
 
     public static void showErrorPopup(String message, Stage ownerStage) {
-        NodeAndController nodeAndController = GuiUtils.loadNodeAndController(
-                "/gui/utils/custom_forms/errorPopup.fxml"
-        );
+        NodeInfo nodeInfo = GuiUtils.loadNode("/gui/utils/custom_forms/errorPopup.fxml");
 
-        Stage popupStage = GuiUtils.createPopupStage(
-                "Error!",
-                nodeAndController.getNode(),
-                ownerStage
-        );
+        Stage popupStage = GuiUtils.createPopupStage("Error!", nodeInfo.getNode(), ownerStage);
 
-        ErrorPopupController controller = nodeAndController.getController();
+        ErrorPopupController controller = nodeInfo.getController();
         controller.initialize(message, popupStage);
 
         popupStage.showAndWait();
     }
 
     public static boolean showAgreementPopup(String message, String yesText, String noText, Stage ownerStage) {
-        NodeAndController nodeAndController = GuiUtils.loadNodeAndController(
-                "/gui/utils/custom_forms/agreementPopup.fxml"
-        );
+        NodeInfo nodeInfo = GuiUtils.loadNode("/gui/utils/custom_forms/agreementPopup.fxml");
 
-        Stage popupStage = GuiUtils.createPopupStage(
-                "Please confirm",
-                nodeAndController.getNode(),
-                ownerStage
-        );
+        Stage popupStage = GuiUtils.createPopupStage("Please confirm", nodeInfo.getNode(), ownerStage);
 
-        AgreementPopupController controller = nodeAndController.getController();
+        AgreementPopupController controller = nodeInfo.getController();
         controller.initialize(message, yesText, noText, null, popupStage);
 
         popupStage.showAndWait();
@@ -265,17 +263,11 @@ public class GuiUtils {
             String applyToAllText,
             Stage ownerStage
     ) {
-        NodeAndController nodeAndController = GuiUtils.loadNodeAndController(
-                "/gui/utils/custom_forms/agreementPopup.fxml"
-        );
+        NodeInfo nodeInfo = GuiUtils.loadNode("/gui/utils/custom_forms/agreementPopup.fxml");
 
-        Stage popupStage = GuiUtils.createPopupStage(
-                "Please confirm",
-                nodeAndController.getNode(),
-                ownerStage
-        );
+        Stage popupStage = GuiUtils.createPopupStage("Please confirm", nodeInfo.getNode(), ownerStage);
 
-        AgreementPopupController controller = nodeAndController.getController();
+        AgreementPopupController controller = nodeInfo.getController();
         controller.initialize(message, yesText, noText, applyToAllText, popupStage);
 
         popupStage.showAndWait();

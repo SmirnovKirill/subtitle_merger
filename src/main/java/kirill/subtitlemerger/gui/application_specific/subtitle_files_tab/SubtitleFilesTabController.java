@@ -15,7 +15,7 @@ import kirill.subtitlemerger.gui.util.background.BackgroundRunnerCallback;
 import kirill.subtitlemerger.gui.util.custom_controls.ActionResultLabels;
 import kirill.subtitlemerger.gui.util.entities.ActionResult;
 import kirill.subtitlemerger.gui.util.entities.FileOrigin;
-import kirill.subtitlemerger.gui.util.entities.NodeAndController;
+import kirill.subtitlemerger.gui.util.entities.NodeInfo;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.SubRipWriter;
@@ -583,17 +583,11 @@ public class SubtitleFilesTabController extends AbstractController {
     }
 
     private SubtitlePreviewController.UserSelection showInputSubtitlePreview(InputFileInfo fileInfo) {
-        NodeAndController nodeAndController = GuiUtils.loadNodeAndController(
-                "/gui/application_specific/subtitlePreview.fxml"
-        );
+        NodeInfo nodeInfo = GuiUtils.loadNode("/gui/application_specific/subtitlePreview.fxml");
 
-        Stage previewStage = GuiUtils.createPopupStage(
-                "Subtitle preview",
-                nodeAndController.getNode(),
-                stage
-        );
+        Stage previewStage = GuiUtils.createPopupStage("Subtitle preview", nodeInfo.getNode(), stage);
 
-        SubtitlePreviewController controller = nodeAndController.getController();
+        SubtitlePreviewController controller = nodeInfo.getController();
         controller.initializeWithEncoding(
                 fileInfo.getRawData(),
                 fileInfo.getEncoding(),
@@ -719,17 +713,11 @@ public class SubtitleFilesTabController extends AbstractController {
 
             filesInfo.setMergedSubtitles(subtitles);
 
-            NodeAndController nodeAndController = GuiUtils.loadNodeAndController(
-                    "/gui/application_specific/subtitlePreview.fxml"
-            );
+            NodeInfo nodeInfo = GuiUtils.loadNode("/gui/application_specific/subtitlePreview.fxml");
 
-            Stage previewStage = GuiUtils.createPopupStage(
-                    "Subtitle preview",
-                    nodeAndController.getNode(),
-                    stage
-            );
+            Stage previewStage = GuiUtils.createPopupStage("Subtitle preview", nodeInfo.getNode(), stage);
 
-            SubtitlePreviewController controller = nodeAndController.getController();
+            SubtitlePreviewController controller = nodeInfo.getController();
             controller.initializeMerged(
                     subtitles,
                     filesInfo.getUpperFileInfo().getPath(),

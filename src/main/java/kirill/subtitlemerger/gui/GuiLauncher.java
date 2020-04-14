@@ -7,7 +7,7 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.application_specific.MainPaneController;
 import kirill.subtitlemerger.gui.util.GuiUtils;
-import kirill.subtitlemerger.gui.util.entities.NodeAndController;
+import kirill.subtitlemerger.gui.util.entities.NodeInfo;
 import lombok.extern.apachecommons.CommonsLog;
 
 import java.awt.*;
@@ -22,17 +22,15 @@ public class GuiLauncher extends Application {
     public void start(Stage stage) {
         Application.setUserAgentStylesheet(STYLESHEET_MODENA);
 
-        NodeAndController nodeAndController = GuiUtils.loadNodeAndController(
-                "/gui/application_specific/mainPane.fxml"
-        );
+        NodeInfo nodeInfo = GuiUtils.loadNode("/gui/application_specific/mainPane.fxml");
 
-        MainPaneController controller = nodeAndController.getController();
+        MainPaneController controller = nodeInfo.getController();
         controller.initialize(stage, new GuiContext());
 
         stage.getIcons().add(new Image(GuiLauncher.class.getResourceAsStream("/gui/icons/icon.png")));
         stage.setTitle("Subtitle merger");
         stage.setResizable(true);
-        stage.setScene(generateScene(nodeAndController.getNode()));
+        stage.setScene(generateScene(nodeInfo.getNode()));
 
         stage.show();
         closeSplashScreen();

@@ -4,8 +4,8 @@ import javafx.scene.Parent;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public class NodeAndController {
-    private Object node;
+public class NodeInfo {
+    private Parent node;
 
     private Object controller;
 

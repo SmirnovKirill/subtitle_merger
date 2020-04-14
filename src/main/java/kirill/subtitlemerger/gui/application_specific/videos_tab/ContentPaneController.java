@@ -9,7 +9,6 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
-import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.gui.application_specific.AbstractController;
 import kirill.subtitlemerger.gui.application_specific.SubtitlePreviewController;
 import kirill.subtitlemerger.gui.application_specific.videos_tab.background.*;
@@ -23,12 +22,13 @@ import kirill.subtitlemerger.gui.util.custom_controls.ActionResultLabels;
 import kirill.subtitlemerger.gui.util.custom_forms.AgreementPopupController;
 import kirill.subtitlemerger.gui.util.entities.ActionResult;
 import kirill.subtitlemerger.gui.util.entities.FileOrigin;
-import kirill.subtitlemerger.gui.util.entities.NodeAndController;
+import kirill.subtitlemerger.gui.util.entities.NodeInfo;
 import kirill.subtitlemerger.logic.files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.files.entities.FileInfo;
 import kirill.subtitlemerger.logic.files.entities.FileWithSubtitles;
 import kirill.subtitlemerger.logic.files.entities.SubtitleOption;
 import kirill.subtitlemerger.logic.settings.SettingException;
+import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.logic.settings.SortBy;
 import kirill.subtitlemerger.logic.settings.SortDirection;
 import lombok.extern.apachecommons.CommonsLog;
@@ -358,17 +358,11 @@ public class ContentPaneController extends AbstractController {
                     fileInfo.getSubtitleOptions()
             );
 
-            NodeAndController nodeAndController = GuiUtils.loadNodeAndController(
-                    "/gui/application_specific/subtitlePreview.fxml"
-            );
+            NodeInfo nodeInfo = GuiUtils.loadNode("/gui/application_specific/subtitlePreview.fxml");
 
-            Stage previewStage = GuiUtils.createPopupStage(
-                    "Subtitle preview",
-                    nodeAndController.getNode(),
-                    stage
-            );
+            Stage previewStage = GuiUtils.createPopupStage("Subtitle preview", nodeInfo.getNode(), stage);
             SubtitlePreviewController controller = getInitializedOptionPreviewController(
-                    nodeAndController,
+                    nodeInfo,
                     subtitleOption,
                     fileInfo,
                     previewStage
@@ -394,12 +388,12 @@ public class ContentPaneController extends AbstractController {
     }
 
     private SubtitlePreviewController getInitializedOptionPreviewController(
-            NodeAndController nodeAndController,
+            NodeInfo nodeInfo,
             SubtitleOption subtitleOption,
             FileInfo fileInfo,
             Stage dialogStage
     ) {
-        SubtitlePreviewController result = nodeAndController.getController();
+        SubtitlePreviewController result = nodeInfo.getController();
 
         if (subtitleOption instanceof FfmpegSubtitleStream) {
             FfmpegSubtitleStream ffmpegStream = (FfmpegSubtitleStream) subtitleOption;
@@ -553,16 +547,10 @@ public class ContentPaneController extends AbstractController {
 
                 fileInfo.setMergedSubtitleInfo(result.getMergedSubtitleInfo());
 
-                NodeAndController nodeAndController = GuiUtils.loadNodeAndController(
-                        "/gui/application_specific/subtitlePreview.fxml"
-                );
+                NodeInfo nodeInfo = GuiUtils.loadNode("/gui/application_specific/subtitlePreview.fxml");
 
-                Stage previewStage = GuiUtils.createPopupStage(
-                        "Subtitle preview",
-                        nodeAndController.getNode(),
-                        stage
-                );
-                SubtitlePreviewController controller = nodeAndController.getController();
+                Stage previewStage = GuiUtils.createPopupStage("Subtitle preview", nodeInfo.getNode(), stage);
+                SubtitlePreviewController controller = nodeInfo.getController();
                 controller.initializeMerged(
                         fileInfo.getMergedSubtitleInfo().getSubtitles(),
                         getOptionTitleForPreview(upperOption),
