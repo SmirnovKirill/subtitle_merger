@@ -5,19 +5,15 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
+import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
-import kirill.subtitlemerger.gui.utils.AbstractController;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerCallback;
+import kirill.subtitlemerger.gui.utils.entities.AbstractController;
 import kirill.subtitlemerger.gui.utils.entities.ActionResult;
-import kirill.subtitlemerger.gui.utils.entities.NoSelectionModel;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.SubRipWriter;
@@ -333,5 +329,60 @@ public class SubtitlePreviewController extends AbstractController {
         private ObservableList<String> linesToDisplay;
 
         private boolean linesTruncated;
+    }
+
+    private static class NoSelectionModel<T> extends MultipleSelectionModel<T> {
+        @Override
+        public ObservableList<Integer> getSelectedIndices() {
+            return FXCollections.emptyObservableList();
+        }
+
+        @Override
+        public ObservableList<T> getSelectedItems() {
+            return FXCollections.emptyObservableList();
+        }
+
+        @Override
+        public void selectIndices(int index, int... indices) {}
+
+        @Override
+        public void selectAll() {}
+
+        @Override
+        public void selectFirst() {}
+
+        @Override
+        public void selectLast() {}
+
+        @Override
+        public void clearAndSelect(int index) {}
+
+        @Override
+        public void select(int index) {}
+
+        @Override
+        public void select(T obj) {}
+
+        @Override
+        public void clearSelection(int index) {}
+
+        @Override
+        public void clearSelection() {}
+
+        @Override
+        public boolean isSelected(int index) {
+            return false;
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return true;
+        }
+
+        @Override
+        public void selectPrevious() {}
+
+        @Override
+        public void selectNext() {}
     }
 }

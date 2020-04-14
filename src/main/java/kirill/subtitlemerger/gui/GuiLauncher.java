@@ -5,6 +5,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import kirill.subtitlemerger.gui.tabs.TabPaneController;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.entities.NodeInfo;
 
@@ -25,7 +26,7 @@ public class GuiLauncher extends Application {
 
         NodeInfo nodeInfo = GuiUtils.loadNode("/gui/javafx/mainPane.fxml");
 
-        MainPaneController controller = nodeInfo.getController();
+        TabPaneController controller = nodeInfo.getController();
         controller.initialize(stage, new GuiContext());
 
         stage.getIcons().add(new Image(GuiLauncher.class.getResourceAsStream("/gui/icons/icon.png")));
