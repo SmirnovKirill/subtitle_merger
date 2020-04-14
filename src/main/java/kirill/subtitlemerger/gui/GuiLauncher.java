@@ -1,6 +1,7 @@
 package kirill.subtitlemerger.gui;
 
 import javafx.application.Application;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
@@ -19,6 +20,8 @@ public class GuiLauncher extends Application {
 
     @Override
     public void start(Stage stage) {
+        Application.setUserAgentStylesheet(STYLESHEET_MODENA);
+
         NodeAndController nodeAndController = GuiUtils.loadNodeAndController(
                 "/gui/application_specific/mainPane.fxml"
         );
@@ -26,21 +29,13 @@ public class GuiLauncher extends Application {
         MainPaneController controller = nodeAndController.getController();
         controller.initialize(stage, new GuiContext());
 
-        Scene scene = new Scene(nodeAndController.getNode());
-        scene.getStylesheets().add("/gui/style.css");
-        stage.setScene(scene);
-
-        stage.setResizable(true);
         stage.getIcons().add(new Image(GuiLauncher.class.getResourceAsStream("/gui/icons/icon.png")));
         stage.setTitle("Subtitle merger");
-        Application.setUserAgentStylesheet(STYLESHEET_MODENA);
+        stage.setResizable(true);
+        stage.setScene(generateScene(nodeAndController.getNode()));
 
         stage.show();
-
-        SplashScreen splash = SplashScreen.getSplashScreen();
-        if (splash != null && splash.isVisible()) {
-            splash.close();
-        }
+        closeSplashScreen();
 
         /*
          * I've encountered a very strange behaviour - at first stage's width and height are set to their computed sizes
@@ -56,5 +51,20 @@ public class GuiLauncher extends Application {
 
         stage.setMinWidth(stage.getWidth());
         stage.setMinHeight(stage.getHeight());
+    }
+
+    private static Scene generateScene(Parent node) {
+        Scene result = new Scene(node);
+
+        result.getStylesheets().add("/gui/style.css");
+
+        return result;
+    }
+
+    private void closeSplashScreen() {
+        SplashScreen splash = SplashScreen.getSplashScreen();
+        if (splash != null && splash.isVisible()) {
+            splash.close();
+        }
     }
 }

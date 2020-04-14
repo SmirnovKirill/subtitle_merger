@@ -607,7 +607,7 @@ public class ContentPaneController extends AbstractController {
             log.warn("failed to save last directory with videos: " + ExceptionUtils.getStackTrace(e));
         }
 
-        context.setWorkWithVideosInProgress(true);
+        context.setVideosInProgress(true);
         GuiUtils.setVisibleAndManaged(addRemoveFilesPane, true);
         hideUnavailableCheckbox.setSelected(false);
         directoryPath = null;
@@ -639,7 +639,7 @@ public class ContentPaneController extends AbstractController {
     }
 
     void handleChosenDirectory(File directory) {
-        context.setWorkWithVideosInProgress(true);
+        context.setVideosInProgress(true);
         GuiUtils.setVisibleAndManaged(chosenDirectoryPane, true);
 
         processDirectoryPath(directory.getAbsolutePath(), FileOrigin.FILE_CHOOSER);
@@ -718,7 +718,7 @@ public class ContentPaneController extends AbstractController {
         tableWithFiles.clearTable();
         lastProcessedFileInfo = null;
 
-        context.setWorkWithVideosInProgress(false);
+        context.setVideosInProgress(false);
         videosTabController.setActivePane(VideosTabController.ActivePane.CHOICE);
     }
 

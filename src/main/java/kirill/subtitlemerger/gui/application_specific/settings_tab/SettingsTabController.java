@@ -127,7 +127,7 @@ public class SettingsTabController {
         setInitialValues();
         mergeModeToggleGroup.selectedToggleProperty().addListener(this::mergeModeChanged);
         makeMergedStreamsDefaultCheckBox.selectedProperty().addListener(this::markStreamAsDefaultChanged);
-        context.workWithVideosInProgressProperty().addListener(this::workWithVideosProgressChanged);
+        context.videosInProgressProperty().addListener(this::videosInProgressChanged);
     }
 
     private void processFfprobePath(String path, FileOrigin fileOrigin) {
@@ -365,7 +365,7 @@ public class SettingsTabController {
         }
     }
 
-    private void workWithVideosProgressChanged(
+    private void videosInProgressChanged(
             ObservableValue<? extends Boolean> observable,
             Boolean oldValue,
             Boolean newValue

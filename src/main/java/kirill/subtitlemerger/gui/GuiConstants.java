@@ -2,15 +2,14 @@ package kirill.subtitlemerger.gui;
 
 import javafx.stage.FileChooser;
 
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.List;
-
 public class GuiConstants {
     public static final boolean GRID_LINES_VISIBLE = false;
 
     public static final int TABLE_FILE_LIMIT = 10_000;
+
+    public static final FileChooser.ExtensionFilter VIDEO_EXTENSION_FILTER = new FileChooser.ExtensionFilter(
+            "mkv files (*.mkv)", "*.mkv"
+    );
 
     public static final String BUTTON_ERROR_CLASS = "button-error";
 
@@ -25,8 +24,4 @@ public class GuiConstants {
     public static final String PANE_UNAVAILABLE_CLASS = "pane-unavailable";
 
     public static final String PANE_ERROR_CLASS = "pane-error";
-
-    public static final FileChooser.ExtensionFilter VIDEO_EXTENSION_FILTER = new FileChooser.ExtensionFilter(
-            "mkv files (*.mkv)", "*.mkv"
-    );
 }

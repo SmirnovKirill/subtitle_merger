@@ -31,7 +31,7 @@ public class GuiContext {
     private Ffmpeg ffmpeg;
 
     @Getter(value = AccessLevel.NONE)
-    private BooleanProperty workWithVideosInProgress = new SimpleBooleanProperty(false);
+    private BooleanProperty videosInProgress = new SimpleBooleanProperty(false);
 
     /**
      * Settings required for merging in videos.
@@ -51,6 +51,7 @@ public class GuiContext {
                 log.error("something's not right, process can't be interrupted");
             }
         }
+
         if (settings.getFfmpegFile() != null) {
             try {
                 ffmpeg = new Ffmpeg(settings.getFfmpegFile());
@@ -88,15 +89,15 @@ public class GuiContext {
         return FXCollections.observableSet(result);
     }
 
-    public boolean isWorkWithVideosInProgress() {
-        return workWithVideosInProgress.get();
+    public boolean getVideosInProgress() {
+        return videosInProgress.get();
     }
 
-    public BooleanProperty workWithVideosInProgressProperty() {
-        return workWithVideosInProgress;
+    public BooleanProperty videosInProgressProperty() {
+        return videosInProgress;
     }
 
-    public void setWorkWithVideosInProgress(boolean workWithVideosInProgress) {
-        this.workWithVideosInProgress.set(workWithVideosInProgress);
+    public void setVideosInProgress(boolean videosInProgress) {
+        this.videosInProgress.set(videosInProgress);
     }
 }
