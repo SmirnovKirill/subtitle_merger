@@ -151,7 +151,7 @@ public class TableSubtitleOption {
     //todo there shouldn't be any enums, gui should be unaware of the logic
 
     public enum UnavailabilityReason {
-        NOT_ALLOWED_CODEC,
+        NOT_ALLOWED_FORMAT,
         INCORRECT_FORMAT
     }
 }

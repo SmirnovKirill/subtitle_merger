@@ -279,9 +279,7 @@ public class TableFileInfo {
     public enum UnavailabilityReason {
         NO_EXTENSION,
         NOT_ALLOWED_EXTENSION,
-        FAILED_TO_GET_MIME_TYPE,
-        NOT_ALLOWED_MIME_TYPE,
-        FAILED_TO_GET_FFPROBE_INFO,
-        NOT_ALLOWED_CONTAINER
+        FFPROBE_FAILED,
+        NOT_ALLOWED_FORMAT
     }
 }

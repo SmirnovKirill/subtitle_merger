@@ -325,13 +325,9 @@ public class TableWithFiles extends TableView<TableFileInfo> {
                 return "File has no extension";
             case NOT_ALLOWED_EXTENSION:
                 return "File has a not allowed extension";
-            case FAILED_TO_GET_MIME_TYPE:
-                return "Failed to get the mime type";
-            case NOT_ALLOWED_MIME_TYPE:
-                return "File has a mime type that is not allowed";
-            case FAILED_TO_GET_FFPROBE_INFO:
+            case FFPROBE_FAILED:
                 return "Failed to get video info with the ffprobe";
-            case NOT_ALLOWED_CONTAINER:
+            case NOT_ALLOWED_FORMAT:
                 return "Video has a format that is not allowed";
             default:
                 throw new IllegalStateException();
@@ -519,12 +515,15 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
         Region spacer = new Region();
 
-        result.getChildren().addAll(
-                generateSizeAndFailedToLoadPane(subtitleOption),
-                spacer,
-                generateLoadSubtitleLink(subtitleOption, fileInfo, singleSubtitleLoader)
-        );
-        HBox.setHgrow(spacer, Priority.ALWAYS);
+        result.getChildren().add(generateSizeAndFailedToLoadPane(subtitleOption));
+
+        if (subtitleOption.getUnavailabilityReason() == null) {
+            result.getChildren().addAll(
+                    spacer,
+                    generateLoadSubtitleLink(subtitleOption, fileInfo, singleSubtitleLoader)
+            );
+            HBox.setHgrow(spacer, Priority.ALWAYS);
+        }
 
         return result;
     }
@@ -620,8 +619,8 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         }
 
         switch (reason) {
-            case NOT_ALLOWED_CODEC:
-                return "Subtitle has a not allowed type";
+            case NOT_ALLOWED_FORMAT:
+                return "Subtitle has a not allowed format";
             case INCORRECT_FORMAT:
                 return "Subtitles have an incorrect format";
             default:
