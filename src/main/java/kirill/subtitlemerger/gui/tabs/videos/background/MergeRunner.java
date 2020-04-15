@@ -105,7 +105,10 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
                                 );
                                 failedCount++;
                             } else {
-                                String subtitleText = SubRipWriter.toText(fileMergeInfo.getMergedSubtitles());
+                                String subtitleText = SubRipWriter.toText(
+                                        fileMergeInfo.getMergedSubtitles(),
+                                        settings.isPlainTextSubtitles()
+                                );
 
                                 FfmpegInjectInfo injectInfo = new FfmpegInjectInfo(
                                         subtitleText,
@@ -147,7 +150,10 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
                         } else if (settings.getMergeMode() == MergeMode.SEPARATE_SUBTITLE_FILES) {
                             FileUtils.writeStringToFile(
                                     fileMergeInfo.getFileWithResult(),
-                                    SubRipWriter.toText(fileMergeInfo.getMergedSubtitles()),
+                                    SubRipWriter.toText(
+                                            fileMergeInfo.getMergedSubtitles(),
+                                            settings.isPlainTextSubtitles()
+                                    ),
                                     StandardCharsets.UTF_8
                             );
 

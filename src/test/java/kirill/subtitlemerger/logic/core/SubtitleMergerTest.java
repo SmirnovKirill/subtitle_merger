@@ -32,6 +32,6 @@ public class SubtitleMergerTest {
                 StandardCharsets.UTF_8
         );
 
-        assertThat(SubRipWriter.toText(merged)).isEqualTo(expected);
+        assertThat(SubRipWriter.toText(merged, true)).isEqualTo(expected);
     }
 }

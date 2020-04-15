@@ -555,6 +555,7 @@ public class ContentPaneController extends AbstractController {
                         fileInfo.getMergedSubtitleInfo().getSubtitles(),
                         getOptionTitleForPreview(upperOption),
                         getOptionTitleForPreview(lowerOption),
+                        context.getSettings().isPlainTextSubtitles(),
                         previewStage
                 );
 

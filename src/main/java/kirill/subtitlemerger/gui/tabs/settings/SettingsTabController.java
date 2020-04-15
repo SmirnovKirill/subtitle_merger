@@ -84,6 +84,9 @@ public class SettingsTabController {
     private BooleanProperty markStreamCheckBoxVisible;
 
     @FXML
+    private CheckBox plainTextCheckBox;
+
+    @FXML
     private ActionResultLabels actionResultLabels;
 
     private String ffprobeCurrentPath;
@@ -126,7 +129,8 @@ public class SettingsTabController {
 
         setInitialValues();
         mergeModeToggleGroup.selectedToggleProperty().addListener(this::mergeModeChanged);
-        makeMergedStreamsDefaultCheckBox.selectedProperty().addListener(this::markStreamAsDefaultChanged);
+        makeMergedStreamsDefaultCheckBox.selectedProperty().addListener(this::makeMergedStreamsDefaultChanged);
+        plainTextCheckBox.selectedProperty().addListener(this::plainTextChanged);
         context.videosInProgressProperty().addListener(this::videosInProgressChanged);
     }
 
@@ -242,6 +246,7 @@ public class SettingsTabController {
         setMarkCheckBoxVisibility();
 
         makeMergedStreamsDefaultCheckBox.setSelected(settings.isMakeMergedStreamsDefault());
+        plainTextCheckBox.setSelected(settings.isPlainTextSubtitles());
     }
 
     private void setFfprobeInitialValue() {
@@ -345,7 +350,7 @@ public class SettingsTabController {
         }
     }
 
-    private void markStreamAsDefaultChanged(
+    private void makeMergedStreamsDefaultChanged(
             ObservableValue<? extends Boolean> observable,
             Boolean oldValue,
             Boolean newValue
@@ -354,14 +359,30 @@ public class SettingsTabController {
             context.getSettings().saveMakeMergedStreamsDefault(newValue.toString());
 
             if (newValue) {
-                actionResultLabels.setOnlySuccess("Flag has been set successfully");
+                actionResultLabels.setOnlySuccess("Merged subtitles will be selected as default from now on");
             } else {
-                actionResultLabels.setOnlySuccess("Flag has been unset successfully");
+                actionResultLabels.setOnlySuccess("Merged subtitles will not be selected as default from now on");
             }
         } catch (SettingException e) {
             log.error("failed to save mark stream as default flag: " + ExceptionUtils.getStackTrace(e));
 
             actionResultLabels.setOnlyError("Something bad has happened, flag value hasn't been saved");
+        }
+    }
+
+    private void plainTextChanged(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+        try {
+            context.getSettings().savePlainTextSubtitles(newValue.toString());
+
+            if (newValue) {
+                actionResultLabels.setOnlySuccess("Merged subtitles will be in plain text from now on");
+            } else {
+                actionResultLabels.setOnlySuccess("Subtitles will have formatting as is from now on");
+            }
+        } catch (SettingException e) {
+            log.error("failed to save plane text flag: " + ExceptionUtils.getStackTrace(e));
+
+            actionResultLabels.setOnlyError("Something bad has happened, plane text flag value hasn't been saved");
         }
     }
 

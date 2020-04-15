@@ -15,6 +15,7 @@ public enum SettingType {
     LOWER_LANGUAGE("lower__subtitles_language"),
     MERGE_MODE("merge_mode"),
     MAKE_MERGED_STREAMS_DEFAULT("make_merged_streams_default"),
+    PLAIN_TEXT_SUBTITLES("plain_text_subtitles"),
     VIDEOS_DIRECTORY("last_directory_with_videos"),
     SORT_BY("sort_by"),
     SORT_DIRECTION("sort_direction"),

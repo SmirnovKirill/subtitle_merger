@@ -56,7 +56,7 @@
             <LabelWithQuestionMark GridPane.rowIndex="2" GridPane.columnIndex="0">
                 <labelText>Preferred language for upper subtitles</labelText>
                 <tooltipText>
-                    This setting will be used to auto-select subtitles to merge when working with videos
+                    This setting will be used to auto-select subtitles to merge when working with videos.
                 </tooltipText>
             </LabelWithQuestionMark>
             <ComboBox fx:id="upperLanguageComboBox" onAction="#upperLanguageChanged" maxWidth="Infinity"
@@ -82,7 +82,7 @@
             <LabelWithQuestionMark GridPane.rowIndex="4" GridPane.columnIndex="0">
                 <labelText>Preferred language for lower subtitles</labelText>
                 <tooltipText>
-                    This setting will be used to auto-select subtitles to merge when working with videos
+                    This setting will be used to auto-select subtitles to merge when working with videos.
                 </tooltipText>
             </LabelWithQuestionMark>
             <ComboBox fx:id="lowerLanguageComboBox" onAction="#lowerLanguageChanged" maxWidth="Infinity"
@@ -145,7 +145,7 @@
                                    GridPane.rowIndex="6" GridPane.columnIndex="0">
                 <labelText>Mark merged subtitles as default</labelText>
                 <tooltipText>
-                    Merged subtitles will be displayed by the video player by default automatically
+                    Merged subtitles will be displayed by the video player by default automatically.
                 </tooltipText>
             </LabelWithQuestionMark>
             <CheckBox fx:id="makeMergedStreamsDefaultCheckBox"
@@ -159,8 +159,20 @@
                 </GridPane.margin>
             </Region>
 
+            <LabelWithQuestionMark GridPane.rowIndex="8" GridPane.columnIndex="0">
+                <labelText>Plain text subtitles</labelText>
+                <tooltipText>
+                    Merged subtitles will be in plain text - no font colors, different sizes and so on.
+                </tooltipText>
+            </LabelWithQuestionMark>
+            <CheckBox fx:id="plainTextCheckBox" GridPane.rowIndex="8" GridPane.columnIndex="1"/>
+
             <ActionResultLabels fx:id="actionResultLabels"
-                                GridPane.rowIndex="8" GridPane.columnIndex="0" GridPane.columnSpan="2"/>
+                                GridPane.rowIndex="9" GridPane.columnIndex="0" GridPane.columnSpan="2">
+                <GridPane.margin>
+                    <Insets top="40"/>
+                </GridPane.margin>
+            </ActionResultLabels>
         </GridPane>
         <HBox fx:id="unavailablePane" visible="false" alignment="TOP_CENTER">
             <padding>

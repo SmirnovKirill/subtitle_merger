@@ -44,6 +44,8 @@ public class Settings {
 
     private boolean makeMergedStreamsDefault;
 
+    private boolean plainTextSubtitles;
+
     private File videosDirectory;
 
     private SortBy sortBy;
@@ -74,6 +76,7 @@ public class Settings {
                 Settings::getValidatedBoolean,
                 preferences
         ).orElse(false);
+        plainTextSubtitles = getSetting(PLAIN_TEXT_SUBTITLES, Settings::getValidatedBoolean, preferences).orElse(false);
 
         videosDirectory = getSetting(VIDEOS_DIRECTORY, Settings::getValidatedDirectory, preferences).orElse(null);
         sortBy = getSetting(SORT_BY, Settings::getValidatedSortBy, preferences).orElse(null);
@@ -380,6 +383,11 @@ public class Settings {
     public void saveMakeMergedStreamsDefault(String rawValue) throws SettingException {
         makeMergedStreamsDefault = getValidatedBoolean(rawValue);
         preferences.put(MAKE_MERGED_STREAMS_DEFAULT.getCode(), Boolean.toString(makeMergedStreamsDefault));
+    }
+
+    public void savePlainTextSubtitles(String rawValue) throws SettingException {
+        plainTextSubtitles = getValidatedBoolean(rawValue);
+        preferences.put(PLAIN_TEXT_SUBTITLES.getCode(), Boolean.toString(plainTextSubtitles));
     }
 
     public void saveVideosDirectory(String rawValue) throws SettingException {

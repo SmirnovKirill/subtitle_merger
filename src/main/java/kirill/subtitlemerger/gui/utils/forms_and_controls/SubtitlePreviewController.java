@@ -80,6 +80,8 @@ public class SubtitlePreviewController extends AbstractController {
 
     private Subtitles currentSubtitles;
 
+    private boolean plainTextSubtitles;
+
     private Stage dialogStage;
 
     private UserSelection userSelection;
@@ -116,11 +118,13 @@ public class SubtitlePreviewController extends AbstractController {
             Subtitles subtitles,
             String upperTitle,
             String lowerTitle,
+            boolean plainTextSubtitles,
             Stage dialogStage
     ) {
         mode = Mode.MERGED;
         this.originalSubtitles = subtitles;
         this.currentSubtitles = subtitles;
+        this.plainTextSubtitles = plainTextSubtitles;
         this.dialogStage = dialogStage;
 
         title.setText("This is the result of merging");
@@ -161,10 +165,14 @@ public class SubtitlePreviewController extends AbstractController {
         listView.getItems().clear();
 
         BackgroundRunner<PreviewInfo> backgroundRunner = runnerManager -> {
-            if (mode == Mode.WITH_ENCODING) {
-                return getPreviewInfo(data, currentEncoding);
+            if (mode == Mode.SIMPLE) {
+                return getPreviewInfo(originalSubtitles, null, false);
+            } else if (mode == Mode.WITH_ENCODING){
+                return getPreviewInfo(data, currentEncoding, false);
+            } else if (mode == Mode.MERGED) {
+                return getPreviewInfo(originalSubtitles, null, plainTextSubtitles);
             } else {
-                return getPreviewInfo(originalSubtitles, null);
+                throw new IllegalStateException();
             }
         };
 
@@ -183,7 +191,7 @@ public class SubtitlePreviewController extends AbstractController {
         runInBackground(backgroundRunner, callback);
     }
 
-    private static PreviewInfo getPreviewInfo(byte[] data, Charset encoding) {
+    private static PreviewInfo getPreviewInfo(byte[] data, Charset encoding, boolean plainTextSubtitles) {
         String text = new String(data, encoding);
         Subtitles subtitles;
         try {
@@ -192,12 +200,12 @@ public class SubtitlePreviewController extends AbstractController {
             subtitles = null;
         }
 
-        return getPreviewInfo(subtitles, text);
+        return getPreviewInfo(subtitles, text, plainTextSubtitles);
     }
 
-    private static PreviewInfo getPreviewInfo(Subtitles subtitles, String subtitleText) {
+    private static PreviewInfo getPreviewInfo(Subtitles subtitles, String subtitleText, boolean plainTextSubtitles) {
         if (subtitleText == null) {
-            subtitleText = SubRipWriter.toText(subtitles);
+            subtitleText = SubRipWriter.toText(subtitles, plainTextSubtitles);
         }
 
         List<String> lines = new ArrayList<>();

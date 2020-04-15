@@ -722,6 +722,7 @@ public class SubtitleFilesTabController extends AbstractController {
                     subtitles,
                     filesInfo.getUpperFileInfo().getPath(),
                     filesInfo.getLowerFileInfo().getPath(),
+                    settings.isPlainTextSubtitles(),
                     previewStage
             );
 
@@ -785,7 +786,7 @@ public class SubtitleFilesTabController extends AbstractController {
             try {
                 FileUtils.writeStringToFile(
                         filesInfo.getMergedFileInfo().getFile(),
-                        SubRipWriter.toText(mergedSubtitles),
+                        SubRipWriter.toText(mergedSubtitles, settings.isPlainTextSubtitles()),
                         StandardCharsets.UTF_8
                 );
 
