@@ -10,7 +10,7 @@
      fx:controller="kirill.subtitlemerger.gui.tabs.subtitle_files.SubtitleFilesTabController"
      text="Subtitle files">
     <StackPane>
-        <GridPane fx:id="mainPane" hgap="35" vgap="40" stylesheets="/gui/javafx/tabs/subtitle_files_tabs_tab/subtitleFilesTab.css">
+        <GridPane fx:id="mainPane" hgap="35" vgap="40" stylesheets="/gui/javafx/tabs/subtitle_files/subtitleFilesTab.css">
             <gridLinesVisible><GuiConstants fx:constant="GRID_LINES_VISIBLE"/></gridLinesVisible>
 
             <padding>

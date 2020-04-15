@@ -1,0 +1,174 @@
+1
+00:00:31,050 --> 00:00:33,880
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Михо! Михо, ты здесь?</font>
+
+2
+00:00:34,010 --> 00:00:35,050
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Я на кухне.</font>
+
+3
+00:00:36,760 --> 00:00:38,550
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Михо, я не знаю, что делать.</font>
+
+4
+00:00:39,850 --> 00:00:41,890
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Эти ребята, эти ребята ...</font>
+
+5
+00:00:47,650 --> 00:00:51,730
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Я ехала, и внезапно раздался шум.</font>
+
+6
+00:00:51,860 --> 00:00:52,900
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Думаю, я сбила его.</font>
+
+7
+00:00:54,820 --> 00:00:57,820
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Бабуля, не переживай. Все хорошо.</font>
+
+8
+00:00:57,950 --> 00:01:01,160
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Боже мой. Но они так злятся!</font>
+
+9
+00:01:08,040 --> 00:01:09,290
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Видишь? Он ранен!</font>
+
+10
+00:01:23,020 --> 00:01:25,770
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}- Бабушка, всё в порядке.
+- Что случилось?</font>
+
+11
+00:01:28,770 --> 00:01:29,810
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Я не хотела ...</font>
+
+12
+00:01:32,150 --> 00:01:35,530
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Сериал уже начался?
+Поднимись наверх и смотри свой сериал.</font>
+
+13
+00:01:38,030 --> 00:01:41,780
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Они сказали, что у меня проблемы.</font>
+
+14
+00:01:43,120 --> 00:01:44,160
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Никакой проблемы.</font>
+
+15
+00:01:49,080 --> 00:01:51,250
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Всё в порядке. Я разберусь.</font>
+
+16
+00:01:51,540 --> 00:01:54,010
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Сделай погромче, чтоб ты могла слышать.
+Очень громко.</font>
+
+17
+00:04:34,790 --> 00:04:38,710
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}- Что случилось?
+- Ничего. Всё в порядке.</font>
+
+18
+00:04:39,210 --> 00:04:42,840
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}- Те мальчики ещё здесь?
+- Они ушли.</font>
+
+19
+00:04:44,930 --> 00:04:47,090
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}У меня проблемы, да?</font>
+
+20
+00:04:47,930 --> 00:04:52,020
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Нет, бабуля. Всё в порядке.
+Они больше не побеспокоят тебя.</font>
+
+21
+00:04:52,770 --> 00:04:55,980
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}- А что там на ковре?
+- Я пролил сальсу.</font>
+
+22
+00:04:59,110 --> 00:05:02,400
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}- Я помогу тебе.
+- Не надо, я почти закончил.</font>
+
+23
+00:05:03,860 --> 00:05:06,490
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Ты пропустишь сериал.</font>
+
+24
+00:05:08,370 --> 00:05:10,240
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Ты уверен?</font>
+
+25
+00:05:10,910 --> 00:05:13,200
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Позволь Михо обо всё позаботиться.</font>
+
+26
+00:05:14,210 --> 00:05:17,290
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Ты хороший мальчик.</font>
+
+27
+00:05:18,250 --> 00:05:21,840
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Послушай, не забудь про содовую.</font>
+
+28
+00:05:21,960 --> 00:05:23,460
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Да, да. Не переживай.</font>
+
+29
+00:07:32,390 --> 00:07:36,600
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Кто этот человек? Он заодно с теми, другими?</font>
+
+30
+00:07:36,930 --> 00:07:41,390
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Нет, он продавец.
+Я всё улажу, бабуля.</font>
+
+31
+00:07:41,560 --> 00:07:42,900
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Куда ты идешь?</font>
+
+32
+00:07:43,650 --> 00:07:46,400
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Пойду возьму содовую.</font>
+
+33
+00:07:47,270 --> 00:07:52,610
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Михо, я вижу, ты еще не убрал
+разлитый соус.</font>
+
+34
+00:07:52,950 --> 00:07:55,410
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Нельзя чтобы он высох.</font>
+
+35
+00:07:55,530 --> 00:07:59,910
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Бабуль, я сам принесу содовую, обещаю.
+Доверься мне.</font>
+
+36
+00:08:00,080 --> 00:08:02,040
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Возвращайся наверх.</font>
+
+37
+00:08:03,000 --> 00:08:05,290
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Но я не хочу, чтобы соус засох.</font>
+
+38
+00:08:05,420 --> 00:08:11,340
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Иначе ты не сможешь его убрать.</font>
+
+39
+00:29:30,740 --> 00:29:32,830
+<font face="Times New Roman" size="60" color="#f7f7f7"><b>СЧЕТ</b>
+
+НЕОТЛОЖНАЯ ПОМОЩЬ
+Перелом берцовой кости</font>
+
+40
+00:45:36,830 --> 00:45:39,800
+<font face="Tahoma" size="51" color="#e5df9c"><font size="30">РЕЛИЗ ПОДГОТОВИЛ
+<font size="50"><b>Lostrator</b></font></font></font>

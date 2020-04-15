@@ -24,7 +24,7 @@ public class GuiLauncher extends Application {
     public void start(Stage stage) {
         Application.setUserAgentStylesheet(STYLESHEET_MODENA);
 
-        NodeInfo nodeInfo = GuiUtils.loadNode("/gui/javafx/mainPane.fxml");
+        NodeInfo nodeInfo = GuiUtils.loadNode("/gui/javafx/tabs/tabPane.fxml");
 
         TabPaneController controller = nodeInfo.getController();
         controller.initialize(stage, new GuiContext());

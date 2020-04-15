@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" spacing="10" fx:id="choicePane"
       fx:controller="kirill.subtitlemerger.gui.tabs.videos.ChoicePaneController"
-      stylesheets="/gui/javafx/tabs/videos_tabs_tab/choicePane.css"
+      stylesheets="/gui/javafx/tabs/videos/choicePane.css"
 >
     <Label alignment="CENTER" maxWidth="Infinity" styleClass="choose-title">Please choose</Label>
     <HBox>

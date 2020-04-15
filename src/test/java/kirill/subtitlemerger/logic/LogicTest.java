@@ -15,10 +15,10 @@ import static com.google.common.truth.Truth.assertThat;
 
 public class LogicTest {
     @Test
-    public void testParseFromFileToSubtitles() throws IOException, SubtitleFormatException {
+    public void testParseSimple() throws IOException, SubtitleFormatException {
         Subtitles subtitles = SubRipParser.from(
                 IOUtils.toString(
-                        LogicTest.class.getResourceAsStream("/MainTest/testParseFromFileToSubtitles/sub.srt"),
+                        LogicTest.class.getResourceAsStream("/MainTest/parse/simple.srt"),
                         StandardCharsets.UTF_8
                 )
         );
@@ -29,24 +29,41 @@ public class LogicTest {
         assertThat(subtitles.getSubtitles().get(1).getLines()).hasSize(1);
     }
 
+    /*
+     * Subtitle #39 has an empty line, it should be parsed correctly.
+     */
+    @Test
+    public void testParseEmptyLines() throws IOException, SubtitleFormatException {
+        Subtitles subtitles = SubRipParser.from(
+                IOUtils.toString(
+                        LogicTest.class.getResourceAsStream("/MainTest/parse/empty_lines.srt"),
+                        StandardCharsets.UTF_8
+                )
+        );
+
+        assertThat(subtitles.getSubtitles()).hasSize(40);
+
+        assertThat(subtitles.getSubtitles().get(38).getLines()).hasSize(4);
+    }
+
     @Test
     public void testMerge() throws IOException, SubtitleFormatException, InterruptedException {
         Subtitles upperSubtitles = SubRipParser.from(
                 IOUtils.toString(
-                        LogicTest.class.getResourceAsStream("/MainTest/testMerged/upper.srt"),
+                        LogicTest.class.getResourceAsStream("/MainTest/merge/upper.srt"),
                         StandardCharsets.UTF_8
                 )
         );
         Subtitles lowerSubtitles = SubRipParser.from(
                 IOUtils.toString(
-                        LogicTest.class.getResourceAsStream("/MainTest/testMerged/lower.srt"),
+                        LogicTest.class.getResourceAsStream("/MainTest/merge/lower.srt"),
                         StandardCharsets.UTF_8
                 )
         );
 
         Subtitles merged = SubtitleMerger.mergeSubtitles(upperSubtitles, lowerSubtitles);
         String expected = IOUtils.toString(
-                LogicTest.class.getResourceAsStream("/MainTest/testMerged/result.srt"),
+                LogicTest.class.getResourceAsStream("/MainTest/merge/result.srt"),
                 StandardCharsets.UTF_8
         );
 
