@@ -237,6 +237,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
             try {
                 String subtitleText = context.getFfmpeg().getSubtitleText(
                         ffmpegStream.getFfmpegIndex(),
+                        ffmpegStream.getFormat(),
                         fileInfo.getFile()
                 );
                 ffmpegStream.setSubtitlesAndSize(SubRipParser.from(subtitleText), subtitleText.getBytes().length);

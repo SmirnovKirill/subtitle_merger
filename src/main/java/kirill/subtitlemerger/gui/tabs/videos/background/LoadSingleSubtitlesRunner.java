@@ -48,7 +48,11 @@ public class LoadSingleSubtitlesRunner implements BackgroundRunner<ActionResult>
         runnerManager.setCancellationPossible(true);
 
         try {
-            String subtitleText = ffmpeg.getSubtitleText(ffmpegStream.getFfmpegIndex(), fileInfo.getFile());
+            String subtitleText = ffmpeg.getSubtitleText(
+                    ffmpegStream.getFfmpegIndex(),
+                    ffmpegStream.getFormat(),
+                    fileInfo.getFile()
+            );
             ffmpegStream.setSubtitlesAndSize(SubRipParser.from(subtitleText), subtitleText.getBytes().length);
 
             Platform.runLater(

@@ -25,5 +25,6 @@
         <Root level="info">
             <AppenderRef ref="file"/>
         </Root>
+        <Logger name="kirill.subtitlemerger.logic.utils.process.ProcessRunner" level="info"/>
     </Loggers>
 </Configuration>

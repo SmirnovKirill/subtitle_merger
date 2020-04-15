@@ -80,7 +80,7 @@ public class FileInfoGetter {
             SubtitleFormat format = SubtitleFormat.from(stream.getCodecName()).orElse(null);
 
             SubtitleOptionUnavailabilityReason unavailabilityReason = null;
-            if (format != SubtitleFormat.SUBRIP) {
+            if (format != SubtitleFormat.SUBRIP && format != SubtitleFormat.ASS) {
                 unavailabilityReason = SubtitleOptionUnavailabilityReason.NOT_ALLOWED_FORMAT;
             }
 

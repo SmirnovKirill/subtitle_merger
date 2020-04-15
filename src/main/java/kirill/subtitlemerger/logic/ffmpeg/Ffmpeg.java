@@ -52,6 +52,7 @@ public class Ffmpeg {
      */
     public synchronized String getSubtitleText(
             int ffmpegStreamIndex,
+            SubtitleFormat format,
             File videoFile
     ) throws FfmpegException, InterruptedException {
         String consoleOutput;
@@ -60,15 +61,20 @@ public class Ffmpeg {
              * We have to pass -y to agree with file overwriting, it's always required because java will have created
              * temporary file by the time ffmpeg is called.
              */
-            List<String> arguments = Arrays.asList(
-                    ffmpegFile.getAbsolutePath(),
-                    "-y",
-                    "-i",
-                    videoFile.getAbsolutePath(),
-                    "-map",
-                    "0:" + ffmpegStreamIndex,
-                    TEMP_SUBTITLE_FILE.getAbsolutePath()
+            List<String> arguments = new ArrayList<>(
+                    Arrays.asList(
+                            ffmpegFile.getAbsolutePath(),
+                            "-y",
+                            "-i",
+                            videoFile.getAbsolutePath(),
+                            "-map",
+                            "0:" + ffmpegStreamIndex
+                    )
             );
+            if (format == SubtitleFormat.ASS) {
+                arguments.addAll(Arrays.asList("-c", "srt"));
+            }
+            arguments.add(TEMP_SUBTITLE_FILE.getAbsolutePath());
 
             consoleOutput = ProcessRunner.run(arguments);
         } catch (ProcessException e) {
