@@ -4,15 +4,26 @@ import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.core.entities.Subtitle;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.LocalTime;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+@CommonsLog
 public class SubRipParser {
+    private static final Pattern TIME_RANGE_PATTERN = Pattern.compile(
+            "^(\\d{2}:\\d{2}:\\d{2},\\d{3}) --> (\\d{2}:\\d{2}:\\d{2},\\d{3})$"
+    );
+
+    /*
+     * The main idea of this method is to find lines with time ranges, they are the most stable and reliable parts of
+     * the text with subtitles.
+     */
     public static Subtitles from(String text) throws SubtitleFormatException {
         List<Subtitle> result = new ArrayList<>();
 
@@ -21,110 +32,132 @@ public class SubRipParser {
             text = text.substring(1);
         }
 
-        CurrentSubtitle currentSubtitle = null;
-        ParsingStage parsingStage = ParsingStage.HAVE_NOT_STARTED;
+        /*
+         * linesBeforeTimeLine contains at least one line with the subtitle number and arbitrary number of blank lines,
+         * linesAfterTimeLine contains the text of the subtitle and the number of the following subtitle if it's
+         * present.
+         */
+        List<String> linesBeforeTimeLine = new ArrayList<>();
+        List<String> linesAfterTimeLine = new ArrayList<>();
+        Range<LocalTime> timeRange = null;
 
-        for (String currentLine : LogicConstants.LINE_SEPARATOR_PATTERN.split(text)) {
-            currentLine = currentLine.trim();
+        for (String line : LogicConstants.LINE_SEPARATOR_PATTERN.split(text)) {
+            if (isLineWithTimeRange(line)) {
+                if (timeRange != null) {
+                    /* We can get here only after parsing the second line with time range.*/
+                    validateNumber(linesBeforeTimeLine);
+                    List<String> subtitleLines =  getTrimmedLines(
+                            linesAfterTimeLine.subList(0, linesAfterTimeLine.size() - 1)
+                    );
+                    result.add(new Subtitle(timeRange.getMinimum(), timeRange.getMaximum(), subtitleLines));
 
-            if (parsingStage == ParsingStage.HAVE_NOT_STARTED) {
-                if (StringUtils.isBlank(currentLine)) {
-                    continue;
+                    linesBeforeTimeLine.clear();
+                    linesBeforeTimeLine.add(linesAfterTimeLine.get(linesAfterTimeLine.size() - 1));
+                    linesAfterTimeLine = new ArrayList<>();
                 }
 
-                /* We can parse the number here but we don't actually need it. */
-                currentSubtitle = new CurrentSubtitle();
-                parsingStage = ParsingStage.PARSED_NUMBER;
-            } else if (parsingStage == ParsingStage.PARSED_NUMBER) {
-                if (StringUtils.isBlank(currentLine)) {
-                    continue;
-                }
-
-                currentSubtitle.setFrom(getFromTime(currentLine));
-                currentSubtitle.setTo(getToTime(currentLine));
-
-                parsingStage = ParsingStage.PARSED_DURATION;
-            } else if (parsingStage == ParsingStage.PARSED_DURATION) {
-                if (StringUtils.isBlank(currentLine)) {
-                    continue;
-                }
-
-                currentSubtitle.setLines(new ArrayList<>());
-                currentSubtitle.getLines().add(currentLine);
-                parsingStage = ParsingStage.LINES_STARTED;
+                timeRange = getTimeRange(line);
             } else {
-                if (StringUtils.isBlank(currentLine)) {
-                    result.add(subtitleFrom(currentSubtitle));
-
-                    currentSubtitle = null;
-                    parsingStage = ParsingStage.HAVE_NOT_STARTED;
+                if (timeRange == null) {
+                    linesBeforeTimeLine.add(line);
                 } else {
-                    currentSubtitle.getLines().add(currentLine);
+                    linesAfterTimeLine.add(line);
                 }
             }
         }
 
-        if (parsingStage != ParsingStage.HAVE_NOT_STARTED && parsingStage != ParsingStage.LINES_STARTED) {
-            throw new SubtitleFormatException();
-        }
-
-        if (parsingStage == ParsingStage.LINES_STARTED) {
-            result.add(subtitleFrom(currentSubtitle));
+        if (timeRange != null) {
+            validateNumber(linesBeforeTimeLine);
+            List<String> subtitleLines = getTrimmedLines(linesAfterTimeLine);
+            result.add(new Subtitle(timeRange.getMinimum(), timeRange.getMaximum(), subtitleLines));
         }
 
         return new Subtitles(result);
     }
 
-    private static LocalTime getFromTime(String line) throws SubtitleFormatException {
-        int delimiterIndex = line.indexOf("-");
-        if (delimiterIndex == -1) {
-            throw new SubtitleFormatException();
+    private static boolean isLineWithTimeRange(String line) {
+        /*
+         * This simple check is here for the sake of performance, it's pretty precise and at the same time much faster
+         * comparing to regular expressions.
+         */
+        if (!line.contains("-->")) {
+            return false;
         }
 
-        String fromText = line.substring(0, delimiterIndex).trim();
+        return TIME_RANGE_PATTERN.matcher(line.trim()).matches();
+    }
+
+    private static Range<LocalTime> getTimeRange(String line) throws SubtitleFormatException {
+        Matcher matcher = TIME_RANGE_PATTERN.matcher(line.trim());
+        if (!matcher.matches()) {
+            log.error("line doesn't match time range pattern, most likely a bug");
+            throw new IllegalStateException();
+        }
+
+        LocalTime from;
         try {
-            return LogicConstants.SUBRIP_TIME_FORMATTER.parseLocalTime(fromText);
+            from = LogicConstants.SUBRIP_TIME_FORMATTER.parseLocalTime(matcher.group(1));
         } catch (IllegalArgumentException e) {
             throw new SubtitleFormatException();
         }
-    }
 
-    private static LocalTime getToTime(String line) throws SubtitleFormatException {
-        int delimiterIndex = line.indexOf(">");
-        if (delimiterIndex == -1) {
-            throw new SubtitleFormatException();
-        }
-
-        if ((delimiterIndex + 1) >= line.length()) {
-            throw new SubtitleFormatException();
-        }
-
-        String toText = line.substring(delimiterIndex + 1).trim();
+        LocalTime to;
         try {
-            return LogicConstants.SUBRIP_TIME_FORMATTER.parseLocalTime(toText);
+            to = LogicConstants.SUBRIP_TIME_FORMATTER.parseLocalTime(matcher.group(2));
         } catch (IllegalArgumentException e) {
             throw new SubtitleFormatException();
         }
+
+        return Range.between(from, to, LocalTime::compareTo);
     }
 
-    private static Subtitle subtitleFrom(CurrentSubtitle currentSubtitle) {
-        return new Subtitle(currentSubtitle.getFrom(), currentSubtitle.getTo(), currentSubtitle.getLines());
+    /**
+     * Checks that last line contains a single integer and lines before are all empty if present.
+     */
+    private static void validateNumber(List<String> lines) throws SubtitleFormatException {
+        if (lines.size() == 0) {
+            throw new SubtitleFormatException();
+        }
+
+        String lastLine = lines.get(lines.size() - 1);
+        try {
+            Integer.parseInt(lastLine.trim());
+        } catch (NumberFormatException e) {
+            throw new SubtitleFormatException();
+        }
+
+        for (int i = 0; i < lines.size() - 1; i++) {
+            if (!StringUtils.isBlank(lines.get(i))) {
+                throw new SubtitleFormatException();
+            }
+        }
     }
 
-    private enum ParsingStage {
-        HAVE_NOT_STARTED,
-        PARSED_NUMBER,
-        PARSED_DURATION,
-        LINES_STARTED,
-    }
+    /**
+     * @return lines with leading and trailing blank lines removed.
+     */
+    private static List<String> getTrimmedLines(List<String> lines) {
+        Integer firstNotBlankIndex = null;
+        for (int i = 0; i < lines.size(); i++) {
+            if (!StringUtils.isBlank(lines.get(i))) {
+                firstNotBlankIndex = i;
+                break;
+            }
+        }
 
-    @Getter
-    @Setter
-    private static class CurrentSubtitle {
-        private LocalTime from;
+        Integer lastNotBlankIndex = null;
+        for (int i = lines.size() - 1; i >= 0; i--) {
+            if (!StringUtils.isBlank(lines.get(i))) {
+                lastNotBlankIndex = i;
+                break;
+            }
+        }
 
-        private LocalTime to;
+        /* Either both of them are null or none of them. */
+        if (firstNotBlankIndex == null || lastNotBlankIndex == null) {
+            return new ArrayList<>();
+        }
 
-        private List<String> lines;
+        return lines.subList(firstNotBlankIndex, lastNotBlankIndex + 1);
     }
 }
