@@ -7,15 +7,15 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
-import kirill.subtitlemerger.gui.utils.entities.AbstractController;
-import kirill.subtitlemerger.gui.utils.forms_and_controls.SubtitlePreviewController;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerCallback;
-import kirill.subtitlemerger.gui.utils.forms_and_controls.ActionResultLabels;
+import kirill.subtitlemerger.gui.utils.entities.AbstractController;
 import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import kirill.subtitlemerger.gui.utils.entities.FileOrigin;
 import kirill.subtitlemerger.gui.utils.entities.NodeInfo;
+import kirill.subtitlemerger.gui.utils.forms_and_controls.ActionResultLabels;
+import kirill.subtitlemerger.gui.utils.forms_and_controls.SubtitlePreviewController;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.SubRipWriter;
@@ -468,8 +468,8 @@ public class SubtitleFilesTabController extends AbstractController {
             case FAILED_TO_READ_CONTENT:
                 return path + ": failed to read the file";
             case INCORRECT_SUBTITLE_FORMAT:
-                return "File '" + path + "' has an incorrect subtitle format, it can happen if the file is not UTF-8-encoded"
-                        + ", you can change the encoding pressing the preview button";
+                return "File '" + path + "' has an incorrect subtitle format, it can happen if the file is not "
+                        + "UTF-8-encoded, you can change the encoding pressing the preview button";
             default:
                 throw new IllegalStateException();
         }

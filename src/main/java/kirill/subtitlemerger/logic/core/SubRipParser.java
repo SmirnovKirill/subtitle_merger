@@ -59,7 +59,10 @@ public class SubRipParser {
                 timeRange = getTimeRange(line);
             } else {
                 if (timeRange == null) {
-                    /* We can get here only once, before parsing the first line with time range. */
+                    /*
+                     * We can get here only before parsing the first line with time range, after that lines before will
+                     * be extracted from lines after.
+                     */
                     linesBeforeTimeLine.add(line);
                 } else {
                     linesAfterTimeLine.add(line);
