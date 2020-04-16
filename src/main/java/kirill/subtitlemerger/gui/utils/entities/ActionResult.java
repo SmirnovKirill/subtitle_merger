@@ -1,15 +1,17 @@
 package kirill.subtitlemerger.gui.utils.entities;
 
+import kirill.subtitlemerger.gui.utils.forms_and_controls.ActionResultLabels;
 import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
-import org.apache.commons.lang3.StringUtils;
 
+/**
+ * This class helps to represent results of complex actions that may for example finish successfully partly and partly
+ * fail. This class is a POJO and isn't bound to any gui library and so can be easily tested. To display the data there
+ * is a special class ActionResultLabels.
+ * @see ActionResultLabels
+ */
 @AllArgsConstructor
 @Getter
-@EqualsAndHashCode
-@ToString
 public class ActionResult {
     public static final ActionResult NO_RESULT = new ActionResult(null, null, null);
 
@@ -29,9 +31,5 @@ public class ActionResult {
 
     public static ActionResult onlyError(String text) {
         return new ActionResult(null, null, text);
-    }
-
-    public boolean empty() {
-        return StringUtils.isBlank(success) && StringUtils.isBlank(warn) && StringUtils.isBlank(error);
     }
 }

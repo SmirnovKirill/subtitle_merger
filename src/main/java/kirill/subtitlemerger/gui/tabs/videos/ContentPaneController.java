@@ -187,9 +187,9 @@ public class ContentPaneController extends AbstractController {
 
     private void setAllSelectedHandler(TableWithFiles tableWithFiles) {
         tableWithFiles.setAllSelectedHandler(allSelected -> {
-            BackgroundRunner<Void> backgroundRunner = runnerManager -> {
-                runnerManager.setIndeterminateProgress();
-                runnerManager.updateMessage("Processing files...");
+            BackgroundRunner<Void> backgroundRunner = backgroundManager -> {
+                backgroundManager.setIndeterminateProgress();
+                backgroundManager.updateMessage("Processing files...");
 
                 for (TableFileInfo fileInfo : tableWithFiles.getItems()) {
                     boolean selected;

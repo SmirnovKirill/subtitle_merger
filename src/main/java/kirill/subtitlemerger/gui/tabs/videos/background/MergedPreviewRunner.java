@@ -7,7 +7,7 @@ import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.background.BackgroundResult;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
+import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
@@ -43,22 +43,22 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
 
     private Ffmpeg ffmpeg;
 
-    public Result run(BackgroundRunnerManager runnerManager) {
+    public Result run(BackgroundManager backgroundManager) {
         if (fileInfo.getMergedSubtitleInfo() != null) {
             if (mergedMatchesCurrentSelection(fileInfo.getMergedSubtitleInfo(), upperOption, lowerOption)) {
                 return new Result(false, fileInfo.getMergedSubtitleInfo());
             }
         }
 
-        runnerManager.setCancellationPossible(true);
+        backgroundManager.setCancellationPossible(true);
 
         try {
-            loadStreamsIfNecessary(runnerManager);
+            loadStreamsIfNecessary(backgroundManager);
         } catch (InterruptedException e) {
             return new Result(true, null);
         }
 
-        runnerManager.updateMessage("Merging subtitles...");
+        backgroundManager.updateMessage("Merging subtitles...");
 
         Subtitles merged;
         try {
@@ -103,7 +103,7 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
         return true;
     }
 
-    private void loadStreamsIfNecessary(BackgroundRunnerManager runnerManager) throws InterruptedException {
+    private void loadStreamsIfNecessary(BackgroundManager backgroundManager) throws InterruptedException {
         List<FfmpegSubtitleStream> streamsToLoad = new ArrayList<>();
         if (upperOption instanceof FfmpegSubtitleStream) {
             streamsToLoad.add((FfmpegSubtitleStream) upperOption);
@@ -113,7 +113,7 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
         }
 
         for (FfmpegSubtitleStream ffmpegStream : streamsToLoad) {
-            runnerManager.updateMessage(getUpdateMessage(ffmpegStream, fileInfo.getFile()));
+            backgroundManager.updateMessage(getUpdateMessage(ffmpegStream, fileInfo.getFile()));
 
             if (ffmpegStream.getSubtitles() != null) {
                 continue;

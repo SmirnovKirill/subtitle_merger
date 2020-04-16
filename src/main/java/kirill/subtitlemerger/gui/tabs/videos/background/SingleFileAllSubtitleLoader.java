@@ -5,7 +5,7 @@ import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableSubtitleOption;
 import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
+import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
@@ -28,22 +28,22 @@ public class SingleFileAllSubtitleLoader implements BackgroundRunner<ActionResul
     private Ffmpeg ffmpeg;
 
     @Override
-    public ActionResult run(BackgroundRunnerManager runnerManager) {
-        int streamToLoadCount = getStreamToLoadCount(fileInfo, runnerManager);
+    public ActionResult run(BackgroundManager backgroundManager) {
+        int streamToLoadCount = getStreamToLoadCount(fileInfo, backgroundManager);
         int processedCount = 0;
         int loadedSuccessfullyCount = 0;
         int failedToLoadCount = 0;
 
-        runnerManager.setIndeterminateProgress();
-        runnerManager.setCancellationDescription("Please be patient, this may take a while depending on the size.");
-        runnerManager.setCancellationPossible(true);
+        backgroundManager.setIndeterminateProgress();
+        backgroundManager.setCancellationDescription("Please be patient, this may take a while depending on the size.");
+        backgroundManager.setCancellationPossible(true);
 
         for (FfmpegSubtitleStream ffmpegStream : fileInfo.getFfmpegSubtitleStreams()) {
             if (ffmpegStream.getUnavailabilityReason() != null || ffmpegStream.getSubtitles() != null) {
                 continue;
             }
 
-            runnerManager.updateMessage(
+            backgroundManager.updateMessage(
                     VideoTabBackgroundUtils.getLoadSubtitlesProgressMessage(
                             processedCount,
                             streamToLoadCount,
@@ -106,9 +106,9 @@ public class SingleFileAllSubtitleLoader implements BackgroundRunner<ActionResul
         );
     }
 
-    private static int getStreamToLoadCount(FileInfo fileInfo, BackgroundRunnerManager runnerManager) {
-        runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("Calculating number of subtitles to load...");
+    private static int getStreamToLoadCount(FileInfo fileInfo, BackgroundManager backgroundManager) {
+        backgroundManager.setIndeterminateProgress();
+        backgroundManager.updateMessage("Calculating number of subtitles to load...");
 
         int result = 0;
 

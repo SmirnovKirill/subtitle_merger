@@ -11,7 +11,7 @@ import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.background.BackgroundResult;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
+import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
@@ -43,15 +43,15 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
     private GuiContext context;
 
     @Override
-    public MergePreparationRunner.Result run(BackgroundRunnerManager runnerManager) {
-        VideoTabBackgroundUtils.clearActionResults(displayedTableFilesInfo, tableWithFiles, runnerManager);
+    public MergePreparationRunner.Result run(BackgroundManager backgroundManager) {
+        VideoTabBackgroundUtils.clearActionResults(displayedTableFilesInfo, tableWithFiles, backgroundManager);
 
         List<TableFileInfo> selectedTableFilesInfo = VideoTabBackgroundUtils.getSelectedFilesInfo(
                 displayedTableFilesInfo,
-                runnerManager
+                backgroundManager
         );
 
-        int filesWithoutSelectionCount = getFilesWithoutSelectionCount(selectedTableFilesInfo, runnerManager);
+        int filesWithoutSelectionCount = getFilesWithoutSelectionCount(selectedTableFilesInfo, backgroundManager);
         if (filesWithoutSelectionCount != 0) {
             return new Result(
                     false,
@@ -64,8 +64,8 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
             );
         }
 
-        runnerManager.setIndeterminateProgress();
-        runnerManager.setCancellationPossible(true);
+        backgroundManager.setIndeterminateProgress();
+        backgroundManager.setCancellationPossible(true);
 
         List<FileMergeInfo> filesMergeInfo = new ArrayList<>();
 
@@ -73,7 +73,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         for (TableFileInfo tableFileInfo : selectedTableFilesInfo) {
             try {
                 filesMergeInfo.add(
-                        getFileMergeInfo(tableFileInfo, processedCount, selectedTableFilesInfo.size(), runnerManager)
+                        getFileMergeInfo(tableFileInfo, processedCount, selectedTableFilesInfo.size(), backgroundManager)
                 );
                 processedCount++;
             } catch (InterruptedException e) {
@@ -93,7 +93,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                 filesMergeInfo,
                 filesInfo,
                 context.getSettings(),
-                runnerManager
+                backgroundManager
         ).orElse(null);
 
         return new Result(
@@ -102,17 +102,17 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                 requiredAndAvailableSpace != null ? requiredAndAvailableSpace.getRequiredSpace() : null,
                 requiredAndAvailableSpace != null ? requiredAndAvailableSpace.getAvailableSpace() : null,
                 requiredAndAvailableSpace != null ? requiredAndAvailableSpace.getDirectoryForTempFile() : null,
-                getFilesToOverwrite(filesMergeInfo, context.getSettings(), runnerManager),
+                getFilesToOverwrite(filesMergeInfo, context.getSettings(), backgroundManager),
                 filesMergeInfo
         );
     }
 
     private static int getFilesWithoutSelectionCount(
             List<TableFileInfo> filesInfo,
-            BackgroundRunnerManager runnerManager
+            BackgroundManager backgroundManager
     ) {
-        runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("Getting file availability info...");
+        backgroundManager.setIndeterminateProgress();
+        backgroundManager.updateMessage("Getting file availability info...");
 
         return (int) filesInfo.stream()
                 .filter(fileInfo -> fileInfo.getUpperOption() == null || fileInfo.getLowerOption() == null)
@@ -123,10 +123,10 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
             TableFileInfo tableFileInfo,
             int processedCount,
             int allCount,
-            BackgroundRunnerManager runnerManager
+            BackgroundManager backgroundManager
     ) throws InterruptedException {
         String progressMessagePrefix = getProgressMessagePrefix(processedCount, allCount, tableFileInfo);
-        runnerManager.updateMessage(progressMessagePrefix + "...");
+        backgroundManager.updateMessage(progressMessagePrefix + "...");
 
         FileInfo fileInfo = FileInfo.getById(tableFileInfo.getId(), filesInfo);
 
@@ -142,7 +142,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                 fileInfo,
                 usedLanguages,
                 progressMessagePrefix,
-                runnerManager
+                backgroundManager
         );
         if (failedToLoadCount != 0) {
             return new FileMergeInfo(
@@ -156,7 +156,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
             );
         }
 
-        runnerManager.updateMessage(progressMessagePrefix + ": merging subtitles...");
+        backgroundManager.updateMessage(progressMessagePrefix + ": merging subtitles...");
         Subtitles mergedSubtitles = SubtitleMerger.mergeSubtitles(
                 upperSubtitles.getSubtitles(),
                 lowerSubtitles.getSubtitles()
@@ -212,7 +212,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
             FileInfo fileInfo,
             Set<LanguageAlpha3Code> usedLanguages,
             String progressMessagePrefix,
-            BackgroundRunnerManager runnerManager
+            BackgroundManager backgroundManager
     ) throws InterruptedException {
         int failedToLoad = 0;
 
@@ -222,7 +222,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                 .collect(Collectors.toList());
 
         for (FfmpegSubtitleStream ffmpegStream : streamsToLoad) {
-            runnerManager.updateMessage(
+            backgroundManager.updateMessage(
                     progressMessagePrefix + ": loading subtitles "
                             + GuiUtils.languageToString(ffmpegStream.getLanguage()).toUpperCase()
                             + (StringUtils.isBlank(ffmpegStream.getTitle()) ? "" : " " + ffmpegStream.getTitle())
@@ -319,15 +319,15 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
             List<FileMergeInfo> filesMergeInfo,
             List<FileInfo> filesInfo,
             Settings settings,
-            BackgroundRunnerManager runnerManager
+            BackgroundManager backgroundManager
     ) {
         if (settings.getMergeMode() != MergeMode.ORIGINAL_VIDEOS) {
             return Optional.empty();
         }
 
-        runnerManager.setIndeterminateProgress();
-        runnerManager.setCancellationPossible(false);
-        runnerManager.updateMessage("Calculating required temporary space...");
+        backgroundManager.setIndeterminateProgress();
+        backgroundManager.setCancellationPossible(false);
+        backgroundManager.updateMessage("Calculating required temporary space...");
 
         Long requiredSpace = null;
         Long availableSpace = null;
@@ -363,15 +363,15 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
     private static List<File> getFilesToOverwrite(
             List<FileMergeInfo> filesMergeInfo,
             Settings settings,
-            BackgroundRunnerManager runnerManager
+            BackgroundManager backgroundManager
     ) {
         if (settings.getMergeMode() == MergeMode.ORIGINAL_VIDEOS) {
             return new ArrayList<>();
         }
 
-        runnerManager.setIndeterminateProgress();
-        runnerManager.setCancellationPossible(false);
-        runnerManager.updateMessage("Getting files to overwrite...");
+        backgroundManager.setIndeterminateProgress();
+        backgroundManager.setCancellationPossible(false);
+        backgroundManager.updateMessage("Getting files to overwrite...");
 
         List<File> result = new ArrayList<>();
         for (FileMergeInfo fileMergeInfo : filesMergeInfo) {

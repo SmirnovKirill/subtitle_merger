@@ -114,8 +114,8 @@ public class SubtitleFilesTabController extends AbstractController {
             return;
         }
 
-        BackgroundRunner<InputFileInfo> backgroundRunner = runnerManager -> {
-            runnerManager.updateMessage("Processing file " + path + "...");
+        BackgroundRunner<InputFileInfo> backgroundRunner = backgroundManager -> {
+            backgroundManager.updateMessage("Processing file " + path + "...");
             return getInputFileInfo(path, fileType, fileOrigin, filesInfo).orElse(null);
         };
 
@@ -684,13 +684,13 @@ public class SubtitleFilesTabController extends AbstractController {
     private void mergedPreviewClicked() {
         clearState();
 
-        BackgroundRunner<Optional<Subtitles>> backgroundRunner = runnerManager -> {
+        BackgroundRunner<Optional<Subtitles>> backgroundRunner = backgroundManager -> {
             if (filesInfo.getMergedSubtitles() != null) {
                 return Optional.of(filesInfo.getMergedSubtitles());
             }
 
-            runnerManager.setCancellationPossible(true);
-            runnerManager.updateMessage("Merging subtitles...");
+            backgroundManager.setCancellationPossible(true);
+            backgroundManager.updateMessage("Merging subtitles...");
 
             try {
                 return Optional.of(
@@ -764,14 +764,14 @@ public class SubtitleFilesTabController extends AbstractController {
     private void mergeButtonClicked() {
         clearState();
 
-        BackgroundRunner<ActionResult> backgroundRunner = runnerManager -> {
+        BackgroundRunner<ActionResult> backgroundRunner = backgroundManager -> {
             Subtitles mergedSubtitles;
 
             if (filesInfo.getMergedSubtitles() != null) {
                 mergedSubtitles = filesInfo.getMergedSubtitles();
             } else {
-                runnerManager.setCancellationPossible(true);
-                runnerManager.updateMessage("Merging subtitles...");
+                backgroundManager.setCancellationPossible(true);
+                backgroundManager.updateMessage("Merging subtitles...");
 
                 try {
                     mergedSubtitles = SubtitleMerger.mergeSubtitles(

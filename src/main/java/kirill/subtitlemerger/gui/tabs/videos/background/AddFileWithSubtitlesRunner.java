@@ -2,7 +2,7 @@ package kirill.subtitlemerger.gui.tabs.videos.background;
 
 import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
+import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
@@ -33,9 +33,9 @@ public class AddFileWithSubtitlesRunner implements BackgroundRunner<AddFileWithS
     private FileInfo videoFileInfo;
 
     @Override
-    public Result run(BackgroundRunnerManager runnerManager) {
-        runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("Processing file " + fileWithSubtitlesToAdd.getAbsolutePath() + "...");
+    public Result run(BackgroundManager backgroundManager) {
+        backgroundManager.setIndeterminateProgress();
+        backgroundManager.updateMessage("Processing file " + fileWithSubtitlesToAdd.getAbsolutePath() + "...");
 
         InputFileValidationOptions validationOptions = InputFileValidationOptions.builder()
                 .allowedExtensions( Collections.singletonList("srt"))

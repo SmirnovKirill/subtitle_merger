@@ -6,7 +6,7 @@ import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
+import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.logic.settings.SortBy;
 import kirill.subtitlemerger.logic.settings.SortDirection;
 import kirill.subtitlemerger.logic.utils.file_validation.FileValidator;
@@ -35,8 +35,8 @@ public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner
     private GuiContext context;
 
     @Override
-    public Result run(BackgroundRunnerManager runnerManager) {
-        DirectoryInfo directoryInfo = getDirectoryInfo(path, runnerManager);
+    public Result run(BackgroundManager backgroundManager) {
+        DirectoryInfo directoryInfo = getDirectoryInfo(path, backgroundManager);
         if (directoryInfo.getUnavailabilityReason() != null) {
             return new Result(
                     unavailabilityReasonToString(directoryInfo.getUnavailabilityReason(), path),
@@ -51,28 +51,28 @@ public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner
         List<FileInfo> filesInfo = VideoTabBackgroundUtils.getFilesInfo(
                 directoryInfo.getDirectoryFiles(),
                 context.getFfprobe(),
-                runnerManager
+                backgroundManager
         );
         List<TableFileInfo> allTableFilesInfo = VideoTabBackgroundUtils.tableFilesInfoFrom(
                 filesInfo,
                 false,
                 false,
-                runnerManager,
+                backgroundManager,
                 context.getSettings()
         );
 
-        boolean hideUnavailable = shouldHideUnavailable(filesInfo, runnerManager);
+        boolean hideUnavailable = shouldHideUnavailable(filesInfo, backgroundManager);
 
         List<TableFileInfo> tableFilesToShowInfo = null;
         if (hideUnavailable) {
-            tableFilesToShowInfo = VideoTabBackgroundUtils.getOnlyAvailableFilesInfo(allTableFilesInfo, runnerManager);
+            tableFilesToShowInfo = VideoTabBackgroundUtils.getOnlyAvailableFilesInfo(allTableFilesInfo, backgroundManager);
         }
 
         tableFilesToShowInfo = VideoTabBackgroundUtils.getSortedFilesInfo(
                 tableFilesToShowInfo != null ? tableFilesToShowInfo : allTableFilesInfo,
                 sortBy,
                 sortDirection,
-                runnerManager
+                backgroundManager
         );
 
         return new Result(
@@ -86,7 +86,7 @@ public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner
                         VideoTabBackgroundUtils.getAllSelectableCount(
                                 tableFilesToShowInfo,
                                 TableWithFiles.Mode.DIRECTORY,
-                                runnerManager
+                                backgroundManager
                         ),
                         0,
                         0
@@ -94,7 +94,7 @@ public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner
         );
     }
 
-    private static DirectoryInfo getDirectoryInfo(String path, BackgroundRunnerManager runnerManager) {
+    private static DirectoryInfo getDirectoryInfo(String path, BackgroundManager backgroundManager) {
         if (StringUtils.isBlank(path)) {
             return new DirectoryInfo(null, null, DirectoryUnavailabilityReason.PATH_EMPTY);
         }
@@ -118,7 +118,7 @@ public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner
             return new DirectoryInfo(file, null, DirectoryUnavailabilityReason.DOES_NOT_EXIST);
         }
 
-        List<File> directoryFiles = getDirectoryFiles(path, runnerManager);
+        List<File> directoryFiles = getDirectoryFiles(path, backgroundManager);
         if (directoryFiles.size() > GuiConstants.TABLE_FILE_LIMIT) {
             return new DirectoryInfo(file, null, DirectoryUnavailabilityReason.TOO_MANY_FILES);
         }
@@ -126,9 +126,9 @@ public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner
         return new DirectoryInfo(file, directoryFiles, null);
     }
 
-    private static List<File> getDirectoryFiles(String directoryPath, BackgroundRunnerManager runnerManager) {
-        runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("Getting file list...");
+    private static List<File> getDirectoryFiles(String directoryPath, BackgroundManager backgroundManager) {
+        backgroundManager.setIndeterminateProgress();
+        backgroundManager.updateMessage("Getting file list...");
 
         File directory = new File(directoryPath);
         File[] directoryFiles = directory.listFiles();
@@ -172,9 +172,9 @@ public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner
      * Set "hide unavailable" checkbox by default if there is at least one available video. Otherwise it should
      * not be checked because the user will see just an empty file list which isn't very user friendly.
      */
-    private static boolean shouldHideUnavailable(List<FileInfo> filesInfo, BackgroundRunnerManager runnerManager) {
-        runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("Calculating whether to hide unavailable files by default...");
+    private static boolean shouldHideUnavailable(List<FileInfo> filesInfo, BackgroundManager backgroundManager) {
+        backgroundManager.setIndeterminateProgress();
+        backgroundManager.updateMessage("Calculating whether to hide unavailable files by default...");
 
         return filesInfo.stream().anyMatch(fileInfo -> fileInfo.getUnavailabilityReason() == null);
     }

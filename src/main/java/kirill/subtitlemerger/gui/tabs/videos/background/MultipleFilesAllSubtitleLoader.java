@@ -7,7 +7,7 @@ import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableSubtitleOptio
 import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
+import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
@@ -33,22 +33,22 @@ public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionRe
     private Ffmpeg ffmpeg;
 
     @Override
-    public ActionResult run(BackgroundRunnerManager runnerManager) {
-        VideoTabBackgroundUtils.clearActionResults(displayedTableFilesInfo, tableWithFiles, runnerManager);
+    public ActionResult run(BackgroundManager backgroundManager) {
+        VideoTabBackgroundUtils.clearActionResults(displayedTableFilesInfo, tableWithFiles, backgroundManager);
 
         List<TableFileInfo> selectedTableFilesInfo = VideoTabBackgroundUtils.getSelectedFilesInfo(
                 displayedTableFilesInfo,
-                runnerManager
+                backgroundManager
         );
 
-        int streamToLoadCount = getStreamToLoadCount(selectedTableFilesInfo, filesInfo, runnerManager);
+        int streamToLoadCount = getStreamToLoadCount(selectedTableFilesInfo, filesInfo, backgroundManager);
         int processedCount = 0;
         int loadedSuccessfullyCount = 0;
         int failedToLoadCount = 0;
 
-        runnerManager.setIndeterminateProgress();
-        runnerManager.setCancellationDescription("Please be patient, this may take a while depending on the size.");
-        runnerManager.setCancellationPossible(true);
+        backgroundManager.setIndeterminateProgress();
+        backgroundManager.setCancellationDescription("Please be patient, this may take a while depending on the size.");
+        backgroundManager.setCancellationPossible(true);
 
         mainLoop: for (TableFileInfo tableFileInfo : selectedTableFilesInfo) {
             FileInfo fileInfo = FileInfo.getById(tableFileInfo.getId(), filesInfo);
@@ -63,7 +63,7 @@ public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionRe
                     continue;
                 }
 
-                runnerManager.updateMessage(
+                backgroundManager.updateMessage(
                         VideoTabBackgroundUtils.getLoadSubtitlesProgressMessage(
                                 processedCount,
                                 streamToLoadCount,
@@ -135,10 +135,10 @@ public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionRe
     private static int getStreamToLoadCount(
             List<TableFileInfo> selectedTableFilesInfo,
             List<FileInfo> allFilesInfo,
-            BackgroundRunnerManager runnerManager
+            BackgroundManager backgroundManager
     ) {
-        runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("Calculating number of subtitles to load...");
+        backgroundManager.setIndeterminateProgress();
+        backgroundManager.updateMessage("Calculating number of subtitles to load...");
 
         int result = 0;
 

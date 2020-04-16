@@ -7,7 +7,7 @@ import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableSubtitleOptio
 import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
+import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
@@ -44,12 +44,12 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
     private Settings settings;
 
     @Override
-    public ActionResult run(BackgroundRunnerManager runnerManager) {
-        VideoTabBackgroundUtils.clearActionResults(displayedTableFilesInfo, tableWithFiles, runnerManager);
+    public ActionResult run(BackgroundManager backgroundManager) {
+        VideoTabBackgroundUtils.clearActionResults(displayedTableFilesInfo, tableWithFiles, backgroundManager);
 
         List<TableFileInfo> selectedTableFilesInfo = VideoTabBackgroundUtils.getSelectedFilesInfo(
                 displayedTableFilesInfo,
-                runnerManager
+                backgroundManager
         );
 
         int allFileCount = selectedTableFilesInfo.size();
@@ -58,13 +58,13 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
         int notPossibleCount = 0;
         int failedCount = 0;
 
-        runnerManager.setIndeterminateProgress();
+        backgroundManager.setIndeterminateProgress();
 
-        runnerManager.setCancellationDescription("Please be patient, this may take a while depending on the size.");
-        runnerManager.setCancellationPossible(true);
+        backgroundManager.setCancellationDescription("Please be patient, this may take a while depending on the size.");
+        backgroundManager.setCancellationPossible(true);
 
         for (TableFileInfo tableFileInfo : selectedTableFilesInfo) {
-            runnerManager.updateMessage(
+            backgroundManager.updateMessage(
                     VideoTabBackgroundUtils.getProcessFileProgressMessage(processedCount, allFileCount, tableFileInfo)
             );
 
@@ -91,7 +91,7 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
                         matchingLowerSubtitles,
                         processedCount,
                         allFileCount,
-                        runnerManager
+                        backgroundManager
                 );
                 if (!loadedSuccessfully) {
                     failedCount++;
@@ -151,7 +151,7 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
             List<FfmpegSubtitleStream> matchingLowerSubtitles,
             int processedCount,
             int allFileCount,
-            BackgroundRunnerManager runnerManager
+            BackgroundManager backgroundManager
     ) throws InterruptedException {
         boolean result = true;
 
@@ -166,7 +166,7 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
         int failedToLoadForFile = 0;
 
         for (FfmpegSubtitleStream ffmpegStream : ffmpegStreams) {
-            runnerManager.updateMessage(
+            backgroundManager.updateMessage(
                     getUpdateMessage(processedCount, allFileCount, ffmpegStream, fileInfo.getFile())
             );
 

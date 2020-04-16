@@ -33,10 +33,7 @@ public abstract class AbstractController {
 
     private HelperTask<?> currentTask;
 
-    protected <T> void runInBackground(
-            BackgroundRunner<T> backgroundTask,
-            BackgroundRunnerCallback<T> taskCallback
-    ) {
+    protected <T> void runInBackground(BackgroundRunner<T> backgroundTask, BackgroundRunnerCallback<T> taskCallback) {
         HelperTask<T> task = new HelperTask<>(backgroundTask, taskCallback, this::stopProgress);
         currentTask = task;
 
@@ -48,13 +45,13 @@ public abstract class AbstractController {
             cancelDescriptionLabel.textProperty().bind(
                     Bindings.createStringBinding(
                             () -> {
-                                String description = task.getBackgroundRunnerManager().getCancellationDescription();
+                                String description = task.getBackgroundManager().getCancellationDescription();
                                 return StringUtils.isBlank(description) ? "" : description + " ";
                             },
-                            task.getBackgroundRunnerManager().cancellationDescriptionProperty()
+                            task.getBackgroundManager().cancellationDescriptionProperty()
                     )
             );
-            cancelTaskPane.visibleProperty().bind(task.getBackgroundRunnerManager().cancellationPossibleProperty());
+            cancelTaskPane.visibleProperty().bind(task.getBackgroundManager().cancellationPossibleProperty());
         }
 
         Thread thread = new Thread(task);

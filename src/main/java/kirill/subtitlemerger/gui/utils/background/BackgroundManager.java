@@ -4,14 +4,14 @@ import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.scene.control.ProgressIndicator;
 
-public class BackgroundRunnerManager {
+public class BackgroundManager {
     private BooleanProperty cancellationPossible;
 
     private StringProperty cancellationDescription;
 
     private HelperTask task;
 
-    BackgroundRunnerManager(HelperTask task) {
+    BackgroundManager(HelperTask task) {
         this.cancellationPossible = new SimpleBooleanProperty(false);
         this.cancellationDescription = new SimpleStringProperty();
         this.task = task;

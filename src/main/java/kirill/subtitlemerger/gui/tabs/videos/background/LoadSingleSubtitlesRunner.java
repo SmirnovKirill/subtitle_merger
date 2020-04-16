@@ -5,7 +5,7 @@ import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableSubtitleOption;
 import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
+import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
@@ -32,10 +32,10 @@ public class LoadSingleSubtitlesRunner implements BackgroundRunner<ActionResult>
     private Ffmpeg ffmpeg;
 
     @Override
-    public ActionResult run(BackgroundRunnerManager runnerManager) {
-        runnerManager.setIndeterminateProgress();
+    public ActionResult run(BackgroundManager backgroundManager) {
+        backgroundManager.setIndeterminateProgress();
 
-        runnerManager.updateMessage(
+        backgroundManager.updateMessage(
                 VideoTabBackgroundUtils.getLoadSubtitlesProgressMessage(
                         0,
                         1,
@@ -44,8 +44,8 @@ public class LoadSingleSubtitlesRunner implements BackgroundRunner<ActionResult>
                 )
         );
 
-        runnerManager.setCancellationDescription("Please be patient, this may take a while depending on the size.");
-        runnerManager.setCancellationPossible(true);
+        backgroundManager.setCancellationDescription("Please be patient, this may take a while depending on the size.");
+        backgroundManager.setCancellationPossible(true);
 
         try {
             String subtitleText = ffmpeg.getSubtitleText(

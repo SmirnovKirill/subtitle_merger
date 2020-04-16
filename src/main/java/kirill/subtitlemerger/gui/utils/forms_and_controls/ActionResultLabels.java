@@ -9,7 +9,10 @@ import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import org.apache.commons.lang3.StringUtils;
 
-
+/**
+ * Special class to display data from ActionResults.
+ * @see ActionResult
+ */
 public class ActionResultLabels extends HBox {
     private Label successLabel;
 

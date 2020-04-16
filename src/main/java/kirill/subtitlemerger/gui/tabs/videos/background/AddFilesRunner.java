@@ -6,7 +6,7 @@ import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
+import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import kirill.subtitlemerger.logic.files.entities.FileInfo;
 import kirill.subtitlemerger.logic.settings.SortBy;
@@ -38,13 +38,13 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
     private GuiContext context;
 
     @Override
-    public Result run(BackgroundRunnerManager runnerManager) {
+    public Result run(BackgroundManager backgroundManager) {
         List<FileInfo> filesToAddInfo = VideoTabBackgroundUtils.getFilesInfo(
                 filesToAdd,
                 context.getFfprobe(),
-                runnerManager
+                backgroundManager
         );
-        removeAlreadyAdded(filesToAddInfo, filesInfo, runnerManager);
+        removeAlreadyAdded(filesToAddInfo, filesInfo, backgroundManager);
 
         if (filesToAddInfo.size() + filesInfo.size() > GuiConstants.TABLE_FILE_LIMIT) {
             return new Result(
@@ -63,21 +63,21 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
                 filesToAddInfo,
                 true,
                 true,
-                runnerManager,
+                backgroundManager,
                 context.getSettings()
         );
         allTableFilesInfo.addAll(tableFilesToAddInfo);
 
         List<TableFileInfo> filesToShowInfo = null;
         if (hideUnavailable) {
-            filesToShowInfo = VideoTabBackgroundUtils.getOnlyAvailableFilesInfo(allTableFilesInfo, runnerManager);
+            filesToShowInfo = VideoTabBackgroundUtils.getOnlyAvailableFilesInfo(allTableFilesInfo, backgroundManager);
         }
 
         filesToShowInfo = VideoTabBackgroundUtils.getSortedFilesInfo(
                 filesToShowInfo != null ? filesToShowInfo : allTableFilesInfo,
                 sortBy,
                 sortDirection,
-                runnerManager
+                backgroundManager
         );
 
         return new Result(
@@ -88,9 +88,9 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
                 allTableFilesInfo,
                 new TableFilesToShowInfo(
                         filesToShowInfo,
-                        VideoTabBackgroundUtils.getAllSelectableCount(filesToShowInfo, mode, runnerManager),
-                        VideoTabBackgroundUtils.getSelectedAvailableCount(filesToShowInfo, runnerManager),
-                        VideoTabBackgroundUtils.getSelectedUnavailableCount(filesToShowInfo, runnerManager)
+                        VideoTabBackgroundUtils.getAllSelectableCount(filesToShowInfo, mode, backgroundManager),
+                        VideoTabBackgroundUtils.getSelectedAvailableCount(filesToShowInfo, backgroundManager),
+                        VideoTabBackgroundUtils.getSelectedUnavailableCount(filesToShowInfo, backgroundManager)
                 )
         );
     }
@@ -98,10 +98,10 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
     private static void removeAlreadyAdded(
             List<FileInfo> filesToAddInfo,
             List<FileInfo> allFilesInfo,
-            BackgroundRunnerManager runnerManager
+            BackgroundManager backgroundManager
     ) {
-        runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("Removing already added files...");
+        backgroundManager.setIndeterminateProgress();
+        backgroundManager.updateMessage("Removing already added files...");
 
         Iterator<FileInfo> iterator = filesToAddInfo.iterator();
 

@@ -9,7 +9,7 @@ import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableSubtitleOptio
 import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
+import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import kirill.subtitlemerger.logic.core.SubRipWriter;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
@@ -57,7 +57,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
     private Settings settings;
 
     @Override
-    public Result run(BackgroundRunnerManager runnerManager) {
+    public Result run(BackgroundManager backgroundManager) {
         int allFileCount = filesMergeInfo.size();
         int processedCount = 0;
         int finishedSuccessfullyCount = 0;
@@ -69,7 +69,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
             TableFileInfo tableFileInfo = TableFileInfo.getById(fileMergeInfo.getId(), displayedTableFilesInfo);
 
             String progressMessagePrefix = getProgressMessagePrefix(processedCount, allFileCount, tableFileInfo);
-            runnerManager.updateMessage(progressMessagePrefix + "...");
+            backgroundManager.updateMessage(progressMessagePrefix + "...");
 
             FileInfo fileInfo = FileInfo.getById(fileMergeInfo.getId(), allFilesInfo);
 
@@ -189,7 +189,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
                 displayedTableFilesInfo,
                 settings.getSortBy(),
                 settings.getSortDirection(),
-                runnerManager
+                backgroundManager
         );
 
         return new Result(

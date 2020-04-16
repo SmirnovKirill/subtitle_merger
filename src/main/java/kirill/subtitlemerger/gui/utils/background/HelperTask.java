@@ -14,7 +14,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 @CommonsLog
 public class HelperTask<T> extends Task<Void> {
     @Getter
-    private BackgroundRunnerManager backgroundRunnerManager;
+    private BackgroundManager backgroundManager;
 
     private BackgroundRunner<T> backgroundRunner;
 
@@ -27,7 +27,7 @@ public class HelperTask<T> extends Task<Void> {
             BackgroundRunnerCallback<T> callback,
             Runnable stopProgressRunnable
     ) {
-        this.backgroundRunnerManager = new BackgroundRunnerManager(this);
+        this.backgroundManager = new BackgroundManager(this);
         this.backgroundRunner = backgroundRunner;
         this.callback = callback;
         this.stopProgressRunnable = stopProgressRunnable;
@@ -41,7 +41,7 @@ public class HelperTask<T> extends Task<Void> {
         });
 
         setOnCancelled(e -> {
-            Platform.runLater(() -> backgroundRunnerManager.setCancellationPossible(false));
+            Platform.runLater(() -> backgroundManager.setCancellationPossible(false));
             updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
             updateMessage("waiting for the task to cancel");
         });
@@ -49,10 +49,10 @@ public class HelperTask<T> extends Task<Void> {
 
     @Override
     protected Void call() {
-        T result = backgroundRunner.run(backgroundRunnerManager);
+        T result = backgroundRunner.run(backgroundManager);
 
         Platform.runLater(() -> {
-            backgroundRunnerManager.setCancellationPossible(false);
+            backgroundManager.setCancellationPossible(false);
             stopProgressRunnable.run();
             callback.run(result);
         });

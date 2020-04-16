@@ -3,7 +3,7 @@ package kirill.subtitlemerger.gui.tabs.videos.background;
 import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
+import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.logic.files.entities.FileInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,11 +22,11 @@ public class RemoveFilesRunner implements BackgroundRunner<RemoveFilesRunner.Res
     private List<TableFileInfo> originalTableFilesToShowInfo;
 
     @Override
-    public Result run(BackgroundRunnerManager runnerManager) {
-        List<String> selectedFileIds =getSelectedFileIds(originalTableFilesToShowInfo, runnerManager);
+    public Result run(BackgroundManager backgroundManager) {
+        List<String> selectedFileIds =getSelectedFileIds(originalTableFilesToShowInfo, backgroundManager);
 
-        runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("Removing files...");
+        backgroundManager.setIndeterminateProgress();
+        backgroundManager.updateMessage("Removing files...");
 
         List<FileInfo> filesInfo = originalFilesInfo.stream()
                 .filter(fileInfo -> !selectedFileIds.contains(fileInfo.getId()))
@@ -44,19 +44,19 @@ public class RemoveFilesRunner implements BackgroundRunner<RemoveFilesRunner.Res
                 allTableFilesInfo,
                 new TableFilesToShowInfo(
                         tableFilesToShowInfo,
-                        VideoTabBackgroundUtils.getAllSelectableCount(tableFilesToShowInfo, mode, runnerManager),
-                        VideoTabBackgroundUtils.getSelectedAvailableCount(tableFilesToShowInfo, runnerManager),
-                        VideoTabBackgroundUtils.getSelectedUnavailableCount(tableFilesToShowInfo, runnerManager)
+                        VideoTabBackgroundUtils.getAllSelectableCount(tableFilesToShowInfo, mode, backgroundManager),
+                        VideoTabBackgroundUtils.getSelectedAvailableCount(tableFilesToShowInfo, backgroundManager),
+                        VideoTabBackgroundUtils.getSelectedUnavailableCount(tableFilesToShowInfo, backgroundManager)
                 )
         );
     }
 
     private static List<String> getSelectedFileIds(
             List<TableFileInfo> filesInfo,
-            BackgroundRunnerManager runnerManager
+            BackgroundManager backgroundManager
     ) {
-        runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("Getting list of files to remove...");
+        backgroundManager.setIndeterminateProgress();
+        backgroundManager.updateMessage("Getting list of files to remove...");
 
         return filesInfo.stream()
                 .filter(TableFileInfo::isSelected)

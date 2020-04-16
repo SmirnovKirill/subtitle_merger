@@ -164,7 +164,7 @@ public class SubtitlePreviewController extends AbstractController {
     private void getPreviewInfoAndUpdateScene(boolean initialRun) {
         listView.getItems().clear();
 
-        BackgroundRunner<PreviewInfo> backgroundRunner = runnerManager -> {
+        BackgroundRunner<PreviewInfo> backgroundRunner = backgroundManager -> {
             if (mode == Mode.SIMPLE) {
                 return getPreviewInfo(originalSubtitles, null, false);
             } else if (mode == Mode.WITH_ENCODING){

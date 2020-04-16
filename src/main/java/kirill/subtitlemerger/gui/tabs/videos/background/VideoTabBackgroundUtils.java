@@ -7,7 +7,7 @@ import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableSubtitleOption;
 import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerManager;
+import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
@@ -37,15 +37,15 @@ class VideoTabBackgroundUtils {
     static List<FileInfo> getFilesInfo(
             List<File> files,
             Ffprobe ffprobe,
-            BackgroundRunnerManager runnerManager
+            BackgroundManager backgroundManager
     ) {
         List<FileInfo> result = new ArrayList<>();
 
-        runnerManager.updateProgress(0, files.size());
+        backgroundManager.updateProgress(0, files.size());
 
         int i = 0;
         for (File file : files) {
-            runnerManager.updateMessage("Getting file info " + file.getName() + "...");
+            backgroundManager.updateMessage("Getting file info " + file.getName() + "...");
 
             if (file.isFile() && file.exists()) {
                 result.add(
@@ -57,7 +57,7 @@ class VideoTabBackgroundUtils {
                 );
             }
 
-            runnerManager.updateProgress(i + 1, files.size());
+            backgroundManager.updateProgress(i + 1, files.size());
 
             i++;
         }
@@ -69,15 +69,15 @@ class VideoTabBackgroundUtils {
             List<FileInfo> filesInfo,
             boolean showFullPath,
             boolean selectByDefault,
-            BackgroundRunnerManager runnerManager,
+            BackgroundManager backgroundManager,
             Settings settings
     ) {
-        runnerManager.setIndeterminateProgress();
+        backgroundManager.setIndeterminateProgress();
 
         List<TableFileInfo> result = new ArrayList<>();
 
         for (FileInfo fileInfo : filesInfo) {
-            runnerManager.updateMessage("Creating object for " + fileInfo.getFile().getName() + "...");
+            backgroundManager.updateMessage("Creating object for " + fileInfo.getFile().getName() + "...");
 
             result.add(tableFileInfoFrom(fileInfo, showFullPath, selectByDefault, settings));
         }
@@ -195,10 +195,10 @@ class VideoTabBackgroundUtils {
 
     static List<TableFileInfo> getOnlyAvailableFilesInfo(
             List<TableFileInfo> allFilesInfo,
-            BackgroundRunnerManager runnerManager
+            BackgroundManager backgroundManager
     ) {
-        runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("Filtering unavailable...");
+        backgroundManager.setIndeterminateProgress();
+        backgroundManager.updateMessage("Filtering unavailable...");
 
         return allFilesInfo.stream()
                 .filter(fileInfo -> fileInfo.getUnavailabilityReason() == null)
@@ -209,10 +209,10 @@ class VideoTabBackgroundUtils {
             List<TableFileInfo> allFilesInfo,
             SortBy sortBy,
             SortDirection sortDirection,
-            BackgroundRunnerManager runnerManager
+            BackgroundManager backgroundManager
     ) {
-        runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("Sorting file list...");
+        backgroundManager.setIndeterminateProgress();
+        backgroundManager.updateMessage("Sorting file list...");
 
         Comparator<TableFileInfo> comparator;
         switch (sortBy) {
@@ -239,10 +239,10 @@ class VideoTabBackgroundUtils {
     static int getAllSelectableCount(
             List<TableFileInfo> allFilesInfo,
             TableWithFiles.Mode mode,
-            BackgroundRunnerManager runnerManager
+            BackgroundManager backgroundManager
     ) {
-        runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("Calculating number of files...");
+        backgroundManager.setIndeterminateProgress();
+        backgroundManager.updateMessage("Calculating number of files...");
 
         if (mode == TableWithFiles.Mode.SEPARATE_FILES) {
             return allFilesInfo.size();
@@ -257,10 +257,10 @@ class VideoTabBackgroundUtils {
 
     static int getSelectedAvailableCount(
             List<TableFileInfo> allFilesInfo,
-            BackgroundRunnerManager runnerManager
+            BackgroundManager backgroundManager
     ) {
-        runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("Calculating number of files...");
+        backgroundManager.setIndeterminateProgress();
+        backgroundManager.updateMessage("Calculating number of files...");
 
         return (int) allFilesInfo.stream()
                 .filter(TableFileInfo::isSelected)
@@ -271,10 +271,10 @@ class VideoTabBackgroundUtils {
 
     static int getSelectedUnavailableCount(
             List<TableFileInfo> allFilesInfo,
-            BackgroundRunnerManager runnerManager
+            BackgroundManager backgroundManager
     ) {
-        runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("Calculating number of files...");
+        backgroundManager.setIndeterminateProgress();
+        backgroundManager.updateMessage("Calculating number of files...");
 
         return (int) allFilesInfo.stream()
                 .filter(TableFileInfo::isSelected)
@@ -302,10 +302,10 @@ class VideoTabBackgroundUtils {
     static void clearActionResults(
             List<TableFileInfo> filesInfo,
             TableWithFiles tableWithFiles,
-            BackgroundRunnerManager runnerManager
+            BackgroundManager backgroundManager
     ) {
-        runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("Clearing state...");
+        backgroundManager.setIndeterminateProgress();
+        backgroundManager.updateMessage("Clearing state...");
 
         for (TableFileInfo fileInfo : filesInfo) {
             Platform.runLater(() -> tableWithFiles.clearActionResult(fileInfo));
@@ -314,10 +314,10 @@ class VideoTabBackgroundUtils {
 
     static List<TableFileInfo> getSelectedFilesInfo(
             List<TableFileInfo> filesInfo,
-            BackgroundRunnerManager runnerManager
+            BackgroundManager backgroundManager
     ) {
-        runnerManager.setIndeterminateProgress();
-        runnerManager.updateMessage("Getting list of files to work with...");
+        backgroundManager.setIndeterminateProgress();
+        backgroundManager.updateMessage("Getting list of files to work with...");
 
         return filesInfo.stream().filter(TableFileInfo::isSelected).collect(Collectors.toList());
     }
