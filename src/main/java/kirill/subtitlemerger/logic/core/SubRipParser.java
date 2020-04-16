@@ -59,6 +59,7 @@ public class SubRipParser {
                 timeRange = getTimeRange(line);
             } else {
                 if (timeRange == null) {
+                    /* We can get here only once, before parsing the first line with time range. */
                     linesBeforeTimeLine.add(line);
                 } else {
                     linesAfterTimeLine.add(line);
@@ -112,7 +113,7 @@ public class SubRipParser {
     }
 
     /**
-     * Checks that last line contains a single integer and lines before are all empty if present.
+     * Checks that the last line contains a single integer and lines before are all empty if present.
      */
     private static void validateNumber(List<String> lines) throws SubtitleFormatException {
         if (lines.size() == 0) {

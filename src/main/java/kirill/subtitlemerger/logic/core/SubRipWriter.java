@@ -45,7 +45,7 @@ public class SubRipWriter {
      * 1) Subtitle text is not an html text, it's a regular text with html tags as far as I know. So for example string
      * "<test" is correct in terms of subtitles but incorrect in terms of HTML because brackets that are not tags have
      * to be encoded. So if I use jsoup it will simply remove the text "<test" completely instead of leaving it as is.
-     * 2) All not removed basic html-entities will be html encoded so I have to decode them back.
+     * 2) All not removed basic html entities will be html-encoded so I have to decode them back.
      * 3) Even if I use jsoup there are no well-known libraries for removing ASS tags.
      * 4) Regular expressions are faster than jsoup.
      * 5) If it's possible not to use another library it's better to do so to reduce the jar's size.
