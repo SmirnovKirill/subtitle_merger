@@ -6,9 +6,10 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.Pane;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
+import kirill.subtitlemerger.gui.utils.background.Background;
 import kirill.subtitlemerger.gui.utils.background.BackgroundCallback;
-import kirill.subtitlemerger.gui.utils.background.HelperTask;
+import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 
@@ -32,17 +33,25 @@ public abstract class AbstractController {
     @FXML
     private Label cancelDescriptionLabel;
 
-    private HelperTask<?> task;
+    private BackgroundManager backgroundManager;
 
     protected <T> void runInBackground(BackgroundRunner<T> runner, BackgroundCallback<T> callback) {
-        task = new HelperTask<>(runner, callback, this::stopProgress);
-
         mainPane.setDisable(true);
         progressPane.setVisible(true);
-        progressIndicator.progressProperty().bind(task.progressProperty());
-        progressLabel.textProperty().bind(task.messageProperty());
+
+        BackgroundCallback<T> extendedCallback = (result) -> {
+            progressPane.setVisible(false);
+            mainPane.setDisable(false);
+
+            callback.run(result);
+            backgroundManager = null;
+        };
+        backgroundManager = Background.run(runner, extendedCallback);
+
+        progressIndicator.progressProperty().bind(backgroundManager.progressProperty());
+        progressLabel.textProperty().bind(backgroundManager.messageProperty());
         if (cancelTaskPane != null) {
-            cancelTaskPane.visibleProperty().bind(task.getManager().cancellationPossibleProperty());
+            cancelTaskPane.visibleProperty().bind(backgroundManager.cancellationPossibleProperty());
 
             /*
              * Besides the description that can be set through the manager there is always a text after this description
@@ -51,31 +60,22 @@ public abstract class AbstractController {
              */
             StringBinding descriptionBinding = Bindings.createStringBinding(
                     () -> {
-                        String description = task.getManager().getCancellationDescription();
+                        String description = backgroundManager.getCancellationDescription();
                         return StringUtils.isBlank(description) ? "" : description + " ";
                     },
-                    task.getManager().cancellationDescriptionProperty()
+                    backgroundManager.cancellationDescriptionProperty()
             );
             cancelDescriptionLabel.textProperty().bind(descriptionBinding);
         }
-
-        Thread thread = new Thread(task);
-        thread.setDaemon(true);
-        thread.start();
-    }
-
-    private void stopProgress() {
-        progressPane.setVisible(false);
-        mainPane.setDisable(false);
     }
 
     @FXML
     private void cancelTaskClicked() {
-        if (task == null) {
-            log.error("task is null, that shouldn't happen");
+        if (backgroundManager == null) {
+            log.error("background manager is null, that shouldn't happen");
             return;
         }
 
-        task.cancel();
+        backgroundManager.cancel();
     }
 }

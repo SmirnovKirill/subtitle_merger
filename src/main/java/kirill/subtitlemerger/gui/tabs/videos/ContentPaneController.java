@@ -540,7 +540,7 @@ public class ContentPaneController extends AbstractController {
             );
 
             BackgroundCallback<MergedPreviewRunner.Result> callback = result -> {
-                if (result.isCancelled()) {
+                if (result.isCanceled()) {
                     generalResult.setOnlyWarn("Merge has been cancelled");
                     return;
                 }
@@ -846,7 +846,7 @@ public class ContentPaneController extends AbstractController {
         );
 
         BackgroundCallback<MergePreparationRunner.Result> callback = preparationResult -> {
-            if (preparationResult.isCancelled()) {
+            if (preparationResult.isCanceled()) {
                 generalResult.setOnlyWarn("Merge has been cancelled");
                 return;
             }

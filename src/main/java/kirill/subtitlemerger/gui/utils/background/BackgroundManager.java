@@ -54,16 +54,24 @@ public class BackgroundManager {
         task.updateMessage(message);
     }
 
+    public ReadOnlyStringProperty messageProperty() {
+        return task.messageProperty();
+    }
+
     public void updateProgress(long workDone, long max) {
         task.updateProgress(workDone, max);
     }
 
-    public void updateProgress(double workDone, double max) {
-        task.updateProgress(workDone, max);
+    public ReadOnlyDoubleProperty progressProperty() {
+        return task.progressProperty();
     }
 
     public void setIndeterminateProgress() {
-        updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
+        task.updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
+    }
+
+    public void cancel() {
+        task.cancel();
     }
 }
 

@@ -5,9 +5,8 @@ import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableSubtitleOption;
 import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
-import kirill.subtitlemerger.gui.utils.background.BackgroundResult;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
@@ -165,14 +164,11 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
                 + " in " + file.getName();
     }
 
+    @AllArgsConstructor
     @Getter
-    public static class Result extends BackgroundResult {
+    public static class Result {
+        private boolean canceled;
+
         private MergedSubtitleInfo mergedSubtitleInfo;
-
-        public Result(boolean cancelled, MergedSubtitleInfo mergedSubtitleInfo) {
-            super(cancelled);
-
-            this.mergedSubtitleInfo = mergedSubtitleInfo;
-        }
     }
  }

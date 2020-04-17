@@ -3,15 +3,12 @@ package kirill.subtitlemerger.gui.tabs.videos.background;
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.application.Platform;
 import kirill.subtitlemerger.gui.GuiContext;
-import kirill.subtitlemerger.logic.settings.MergeMode;
-import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableSubtitleOption;
 import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
-import kirill.subtitlemerger.gui.utils.background.BackgroundResult;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
@@ -21,6 +18,8 @@ import kirill.subtitlemerger.logic.files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.files.entities.FileInfo;
 import kirill.subtitlemerger.logic.files.entities.FileWithSubtitles;
 import kirill.subtitlemerger.logic.files.entities.SubtitleOption;
+import kirill.subtitlemerger.logic.settings.MergeMode;
+import kirill.subtitlemerger.logic.settings.Settings;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
@@ -383,8 +382,11 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         return result;
     }
 
+    @AllArgsConstructor
     @Getter
-    public static class Result extends BackgroundResult {
+    public static class Result {
+        private boolean canceled;
+
         private int filesWithoutSelectionCount;
 
         private Long requiredTempSpace;
@@ -396,24 +398,6 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         private List<File> filesToOverwrite;
 
         private List<FileMergeInfo> filesMergeInfo;
-
-        public Result(
-                boolean cancelled,
-                int filesWithoutSelectionCount,
-                Long requiredTempSpace,
-                Long availableTempSpace,
-                File directoryForTempFile,
-                List<File> filesToOverwrite,
-                List<FileMergeInfo> filesMergeInfo
-        ) {
-            super(cancelled);
-            this.filesWithoutSelectionCount = filesWithoutSelectionCount;
-            this.requiredTempSpace = requiredTempSpace;
-            this.availableTempSpace = availableTempSpace;
-            this.directoryForTempFile = directoryForTempFile;
-            this.filesToOverwrite = filesToOverwrite;
-            this.filesMergeInfo = filesMergeInfo;
-        }
     }
 
     @AllArgsConstructor
