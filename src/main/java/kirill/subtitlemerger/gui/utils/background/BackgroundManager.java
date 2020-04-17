@@ -4,16 +4,23 @@ import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.scene.control.ProgressIndicator;
 
+/**
+ * This class provides interaction between the background task and the main thread - updates progress and progress
+ * message, cancellation availability and cancellation text. It may seem unnecessary since JavaFX's tasks can interact
+ * with the main thread the same way and have updateMessage and updateProgress message. But the problem is that you are
+ * able to use these methods only if you create child classes directly, they are unavailable when you use method
+ * references.
+ */
 public class BackgroundManager {
-    private BooleanProperty cancellationPossible;
+    private ReadOnlyBooleanWrapper cancellationPossible;
 
-    private StringProperty cancellationDescription;
+    private ReadOnlyStringWrapper cancellationDescription;
 
     private HelperTask task;
 
     BackgroundManager(HelperTask task) {
-        this.cancellationPossible = new SimpleBooleanProperty(false);
-        this.cancellationDescription = new SimpleStringProperty();
+        this.cancellationPossible = new ReadOnlyBooleanWrapper(false);
+        this.cancellationDescription = new ReadOnlyStringWrapper();
         this.task = task;
     }
 
@@ -21,8 +28,8 @@ public class BackgroundManager {
         return cancellationPossible.get();
     }
 
-    public BooleanProperty cancellationPossibleProperty() {
-        return cancellationPossible;
+    public ReadOnlyBooleanProperty cancellationPossibleProperty() {
+        return cancellationPossible.getReadOnlyProperty();
     }
 
     public void setCancellationPossible(boolean cancellationPossible) {
@@ -34,8 +41,8 @@ public class BackgroundManager {
         return cancellationDescription.get();
     }
 
-    public StringProperty cancellationDescriptionProperty() {
-        return cancellationDescription;
+    public ReadOnlyStringProperty cancellationDescriptionProperty() {
+        return cancellationDescription.getReadOnlyProperty();
     }
 
     public void setCancellationDescription(String cancellationDescription) {
@@ -57,18 +64,6 @@ public class BackgroundManager {
 
     public void setIndeterminateProgress() {
         updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
-    }
-
-    public ReadOnlyDoubleProperty progressProperty() {
-        return task.progressProperty();
-    }
-
-    public ReadOnlyStringProperty messageProperty() {
-        return task.messageProperty();
-    }
-
-    void cancel() {
-        task.cancel();
     }
 }
 

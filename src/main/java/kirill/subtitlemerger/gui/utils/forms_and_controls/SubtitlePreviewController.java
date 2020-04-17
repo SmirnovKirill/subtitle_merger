@@ -11,7 +11,7 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerCallback;
+import kirill.subtitlemerger.gui.utils.background.BackgroundCallback;
 import kirill.subtitlemerger.gui.utils.entities.AbstractController;
 import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import kirill.subtitlemerger.logic.LogicConstants;
@@ -176,7 +176,7 @@ public class SubtitlePreviewController extends AbstractController {
             }
         };
 
-        BackgroundRunnerCallback<PreviewInfo> callback = previewInfo -> {
+        BackgroundCallback<PreviewInfo> callback = previewInfo -> {
             if (mode == Mode.WITH_ENCODING) {
                 if (initialRun) {
                     originalSubtitles = previewInfo.getSubtitles();

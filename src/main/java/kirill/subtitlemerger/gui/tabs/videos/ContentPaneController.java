@@ -17,7 +17,7 @@ import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableSubtitleOptio
 import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerCallback;
+import kirill.subtitlemerger.gui.utils.background.BackgroundCallback;
 import kirill.subtitlemerger.gui.utils.forms_and_controls.ActionResultLabels;
 import kirill.subtitlemerger.gui.utils.forms_and_controls.AgreementPopupController;
 import kirill.subtitlemerger.gui.utils.entities.ActionResult;
@@ -228,7 +228,7 @@ public class ContentPaneController extends AbstractController {
                     context.getSettings().getSortDirection()
             );
 
-            BackgroundRunnerCallback<TableFilesToShowInfo> callback = result ->
+            BackgroundCallback<TableFilesToShowInfo> callback = result ->
                     tableWithFiles.setFilesInfo(
                             result.getFilesInfo(),
                             getTableSortBy(context.getSettings()),
@@ -281,7 +281,7 @@ public class ContentPaneController extends AbstractController {
                     context.getSettings().getSortDirection()
             );
 
-            BackgroundRunnerCallback<TableFilesToShowInfo> callback = result ->
+            BackgroundCallback<TableFilesToShowInfo> callback = result ->
                     tableWithFiles.setFilesInfo(
                             result.getFilesInfo(),
                             getTableSortBy(context.getSettings()),
@@ -339,7 +339,7 @@ public class ContentPaneController extends AbstractController {
                     context.getFfmpeg()
             );
 
-            BackgroundRunnerCallback<ActionResult> callback = actionResult ->
+            BackgroundCallback<ActionResult> callback = actionResult ->
                     tableWithFiles.setActionResult(actionResult, tableFileInfo);
 
             runInBackground(backgroundRunner, callback);
@@ -450,7 +450,7 @@ public class ContentPaneController extends AbstractController {
                     videoFileInfo
             );
 
-            BackgroundRunnerCallback<AddFileWithSubtitlesRunner.Result> callback = result -> {
+            BackgroundCallback<AddFileWithSubtitlesRunner.Result> callback = result -> {
                 if (result.getUnavailabilityReason() != null) {
                     tableWithFiles.failedToAddFileWithSubtitles(result.getUnavailabilityReason(), tableFileInfo);
                 } else {
@@ -507,7 +507,7 @@ public class ContentPaneController extends AbstractController {
                     context.getFfmpeg()
             );
 
-            BackgroundRunnerCallback<ActionResult> callback = actionResult ->
+            BackgroundCallback<ActionResult> callback = actionResult ->
                     tableWithFiles.setActionResult(actionResult, tableFileInfo);
 
             runInBackground(backgroundRunner, callback);
@@ -539,7 +539,7 @@ public class ContentPaneController extends AbstractController {
                     context.getFfmpeg()
             );
 
-            BackgroundRunnerCallback<MergedPreviewRunner.Result> callback = result -> {
+            BackgroundCallback<MergedPreviewRunner.Result> callback = result -> {
                 if (result.isCancelled()) {
                     generalResult.setOnlyWarn("Merge has been cancelled");
                     return;
@@ -608,7 +608,7 @@ public class ContentPaneController extends AbstractController {
                 context
         );
 
-        BackgroundRunnerCallback<LoadSeparateFilesRunner.Result> callback = result -> {
+        BackgroundCallback<LoadSeparateFilesRunner.Result> callback = result -> {
             filesInfo = result.getFilesInfo();
             allTableFilesInfo = result.getAllTableFilesInfo();
 
@@ -666,7 +666,7 @@ public class ContentPaneController extends AbstractController {
                 context
         );
 
-        BackgroundRunnerCallback<LoadDirectoryRunner.Result> callback = result -> {
+        BackgroundCallback<LoadDirectoryRunner.Result> callback = result -> {
             if (result.getUnavailabilityReason() != null) {
                 filesInfo = null;
                 allTableFilesInfo = null;
@@ -727,7 +727,7 @@ public class ContentPaneController extends AbstractController {
                 context
         );
 
-        BackgroundRunnerCallback<LoadDirectoryRunner.Result> callback = result -> {
+        BackgroundCallback<LoadDirectoryRunner.Result> callback = result -> {
             if (result.getUnavailabilityReason() != null) {
                 filesInfo = null;
                 allTableFilesInfo = null;
@@ -772,7 +772,7 @@ public class ContentPaneController extends AbstractController {
                 context.getSettings().getSortDirection()
         );
 
-        BackgroundRunnerCallback<TableFilesToShowInfo> callback = result -> {
+        BackgroundCallback<TableFilesToShowInfo> callback = result -> {
             tableWithFiles.setFilesInfo(
                     result.getFilesInfo(),
                     getTableSortBy(context.getSettings()),
@@ -811,7 +811,7 @@ public class ContentPaneController extends AbstractController {
                 context.getSettings()
         );
 
-        BackgroundRunnerCallback<ActionResult> callback = actionResult -> generalResult.set(actionResult);
+        BackgroundCallback<ActionResult> callback = actionResult -> generalResult.set(actionResult);
 
         runInBackground(backgroundRunner, callback);
     }
@@ -828,7 +828,7 @@ public class ContentPaneController extends AbstractController {
                 context.getFfmpeg()
         );
 
-        BackgroundRunnerCallback<ActionResult> callback = actionResult -> generalResult.set(actionResult);
+        BackgroundCallback<ActionResult> callback = actionResult -> generalResult.set(actionResult);
 
         runInBackground(backgroundRunner, callback);
     }
@@ -845,7 +845,7 @@ public class ContentPaneController extends AbstractController {
                 context
         );
 
-        BackgroundRunnerCallback<MergePreparationRunner.Result> callback = preparationResult -> {
+        BackgroundCallback<MergePreparationRunner.Result> callback = preparationResult -> {
             if (preparationResult.isCancelled()) {
                 generalResult.setOnlyWarn("Merge has been cancelled");
                 return;
@@ -890,7 +890,7 @@ public class ContentPaneController extends AbstractController {
                     context.getSettings()
             );
 
-            BackgroundRunnerCallback<MergeRunner.Result> mergeCallback = result -> {
+            BackgroundCallback<MergeRunner.Result> mergeCallback = result -> {
                 generalResult.set(result.getActionResult());
 
                 tableWithFiles.setFilesInfo(
@@ -1009,7 +1009,7 @@ public class ContentPaneController extends AbstractController {
                 tableWithFiles.getItems()
         );
 
-        BackgroundRunnerCallback<RemoveFilesRunner.Result> callback = result -> {
+        BackgroundCallback<RemoveFilesRunner.Result> callback = result -> {
             filesInfo = result.getFilesInfo();
             allTableFilesInfo = result.getAllTableFilesInfo();
 
@@ -1066,7 +1066,7 @@ public class ContentPaneController extends AbstractController {
                 context
         );
 
-        BackgroundRunnerCallback<AddFilesRunner.Result> callback = result -> {
+        BackgroundCallback<AddFilesRunner.Result> callback = result -> {
             if (!StringUtils.isBlank(result.getAddFailedReason())) {
                 generalResult.set(ActionResult.onlyError(result.getAddFailedReason()));
             } else {

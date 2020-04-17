@@ -6,7 +6,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.Pane;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerCallback;
+import kirill.subtitlemerger.gui.utils.background.BackgroundCallback;
 import kirill.subtitlemerger.gui.utils.background.HelperTask;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
@@ -33,7 +33,7 @@ public abstract class AbstractController {
 
     private HelperTask<?> currentTask;
 
-    protected <T> void runInBackground(BackgroundRunner<T> backgroundTask, BackgroundRunnerCallback<T> taskCallback) {
+    protected <T> void runInBackground(BackgroundRunner<T> backgroundTask, BackgroundCallback<T> taskCallback) {
         HelperTask<T> task = new HelperTask<>(backgroundTask, taskCallback, this::stopProgress);
         currentTask = task;
 

@@ -9,7 +9,7 @@ import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunnerCallback;
+import kirill.subtitlemerger.gui.utils.background.BackgroundCallback;
 import kirill.subtitlemerger.gui.utils.entities.AbstractController;
 import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import kirill.subtitlemerger.gui.utils.entities.FileOrigin;
@@ -119,7 +119,7 @@ public class SubtitleFilesTabController extends AbstractController {
             return getInputFileInfo(path, fileType, fileOrigin, filesInfo).orElse(null);
         };
 
-        BackgroundRunnerCallback<InputFileInfo> callback = inputFileInfo -> {
+        BackgroundCallback<InputFileInfo> callback = inputFileInfo -> {
             updateFilesInfo(inputFileInfo, fileType, filesInfo);
             markOtherFileNotDuplicate(fileType, filesInfo);
             if (fileOrigin == FileOrigin.FILE_CHOOSER && inputFileInfo != null) {
@@ -704,7 +704,7 @@ public class SubtitleFilesTabController extends AbstractController {
             }
         };
 
-        BackgroundRunnerCallback<Optional<Subtitles>> callback = result -> {
+        BackgroundCallback<Optional<Subtitles>> callback = result -> {
             Subtitles subtitles = result.orElse(null);
             if (subtitles == null) {
                 actionResultLabels.setOnlyWarn("Merge has been cancelled");
@@ -798,7 +798,7 @@ public class SubtitleFilesTabController extends AbstractController {
             }
         };
 
-        BackgroundRunnerCallback<ActionResult> callback = actionResult -> {
+        BackgroundCallback<ActionResult> callback = actionResult -> {
             if (!StringUtils.isBlank(actionResult.getError())) {
                 showFileElementsAsIncorrect(ExtendedFileType.MERGED_SUBTITLES);
             }

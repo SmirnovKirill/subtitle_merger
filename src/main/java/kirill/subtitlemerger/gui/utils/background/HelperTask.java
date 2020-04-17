@@ -18,13 +18,13 @@ public class HelperTask<T> extends Task<Void> {
 
     private BackgroundRunner<T> backgroundRunner;
 
-    private BackgroundRunnerCallback<T> callback;
+    private BackgroundCallback<T> callback;
 
     private Runnable stopProgressRunnable;
 
     public HelperTask(
             BackgroundRunner<T> backgroundRunner,
-            BackgroundRunnerCallback<T> callback,
+            BackgroundCallback<T> callback,
             Runnable stopProgressRunnable
     ) {
         this.backgroundManager = new BackgroundManager(this);
@@ -33,17 +33,15 @@ public class HelperTask<T> extends Task<Void> {
         this.stopProgressRunnable = stopProgressRunnable;
 
         setOnFailed(event -> {
-            log.error(
-                    "task has failed, shouldn't happen: "
-                            + ExceptionUtils.getStackTrace(event.getSource().getException())
-            );
+            Throwable e = event.getSource().getException();
+            log.error("task has failed, shouldn't happen: " + ExceptionUtils.getStackTrace(e));
             throw new IllegalStateException();
         });
 
         setOnCancelled(e -> {
             Platform.runLater(() -> backgroundManager.setCancellationPossible(false));
             updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
-            updateMessage("waiting for the task to cancel");
+            updateMessage("Waiting for the task to cancel...");
         });
     }
 

@@ -1,6 +1,6 @@
 package kirill.subtitlemerger.gui.utils.background;
 
 @FunctionalInterface
-public interface BackgroundRunnerCallback<T> {
+public interface BackgroundCallback<T> {
     void run(T backgroundRunnerResult);
 }
