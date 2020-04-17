@@ -121,6 +121,10 @@ public class SubtitleMerger {
             LocalTime from,
             LocalTime to
     ) {
+        if (currentIndex == subtitles.getSubtitles().size()) {
+            return Optional.empty();
+        }
+
         if (subtitleMatchesTime(subtitles.getSubtitles().get(currentIndex), from, to)) {
             return Optional.of(currentIndex);
         } else {

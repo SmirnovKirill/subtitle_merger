@@ -34,4 +34,35 @@ public class SubtitleMergerTest {
 
         assertThat(SubRipWriter.toText(merged, true)).isEqualTo(expected);
     }
+
+    @Test
+    public void testAllEmpty() throws SubtitleFormatException, InterruptedException {
+        Subtitles upperSubtitles = SubRipParser.from("");
+        Subtitles lowerSubtitles = SubRipParser.from("");
+
+        Subtitles merged = SubtitleMerger.mergeSubtitles(upperSubtitles, lowerSubtitles);
+        String expected = "";
+
+        assertThat(SubRipWriter.toText(merged, true)).isEqualTo(expected);
+    }
+
+    @Test
+    public void testOneEmpty() throws SubtitleFormatException, InterruptedException, IOException {
+        Subtitles upperSubtitles = SubRipParser.from(
+                IOUtils.toString(
+                        getClass().getResourceAsStream("/logic/core/subtitle_merger/upper.srt"),
+                        StandardCharsets.UTF_8
+                )
+        );
+
+        Subtitles lowerSubtitles = SubRipParser.from("");
+
+        Subtitles merged = SubtitleMerger.mergeSubtitles(upperSubtitles, lowerSubtitles);
+        String expected = IOUtils.toString(
+                getClass().getResourceAsStream("/logic/core/subtitle_merger/upper.srt"),
+                StandardCharsets.UTF_8
+        );
+
+        assertThat(SubRipWriter.toText(merged, true)).isEqualTo(expected);
+    }
 }

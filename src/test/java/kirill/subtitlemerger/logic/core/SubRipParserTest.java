@@ -27,6 +27,13 @@ public class SubRipParserTest {
         assertThat(subtitles.getSubtitles().get(1).getLines()).hasSize(1);
     }
 
+    @Test
+    public void testEmpty() throws SubtitleFormatException {
+        Subtitles subtitles = SubRipParser.from("");
+
+        assertThat(subtitles.getSubtitles()).hasSize(0);
+    }
+
     /*
      * Subtitle #3 has an empty line, it should be parsed correctly.
      */
