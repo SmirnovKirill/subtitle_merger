@@ -13,8 +13,8 @@ import javafx.util.StringConverter;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
-import kirill.subtitlemerger.gui.utils.forms_and_controls.ActionResultLabels;
 import kirill.subtitlemerger.gui.utils.entities.FileOrigin;
+import kirill.subtitlemerger.gui.utils.forms_and_controls.ActionResultLabels;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
@@ -29,14 +29,21 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @CommonsLog
 public class SettingsTabController {
     public static final String MERGE_MODE_ORIGINAL_VIDEOS = "Modify original videos";
 
     public static final String MERGE_MODE_SEPARATE_SUBTITLE_FILES = "Create separate subtitle files";
+
+    private static final List<LanguageAlpha3Code> ALLOWED_LANGUAGES = LogicConstants.ALLOWED_LANGUAGES.stream()
+            .sorted(Comparator.comparing(LanguageAlpha3Code::getName))
+            .collect(Collectors.toList());
 
     private static final LanguageCodeStringConverter LANGUAGE_CODE_STRING_CONVERTER = new LanguageCodeStringConverter();
 
@@ -122,9 +129,9 @@ public class SettingsTabController {
                 ffmpegPathField,
                 (path) -> processFfmpegPath(path, FileOrigin.TEXT_FIELD)
         );
-        upperLanguageComboBox.getItems().setAll(LogicConstants.ALLOWED_LANGUAGE_CODES);
+        upperLanguageComboBox.getItems().setAll(ALLOWED_LANGUAGES);
         upperLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
-        lowerLanguageComboBox.getItems().setAll(LogicConstants.ALLOWED_LANGUAGE_CODES);
+        lowerLanguageComboBox.getItems().setAll(ALLOWED_LANGUAGES);
         lowerLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
 
         setInitialValues();

@@ -8,7 +8,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -16,7 +15,7 @@ import java.util.stream.Collectors;
 public class LogicConstants {
     public static final List<String> ALLOWED_VIDEO_EXTENSIONS = Collections.singletonList("mkv");
 
-    public static final List<LanguageAlpha3Code> ALLOWED_LANGUAGE_CODES = getAllLanguageCodes();
+    public static final List<LanguageAlpha3Code> ALLOWED_LANGUAGES = getAllowedLanguages();
 
     public static final DateTimeFormatter SUBRIP_TIME_FORMATTER = DateTimeFormat.forPattern("HH:mm:ss,SSS");
 
@@ -60,17 +59,14 @@ public class LogicConstants {
             Charset.forName("windows-1257")
     );
 
-    private static List<LanguageAlpha3Code> getAllLanguageCodes() {
-        //todo
+    private static List<LanguageAlpha3Code> getAllowedLanguages() {
         return Arrays.stream(LanguageAlpha3Code.values())
                 .filter(code -> code != LanguageAlpha3Code.undefined)
-                .filter(code -> code.getUsage() != LanguageAlpha3Code.Usage.TERMINOLOGY)
                 /*
-                 * The title for this code is way too long and doesn't fit to the combobox so I think it's easier
-                 * just to remove it, nobody will use it anyway.
+                 * https://www.ffmpeg.org/ffmpeg-formats.html#matroska says that bibliographic codes are used, so we
+                 * will exclude terminological.
                  */
-                .filter(code -> code != LanguageAlpha3Code.inc)
-                .sorted(Comparator.comparing(LanguageAlpha3Code::getName))
+                .filter(code -> code.getUsage() != LanguageAlpha3Code.Usage.TERMINOLOGY)
                 .collect(Collectors.toList());
     }
 }

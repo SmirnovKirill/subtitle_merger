@@ -164,7 +164,7 @@ public class Settings {
             throw new SettingException("language code " + rawValue + " is not valid");
         }
 
-        if (!LogicConstants.ALLOWED_LANGUAGE_CODES.contains(result)) {
+        if (!LogicConstants.ALLOWED_LANGUAGES.contains(result)) {
             throw new SettingException("language code " + rawValue + " is not allowed");
         }
 
