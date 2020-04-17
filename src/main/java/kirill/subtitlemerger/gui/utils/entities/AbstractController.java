@@ -1,6 +1,7 @@
 package kirill.subtitlemerger.gui.utils.entities;
 
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.StringBinding;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
@@ -31,27 +32,31 @@ public abstract class AbstractController {
     @FXML
     private Label cancelDescriptionLabel;
 
-    private HelperTask<?> currentTask;
+    private HelperTask<?> task;
 
-    protected <T> void runInBackground(BackgroundRunner<T> backgroundTask, BackgroundCallback<T> taskCallback) {
-        HelperTask<T> task = new HelperTask<>(backgroundTask, taskCallback, this::stopProgress);
-        currentTask = task;
+    protected <T> void runInBackground(BackgroundRunner<T> runner, BackgroundCallback<T> callback) {
+        task = new HelperTask<>(runner, callback, this::stopProgress);
 
         mainPane.setDisable(true);
         progressPane.setVisible(true);
         progressIndicator.progressProperty().bind(task.progressProperty());
         progressLabel.textProperty().bind(task.messageProperty());
         if (cancelTaskPane != null) {
-            cancelDescriptionLabel.textProperty().bind(
-                    Bindings.createStringBinding(
-                            () -> {
-                                String description = task.getBackgroundManager().getCancellationDescription();
-                                return StringUtils.isBlank(description) ? "" : description + " ";
-                            },
-                            task.getBackgroundManager().cancellationDescriptionProperty()
-                    )
+            cancelTaskPane.visibleProperty().bind(task.getManager().cancellationPossibleProperty());
+
+            /*
+             * Besides the description that can be set through the manager there is always a text after this description
+             * offering to click the link to cancel the task. So if the description is set through the manager there
+             * should be a space after that description so that texts won't be too close.
+             */
+            StringBinding descriptionBinding = Bindings.createStringBinding(
+                    () -> {
+                        String description = task.getManager().getCancellationDescription();
+                        return StringUtils.isBlank(description) ? "" : description + " ";
+                    },
+                    task.getManager().cancellationDescriptionProperty()
             );
-            cancelTaskPane.visibleProperty().bind(task.getBackgroundManager().cancellationPossibleProperty());
+            cancelDescriptionLabel.textProperty().bind(descriptionBinding);
         }
 
         Thread thread = new Thread(task);
@@ -66,11 +71,11 @@ public abstract class AbstractController {
 
     @FXML
     private void cancelTaskClicked() {
-        if (currentTask == null) {
+        if (task == null) {
             log.error("task is null, that shouldn't happen");
             return;
         }
 
-        currentTask.cancel();
+        task.cancel();
     }
 }

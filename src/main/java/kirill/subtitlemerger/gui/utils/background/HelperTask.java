@@ -8,27 +8,23 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 /*
- * This class was created basically just to give access to the updateProgress and updateMessage methods. Otherwise
- * we could have just used an anonymous class in the AbstractController.
+ * This class was created basically just to give access to the updateProgress and updateMessage methods for the
+ * background manager.
  */
 @CommonsLog
 public class HelperTask<T> extends Task<Void> {
     @Getter
-    private BackgroundManager backgroundManager;
+    private BackgroundManager manager;
 
-    private BackgroundRunner<T> backgroundRunner;
+    private BackgroundRunner<T> runner;
 
     private BackgroundCallback<T> callback;
 
     private Runnable stopProgressRunnable;
 
-    public HelperTask(
-            BackgroundRunner<T> backgroundRunner,
-            BackgroundCallback<T> callback,
-            Runnable stopProgressRunnable
-    ) {
-        this.backgroundManager = new BackgroundManager(this);
-        this.backgroundRunner = backgroundRunner;
+    public HelperTask(BackgroundRunner<T> runner, BackgroundCallback<T> callback, Runnable stopProgressRunnable) {
+        this.manager = new BackgroundManager(this);
+        this.runner = runner;
         this.callback = callback;
         this.stopProgressRunnable = stopProgressRunnable;
 
@@ -39,7 +35,7 @@ public class HelperTask<T> extends Task<Void> {
         });
 
         setOnCancelled(e -> {
-            Platform.runLater(() -> backgroundManager.setCancellationPossible(false));
+            Platform.runLater(() -> manager.setCancellationPossible(false));
             updateProgress(ProgressIndicator.INDETERMINATE_PROGRESS, ProgressIndicator.INDETERMINATE_PROGRESS);
             updateMessage("Waiting for the task to cancel...");
         });
@@ -47,10 +43,10 @@ public class HelperTask<T> extends Task<Void> {
 
     @Override
     protected Void call() {
-        T result = backgroundRunner.run(backgroundManager);
+        T result = runner.run(manager);
 
         Platform.runLater(() -> {
-            backgroundManager.setCancellationPossible(false);
+            manager.setCancellationPossible(false);
             stopProgressRunnable.run();
             callback.run(result);
         });
