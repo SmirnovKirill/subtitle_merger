@@ -10,6 +10,7 @@ import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.logic.core.SubRipParser;
+import kirill.subtitlemerger.logic.core.SubRipWriter;
 import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
@@ -151,6 +152,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                     upperSubtitles,
                     lowerSubtitles,
                     null,
+                    null,
                     getFileWithResult(fileInfo, upperSubtitles, lowerSubtitles, context.getSettings())
             );
         }
@@ -160,8 +162,9 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                 upperSubtitles.getSubtitles(),
                 lowerSubtitles.getSubtitles()
         );
+        String mergesSubtitleText = SubRipWriter.toText(mergedSubtitles, context.getSettings().isPlainTextSubtitles());
 
-        if (isDuplicate(mergedSubtitles, languagesToCheck, fileInfo)) {
+        if (isDuplicate(mergesSubtitleText, languagesToCheck, fileInfo, context.getSettings().isPlainTextSubtitles())) {
             return new FileMergeInfo(
                     fileInfo.getId(),
                     FileMergeStatus.DUPLICATE,
@@ -169,6 +172,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                     upperSubtitles,
                     lowerSubtitles,
                     mergedSubtitles,
+                    mergesSubtitleText,
                     getFileWithResult(fileInfo, upperSubtitles, lowerSubtitles, context.getSettings())
             );
         } else {
@@ -179,6 +183,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                     upperSubtitles,
                     lowerSubtitles,
                     mergedSubtitles,
+                    mergesSubtitleText,
                     getFileWithResult(fileInfo, upperSubtitles, lowerSubtitles, context.getSettings())
             );
         }
@@ -281,11 +286,16 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         return failedToLoad;
     }
 
-    private static boolean isDuplicate(Subtitles merged, Set<LanguageAlpha3Code> languagesToCheck, FileInfo fileInfo) {
+    private static boolean isDuplicate(
+            String mergedText,
+            Set<LanguageAlpha3Code> languagesToCheck,
+            FileInfo fileInfo,
+            boolean plainText
+    ) {
         for (FfmpegSubtitleStream subtitleStream : fileInfo.getFfmpegSubtitleStreams()) {
             if (subtitleStream.getLanguage() == null || languagesToCheck.contains(subtitleStream.getLanguage())) {
-                //todo !!!
-                if (Objects.equals(merged, subtitleStream.getSubtitles())) {
+                String subtitleText = SubRipWriter.toText(subtitleStream.getSubtitles(), plainText);
+                if (Objects.equals(mergedText, subtitleText)) {
                     return true;
                 }
             }
@@ -424,6 +434,8 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         private SubtitleOption lowerSubtitles;
 
         private Subtitles mergedSubtitles;
+
+        private String mergedSubtitleText;
 
         private File fileWithResult;
     }

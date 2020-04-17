@@ -2,16 +2,13 @@ package kirill.subtitlemerger.gui.tabs.videos.background;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.application.Platform;
-import kirill.subtitlemerger.logic.settings.MergeMode;
-import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableSubtitleOption;
 import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.entities.ActionResult;
-import kirill.subtitlemerger.logic.core.SubRipWriter;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
@@ -23,6 +20,8 @@ import kirill.subtitlemerger.logic.files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.files.entities.FileInfo;
 import kirill.subtitlemerger.logic.files.entities.FileWithSubtitles;
 import kirill.subtitlemerger.logic.files.entities.SubtitleOption;
+import kirill.subtitlemerger.logic.settings.MergeMode;
+import kirill.subtitlemerger.logic.settings.Settings;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
@@ -105,13 +104,8 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
                                 );
                                 failedCount++;
                             } else {
-                                String subtitleText = SubRipWriter.toText(
-                                        fileMergeInfo.getMergedSubtitles(),
-                                        settings.isPlainTextSubtitles()
-                                );
-
                                 FfmpegInjectInfo injectInfo = new FfmpegInjectInfo(
-                                        subtitleText,
+                                        fileMergeInfo.getMergedSubtitleText(),
                                         fileInfo.getFfmpegSubtitleStreams().size(),
                                         getMergedSubtitleLanguage(fileMergeInfo),
                                         "merged-" + getOptionTitleForFfmpeg(fileMergeInfo.getUpperSubtitles())
@@ -130,7 +124,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
                                 try {
                                     updateFileInfo(
                                             fileMergeInfo.getMergedSubtitles(),
-                                            subtitleText.getBytes().length,
+                                            fileMergeInfo.getMergedSubtitleText().getBytes().length,
                                             fileInfo,
                                             tableFileInfo,
                                             ffprobe,
@@ -150,10 +144,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
                         } else if (settings.getMergeMode() == MergeMode.SEPARATE_SUBTITLE_FILES) {
                             FileUtils.writeStringToFile(
                                     fileMergeInfo.getFileWithResult(),
-                                    SubRipWriter.toText(
-                                            fileMergeInfo.getMergedSubtitles(),
-                                            settings.isPlainTextSubtitles()
-                                    ),
+                                    fileMergeInfo.getMergedSubtitleText(),
                                     StandardCharsets.UTF_8
                             );
 
@@ -271,6 +262,11 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
         //todo diagnostics
         JsonFfprobeFileInfo ffprobeInfo = ffprobe.getFileInfo(fileInfo.getFile());
         List<FfmpegSubtitleStream> subtitleOptions = FileInfoGetter.getSubtitleOptions(ffprobeInfo);
+        if (settings.isMakeMergedStreamsDefault()) {
+            for (FfmpegSubtitleStream stream : subtitleOptions) {
+                stream.disableDefaultDisposition();
+            }
+        }
 
         List<String> currentOptionsIds = fileInfo.getSubtitleOptions().stream()
                 .map(SubtitleOption::getId)

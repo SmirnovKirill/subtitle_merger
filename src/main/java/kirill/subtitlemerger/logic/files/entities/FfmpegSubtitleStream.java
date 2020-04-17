@@ -24,7 +24,6 @@ public class FfmpegSubtitleStream extends SubtitleOption {
 
     private String title;
 
-    //todo change!
     private boolean defaultDisposition;
 
     public FfmpegSubtitleStream(
@@ -59,5 +58,11 @@ public class FfmpegSubtitleStream extends SubtitleOption {
     public void setSubtitlesAndSize(Subtitles subtitles, int size) {
         this.subtitles = subtitles;
         this.size = size;
+    }
+
+    public void disableDefaultDisposition() {
+        if (defaultDisposition) {
+            defaultDisposition = false;
+        }
     }
 }

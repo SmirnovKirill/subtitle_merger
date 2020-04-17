@@ -219,10 +219,9 @@ public class GuiUtils {
     public static Stage createPopupStage(String title, Parent node, Stage ownerStage) {
         Stage result = new Stage();
 
-        //todo set stage parameters in the same manner everywhere
-        result.setTitle(title);
-        result.initModality(Modality.APPLICATION_MODAL);
         result.initOwner(ownerStage);
+        result.initModality(Modality.APPLICATION_MODAL);
+        result.setTitle(title);
         result.setResizable(false);
 
         Scene scene = new Scene(node);

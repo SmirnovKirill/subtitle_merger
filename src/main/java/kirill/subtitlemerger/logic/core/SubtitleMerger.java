@@ -275,7 +275,7 @@ public class SubtitleMerger {
             }
 
             MergerSubtitle currentSubtitle = subtitles.get(i);
-            if (currentSubtitle.getLines().stream().anyMatch(line -> Objects.equals(line.getSource(), otherSource))) {
+            if (currentSubtitle.getLines().stream().anyMatch(line -> line.getSource() == otherSource)) {
                 firstMatchingSubtitleForward = currentSubtitle;
                 break;
             }
@@ -288,7 +288,7 @@ public class SubtitleMerger {
             }
 
             MergerSubtitle currentSubtitle = subtitles.get(i);
-            if (currentSubtitle.getLines().stream().anyMatch(line -> Objects.equals(line.getSource(), otherSource))) {
+            if (currentSubtitle.getLines().stream().anyMatch(line -> line.getSource() == otherSource)) {
                 firstMatchingSubtitleBackward = currentSubtitle;
                 break;
             }
