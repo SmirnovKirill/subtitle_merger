@@ -1,5 +1,7 @@
 package kirill.subtitlemerger.logic.utils;
 
+import com.neovisionaries.i18n.LanguageAlpha3Code;
+
 import java.io.File;
 import java.util.Optional;
 
@@ -22,5 +24,23 @@ public class Utils {
         }
 
         return Optional.of(result);
+    }
+
+    /**
+     * Language are considered to be equal if their codes are the same or if they represent the same language and are
+     * just synonyms (bibliographic and terminological versions).
+     */
+    public static boolean languagesEqual(LanguageAlpha3Code first, LanguageAlpha3Code second) {
+        /* Also covers the case when they are both null. */
+        if (first == second) {
+            return true;
+        }
+
+        /* If first is null then second is surely not null. */
+        if (first == null) {
+            return false;
+        }
+
+        return first.getSynonym() == second;
     }
 }

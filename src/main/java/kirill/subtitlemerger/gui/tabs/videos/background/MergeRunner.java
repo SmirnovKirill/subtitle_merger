@@ -233,13 +233,20 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
     }
 
     private static LanguageAlpha3Code getMergedSubtitleLanguage(MergePreparationRunner.FileMergeInfo mergeInfo) {
+        LanguageAlpha3Code result = null;
         if (mergeInfo.getUpperSubtitles() instanceof FfmpegSubtitleStream) {
-            return ((FfmpegSubtitleStream) mergeInfo.getUpperSubtitles()).getLanguage();
-        } else if (mergeInfo.getLowerSubtitles() instanceof FfmpegSubtitleStream) {
-            return ((FfmpegSubtitleStream) mergeInfo.getUpperSubtitles()).getLanguage();
-        } else {
-            return LanguageAlpha3Code.undefined;
+            result = ((FfmpegSubtitleStream) mergeInfo.getUpperSubtitles()).getLanguage();
         }
+
+        if (result == null && mergeInfo.getLowerSubtitles() instanceof FfmpegSubtitleStream) {
+            result = ((FfmpegSubtitleStream) mergeInfo.getUpperSubtitles()).getLanguage();
+        }
+
+        if (result == null) {
+            result = LanguageAlpha3Code.undefined;
+        }
+
+        return result;
     }
 
     private static String getOptionTitleForFfmpeg(SubtitleOption subtitleOption) {

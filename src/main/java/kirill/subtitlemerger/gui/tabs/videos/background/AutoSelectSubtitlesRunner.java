@@ -15,6 +15,7 @@ import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.files.entities.FileInfo;
+import kirill.subtitlemerger.logic.utils.Utils;
 import lombok.AllArgsConstructor;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
@@ -133,14 +134,14 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
     private static List<FfmpegSubtitleStream> getMatchingUpperSubtitles(FileInfo fileInfo, Settings settings) {
         return fileInfo.getFfmpegSubtitleStreams().stream()
                 .filter(stream -> stream.getUnavailabilityReason() == null)
-                .filter(stream -> stream.getLanguage() == settings.getUpperLanguage())
+                .filter(stream -> Utils.languagesEqual(stream.getLanguage(), settings.getUpperLanguage()))
                 .collect(Collectors.toList());
     }
 
     private static List<FfmpegSubtitleStream> getMatchingLowerSubtitles(FileInfo fileInfo, Settings settings) {
         return fileInfo.getFfmpegSubtitleStreams().stream()
                 .filter(stream -> stream.getUnavailabilityReason() == null)
-                .filter(stream -> stream.getLanguage() == settings.getLowerLanguage())
+                .filter(stream -> Utils.languagesEqual(stream.getLanguage(), settings.getLowerLanguage()))
                 .collect(Collectors.toList());
     }
 

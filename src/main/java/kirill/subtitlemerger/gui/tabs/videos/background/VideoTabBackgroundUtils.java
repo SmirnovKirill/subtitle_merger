@@ -19,6 +19,7 @@ import kirill.subtitlemerger.logic.files.entities.FileUnavailabilityReason;
 import kirill.subtitlemerger.logic.files.entities.SubtitleOptionUnavailabilityReason;
 import kirill.subtitlemerger.logic.settings.SortBy;
 import kirill.subtitlemerger.logic.settings.SortDirection;
+import kirill.subtitlemerger.logic.utils.Utils;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.EnumUtils;
@@ -96,9 +97,9 @@ class VideoTabBackgroundUtils {
         List<TableSubtitleOption> subtitleOptions = new ArrayList<>();
         if (!CollectionUtils.isEmpty(fileInfo.getFfmpegSubtitleStreams())) {
             boolean fileHasPreferredUpperLanguage = fileInfo.getFfmpegSubtitleStreams().stream()
-                    .anyMatch(stream -> stream.getLanguage() == settings.getUpperLanguage());
+                    .anyMatch(stream -> Utils.languagesEqual(stream.getLanguage(), settings.getUpperLanguage()));
             boolean fileHasPreferredLowerLanguage = fileInfo.getFfmpegSubtitleStreams().stream()
-                    .anyMatch(stream -> stream.getLanguage() == settings.getLowerLanguage());
+                    .anyMatch(stream -> Utils.languagesEqual(stream.getLanguage(), settings.getLowerLanguage()));
             boolean hideableOptionsPossible = fileHasPreferredUpperLanguage && fileHasPreferredLowerLanguage;
 
             subtitleOptions = fileInfo.getFfmpegSubtitleStreams().stream()
@@ -172,7 +173,8 @@ class VideoTabBackgroundUtils {
     private static boolean isOptionHideable(FfmpegSubtitleStream subtitleStream, Settings settings) {
         LanguageAlpha3Code streamLanguage = subtitleStream.getLanguage();
 
-        return streamLanguage != settings.getUpperLanguage() && streamLanguage != settings.getLowerLanguage();
+        return !Utils.languagesEqual(streamLanguage, settings.getUpperLanguage())
+                && !Utils.languagesEqual(streamLanguage, settings.getLowerLanguage());
     }
 
     private static TableSubtitleOption.UnavailabilityReason tableUnavailabilityReasonFrom(

@@ -134,12 +134,12 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         SubtitleOption upperSubtitles = SubtitleOption.getById(tableUpperOption.getId(), fileInfo.getSubtitleOptions());
         SubtitleOption lowerSubtitles = SubtitleOption.getById(tableLowerOption.getId(), fileInfo.getSubtitleOptions());
 
-        Set<LanguageAlpha3Code> usedLanguages = getUsedLanguages(upperSubtitles, lowerSubtitles);
+        Set<LanguageAlpha3Code> languagesToCheck = getLanguagesToCheck(upperSubtitles, lowerSubtitles);
 
         int failedToLoadCount = loadStreamsIfNecessary(
                 tableFileInfo,
                 fileInfo,
-                usedLanguages,
+                languagesToCheck,
                 progressMessagePrefix,
                 backgroundManager
         );
@@ -161,7 +161,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                 lowerSubtitles.getSubtitles()
         );
 
-        if (isDuplicate(mergedSubtitles, usedLanguages, fileInfo)) {
+        if (isDuplicate(mergedSubtitles, languagesToCheck, fileInfo)) {
             return new FileMergeInfo(
                     fileInfo.getId(),
                     FileMergeStatus.DUPLICATE,
@@ -192,16 +192,26 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         return progressPrefix + fileInfo.getFilePath();
     }
 
-    private static Set<LanguageAlpha3Code> getUsedLanguages(SubtitleOption upperOption, SubtitleOption lowerOption) {
+    private static Set<LanguageAlpha3Code> getLanguagesToCheck(SubtitleOption upperOption, SubtitleOption lowerOption) {
         Set<LanguageAlpha3Code> result = new HashSet<>();
 
         if (upperOption instanceof FfmpegSubtitleStream) {
-            result.add(((FfmpegSubtitleStream) upperOption).getLanguage());
+            LanguageAlpha3Code language = ((FfmpegSubtitleStream) upperOption).getLanguage();
+            if (language != null) {
+                result.add(language);
+                result.add(language.getSynonym());
+            }
         }
 
         if (lowerOption instanceof FfmpegSubtitleStream) {
-            result.add(((FfmpegSubtitleStream) lowerOption).getLanguage());
+            LanguageAlpha3Code language = ((FfmpegSubtitleStream) lowerOption).getLanguage();
+            if (language != null) {
+                result.add(language);
+                result.add(language.getSynonym());
+            }
         }
+
+        result.add(LanguageAlpha3Code.undefined);
 
         return result;
     }
@@ -209,14 +219,14 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
     private int loadStreamsIfNecessary(
             TableFileInfo tableFileInfo,
             FileInfo fileInfo,
-            Set<LanguageAlpha3Code> usedLanguages,
+            Set<LanguageAlpha3Code> languagesToCheck,
             String progressMessagePrefix,
             BackgroundManager backgroundManager
     ) throws InterruptedException {
         int failedToLoad = 0;
 
         List<FfmpegSubtitleStream> streamsToLoad = fileInfo.getFfmpegSubtitleStreams().stream()
-                .filter(stream -> usedLanguages.contains(stream.getLanguage()))
+                .filter(stream -> stream.getLanguage() == null || languagesToCheck.contains(stream.getLanguage()))
                 .filter(stream -> stream.getSubtitles() == null)
                 .collect(Collectors.toList());
 
@@ -271,9 +281,9 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         return failedToLoad;
     }
 
-    private static boolean isDuplicate(Subtitles merged, Set<LanguageAlpha3Code> usedLanguages, FileInfo fileInfo) {
+    private static boolean isDuplicate(Subtitles merged, Set<LanguageAlpha3Code> languagesToCheck, FileInfo fileInfo) {
         for (FfmpegSubtitleStream subtitleStream : fileInfo.getFfmpegSubtitleStreams()) {
-            if (usedLanguages.contains(subtitleStream.getLanguage())) {
+            if (subtitleStream.getLanguage() == null || languagesToCheck.contains(subtitleStream.getLanguage())) {
                 //todo !!!
                 if (Objects.equals(merged, subtitleStream.getSubtitles())) {
                     return true;
