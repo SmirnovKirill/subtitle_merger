@@ -7,32 +7,20 @@ import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
-import javafx.stage.FileChooser;
-import javafx.stage.Stage;
 import javafx.util.StringConverter;
-import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
-import kirill.subtitlemerger.gui.utils.GuiUtils;
-import kirill.subtitlemerger.gui.utils.entities.FileOrigin;
 import kirill.subtitlemerger.gui.utils.forms_and_controls.ActionResultLabels;
 import kirill.subtitlemerger.logic.LogicConstants;
-import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
-import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
-import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
 import kirill.subtitlemerger.logic.settings.MergeMode;
 import kirill.subtitlemerger.logic.settings.SettingException;
 import kirill.subtitlemerger.logic.settings.SettingType;
 import kirill.subtitlemerger.logic.settings.Settings;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
-import java.io.File;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @CommonsLog
@@ -47,8 +35,6 @@ public class SettingsTabController {
 
     private static final LanguageCodeStringConverter LANGUAGE_CODE_STRING_CONVERTER = new LanguageCodeStringConverter();
 
-    private Stage stage;
-
     private GuiContext context;
 
     private Settings settings;
@@ -58,18 +44,6 @@ public class SettingsTabController {
 
     @FXML
     private Pane settingsPane;
-
-    @FXML
-    private TextField ffprobePathField;
-
-    @FXML
-    private Button ffprobeSetButton;
-
-    @FXML
-    private TextField ffmpegPathField;
-
-    @FXML
-    private Button ffmpegSetButton;
 
     @FXML
     //todo make editable with drop-down
@@ -96,10 +70,6 @@ public class SettingsTabController {
     @FXML
     private ActionResultLabels actionResultLabels;
 
-    private String ffprobeCurrentPath;
-
-    private String ffmpegCurrentPath;
-
     public SettingsTabController() {
         markStreamCheckBoxVisible = new SimpleBooleanProperty(false);
     }
@@ -116,19 +86,10 @@ public class SettingsTabController {
         this.markStreamCheckBoxVisible.set(markStreamCheckBoxVisible);
     }
 
-    public void initialize(Stage stage, GuiContext context) {
-        this.stage = stage;
+    public void initialize(GuiContext context) {
         this.context = context;
         this.settings = context.getSettings();
 
-        GuiUtils.setTextFieldChangeListeners(
-                ffprobePathField,
-                (path) -> processFfprobePath(path, FileOrigin.TEXT_FIELD)
-        );
-        GuiUtils.setTextFieldChangeListeners(
-                ffmpegPathField,
-                (path) -> processFfmpegPath(path, FileOrigin.TEXT_FIELD)
-        );
         upperLanguageComboBox.getItems().setAll(ALLOWED_LANGUAGES);
         upperLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
         lowerLanguageComboBox.getItems().setAll(ALLOWED_LANGUAGES);
@@ -141,111 +102,7 @@ public class SettingsTabController {
         context.videosInProgressProperty().addListener(this::videosInProgressChanged);
     }
 
-    private void processFfprobePath(String path, FileOrigin fileOrigin) {
-        if (fileOrigin == FileOrigin.FILE_CHOOSER && Objects.equals(path, ffprobeCurrentPath)) {
-            return;
-        }
-
-        if (fileOrigin == FileOrigin.FILE_CHOOSER) {
-            ffprobePathField.setText(path);
-        }
-
-        clearState();
-        ffprobePathField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
-        ffprobeSetButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
-
-        if (StringUtils.isBlank(path)) {
-            settings.clearFfprobeFile();
-            context.setFfprobe(null);
-            context.getMissingSettings().add(SettingType.FFPROBE_PATH);
-        } else {
-            try {
-                File previousValue = settings.getFfprobeFile();
-
-                settings.saveFfprobeFile(path);
-                context.setFfprobe(new Ffprobe(settings.getFfprobeFile()));
-                context.getMissingSettings().remove(SettingType.FFPROBE_PATH);
-
-                if (previousValue != null) {
-                    if (Objects.equals(settings.getFfprobeFile(), previousValue)) {
-                        actionResultLabels.setOnlySuccess("Path to ffprobe has stayed the same");
-                    } else {
-                        actionResultLabels.setOnlySuccess("Path to ffprobe has been updated successfully");
-                    }
-                } else {
-                    actionResultLabels.setOnlySuccess("Path to ffprobe has been saved successfully");
-                }
-            } catch (SettingException | FfmpegException e) {
-                settings.clearFfprobeFile();
-                context.setFfprobe(null);
-
-                ffprobePathField.getStyleClass().add(GuiConstants.TEXT_FIELD_ERROR_CLASS);
-                ffprobeSetButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
-
-                actionResultLabels.setOnlyError("Incorrect path to ffprobe");
-            } catch (InterruptedException e) {
-                log.error("something's not right, process can't be interrupted");
-                throw new IllegalStateException();
-            }
-        }
-
-        ffprobeCurrentPath = path;
-    }
-
-    private void processFfmpegPath(String path, FileOrigin fileOrigin) {
-        if (fileOrigin == FileOrigin.FILE_CHOOSER && Objects.equals(path, ffmpegCurrentPath)) {
-            return;
-        }
-
-        if (fileOrigin == FileOrigin.FILE_CHOOSER) {
-            ffmpegPathField.setText(path);
-        }
-
-        clearState();
-        ffmpegPathField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
-        ffmpegSetButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
-
-        if (StringUtils.isBlank(path)) {
-            settings.clearFfmpegFile();
-            context.setFfmpeg(null);
-            context.getMissingSettings().add(SettingType.FFMPEG_PATH);
-        } else {
-            try {
-                File previousValue = settings.getFfmpegFile();
-
-                settings.saveFfmpegFile(path);
-                context.setFfmpeg(new Ffmpeg(settings.getFfmpegFile()));
-                context.getMissingSettings().remove(SettingType.FFMPEG_PATH);
-
-                if (previousValue != null) {
-                    if (Objects.equals(settings.getFfmpegFile(), previousValue)) {
-                        actionResultLabels.setOnlySuccess("Path to ffprobe has stayed the same");
-                    } else {
-                        actionResultLabels.setOnlySuccess("Path to ffmpeg has been updated successfully");
-                    }
-                } else {
-                    actionResultLabels.setOnlySuccess("Path to ffmpeg has been saved successfully");
-                }
-            } catch (SettingException | FfmpegException e) {
-                settings.clearFfmpegFile();
-                context.setFfmpeg(null);
-
-                ffmpegPathField.getStyleClass().add(GuiConstants.TEXT_FIELD_ERROR_CLASS);
-                ffmpegSetButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
-
-                actionResultLabels.setOnlyError("Incorrect path to ffmpeg");
-            } catch (InterruptedException e) {
-                log.error("something's not right, process can't be interrupted");
-                throw new IllegalStateException();
-            }
-        }
-
-        ffmpegCurrentPath = path;
-    }
-
     private void setInitialValues() {
-        setFfprobeInitialValue();
-        setFfmpegInitialValue();
         setUpperSubtitlesInitialValue();
         setSwapLanguagesButtonVisibility();
         setLowerSubtitlesInitialValue();
@@ -254,25 +111,6 @@ public class SettingsTabController {
 
         makeMergedStreamsDefaultCheckBox.setSelected(settings.isMakeMergedStreamsDefault());
         plainTextCheckBox.setSelected(settings.isPlainTextSubtitles());
-    }
-
-    private void setFfprobeInitialValue() {
-        File ffprobeFile = settings.getFfprobeFile();
-
-        if (ffprobeFile != null) {
-            ffprobePathField.setText(ffprobeFile.getAbsolutePath());
-        }
-
-        ffprobeCurrentPath = ObjectUtils.firstNonNull(ffprobePathField.getText(), "");
-    }
-
-    private void setFfmpegInitialValue() {
-        File ffmpegFile = settings.getFfmpegFile();
-        if (ffmpegFile != null) {
-            ffmpegPathField.setText(ffmpegFile.getAbsolutePath());
-        }
-
-        ffmpegCurrentPath = ObjectUtils.firstNonNull(ffmpegPathField.getText(), "");
     }
 
     private void setUpperSubtitlesInitialValue() {
@@ -405,97 +243,6 @@ public class SettingsTabController {
             settingsPane.setDisable(false);
             unavailablePane.setVisible(false);
         }
-    }
-
-    @FXML
-    private void ffprobeFileButtonClicked() {
-        File ffprobeFile = getFfprobeFile(ffprobeCurrentPath, stage, settings).orElse(null);
-        if (ffprobeFile == null) {
-            clearState();
-            return;
-        }
-
-        processFfprobePath(ffprobeFile.getAbsolutePath(), FileOrigin.FILE_CHOOSER);
-    }
-
-    private static Optional<File> getFfprobeFile(String currentPath, Stage stage, Settings settings) {
-        FileChooser fileChooser = new FileChooser();
-
-        String title;
-        File initialDirectory;
-        if (settings.getFfprobeFile() != null) {
-            title = "update path to ffprobe";
-            initialDirectory = settings.getFfprobeFile().getParentFile();
-        } else {
-            title = "choose path to ffprobe";
-
-            if (settings.getFfmpegFile() != null){
-                initialDirectory = settings.getFfmpegFile().getParentFile();
-            } else {
-                initialDirectory = extractParentDirectoryIfPossible(currentPath).orElse(null);
-            }
-        }
-
-        fileChooser.setTitle(title);
-        fileChooser.setInitialDirectory(initialDirectory);
-
-        return Optional.ofNullable(fileChooser.showOpenDialog(stage));
-    }
-
-    private static Optional<File> extractParentDirectoryIfPossible(String path) {
-        if (StringUtils.isBlank(path)) {
-            return Optional.empty();
-        }
-
-        File parent = new File(path).getParentFile();
-        if (parent == null) {
-            return Optional.empty();
-        }
-
-        if (parent.isDirectory()) {
-            return Optional.of(parent);
-        }
-
-        return Optional.empty();
-    }
-
-    private void clearState() {
-        actionResultLabels.clear();
-    }
-
-    @FXML
-    private void ffmpegFileButtonClicked() {
-        File ffmpegFile = getFfmpegFile(ffmpegCurrentPath, stage, settings).orElse(null);
-        if (ffmpegFile == null) {
-            clearState();
-            return;
-        }
-
-        processFfmpegPath(ffmpegFile.getAbsolutePath(), FileOrigin.FILE_CHOOSER);
-    }
-
-    private static Optional<File> getFfmpegFile(String currentPath, Stage stage, Settings settings) {
-        FileChooser fileChooser = new FileChooser();
-
-        String title;
-        File initialDirectory;
-        if (settings.getFfmpegFile() != null) {
-            title = "update path to ffmpeg";
-            initialDirectory = settings.getFfmpegFile().getParentFile();
-        } else {
-            title = "choose path to ffmpeg";
-
-            if (settings.getFfprobeFile() != null) {
-                initialDirectory = settings.getFfprobeFile().getParentFile();
-            } else {
-                initialDirectory = extractParentDirectoryIfPossible(currentPath).orElse(null);
-            }
-        }
-
-        fileChooser.setTitle(title);
-        fileChooser.setInitialDirectory(initialDirectory);
-
-        return Optional.ofNullable(fileChooser.showOpenDialog(stage));
     }
 
     @FXML

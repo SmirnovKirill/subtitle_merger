@@ -9,8 +9,6 @@ public enum SettingType {
     UPPER_DIRECTORY("last_directory_with_upper_subtitles"),
     LOWER_DIRECTORY("last_directory_with_lower_subtitles"),
     MERGED_DIRECTORY("last_directory_with_merged_subtitles"),
-    FFPROBE_PATH("ffprobe_path"),
-    FFMPEG_PATH("ffmpeg_path"),
     UPPER_LANGUAGE("upper_subtitles_language"),
     LOWER_LANGUAGE("lower__subtitles_language"),
     MERGE_MODE("merge_mode"),

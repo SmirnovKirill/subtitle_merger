@@ -28,7 +28,7 @@ public class TabPaneController {
     public void initialize(Stage stage, GuiContext guiContext) {
         this.subtitleFilesTabController.initialize(stage, guiContext);
         this.videosTabController.initialize(this, stage, guiContext);
-        this.settingsTabController.initialize(stage, guiContext);
+        this.settingsTabController.initialize(guiContext);
     }
 
     public void openSettingsTab() {

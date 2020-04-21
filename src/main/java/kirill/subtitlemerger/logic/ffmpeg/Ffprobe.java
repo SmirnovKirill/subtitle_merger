@@ -36,7 +36,7 @@ public class Ffprobe {
         this.ffprobeFile = ffprobeFile;
     }
 
-    public static void validate(File ffprobeFile) throws FfmpegException, InterruptedException {
+    private static void validate(File ffprobeFile) throws FfmpegException, InterruptedException {
         try {
             List<String> arguments = Arrays.asList(
                     ffprobeFile.getAbsolutePath(),

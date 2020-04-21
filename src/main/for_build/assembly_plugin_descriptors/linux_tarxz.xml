@@ -1,16 +1,20 @@
 <assembly xmlns="http://maven.apache.org/ASSEMBLY/2.0.0"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.0.0 http://maven.apache.org/xsd/assembly-2.0.0.xsd">
-    <id>zip_win_64_no_ffmpeg</id>
-    <includeBaseDirectory>false</includeBaseDirectory>
+    <id>linux_tarxz</id>
+    <includeBaseDirectory>true</includeBaseDirectory>
 
     <formats>
-        <format>zip</format>
+        <format>tar.xz</format>
     </formats>
     <fileSets>
         <fileSet>
-            <directory>${project.basedir}/build_parts/custom_jre/win_64</directory>
+            <directory>${project.basedir}/build_parts/custom_jre/linux_64</directory>
             <outputDirectory>jre</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/build_parts/downloads/ffmpeg/linux_64</directory>
+            <outputDirectory>ffmpeg</outputDirectory>
         </fileSet>
     </fileSets>
     <files>
@@ -20,7 +24,8 @@
             <fileMode>744</fileMode>
         </file>
         <file>
-            <source>${project.build.directory}/subtitle-merger.exe</source>
+            <source>${project.basedir}/src/main/for_build/run_scripts/run_linux.sh</source>
+            <destName>run.sh</destName>
             <fileMode>744</fileMode>
         </file>
     </files>

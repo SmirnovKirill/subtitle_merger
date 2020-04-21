@@ -41,10 +41,6 @@ public class MissingSettingsPaneController {
 
     private static String getText(SettingType settingType) {
         switch (settingType) {
-            case FFPROBE_PATH:
-                return "path to ffprobe";
-            case FFMPEG_PATH:
-                return "path to ffmpeg";
             case UPPER_LANGUAGE:
                 return "preferred language for upper subtitles";
             case LOWER_LANGUAGE:

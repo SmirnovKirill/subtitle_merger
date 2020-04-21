@@ -34,38 +34,19 @@
                 <ColumnConstraints hgrow="ALWAYS"/>
             </columnConstraints>
 
-            <Label text="Path to ffprobe" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-            <HBox spacing="20" GridPane.rowIndex="0" GridPane.columnIndex="1">
-                <TextField fx:id="ffprobePathField" HBox.hgrow="ALWAYS"/>
-                <Button fx:id="ffprobeSetButton" onAction="#ffprobeFileButtonClicked" text="Choose file"/>
-            </HBox>
-
-            <Label text="Path to ffmpeg" GridPane.rowIndex="1" GridPane.columnIndex="0">
-                <GridPane.margin>
-                    <Insets top="40" bottom="40"/>
-                </GridPane.margin>
-            </Label>
-            <HBox spacing="20" GridPane.rowIndex="1" GridPane.columnIndex="1">
-                <GridPane.margin>
-                    <Insets top="40" bottom="40"/>
-                </GridPane.margin>
-                <TextField fx:id="ffmpegPathField" HBox.hgrow="ALWAYS"/>
-                <Button fx:id="ffmpegSetButton" onAction="#ffmpegFileButtonClicked" text="Choose file"/>
-            </HBox>
-
-            <LabelWithQuestionMark GridPane.rowIndex="2" GridPane.columnIndex="0">
+            <LabelWithQuestionMark GridPane.rowIndex="0" GridPane.columnIndex="0">
                 <labelText>Preferred language for upper subtitles</labelText>
                 <tooltipText>
                     This setting will be used to auto-select subtitles to merge when working with videos.
                 </tooltipText>
             </LabelWithQuestionMark>
             <ComboBox fx:id="upperLanguageComboBox" onAction="#upperLanguageChanged" maxWidth="Infinity"
-                      GridPane.rowIndex="2" GridPane.columnIndex="1">
+                      GridPane.rowIndex="0" GridPane.columnIndex="1">
             </ComboBox>
 
-            <Region GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+            <Region GridPane.rowIndex="1" GridPane.columnIndex="0"/>
             <Button fx:id="swapLanguagesButton" onAction="#swapLanguagesButtonClicked"
-                    GridPane.rowIndex="3" GridPane.columnIndex="1">
+                    GridPane.rowIndex="1" GridPane.columnIndex="1">
                 <GridPane.margin>
                     <Insets top="8" bottom="8" left="10"/>
                 </GridPane.margin>
@@ -79,22 +60,22 @@
                 </graphic>
             </Button>
 
-            <LabelWithQuestionMark GridPane.rowIndex="4" GridPane.columnIndex="0">
+            <LabelWithQuestionMark GridPane.rowIndex="2" GridPane.columnIndex="0">
                 <labelText>Preferred language for lower subtitles</labelText>
                 <tooltipText>
                     This setting will be used to auto-select subtitles to merge when working with videos.
                 </tooltipText>
             </LabelWithQuestionMark>
             <ComboBox fx:id="lowerLanguageComboBox" onAction="#lowerLanguageChanged" maxWidth="Infinity"
-                      GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+                      GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
-            <Label text="Video merge mode" GridPane.rowIndex="5" GridPane.columnIndex="0">
+            <Label text="Video merge mode" GridPane.rowIndex="3" GridPane.columnIndex="0">
                 <GridPane.margin>
                     <Insets top="40" bottom="40"/>
                 </GridPane.margin>
             </Label>
 
-            <GridPane hgap="40" vgap="15" GridPane.rowIndex="5" GridPane.columnIndex="1">
+            <GridPane hgap="40" vgap="15" GridPane.rowIndex="3" GridPane.columnIndex="1">
                 <gridLinesVisible><GuiConstants fx:constant="GRID_LINES_VISIBLE"/></gridLinesVisible>
 
                 <GridPane.margin>
@@ -142,7 +123,7 @@
 
             <LabelWithQuestionMark
                     visible="${controller.markStreamCheckBoxVisible}" managed="${controller.markStreamCheckBoxVisible}"
-                                   GridPane.rowIndex="6" GridPane.columnIndex="0">
+                                   GridPane.rowIndex="4" GridPane.columnIndex="0">
                 <labelText>Mark merged subtitles as default</labelText>
                 <tooltipText>
                     Merged subtitles will be displayed by the video player by default automatically.
@@ -150,25 +131,25 @@
             </LabelWithQuestionMark>
             <CheckBox fx:id="makeMergedStreamsDefaultCheckBox"
                       visible="${controller.markStreamCheckBoxVisible}" managed="${controller.markStreamCheckBoxVisible}"
-                      GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+                      GridPane.rowIndex="4" GridPane.columnIndex="1"/>
 
             <Region visible="${controller.markStreamCheckBoxVisible}" managed="${controller.markStreamCheckBoxVisible}"
-                    GridPane.rowIndex="7" GridPane.columnIndex="0" GridPane.columnSpan="2">
+                    GridPane.rowIndex="5" GridPane.columnIndex="0" GridPane.columnSpan="2">
                 <GridPane.margin>
                     <Insets top="20" bottom="20"/>
                 </GridPane.margin>
             </Region>
 
-            <LabelWithQuestionMark GridPane.rowIndex="8" GridPane.columnIndex="0">
+            <LabelWithQuestionMark GridPane.rowIndex="6" GridPane.columnIndex="0">
                 <labelText>Plain text subtitles</labelText>
                 <tooltipText>
                     Merged subtitles will be in plain text - no font colors, different sizes and so on.
                 </tooltipText>
             </LabelWithQuestionMark>
-            <CheckBox fx:id="plainTextCheckBox" GridPane.rowIndex="8" GridPane.columnIndex="1"/>
+            <CheckBox fx:id="plainTextCheckBox" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
 
             <ActionResultLabels fx:id="actionResultLabels"
-                                GridPane.rowIndex="9" GridPane.columnIndex="0" GridPane.columnSpan="2">
+                                GridPane.rowIndex="7" GridPane.columnIndex="0" GridPane.columnSpan="2">
                 <GridPane.margin>
                     <Insets top="40"/>
                 </GridPane.margin>

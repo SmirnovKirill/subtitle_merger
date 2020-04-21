@@ -181,7 +181,7 @@
                 <version>3.1.1</version>
                 <executions>
                     <execution>
-                        <id>tarxz_linux_64_no_ffmpeg</id>
+                        <id>linux_tarxz</id>
                         <phase>package</phase>
                         <goals>
                             <goal>single</goal>
@@ -191,14 +191,14 @@
                             <tarLongFileMode>posix</tarLongFileMode>
                             <descriptors>
                                 <descriptor>
-                                    src/main/for_build/assembly_plugin_descriptors/tarxz_linux_64_no_ffmpeg.xml
+                                    src/main/for_build/assembly_plugin_descriptors/linux_tarxz.xml
                                 </descriptor>
                             </descriptors>
-                            <finalName>${project.artifactId}_${project.version}_build_linux_64_no_ffmpeg</finalName>
+                            <finalName>${project.artifactId}_${project.version}_build_linux</finalName>
                         </configuration>
                     </execution>
                     <execution>
-                        <id>tarxz_linux_64_with_ffmpeg</id>
+                        <id>win_zip</id>
                         <phase>package</phase>
                         <goals>
                             <goal>single</goal>
@@ -208,44 +208,10 @@
                             <tarLongFileMode>posix</tarLongFileMode>
                             <descriptors>
                                 <descriptor>
-                                    src/main/for_build/assembly_plugin_descriptors/tarxz_linux_64_with_ffmpeg.xml
+                                    src/main/for_build/assembly_plugin_descriptors/win_zip.xml
                                 </descriptor>
                             </descriptors>
-                            <finalName>${project.artifactId}_${project.version}_build_linux_64_with_ffmpeg</finalName>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>zip_win_64_no_ffmpeg</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <appendAssemblyId>false</appendAssemblyId>
-                            <tarLongFileMode>posix</tarLongFileMode>
-                            <descriptors>
-                                <descriptor>
-                                    src/main/for_build/assembly_plugin_descriptors/zip_win_64_no_ffmpeg.xml
-                                </descriptor>
-                            </descriptors>
-                            <finalName>${project.artifactId}_${project.version}_build_win_64_no_ffmpeg</finalName>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>zip_win_64_with_ffmpeg</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <appendAssemblyId>false</appendAssemblyId>
-                            <tarLongFileMode>posix</tarLongFileMode>
-                            <descriptors>
-                                <descriptor>
-                                    src/main/for_build/assembly_plugin_descriptors/zip_win_64_with_ffmpeg.xml
-                                </descriptor>
-                            </descriptors>
-                            <finalName>${project.artifactId}_${project.version}_build_win_64_with_ffmpeg</finalName>
+                            <finalName>${project.artifactId}_${project.version}_build_win</finalName>
                         </configuration>
                     </execution>
                 </executions>

@@ -31,7 +31,7 @@ public class Ffmpeg {
         this.ffmpegFile = ffmpegFile;
     }
 
-    public static void validate(File ffmpegFile) throws FfmpegException, InterruptedException {
+    private static void validate(File ffmpegFile) throws FfmpegException, InterruptedException {
         try {
             List<String> arguments = Arrays.asList(
                     ffmpegFile.getAbsolutePath(),
