@@ -19,6 +19,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.EnumSet;
+import java.util.Optional;
 import java.util.Set;
 
 import static kirill.subtitlemerger.logic.settings.SettingType.*;
@@ -70,13 +71,13 @@ public class GuiContext {
     }
 
     private static Ffprobe getPackedFfprobe() {
-        File directoryWithJar = getDirectoryWithJar();
+        File directoryWithFfmpeg = getDirectoryWithFfmpeg();
 
         File ffprobeFile;
         if (SystemUtils.IS_OS_LINUX) {
-            ffprobeFile = new File(directoryWithJar, "ffmpeg/ffprobe");
+            ffprobeFile = new File(directoryWithFfmpeg, "ffprobe");
         } else if (SystemUtils.IS_OS_WINDOWS) {
-            ffprobeFile = new File(directoryWithJar, "ffmpeg/bin/ffprobe.exe");
+            ffprobeFile = new File(directoryWithFfmpeg, "bin/ffprobe.exe");
         } else {
             log.error("operating system is not supported: " + SystemUtils.OS_NAME);
             throw new IllegalStateException();
@@ -98,11 +99,7 @@ public class GuiContext {
         }
     }
 
-    /**
-     * @return the directory containing jar file that is running.
-     * @throws IllegalStateException if directory can't be located for some reason
-     */
-    private static File getDirectoryWithJar() {
+    private static File getDirectoryWithFfmpeg() {
         File jar;
         try {
             jar = new File(Settings.class.getProtectionDomain().getCodeSource().getLocation().toURI());
@@ -111,23 +108,62 @@ public class GuiContext {
             throw new IllegalStateException();
         }
 
-        File result = jar.getParentFile();
-        if (result == null) {
-            log.error("folder with jar is null, that shouldn't happen");
+        File directoryWithJar = jar.getParentFile();
+        if (directoryWithJar == null) {
+            log.error("directory with jar is null, that shouldn't happen");
             throw new NullPointerException();
         }
 
-        return result;
+        File result = new File(directoryWithJar, "ffmpeg");
+        if (result.isDirectory()) {
+            return result;
+        } else {
+            /*
+             * If we got here it means that either folder with the application is corrupted (folder with ffmpeg has been
+             * deleted) or the application is launched from IntelliJ IDEA.
+             */
+            result = getDirectoryWithFfmpegIdea(directoryWithJar).orElse(null);
+            if (result == null) {
+                log.error("directory with ffmpeg and ffprobe doesn't exist");
+                throw new IllegalStateException();
+            }
+
+            return result;
+        }
+    }
+
+    private static Optional<File> getDirectoryWithFfmpegIdea(File directoryWithJar) {
+        File sourceDirectory = directoryWithJar.getParentFile();
+        if (!sourceDirectory.isDirectory()) {
+            return Optional.empty();
+        }
+
+        String subDirectory;
+        if (SystemUtils.IS_OS_LINUX) {
+            subDirectory = "linux_64";
+        } else if (SystemUtils.IS_OS_WINDOWS) {
+            subDirectory = "win_64";
+        } else {
+            log.error("operating system is not supported: " + SystemUtils.OS_NAME);
+            throw new IllegalStateException();
+        }
+
+        File result = new File(sourceDirectory, "build_parts/downloads/ffmpeg/" + subDirectory);
+        if (result.isDirectory()) {
+            return Optional.of(result);
+        }
+
+        return Optional.empty();
     }
 
     private static Ffmpeg getPackedFfmpegFile() {
-        File directoryWithJar = getDirectoryWithJar();
+        File directoryWithFfmpeg = getDirectoryWithFfmpeg();
 
         File ffmpegFile;
         if (SystemUtils.IS_OS_LINUX) {
-            ffmpegFile = new File(directoryWithJar, "ffmpeg/ffmpeg");
+            ffmpegFile = new File(directoryWithFfmpeg, "ffmpeg");
         } else if (SystemUtils.IS_OS_WINDOWS) {
-            ffmpegFile = new File(directoryWithJar, "ffmpeg/bin/ffmpeg.exe");
+            ffmpegFile = new File(directoryWithFfmpeg, "bin/ffmpeg.exe");
         } else {
             log.error("operating system is not supported: " + SystemUtils.OS_NAME);
             throw new IllegalStateException();
