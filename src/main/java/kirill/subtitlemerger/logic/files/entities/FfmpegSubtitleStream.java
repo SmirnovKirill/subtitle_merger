@@ -11,6 +11,8 @@ import java.nio.charset.StandardCharsets;
 @CommonsLog
 @Getter
 public class FfmpegSubtitleStream extends SubtitleOption {
+    private static final String MERGED_SUBTITLE_REGEXP = "^merged-"
+            + "(external|unknown|undefined|[a-z]{3})-(external|unknown|undefined|[a-z]{3})$";
     /*
      * The word "ffmpeg" here emphasizes the fact that it's not a regular index, but an index got from ffmpeg. For
      * example the first subtitle stream may have index 2 because the first two indices are assigned to the video and
@@ -25,6 +27,8 @@ public class FfmpegSubtitleStream extends SubtitleOption {
     private String title;
 
     private boolean defaultDisposition;
+
+    private boolean merged;
 
     public FfmpegSubtitleStream(
             int ffmpegIndex,
@@ -53,6 +57,8 @@ public class FfmpegSubtitleStream extends SubtitleOption {
         this.language = language;
         this.title = title;
         this.defaultDisposition = defaultDisposition;
+
+        merged  = title != null && title.matches(MERGED_SUBTITLE_REGEXP);
     }
 
     public void setSubtitlesAndSize(Subtitles subtitles, int size) {
