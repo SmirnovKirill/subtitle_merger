@@ -290,14 +290,14 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         }
 
         result.getChildren().addAll(
-                GuiUtils.createFixedHeightSpacer(1),
+                GuiUtils.generateFixedHeightSpacer(1),
                 generateRowWithActionsPane(
                         fileInfo,
                         addFileWithSubtitlesHandler,
                         allFileSubtitleLoader,
                         mergedSubtitlePreviewHandler
                 ),
-                GuiUtils.createFixedHeightSpacer(6),
+                GuiUtils.generateFixedHeightSpacer(6),
                 generateActionResultLabels(fileInfo)
         );
 
@@ -412,7 +412,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
             return Optional.empty();
         }
 
-        Button result = GuiUtils.createImageButton(
+        Button result = GuiUtils.generateImageButton(
                 null,
                 "/gui/icons/remove.png",
                 8,
@@ -490,7 +490,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
             TableFileInfo fileInfo,
             ObjectProperty<SubtitleOptionPreviewHandler> subtitleOptionPreviewHandler
     ) {
-        Button result = GuiUtils.createImageButton("", "/gui/icons/eye.png", 15, 10);
+        Button result = GuiUtils.generateImageButton("", "/gui/icons/eye.png", 15, 10);
 
         result.setOnAction(event -> {
             SubtitleOptionPreviewHandler handler = subtitleOptionPreviewHandler.get();
@@ -546,7 +546,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         Label result = new Label();
 
         result.setAlignment(Pos.CENTER);
-        result.setGraphic(GuiUtils.createImageView("/gui/icons/error.png", 12, 12));
+        result.setGraphic(GuiUtils.generateImageView("/gui/icons/error.png", 12, 12));
 
         result.setTooltip(GuiUtils.generateTooltip(subtitleOption.failedToLoadReasonProperty()));
         GuiUtils.bindVisibleAndManaged(result, subtitleOption.failedToLoadReasonProperty().isNotNull());
@@ -689,7 +689,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
             TableFileInfo fileInfo,
             ObjectProperty<AddFileWithSubtitlesHandler> addFileWithSubtitlesHandler
     ) {
-        Button result = GuiUtils.createImageButton(
+        Button result = GuiUtils.generateImageButton(
                 "Add subtitles",
                 "/gui/icons/add.png",
                 9,
@@ -751,7 +751,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         GuiUtils.setFixedWidth(result, SELECT_OPTION_PANE_WIDTH);
         result.visibleProperty().bind(fileInfo.visibleOptionCountProperty().greaterThanOrEqualTo(2));
 
-        Button previewButton = GuiUtils.createImageButton(
+        Button previewButton = GuiUtils.generateImageButton(
                 "result preview",
                 "/gui/icons/eye.png",
                 15,

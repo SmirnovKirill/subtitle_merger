@@ -9,20 +9,20 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
-import kirill.subtitlemerger.gui.utils.entities.AbstractController;
-import kirill.subtitlemerger.gui.utils.forms_and_controls.SubtitlePreviewController;
 import kirill.subtitlemerger.gui.tabs.videos.background.*;
 import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableSubtitleOption;
 import kirill.subtitlemerger.gui.tabs.videos.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundCallback;
-import kirill.subtitlemerger.gui.utils.forms_and_controls.ActionResultLabels;
-import kirill.subtitlemerger.gui.utils.forms_and_controls.AgreementPopupController;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
+import kirill.subtitlemerger.gui.utils.entities.AbstractController;
 import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import kirill.subtitlemerger.gui.utils.entities.FileOrigin;
 import kirill.subtitlemerger.gui.utils.entities.NodeInfo;
+import kirill.subtitlemerger.gui.utils.forms_and_controls.ActionResultLabels;
+import kirill.subtitlemerger.gui.utils.forms_and_controls.AgreementResult;
+import kirill.subtitlemerger.gui.utils.forms_and_controls.SubtitlePreviewController;
 import kirill.subtitlemerger.logic.files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.files.entities.FileInfo;
 import kirill.subtitlemerger.logic.files.entities.FileWithSubtitles;
@@ -360,7 +360,7 @@ public class ContentPaneController extends AbstractController {
 
             NodeInfo nodeInfo = GuiUtils.loadNode("/gui/javafx/forms_and_controls/subtitle_preview.fxml");
 
-            Stage previewStage = GuiUtils.createPopupStage("Subtitle preview", nodeInfo.getNode(), stage);
+            Stage previewStage = GuiUtils.generatePopupStage("Subtitle preview", nodeInfo.getNode(), stage);
             SubtitlePreviewController controller = getInitializedOptionPreviewController(
                     nodeInfo,
                     subtitleOption,
@@ -549,7 +549,7 @@ public class ContentPaneController extends AbstractController {
 
                 NodeInfo nodeInfo = GuiUtils.loadNode("/gui/javafx/forms_and_controls/subtitle_preview.fxml");
 
-                Stage previewStage = GuiUtils.createPopupStage("Subtitle preview", nodeInfo.getNode(), stage);
+                Stage previewStage = GuiUtils.generatePopupStage("Subtitle preview", nodeInfo.getNode(), stage);
                 SubtitlePreviewController controller = nodeInfo.getController();
                 controller.initializeMerged(
                         fileInfo.getMergedSubtitleInfo().getSubtitles(),
@@ -969,25 +969,25 @@ public class ContentPaneController extends AbstractController {
                 applyToAllText = String.format("Apply to all (%d left)", filesToOverwriteLeft);
             }
 
-            AgreementPopupController.Result agreementResult = GuiUtils.showAgreementPopup(
+            AgreementResult agreementResult = GuiUtils.showAgreementPopup(
                     "File '" + fileName + "' already exists. Do you want to overwrite it?",
+                    applyToAllText,
                     "Yes",
                     "No",
-                    applyToAllText,
                     stage
             );
-            if (agreementResult == AgreementPopupController.Result.CANCELED) {
+            if (agreementResult == AgreementResult.CANCELED) {
                 return Optional.empty();
-            } else if (agreementResult == AgreementPopupController.Result.YES) {
+            } else if (agreementResult == AgreementResult.YES) {
                 result.add(fileToOverwrite);
-            } else if (agreementResult == AgreementPopupController.Result.YES_TO_ALL) {
+            } else if (agreementResult == AgreementResult.YES_TO_ALL) {
                 List<File> filesLeft = mergePreparationResult.getFilesToOverwrite().subList(
                         mergePreparationResult.getFilesToOverwrite().size() - filesToOverwriteLeft,
                         mergePreparationResult.getFilesToOverwrite().size()
                 );
                 result.addAll(filesLeft);
                 return Optional.of(result);
-            } else if (agreementResult == AgreementPopupController.Result.NO_TO_ALL) {
+            } else if (agreementResult == AgreementResult.NO_TO_ALL) {
                 return Optional.of(result);
             }
 

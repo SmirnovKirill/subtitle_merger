@@ -585,7 +585,7 @@ public class SubtitleFilesTabController extends AbstractController {
     private SubtitlePreviewController.UserSelection showInputSubtitlePreview(InputFileInfo fileInfo) {
         NodeInfo nodeInfo = GuiUtils.loadNode("/gui/javafx/forms_and_controls/subtitle_preview.fxml");
 
-        Stage previewStage = GuiUtils.createPopupStage("Subtitle preview", nodeInfo.getNode(), stage);
+        Stage previewStage = GuiUtils.generatePopupStage("Subtitle preview", nodeInfo.getNode(), stage);
 
         SubtitlePreviewController controller = nodeInfo.getController();
         controller.initializeWithEncoding(
@@ -715,7 +715,7 @@ public class SubtitleFilesTabController extends AbstractController {
 
             NodeInfo nodeInfo = GuiUtils.loadNode("/gui/javafx/forms_and_controls/subtitle_preview.fxml");
 
-            Stage previewStage = GuiUtils.createPopupStage("Subtitle preview", nodeInfo.getNode(), stage);
+            Stage previewStage = GuiUtils.generatePopupStage("Subtitle preview", nodeInfo.getNode(), stage);
 
             SubtitlePreviewController controller = nodeInfo.getController();
             controller.initializeMerged(

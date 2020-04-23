@@ -45,29 +45,21 @@ public class AgreementPopupController {
         });
     }
 
-    public Result getResult() {
+    public AgreementResult getResult() {
         if (agreed == null) {
-            return Result.CANCELED;
+            return AgreementResult.CANCELED;
         } else if (agreed) {
             if (applyToAllCheckBox.isSelected()) {
-                return Result.YES_TO_ALL;
+                return AgreementResult.YES_TO_ALL;
             } else {
-                return Result.YES;
+                return AgreementResult.YES;
             }
         } else {
             if (applyToAllCheckBox.isSelected()) {
-                return Result.NO_TO_ALL;
+                return AgreementResult.NO_TO_ALL;
             } else {
-                return Result.NO;
+                return AgreementResult.NO;
             }
         }
-    }
-
-    public enum Result {
-        CANCELED,
-        YES,
-        YES_TO_ALL,
-        NO,
-        NO_TO_ALL
     }
 }
