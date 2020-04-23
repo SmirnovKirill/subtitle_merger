@@ -5,9 +5,9 @@ import javafx.beans.property.*;
 import javafx.scene.control.ProgressIndicator;
 
 /**
- * This class provides interaction between the background task and the main thread - updates progress and progress
- * message, cancellation availability and cancellation text. It may seem unnecessary since JavaFX's tasks can interact
- * with the main thread the same way and have updateMessage and updateProgress message. But the problem is that you are
+ * This class provides interaction between the background task and the main thread - updates progress and a progress
+ * message, cancellation availability and a cancellation text. It may seem unnecessary since JavaFX's tasks can interact
+ * with the main thread the same way and have updateMessage and updateProgress methods. But the problem is that you are
  * able to use these methods only if you create child classes directly, they are unavailable when you use method
  * references.
  */
