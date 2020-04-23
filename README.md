@@ -36,8 +36,8 @@ application itself is relatively simple.<br/>
 There are two main reasons for it:
 1. 40 megabytes are taken by the custom Java Runtime Environment (JRE) which is included because starting from version 9
 Java no longer has JREs, only development kits.
-2. 35-45 megabytes are taken by Ffmpeg. It is a very powerful open source utility that the application uses internally
-to work with videos. 
+2. 35-45 megabytes are taken by Ffmpeg. It is a very useful open source utility that the application uses internally to
+work with videos. 
 
 The "pure" jar with the application takes approximately 350 KB. After adding required libraries and making a "fat" jar, 
 the size rises up to 5.5 MB. All other space is taken by the JRE and Ffmpeg.
@@ -51,7 +51,7 @@ third one. The second tab is much more powerful and allows to work with videos.
 
 <a name="subtitle_files_tab"></a>
 ### To merge two subtitle files into the third
-Open the first tab called "Subtitle files". On that tab you just need to select the file with subtitles that will be
+Open the first tab called "Subtitle files". On that tab you just need to select a file with subtitles that will be
 displayed at the top of the video and another file with subtitles that will go at the bottom. You also need to select 
 the file where the result will be written.
 ![Subtitle files](/readme_images/subtitle_files.png)
