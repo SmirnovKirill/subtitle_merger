@@ -86,20 +86,20 @@
                     <text><SettingsTabController fx:constant="MERGE_MODE_ORIGINAL_VIDEOS"/></text>
                     <tooltip>
                         With this option application will inject merged subtitles into original video files. It is the
-                        most convenient option since everything will look as before except for the new merged subtitles in
-                        the subtitle list. This approach requires extra disk space during the merge process (equal to the
-                        size of the largest video to process) because application will create a temporary file first and then
-                        will overwrite the original video with this temporary one. Note that the original files will be
-                        overwritten! And if something goes wrong during the merge you may lose your video files.
+                        most convenient option since everything will look as before except for the new merged subtitles
+                        in the subtitle list. This approach requires extra disk space during the merge process (equal to
+                        the size of the largest video to process) because application will create a temporary file first
+                        and then will overwrite the original video with this temporary one. Note that the original files
+                        will be overwritten! And if something goes wrong during the merge you may lose your video files.
                     </tooltip>
                 </MergeModeOption>
                 <MergeModeOption toggleGroup="$mergeModeToggleGroup" GridPane.rowIndex="0" GridPane.columnIndex="1">
                     <text><SettingsTabController fx:constant="MERGE_MODE_SEPARATE_SUBTITLE_FILES"/></text>
                     <tooltip>
-                        With this option application will create separate subtitle files next to the videos. This option is
-                        the least convenient because after the merge you will have to add subtitle files manually when
-                        watching videos. But this option is safe because original files won't be modified in any way. And it
-                        also doesn't require almost any extra disk space.
+                        With this option application will create separate subtitle files next to the videos. This option
+                        is not so convenient because after the merge you will have to add subtitle files manually when
+                        watching videos. But this option is safe because original files won't be modified in any way.
+                        And it also doesn't require almost any extra disk space.
                     </tooltip>
                 </MergeModeOption>
 
