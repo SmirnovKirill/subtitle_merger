@@ -20,7 +20,7 @@ public class MergeModeCharacteristicTable extends GridPane {
     private Label diskUsageLabel;
 
     public MergeModeCharacteristicTable() {
-        GuiUtils.initializeCustomControl("/gui/javafx/tabs/settings/mergeModeCharacteristicTable.fxml", this);
+        GuiUtils.initializeCustomControl("/gui/javafx/tabs/settings/merge_mode_characteristic_table.fxml", this);
     }
 
     public StringProperty convenienceTextProperty() {

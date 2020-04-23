@@ -232,7 +232,7 @@ public class GuiUtils {
     }
 
     public static void showErrorPopup(String message, Stage ownerStage) {
-        NodeInfo nodeInfo = GuiUtils.loadNode("/gui/javafx/forms_and_controls/errorPopup.fxml");
+        NodeInfo nodeInfo = GuiUtils.loadNode("/gui/javafx/forms_and_controls/error_popup.fxml");
 
         Stage popupStage = GuiUtils.createPopupStage("Error!", nodeInfo.getNode(), ownerStage);
 
@@ -243,7 +243,7 @@ public class GuiUtils {
     }
 
     public static boolean showAgreementPopup(String message, String yesText, String noText, Stage ownerStage) {
-        NodeInfo nodeInfo = GuiUtils.loadNode("/gui/javafx/forms_and_controls/agreementPopup.fxml");
+        NodeInfo nodeInfo = GuiUtils.loadNode("/gui/javafx/forms_and_controls/agreement_popup.fxml");
 
         Stage popupStage = GuiUtils.createPopupStage("Please confirm", nodeInfo.getNode(), ownerStage);
 
@@ -262,7 +262,7 @@ public class GuiUtils {
             String applyToAllText,
             Stage ownerStage
     ) {
-        NodeInfo nodeInfo = GuiUtils.loadNode("/gui/javafx/forms_and_controls/agreementPopup.fxml");
+        NodeInfo nodeInfo = GuiUtils.loadNode("/gui/javafx/forms_and_controls/agreement_popup.fxml");
 
         Stage popupStage = GuiUtils.createPopupStage("Please confirm", nodeInfo.getNode(), ownerStage);
 

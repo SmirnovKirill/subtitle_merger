@@ -7,7 +7,7 @@
 <?import kirill.subtitlemerger.gui.GuiConstants?>
 <StackPane xmlns:fx="http://javafx.com/fxml" prefHeight="600" prefWidth="900"
            fx:controller="kirill.subtitlemerger.gui.utils.forms_and_controls.SubtitlePreviewController"
-           stylesheets="/gui/javafx/forms_and_controls/subtitlePreview.css"
+           stylesheets="/gui/javafx/forms_and_controls/subtitle_preview.css"
 >
     <padding>
         <Insets top="20" right="20" bottom="20" left="20"/>

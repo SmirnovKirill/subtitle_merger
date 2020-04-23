@@ -21,7 +21,7 @@
         </ImageView>
     </graphic>
 
-    <StackPane stylesheets="/gui/javafx/tabs/settings/settingsTab.css">
+    <StackPane stylesheets="/gui/javafx/tabs/settings/settings_tab.css">
         <GridPane fx:id="settingsPane" hgap="35">
             <gridLinesVisible><GuiConstants fx:constant="GRID_LINES_VISIBLE"/></gridLinesVisible>
 

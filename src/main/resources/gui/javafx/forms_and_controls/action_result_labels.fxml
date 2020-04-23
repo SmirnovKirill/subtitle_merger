@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import kirill.subtitlemerger.gui.GuiConstants?>
+<fx:root xmlns:fx="http://javafx.com/fxml" type="javafx.scene.layout.HBox">
+    <Label fx:id="successLabel">
+        <styleClass>
+            <GuiConstants fx:constant="LABEL_SUCCESS_CLASS"/>
+        </styleClass>
+    </Label>
+    <Label fx:id="warnLabel">
+        <styleClass>
+            <GuiConstants fx:constant="LABEL_WARN_CLASS"/>
+        </styleClass>
+    </Label>
+    <Label fx:id="errorLabel">
+        <styleClass>
+            <GuiConstants fx:constant="LABEL_ERROR_CLASS"/>
+        </styleClass>
+    </Label>
+</fx:root>

@@ -358,7 +358,7 @@ public class ContentPaneController extends AbstractController {
                     fileInfo.getSubtitleOptions()
             );
 
-            NodeInfo nodeInfo = GuiUtils.loadNode("/gui/javafx/forms_and_controls/subtitlePreview.fxml");
+            NodeInfo nodeInfo = GuiUtils.loadNode("/gui/javafx/forms_and_controls/subtitle_preview.fxml");
 
             Stage previewStage = GuiUtils.createPopupStage("Subtitle preview", nodeInfo.getNode(), stage);
             SubtitlePreviewController controller = getInitializedOptionPreviewController(
@@ -547,7 +547,7 @@ public class ContentPaneController extends AbstractController {
 
                 fileInfo.setMergedSubtitleInfo(result.getMergedSubtitleInfo());
 
-                NodeInfo nodeInfo = GuiUtils.loadNode("/gui/javafx/forms_and_controls/subtitlePreview.fxml");
+                NodeInfo nodeInfo = GuiUtils.loadNode("/gui/javafx/forms_and_controls/subtitle_preview.fxml");
 
                 Stage previewStage = GuiUtils.createPopupStage("Subtitle preview", nodeInfo.getNode(), stage);
                 SubtitlePreviewController controller = nodeInfo.getController();

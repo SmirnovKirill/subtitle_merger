@@ -3,21 +3,25 @@ package kirill.subtitlemerger.gui.utils.forms_and_controls;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
-import kirill.subtitlemerger.gui.GuiConstants;
+import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import org.apache.commons.lang3.StringUtils;
 
 /**
- * Special class to display data from ActionResults.
+ * Special class to display data from the ActionResults class.
  * @see ActionResult
  */
 public class ActionResultLabels extends HBox {
+    @FXML
     private Label successLabel;
 
+    @FXML
     private Label warnLabel;
 
+    @FXML
     private Label errorLabel;
 
     private BooleanProperty wrapText;
@@ -31,22 +35,14 @@ public class ActionResultLabels extends HBox {
         alwaysManaged = new SimpleBooleanProperty(false);
         empty = new SimpleBooleanProperty(true);
 
+        GuiUtils.initializeCustomControl("/gui/javafx/forms_and_controls/action_result_labels.fxml", this);
+
         setVisible(false);
         managedProperty().bind(alwaysManaged.or(Bindings.not(empty)));
 
-        successLabel = new Label();
-        successLabel.getStyleClass().add(GuiConstants.LABEL_SUCCESS_CLASS);
         successLabel.wrapTextProperty().bind(wrapText);
-
-        warnLabel = new Label();
-        warnLabel.getStyleClass().add(GuiConstants.LABEL_WARN_CLASS);
         warnLabel.wrapTextProperty().bind(wrapText);
-
-        errorLabel = new Label();
-        errorLabel.getStyleClass().add(GuiConstants.LABEL_ERROR_CLASS);
         errorLabel.wrapTextProperty().bind(wrapText);
-
-        getChildren().addAll(successLabel, warnLabel, errorLabel);
     }
 
     public boolean isWrapText() {

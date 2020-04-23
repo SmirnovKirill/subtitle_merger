@@ -15,7 +15,7 @@ public class LabelWithQuestionMark extends HBox {
     private Tooltip tooltip;
 
     public LabelWithQuestionMark() {
-        GuiUtils.initializeCustomControl("/gui/javafx/tabs/settings/labelWithQuestionMark.fxml", this);
+        GuiUtils.initializeCustomControl("/gui/javafx/tabs/settings/label_with_question_mark.fxml", this);
     }
 
     public StringProperty labelTextProperty() {

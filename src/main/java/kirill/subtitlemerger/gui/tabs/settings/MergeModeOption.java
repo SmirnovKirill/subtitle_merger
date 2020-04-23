@@ -19,7 +19,7 @@ public class MergeModeOption extends HBox {
     private Tooltip tooltip;
 
     public MergeModeOption() {
-        GuiUtils.initializeCustomControl("/gui/javafx/tabs/settings/mergeModeOption.fxml", this);
+        GuiUtils.initializeCustomControl("/gui/javafx/tabs/settings/merge_mode_option.fxml", this);
     }
 
     public StringProperty textProperty() {
