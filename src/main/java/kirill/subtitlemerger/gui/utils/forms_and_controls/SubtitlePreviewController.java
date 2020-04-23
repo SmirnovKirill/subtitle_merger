@@ -80,7 +80,7 @@ public class SubtitlePreviewController extends AbstractController {
 
     private Subtitles currentSubtitles;
 
-    private boolean plainTextSubtitles;
+    private boolean plainText;
 
     private Stage dialogStage;
 
@@ -90,17 +90,13 @@ public class SubtitlePreviewController extends AbstractController {
         linesTruncated = new SimpleBooleanProperty(false);
     }
 
-    public void initializeSimple(
-            Subtitles subtitles,
-            String title,
-            Stage dialogStage
-    ) {
+    public void initializeSimple(Subtitles subtitles, String title, Stage dialogStage) {
         mode = Mode.SIMPLE;
-        this.originalSubtitles = subtitles;
-        this.currentSubtitles = subtitles;
+        originalSubtitles = subtitles;
+        currentSubtitles = subtitles;
         this.dialogStage = dialogStage;
 
-        this.title.setText(getShortenedTitleIfNecessary(title));
+        this.title.setText(getShortenedTitle(title));
         GuiUtils.setVisibleAndManaged(mergedUpperPane, false);
         GuiUtils.setVisibleAndManaged(mergedLowerPane, false);
         GuiUtils.setVisibleAndManaged(encodingPane, false);
@@ -110,55 +106,8 @@ public class SubtitlePreviewController extends AbstractController {
         getPreviewInfoAndUpdateScene(true);
     }
 
-    private static String getShortenedTitleIfNecessary(String title) {
-        return GuiUtils.getShortenedStringIfNecessary(title, 0, 128);
-    }
-
-    public void initializeMerged(
-            Subtitles subtitles,
-            String upperTitle,
-            String lowerTitle,
-            boolean plainTextSubtitles,
-            Stage dialogStage
-    ) {
-        mode = Mode.MERGED;
-        this.originalSubtitles = subtitles;
-        this.currentSubtitles = subtitles;
-        this.plainTextSubtitles = plainTextSubtitles;
-        this.dialogStage = dialogStage;
-
-        title.setText("This is the result of merging");
-        mergedUpperTitle.setText(upperTitle);
-        mergedLowerTitle.setText(lowerTitle);
-        GuiUtils.setVisibleAndManaged(encodingPane, false);
-        listView.setSelectionModel(new NoSelectionModel<>());
-        GuiUtils.setVisibleAndManaged(cancelSavePane, false);
-
-        getPreviewInfoAndUpdateScene(true);
-    }
-
-    public void initializeWithEncoding(
-            byte[] data,
-            Charset originalEncoding,
-            String fileFullPath,
-            Stage dialogStage
-    ) {
-        mode = Mode.WITH_ENCODING;
-        this.data = data;
-        this.originalEncoding = originalEncoding;
-        currentEncoding = originalEncoding;
-        this.dialogStage = dialogStage;
-
-        title.setText(getShortenedTitleIfNecessary(fileFullPath));
-        GuiUtils.setVisibleAndManaged(mergedUpperPane, false);
-        GuiUtils.setVisibleAndManaged(mergedLowerPane, false);
-        encodingComboBox.setConverter(CHARSET_STRING_CONVERTER);
-        encodingComboBox.getItems().setAll(LogicConstants.SUPPORTED_ENCODINGS);
-        encodingComboBox.getSelectionModel().select(originalEncoding);
-        listView.setSelectionModel(new NoSelectionModel<>());
-        GuiUtils.setVisibleAndManaged(okPane, false);
-
-        getPreviewInfoAndUpdateScene(true);
+    private static String getShortenedTitle(String title) {
+        return GuiUtils.getShortenedString(title, 0, 128);
     }
 
     private void getPreviewInfoAndUpdateScene(boolean initialRun) {
@@ -170,7 +119,7 @@ public class SubtitlePreviewController extends AbstractController {
             } else if (mode == Mode.WITH_ENCODING){
                 return getPreviewInfo(data, currentEncoding, false);
             } else if (mode == Mode.MERGED) {
-                return getPreviewInfo(originalSubtitles, null, plainTextSubtitles);
+                return getPreviewInfo(originalSubtitles, null, plainText);
             } else {
                 throw new IllegalStateException();
             }
@@ -252,6 +201,48 @@ public class SubtitlePreviewController extends AbstractController {
 
             saveButton.setDisable(Objects.equals(currentEncoding, originalEncoding) || currentSubtitles == null);
         }
+    }
+
+    public void initializeMerged(
+            Subtitles subtitles,
+            String upperTitle,
+            String lowerTitle,
+            boolean plainText,
+            Stage dialogStage
+    ) {
+        mode = Mode.MERGED;
+        originalSubtitles = subtitles;
+        currentSubtitles = subtitles;
+        this.plainText = plainText;
+        this.dialogStage = dialogStage;
+
+        title.setText("This is the result of merging");
+        mergedUpperTitle.setText(upperTitle);
+        mergedLowerTitle.setText(lowerTitle);
+        GuiUtils.setVisibleAndManaged(encodingPane, false);
+        listView.setSelectionModel(new NoSelectionModel<>());
+        GuiUtils.setVisibleAndManaged(cancelSavePane, false);
+
+        getPreviewInfoAndUpdateScene(true);
+    }
+
+    public void initializeWithEncoding(byte[] data, Charset originalEncoding, String fileFullPath, Stage dialogStage) {
+        mode = Mode.WITH_ENCODING;
+        this.data = data;
+        this.originalEncoding = originalEncoding;
+        currentEncoding = originalEncoding;
+        this.dialogStage = dialogStage;
+
+        title.setText(getShortenedTitle(fileFullPath));
+        GuiUtils.setVisibleAndManaged(mergedUpperPane, false);
+        GuiUtils.setVisibleAndManaged(mergedLowerPane, false);
+        encodingComboBox.setConverter(CHARSET_STRING_CONVERTER);
+        encodingComboBox.getItems().setAll(LogicConstants.SUPPORTED_ENCODINGS);
+        encodingComboBox.getSelectionModel().select(originalEncoding);
+        listView.setSelectionModel(new NoSelectionModel<>());
+        GuiUtils.setVisibleAndManaged(okPane, false);
+
+        getPreviewInfoAndUpdateScene(true);
     }
 
     public boolean isLinesTruncated() {

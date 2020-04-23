@@ -25,7 +25,7 @@
                 </graphic>
             </Label>
         </HBox>
-        <Label fx:id="textLabel" wrapText="true"/>
+        <Label fx:id="messageLabel" wrapText="true"/>
     </HBox>
     <HBox alignment="CENTER">
         <Region HBox.hgrow="ALWAYS"/>

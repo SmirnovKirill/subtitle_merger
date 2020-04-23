@@ -25,7 +25,7 @@
             </Label>
         </HBox>
         <VBox spacing="10">
-            <Label fx:id="textLabel" wrapText="true"/>
+            <Label fx:id="messageLabel" wrapText="true"/>
             <CheckBox fx:id="applyToAllCheckBox"/>
         </VBox>
     </HBox>

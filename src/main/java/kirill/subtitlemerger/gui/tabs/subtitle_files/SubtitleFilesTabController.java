@@ -476,7 +476,7 @@ public class SubtitleFilesTabController extends AbstractController {
     }
 
     private static String getShortenedPath(String path) {
-        return GuiUtils.getShortenedStringIfNecessary(path, 20, 40);
+        return GuiUtils.getShortenedString(path, 20, 40);
     }
 
     private static String getErrorText(String path, IncorrectMergedFileReason reason) {
@@ -558,7 +558,7 @@ public class SubtitleFilesTabController extends AbstractController {
     private boolean agreeToOverwrite(MergedFileInfo mergedFileInfo) {
         agreeToOverwriteInProgress = true;
 
-        String fileName = GuiUtils.getShortenedStringIfNecessary(
+        String fileName = GuiUtils.getShortenedString(
                 mergedFileInfo.getFile().getName(),
                 0,
                 32

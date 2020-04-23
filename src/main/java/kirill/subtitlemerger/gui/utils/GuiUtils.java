@@ -69,6 +69,40 @@ public class GuiUtils {
         return new NodeInfo(node, controller);
     }
 
+    public static void setVisibleAndManaged(Node node, boolean value) {
+        node.setVisible(value);
+        node.setManaged(value);
+    }
+
+    public static void bindVisibleAndManaged(Node node, BooleanBinding binding) {
+        node.visibleProperty().bind(binding);
+        node.managedProperty().bind(binding);
+    }
+
+    /**
+     * Returns the shortened version of the string if necessary. String will be shortened only if its size is larger
+     * than or equal to charsBeforeEllipsis + charsAfterEllipsis + 3. These 3 extra characters are needed because if
+     * less than 3 characters are shortened it would look weird.
+     *
+     * @param string string to process
+     * @param charsBeforeEllipsis number of characters before the ellipsis in the shortened string
+     * @param charsAfterEllipsis number of characters after the ellipsis in the shortened string
+     * @return the shortened version of the string if it was too long or the original string otherwise
+     */
+    public static String getShortenedString(
+            String string,
+            int charsBeforeEllipsis,
+            int charsAfterEllipsis
+    ) {
+        if (string.length() < charsBeforeEllipsis + charsAfterEllipsis + 3) {
+            return string;
+        }
+
+        return string.substring(0, charsBeforeEllipsis)
+                + "..."
+                + string.substring(string.length() - charsAfterEllipsis);
+    }
+
     /**
      * Set change listeners so that the onChange method will be invoked each time Enter button is pressed or the focus
      * is lost.
@@ -91,30 +125,6 @@ public class GuiUtils {
             String value = textField.getText();
             onChange.accept(value);
         });
-    }
-
-    /**
-     * Returns the shortened version of the string if necessary. String will be shortened only if its size is larger
-     * than or equal to charsBeforeEllipsis + charsAfterEllipsis + 3. These 3 extra characters are needed because if
-     * less than 3 characters are shortened it would look weird.
-     *
-     * @param string string to process
-     * @param charsBeforeEllipsis number of characters before the ellipsis in the shortened string
-     * @param charsAfterEllipsis number of characters after the ellipsis in the shortened string
-     * @return the shortened version of the string if it was too long or the original string otherwise
-     */
-    public static String getShortenedStringIfNecessary(
-            String string,
-            int charsBeforeEllipsis,
-            int charsAfterEllipsis
-    ) {
-        if (string.length() < charsBeforeEllipsis + charsAfterEllipsis + 3) {
-            return string;
-        }
-
-        return string.substring(0, charsBeforeEllipsis)
-                + "..."
-                + string.substring(string.length() - charsAfterEllipsis);
     }
 
     public static Button createImageButton(String text, String imageUrl, int width, int height) {
@@ -192,16 +202,6 @@ public class GuiUtils {
         }
     }
 
-    public static void setVisibleAndManaged(Node node, boolean value) {
-        node.setVisible(value);
-        node.setManaged(value);
-    }
-
-    public static void bindVisibleAndManaged(Node node, BooleanBinding binding) {
-        node.visibleProperty().bind(binding);
-        node.managedProperty().bind(binding);
-    }
-
     public static Region createFixedHeightSpacer(int height) {
         Region result = new Region();
 
@@ -248,7 +248,7 @@ public class GuiUtils {
         Stage popupStage = GuiUtils.createPopupStage("Please confirm", nodeInfo.getNode(), ownerStage);
 
         AgreementPopupController controller = nodeInfo.getController();
-        controller.initialize(message, yesText, noText, null, popupStage);
+        controller.initialize(message, null, yesText, noText, popupStage);
 
         popupStage.showAndWait();
 
@@ -267,7 +267,7 @@ public class GuiUtils {
         Stage popupStage = GuiUtils.createPopupStage("Please confirm", nodeInfo.getNode(), ownerStage);
 
         AgreementPopupController controller = nodeInfo.getController();
-        controller.initialize(message, yesText, noText, applyToAllText, popupStage);
+        controller.initialize(message, applyToAllText, yesText, noText, popupStage);
 
         popupStage.showAndWait();
 

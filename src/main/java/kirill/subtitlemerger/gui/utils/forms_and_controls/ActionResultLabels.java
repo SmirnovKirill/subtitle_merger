@@ -31,11 +31,11 @@ public class ActionResultLabels extends HBox {
     private BooleanProperty empty;
 
     public ActionResultLabels() {
+        GuiUtils.initializeCustomControl("/gui/javafx/forms_and_controls/action_result_labels.fxml", this);
+
         wrapText = new SimpleBooleanProperty(false);
         alwaysManaged = new SimpleBooleanProperty(false);
         empty = new SimpleBooleanProperty(true);
-
-        GuiUtils.initializeCustomControl("/gui/javafx/forms_and_controls/action_result_labels.fxml", this);
 
         setVisible(false);
         managedProperty().bind(alwaysManaged.or(Bindings.not(empty)));
@@ -81,35 +81,35 @@ public class ActionResultLabels extends HBox {
         this.empty.set(empty);
     }
 
-    public void set(ActionResult multiPartResult) {
+    public void set(ActionResult actionResult) {
         String success = null;
         String warn = null;
         String error = null;
 
         boolean empty = true;
 
-        if (!StringUtils.isBlank(multiPartResult.getSuccess())) {
+        if (!StringUtils.isBlank(actionResult.getSuccess())) {
             empty = false;
 
-            success = multiPartResult.getSuccess();
-            if (!StringUtils.isBlank(multiPartResult.getWarn()) || !StringUtils.isBlank(multiPartResult.getError())) {
+            success = actionResult.getSuccess();
+            if (!StringUtils.isBlank(actionResult.getWarn()) || !StringUtils.isBlank(actionResult.getError())) {
                 success += ", ";
             }
         }
 
-        if (!StringUtils.isBlank(multiPartResult.getWarn())) {
+        if (!StringUtils.isBlank(actionResult.getWarn())) {
             empty = false;
 
-            warn = multiPartResult.getWarn();
-            if (!StringUtils.isBlank(multiPartResult.getError())) {
+            warn = actionResult.getWarn();
+            if (!StringUtils.isBlank(actionResult.getError())) {
                 warn += ", ";
             }
         }
 
-        if (!StringUtils.isBlank(multiPartResult.getError())) {
+        if (!StringUtils.isBlank(actionResult.getError())) {
             empty = false;
 
-            error = multiPartResult.getError();
+            error = actionResult.getError();
         }
 
         successLabel.setText(success);

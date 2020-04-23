@@ -148,7 +148,7 @@ public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner
     }
 
     private static String unavailabilityReasonToString(DirectoryUnavailabilityReason reason, String path) {
-        path = GuiUtils.getShortenedStringIfNecessary(path, 20, 40);
+        path = GuiUtils.getShortenedString(path, 20, 40);
 
         switch (reason) {
             case PATH_EMPTY:

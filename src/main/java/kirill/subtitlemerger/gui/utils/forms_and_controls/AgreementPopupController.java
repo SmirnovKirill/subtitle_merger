@@ -10,7 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 
 public class AgreementPopupController {
     @FXML
-    private Label textLabel;
+    private Label messageLabel;
 
     @FXML
     private CheckBox applyToAllCheckBox;
@@ -23,16 +23,8 @@ public class AgreementPopupController {
 
     private Boolean agreed;
 
-    public void initialize(
-            String messageText,
-            String yesText,
-            String noText,
-            String applyToAllText,
-            Stage stage
-    ) {
-        textLabel.setText(messageText);
-        yesButton.setText(yesText);
-        noButton.setText(noText);
+    public void initialize(String message, String applyToAllText, String yesText, String noText, Stage stage) {
+        messageLabel.setText(message);
 
         if (StringUtils.isBlank(applyToAllText)) {
             GuiUtils.setVisibleAndManaged(applyToAllCheckBox, false);
@@ -40,11 +32,13 @@ public class AgreementPopupController {
             applyToAllCheckBox.setText(applyToAllText);
         }
 
+        yesButton.setText(yesText);
         yesButton.setOnAction(event -> {
             agreed = true;
             stage.close();
         });
 
+        noButton.setText(noText);
         noButton.setOnAction(event -> {
             agreed = false;
             stage.close();

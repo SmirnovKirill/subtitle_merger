@@ -7,13 +7,13 @@ import javafx.stage.Stage;
 
 public class ErrorPopupController {
     @FXML
-    private Label textLabel;
+    private Label messageLabel;
 
     @FXML
     private Button okButton;
 
-    public void initialize(String text, Stage stage) {
-        textLabel.setText(text);
+    public void initialize(String message, Stage stage) {
+        messageLabel.setText(message);
 
         okButton.setOnAction(event -> stage.close());
     }

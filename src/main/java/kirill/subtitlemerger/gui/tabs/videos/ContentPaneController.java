@@ -956,7 +956,7 @@ public class ContentPaneController extends AbstractController {
 
         int filesToOverwriteLeft = mergePreparationResult.getFilesToOverwrite().size();
         for (File fileToOverwrite : mergePreparationResult.getFilesToOverwrite()) {
-            String fileName = GuiUtils.getShortenedStringIfNecessary(
+            String fileName = GuiUtils.getShortenedString(
                     fileToOverwrite.getName(),
                     0,
                     32

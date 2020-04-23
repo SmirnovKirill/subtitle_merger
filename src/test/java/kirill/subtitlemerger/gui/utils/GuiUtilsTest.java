@@ -16,23 +16,23 @@ public class GuiUtilsTest {
     @Test
     public void testShortenedString() {
         assertThat(
-                GuiUtils.getShortenedStringIfNecessary("test", 2, 2)
+                GuiUtils.getShortenedString("test", 2, 2)
         ).isEqualTo("test");
 
         assertThat(
-                GuiUtils.getShortenedStringIfNecessary("testlonger", 2, 2)
+                GuiUtils.getShortenedString("testlonger", 2, 2)
         ).isEqualTo("te...er");
 
         assertThat(
-                GuiUtils.getShortenedStringIfNecessary("testlonger", 2, 5)
+                GuiUtils.getShortenedString("testlonger", 2, 5)
         ).isEqualTo("te...onger");
 
         assertThat(
-                GuiUtils.getShortenedStringIfNecessary("testlonger", 2, 6)
+                GuiUtils.getShortenedString("testlonger", 2, 6)
         ).isEqualTo("testlonger");
 
         assertThat(
-                GuiUtils.getShortenedStringIfNecessary("testlonger", 3, 5)
+                GuiUtils.getShortenedString("testlonger", 3, 5)
         ).isEqualTo("testlonger");
     }
 
