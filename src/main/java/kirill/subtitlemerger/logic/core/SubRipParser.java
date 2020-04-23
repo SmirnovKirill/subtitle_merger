@@ -5,6 +5,7 @@ import kirill.subtitlemerger.logic.core.entities.Subtitle;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.LocalTime;
@@ -30,6 +31,10 @@ public class SubRipParser {
         /* Remove BOM if it's present. */
         if (text.startsWith("\uFEFF")) {
             text = text.substring(1);
+        }
+
+        if (StringUtils.isBlank(text)) {
+            return new Subtitles(result);
         }
 
         /*
@@ -74,6 +79,8 @@ public class SubRipParser {
             validateNumber(linesBeforeTimeLine);
             List<String> subtitleLines = getTrimmedLines(linesAfterTimeLine);
             result.add(new Subtitle(timeRange.getMinimum(), timeRange.getMaximum(), subtitleLines));
+        } else if (!CollectionUtils.isEmpty(linesBeforeTimeLine)) {
+            throw new SubtitleFormatException();
         }
 
         return new Subtitles(result);

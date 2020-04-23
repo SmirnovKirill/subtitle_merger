@@ -94,4 +94,9 @@ public class SubRipParserTest {
         assertThat(subtitle.getLines()).hasSize(1);
         assertThat(subtitle.getLines().get(0)).isEqualTo("которая работает в разных странах");
     }
+
+    @Test(expected = SubtitleFormatException.class)
+    public void testIncorrect() throws SubtitleFormatException {
+        SubRipParser.from("just an incorrect string");
+    }
 }
