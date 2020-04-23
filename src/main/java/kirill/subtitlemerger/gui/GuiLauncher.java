@@ -30,7 +30,7 @@ public class GuiLauncher extends Application {
         controller.initialize(stage, new GuiContext());
 
         stage.getIcons().add(new Image(GuiLauncher.class.getResourceAsStream("/gui/icons/icon.png")));
-        stage.setTitle("Subtitle merger");
+        stage.setTitle("Subtitle Merger");
         stage.setResizable(true);
         stage.setScene(generateScene(nodeInfo.getNode()));
 
