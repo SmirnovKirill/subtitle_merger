@@ -18,6 +18,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import kirill.subtitlemerger.gui.utils.forms_and_controls.AgreementPopupController;
+import kirill.subtitlemerger.gui.utils.forms_and_controls.AgreementResult;
 import kirill.subtitlemerger.gui.utils.forms_and_controls.ErrorPopupController;
 import kirill.subtitlemerger.gui.utils.entities.NodeInfo;
 import lombok.extern.apachecommons.CommonsLog;
@@ -35,7 +36,7 @@ import java.util.function.Consumer;
 @CommonsLog
 public class GuiUtils {
     /**
-     * Uses FXML loader to load provided fxml file.
+     * Uses FXML loader to load the provided fxml file.
      *
      * @param path path to the fxml file.
      * @return a wrapper containing root node and its controller.
@@ -80,20 +81,16 @@ public class GuiUtils {
     }
 
     /**
-     * Returns the shortened version of the string if necessary. String will be shortened only if its size is larger
+     * Returns the shortened version of a string if necessary. The string will be shortened only if its size is larger
      * than or equal to charsBeforeEllipsis + charsAfterEllipsis + 3. These 3 extra characters are needed because if
      * less than 3 characters are shortened it would look weird.
      *
-     * @param string string to process
-     * @param charsBeforeEllipsis number of characters before the ellipsis in the shortened string
-     * @param charsAfterEllipsis number of characters after the ellipsis in the shortened string
+     * @param string the string to process
+     * @param charsBeforeEllipsis the number of characters before the ellipsis in the shortened string
+     * @param charsAfterEllipsis the number of characters after the ellipsis in the shortened string
      * @return the shortened version of the string if it was too long or the original string otherwise
      */
-    public static String getShortenedString(
-            String string,
-            int charsBeforeEllipsis,
-            int charsAfterEllipsis
-    ) {
+    public static String getShortenedString(String string, int charsBeforeEllipsis, int charsAfterEllipsis) {
         if (string.length() < charsBeforeEllipsis + charsAfterEllipsis + 3) {
             return string;
         }
@@ -104,17 +101,17 @@ public class GuiUtils {
     }
 
     /**
-     * Set change listeners so that the onChange method will be invoked each time Enter button is pressed or the focus
-     * is lost.
+     * Sets the change listeners so that the value handler method will be invoked each time the Enter button is pressed
+     * or the focus is lost.
      */
-    public static void setTextFieldChangeListeners(TextField textField, Consumer<String> onChange) {
+    public static void setTextFieldChangeListeners(TextField textField, Consumer<String> valueHandler) {
         textField.focusedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
                 return;
             }
 
             String value = textField.getText();
-            onChange.accept(value);
+            valueHandler.accept(value);
         });
 
         textField.setOnKeyPressed(keyEvent -> {
@@ -123,21 +120,21 @@ public class GuiUtils {
             }
 
             String value = textField.getText();
-            onChange.accept(value);
+            valueHandler.accept(value);
         });
     }
 
-    public static Button createImageButton(String text, String imageUrl, int width, int height) {
+    public static Button generateImageButton(String text, String imageUrl, int width, int height) {
         Button result = new Button(text);
 
         result.getStyleClass().add("image-button");
 
-        result.setGraphic(createImageView(imageUrl, width, height));
+        result.setGraphic(generateImageView(imageUrl, width, height));
 
         return result;
     }
 
-    public static ImageView createImageView(String imageUrl, int width, int height) {
+    public static ImageView generateImageView(String imageUrl, int width, int height) {
         ImageView result = new ImageView(new Image(imageUrl));
 
         result.setFitWidth(width);
@@ -146,18 +143,12 @@ public class GuiUtils {
         return result;
     }
 
+    /**
+     * Generates the tooltip that is shown indefinitely and without delays.
+     */
     public static Tooltip generateTooltip(String text) {
         Tooltip result = new Tooltip(text);
 
-        setTooltipProperties(result);
-
-        return result;
-    }
-
-    public static Tooltip generateTooltip(StringProperty text) {
-        Tooltip result = new Tooltip();
-
-        result.textProperty().bind(text);
         setTooltipProperties(result);
 
         return result;
@@ -169,12 +160,26 @@ public class GuiUtils {
     }
 
     /**
-     * @param count number of items
-     * @param oneItemText text to return when there is only one item, this text can't use any format arguments because
-     *                    there is always only one item
-     * @param zeroOrSeveralItemsText text to return when there are zero or several items, this text can use format
+     * Generates the tooltip that is shown indefinitely and without delays.
+     */
+    public static Tooltip generateTooltip(StringProperty text) {
+        Tooltip result = new Tooltip();
+
+        result.textProperty().bind(text);
+        setTooltipProperties(result);
+
+        return result;
+    }
+
+    /**
+     * This method is helpful for displaying English texts.
+     *
+     * @param count the number of items
+     * @param oneItemText the text to return when there is only one item, this text can't use any format arguments
+     *                   because there is always only one item
+     * @param zeroOrSeveralItemsText the text to return when there are zero or several items, this text can use format
      *                               argument %d inside
-     * @return text depending on the count.
+     * @return the text depending on the count.
      */
     public static String getTextDependingOnTheCount(int count, String oneItemText, String zeroOrSeveralItemsText) {
         if (count == 1) {
@@ -184,6 +189,9 @@ public class GuiUtils {
         }
     }
 
+    /**
+     * Returns the language code if the language is not empty or the string "unknown language" otherwise.
+     */
     public static String languageToString(LanguageAlpha3Code language) {
         return language != null ? language.toString() : "unknown language";
     }
@@ -202,7 +210,7 @@ public class GuiUtils {
         }
     }
 
-    public static Region createFixedHeightSpacer(int height) {
+    public static Region generateFixedHeightSpacer(int height) {
         Region result = new Region();
 
         result.setMinHeight(height);
@@ -216,7 +224,7 @@ public class GuiUtils {
         region.setMaxWidth(width);
     }
 
-    public static Stage createPopupStage(String title, Parent node, Stage ownerStage) {
+    public static Stage generatePopupStage(String title, Parent node, Stage ownerStage) {
         Stage result = new Stage();
 
         result.initOwner(ownerStage);
@@ -232,9 +240,9 @@ public class GuiUtils {
     }
 
     public static void showErrorPopup(String message, Stage ownerStage) {
-        NodeInfo nodeInfo = GuiUtils.loadNode("/gui/javafx/forms_and_controls/error_popup.fxml");
+        NodeInfo nodeInfo = loadNode("/gui/javafx/forms_and_controls/error_popup.fxml");
 
-        Stage popupStage = GuiUtils.createPopupStage("Error!", nodeInfo.getNode(), ownerStage);
+        Stage popupStage = generatePopupStage("Error!", nodeInfo.getNode(), ownerStage);
 
         ErrorPopupController controller = nodeInfo.getController();
         controller.initialize(message, popupStage);
@@ -243,28 +251,28 @@ public class GuiUtils {
     }
 
     public static boolean showAgreementPopup(String message, String yesText, String noText, Stage ownerStage) {
-        NodeInfo nodeInfo = GuiUtils.loadNode("/gui/javafx/forms_and_controls/agreement_popup.fxml");
+        NodeInfo nodeInfo = loadNode("/gui/javafx/forms_and_controls/agreement_popup.fxml");
 
-        Stage popupStage = GuiUtils.createPopupStage("Please confirm", nodeInfo.getNode(), ownerStage);
+        Stage popupStage = generatePopupStage("Please confirm", nodeInfo.getNode(), ownerStage);
 
         AgreementPopupController controller = nodeInfo.getController();
         controller.initialize(message, null, yesText, noText, popupStage);
 
         popupStage.showAndWait();
 
-        return controller.getResult() == AgreementPopupController.Result.YES;
+        return controller.getResult() == AgreementResult.YES;
     }
 
-    public static AgreementPopupController.Result showAgreementPopup(
+    public static AgreementResult showAgreementPopup(
             String message,
+            String applyToAllText,
             String yesText,
             String noText,
-            String applyToAllText,
             Stage ownerStage
     ) {
-        NodeInfo nodeInfo = GuiUtils.loadNode("/gui/javafx/forms_and_controls/agreement_popup.fxml");
+        NodeInfo nodeInfo = loadNode("/gui/javafx/forms_and_controls/agreement_popup.fxml");
 
-        Stage popupStage = GuiUtils.createPopupStage("Please confirm", nodeInfo.getNode(), ownerStage);
+        Stage popupStage = generatePopupStage("Please confirm", nodeInfo.getNode(), ownerStage);
 
         AgreementPopupController controller = nodeInfo.getController();
         controller.initialize(message, applyToAllText, yesText, noText, popupStage);
