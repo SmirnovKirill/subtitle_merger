@@ -1,10 +1,9 @@
 package kirill.subtitlemerger.logic.files;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
+import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
-import kirill.subtitlemerger.logic.ffmpeg.SubtitleFormat;
-import kirill.subtitlemerger.logic.ffmpeg.VideoFormat;
 import kirill.subtitlemerger.logic.ffmpeg.json.JsonFfprobeFileInfo;
 import kirill.subtitlemerger.logic.ffmpeg.json.JsonStream;
 import kirill.subtitlemerger.logic.files.entities.FfmpegSubtitleStream;
@@ -55,9 +54,9 @@ public class FileInfoGetter {
             throw new IllegalStateException();
         }
 
-        VideoFormat format = VideoFormat.from(ffprobeInfo.getFormat().getFormatName()).orElse(null);
-        if (format != VideoFormat.MATROSKA) {
-            return new FileInfo(file, null, NOT_ALLOWED_FORMAT, null, null);
+        String format = ffprobeInfo.getFormat().getFormatName();
+        if (!LogicConstants.ALLOWED_VIDEO_FORMATS.contains(format)) {
+            return new FileInfo(file, format, NOT_ALLOWED_FORMAT, null, null);
         }
 
         return new FileInfo(
@@ -77,10 +76,9 @@ public class FileInfoGetter {
                 continue;
             }
 
-            SubtitleFormat format = SubtitleFormat.from(stream.getCodecName()).orElse(null);
-
+            String format = stream.getCodecName();
             SubtitleOptionUnavailabilityReason unavailabilityReason = null;
-            if (format != SubtitleFormat.SUBRIP && format != SubtitleFormat.ASS) {
+            if (!LogicConstants.ALLOWED_SUBTITLE_FORMATS.contains(format)) {
                 unavailabilityReason = SubtitleOptionUnavailabilityReason.NOT_ALLOWED_FORMAT;
             }
 

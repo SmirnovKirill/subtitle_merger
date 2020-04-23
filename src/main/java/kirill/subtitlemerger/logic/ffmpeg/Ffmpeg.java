@@ -1,5 +1,6 @@
 package kirill.subtitlemerger.logic.ffmpeg;
 
+import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.utils.process.ProcessException;
 import kirill.subtitlemerger.logic.utils.process.ProcessRunner;
 import lombok.extern.apachecommons.CommonsLog;
@@ -15,6 +16,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @CommonsLog
 public class Ffmpeg {
@@ -52,7 +54,7 @@ public class Ffmpeg {
      */
     public synchronized String getSubtitleText(
             int ffmpegStreamIndex,
-            SubtitleFormat format,
+            String format,
             File videoFile
     ) throws FfmpegException, InterruptedException {
         String consoleOutput;
@@ -71,7 +73,7 @@ public class Ffmpeg {
                             "0:" + ffmpegStreamIndex
                     )
             );
-            if (format == SubtitleFormat.ASS) {
+            if (Objects.equals(format, LogicConstants.SUB_STATION_ALPHA_FORMAT)) {
                 arguments.addAll(Arrays.asList("-c", "srt"));
             }
             arguments.add(TEMP_SUBTITLE_FILE.getAbsolutePath());

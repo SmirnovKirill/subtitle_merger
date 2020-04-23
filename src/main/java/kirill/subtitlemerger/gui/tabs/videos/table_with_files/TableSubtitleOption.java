@@ -34,6 +34,9 @@ public class TableSubtitleOption {
 
     private BooleanProperty selectedAsLower;
 
+    @Getter
+    private String format;
+
     public TableSubtitleOption(
             String id,
             String title,
@@ -44,7 +47,8 @@ public class TableSubtitleOption {
             String failedToLoadReason,
             UnavailabilityReason unavailabilityReason,
             boolean selectedAsUpper,
-            boolean selectedAsLower
+            boolean selectedAsLower,
+            String format
     ) {
         this.id = new SimpleStringProperty(id);
         this.title = new SimpleStringProperty(title);
@@ -56,6 +60,7 @@ public class TableSubtitleOption {
         this.unavailabilityReason = new SimpleObjectProperty<>(unavailabilityReason);
         this.selectedAsUpper = new SimpleBooleanProperty(selectedAsUpper);
         this.selectedAsLower = new SimpleBooleanProperty(selectedAsLower);
+        this.format = format;
     }
 
     public String getId() {

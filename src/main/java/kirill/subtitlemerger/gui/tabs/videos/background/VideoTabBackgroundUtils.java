@@ -24,6 +24,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -119,7 +120,8 @@ class VideoTabBackgroundUtils {
                             null,
                             null,
                             false,
-                            false
+                            false,
+                            LogicConstants.SUB_RIP_FORMAT
                     )
             );
         }
@@ -133,6 +135,7 @@ class VideoTabBackgroundUtils {
                 fileInfo.getSize(),
                 fileInfo.getLastModified(),
                 tableUnavailabilityReasonFrom(fileInfo.getUnavailabilityReason()),
+                fileInfo.getFormat(),
                 subtitleOptions,
                 haveHideableOptions,
                 null
@@ -156,7 +159,8 @@ class VideoTabBackgroundUtils {
                 null,
                 tableUnavailabilityReasonFrom(subtitleStream.getUnavailabilityReason()),
                 false,
-                false
+                false,
+                subtitleStream.getFormat()
         );
     }
 

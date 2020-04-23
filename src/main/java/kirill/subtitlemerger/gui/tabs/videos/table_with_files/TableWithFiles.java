@@ -310,17 +310,17 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         result.setAlignment(Pos.CENTER_LEFT);
         result.setPadding(new Insets(CELL_PADDING, CELL_PADDING, CELL_PADDING, CELL_PADDING + 1));
 
-        result.getChildren().add(new Label(unavailabilityReasonToString(fileInfo.getUnavailabilityReason())));
+        result.getChildren().add(new Label(unavailabilityReasonToString(fileInfo)));
 
         return result;
     }
 
-    private static String unavailabilityReasonToString(TableFileInfo.UnavailabilityReason reason) {
-        if (reason == null) {
+    private static String unavailabilityReasonToString(TableFileInfo fileInfo) {
+        if (fileInfo.getUnavailabilityReason() == null) {
             return "";
         }
 
-        switch (reason) {
+        switch (fileInfo.getUnavailabilityReason()) {
             case NO_EXTENSION:
                 return "File has no extension";
             case NOT_ALLOWED_EXTENSION:
@@ -328,7 +328,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
             case FFPROBE_FAILED:
                 return "Failed to get video info with the ffprobe";
             case NOT_ALLOWED_FORMAT:
-                return "Video has a format that is not allowed";
+                return "Video has a format that is not allowed (" + fileInfo.getFormat() + ")";
             default:
                 throw new IllegalStateException();
         }
@@ -583,9 +583,9 @@ public class TableWithFiles extends TableView<TableFileInfo> {
 
         GuiUtils.setFixedWidth(result, SELECT_OPTION_PANE_WIDTH);
 
-        setSelectOptionPaneTooltip(result, subtitleOption.getUnavailabilityReason());
+        setSelectOptionPaneTooltip(result, subtitleOption);
         subtitleOption.unavailabilityReasonProperty().addListener(
-                observable -> setSelectOptionPaneTooltip(result, subtitleOption.getUnavailabilityReason())
+                observable -> setSelectOptionPaneTooltip(result, subtitleOption)
         );
 
         RadioButton upper = new RadioButton("upper");
@@ -601,26 +601,23 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         return result;
     }
 
-    private static void setSelectOptionPaneTooltip(
-            Pane selectOptionPane,
-            TableSubtitleOption.UnavailabilityReason unavailabilityReason
-    ) {
-        if (unavailabilityReason == null) {
+    private static void setSelectOptionPaneTooltip(Pane selectOptionPane, TableSubtitleOption subtitleOption) {
+        if (subtitleOption.getUnavailabilityReason() == null) {
             Tooltip.install(selectOptionPane, null);
         } else {
-            Tooltip tooltip = GuiUtils.generateTooltip(unavailabilityReasonToString(unavailabilityReason));
+            Tooltip tooltip = GuiUtils.generateTooltip(unavailabilityReasonToString(subtitleOption));
             Tooltip.install(selectOptionPane, tooltip);
         }
     }
 
-    private static String unavailabilityReasonToString(TableSubtitleOption.UnavailabilityReason reason) {
-        if (reason == null) {
+    private static String unavailabilityReasonToString(TableSubtitleOption subtitleOption) {
+        if (subtitleOption.getUnavailabilityReason() == null) {
             return "";
         }
 
-        switch (reason) {
+        switch (subtitleOption.getUnavailabilityReason()) {
             case NOT_ALLOWED_FORMAT:
-                return "Subtitle has a not allowed format";
+                return "Subtitle has a not allowed format (" + subtitleOption.getFormat() + ")";
             case INCORRECT_FORMAT:
                 return "Subtitles have an incorrect format";
             default:

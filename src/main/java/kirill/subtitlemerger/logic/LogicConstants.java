@@ -59,6 +59,14 @@ public class LogicConstants {
             Charset.forName("windows-1257")
     );
 
+    public static final List<String> ALLOWED_VIDEO_FORMATS = Collections.singletonList("matroska,webm");
+
+    public static final String SUB_RIP_FORMAT = "subrip";
+
+    public static final String SUB_STATION_ALPHA_FORMAT = "ass";
+
+    public static final List<String> ALLOWED_SUBTITLE_FORMATS = Arrays.asList(SUB_RIP_FORMAT, SUB_STATION_ALPHA_FORMAT);
+
     private static List<LanguageAlpha3Code> getAllowedLanguages() {
         return Arrays.stream(LanguageAlpha3Code.values())
                 .filter(code -> code != LanguageAlpha3Code.undefined)

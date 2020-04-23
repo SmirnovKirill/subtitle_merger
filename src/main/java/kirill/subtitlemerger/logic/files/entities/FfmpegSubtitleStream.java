@@ -2,7 +2,6 @@ package kirill.subtitlemerger.logic.files.entities;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
-import kirill.subtitlemerger.logic.ffmpeg.SubtitleFormat;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
 
@@ -20,7 +19,7 @@ public class FfmpegSubtitleStream extends SubtitleOption {
      */
     private int ffmpegIndex;
 
-    private SubtitleFormat format;
+    private String format;
 
     private LanguageAlpha3Code language;
 
@@ -37,7 +36,7 @@ public class FfmpegSubtitleStream extends SubtitleOption {
             SubtitleOptionUnavailabilityReason unavailabilityReason,
             boolean selectedAsUpper,
             boolean selectedAsLower,
-            SubtitleFormat format,
+            String format,
             LanguageAlpha3Code language,
             String title,
             boolean defaultDisposition

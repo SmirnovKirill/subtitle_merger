@@ -32,6 +32,9 @@ public class TableFileInfo {
     private UnavailabilityReason unavailabilityReason;
 
     @Getter
+    private String format;
+
+    @Getter
     private List<TableSubtitleOption> subtitleOptions;
 
     @Getter
@@ -56,6 +59,7 @@ public class TableFileInfo {
             long size,
             LocalDateTime lastModified,
             UnavailabilityReason unavailabilityReason,
+            String format,
             List<TableSubtitleOption> subtitleOptions,
             boolean someOptionsHidden,
             ActionResult actionResult
@@ -68,6 +72,7 @@ public class TableFileInfo {
         this.size = size;
         this.lastModified = lastModified;
         this.unavailabilityReason = unavailabilityReason;
+        this.format = format;
         this.subtitleOptions = subtitleOptions;
         hideableOptionCount = calculateHideableOptionCount(subtitleOptions);
         this.someOptionsHidden = new SimpleBooleanProperty(someOptionsHidden);

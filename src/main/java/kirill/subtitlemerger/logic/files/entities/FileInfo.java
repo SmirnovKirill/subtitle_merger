@@ -1,6 +1,5 @@
 package kirill.subtitlemerger.logic.files.entities;
 
-import kirill.subtitlemerger.logic.ffmpeg.VideoFormat;
 import lombok.Getter;
 import lombok.Setter;
 import org.joda.time.LocalDateTime;
@@ -20,7 +19,7 @@ public class FileInfo {
 
     private long size;
 
-    private VideoFormat format;
+    private String format;
 
     /**
      * We will keep track of all the selected files even if they can't be used for subtitle merging (for better
@@ -35,7 +34,7 @@ public class FileInfo {
 
     public FileInfo(
             File file,
-            VideoFormat format,
+            String format,
             FileUnavailabilityReason unavailabilityReason,
             List<SubtitleOption> subtitleOptions,
             MergedSubtitleInfo mergedSubtitleInfo
