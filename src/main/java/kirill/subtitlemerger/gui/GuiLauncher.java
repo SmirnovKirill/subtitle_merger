@@ -38,13 +38,13 @@ public class GuiLauncher extends Application {
         closeSplashScreen();
 
         /*
-         * I've encountered a very strange behaviour - at first stage's width and height are set to their computed sizes
-         * but very soon after this method (start) is called during the startup window sizes are changed for a reason
-         * completely unknown to me. Sizes are changed because com.sun.glass.ui.Window::notifyResize is called. This
-         * method is called from a native method com.sun.glass.ui.gtk.GtkApplication::_runLoop so I can't understand why
-         * that happens. Anyway, I've discovered that if I set stage's width and height explicitly these original sizes
-         * will be restored after these weird changes. And it reproduces only in Kubuntu for me, in Windows 10
-         * and Arch everything works fine.
+         * I've encountered a very strange behaviour - at first the stage's width and height are set to their computed
+         * sizes but very soon after this method (start) is called during the startup window the sizes are changed for a
+         * reason completely unknown to me. Sizes are changed because the com.sun.glass.ui.Window::notifyResize is
+         * called. This method is called from a native method com.sun.glass.ui.gtk.GtkApplication::_runLoop so I can't
+         * understand why that happens. Anyway, I've discovered that if I set the stage's width and height explicitly
+         * these original sizes will be restored after these weird changes. And it reproduces only in Kubuntu for me, in
+         * Windows 10 and Arch everything works fine.
          */
         stage.setWidth(stage.getWidth());
         stage.setHeight(stage.getHeight());

@@ -33,7 +33,7 @@ public class BackgroundManager {
     }
 
     public void setCancellationPossible(boolean cancellationPossible) {
-        /* Property is usually bound to some gui element so it should be updated in the javafx thread. */
+        /* The property is usually bound to some gui element so it should be updated in the javafx thread. */
         Platform.runLater(() -> this.cancellationPossible.set(cancellationPossible));
     }
 
@@ -46,7 +46,7 @@ public class BackgroundManager {
     }
 
     public void setCancellationDescription(String cancellationDescription) {
-        /* Property is usually bound to some gui element so it should be updated in the javafx thread. */
+        /* The property is usually bound to some gui element so it should be updated in the javafx thread. */
         Platform.runLater(() -> this.cancellationDescription.set(cancellationDescription));
     }
 

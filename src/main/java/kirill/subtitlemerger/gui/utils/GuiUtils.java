@@ -36,10 +36,10 @@ import java.util.function.Consumer;
 @CommonsLog
 public class GuiUtils {
     /**
-     * Uses FXML loader to load the form based on the provided fxml file.
+     * Uses the FXML loader to load the form based on the provided fxml file.
      *
-     * @param path path to the fxml file.
-     * @return a wrapper containing root node and its controller.
+     * @param path the path to the fxml file.
+     * @return a wrapper containing the root node and its controller.
      * @throws IllegalStateException if something goes wrong during the process.
      */
     public static FormInfo loadForm(String path) {
@@ -71,11 +71,11 @@ public class GuiUtils {
     }
 
     /**
-     * Uses FXML loader to initialize the given control based on the provided fxml file.
+     * Uses the FXML loader to initialize the given control based on the provided fxml file.
      *
      * @param control the control to initialize
-     * @param path path to the fxml file. Note that it shouldn't contain fx:controller inside because the controller
-     *             for the control is the control itself.
+     * @param path the path to the fxml file. Note that it shouldn't contain a fx:controller inside because the
+     *            controller for the control is the control itself.
      * @throws IllegalStateException if something goes wrong during the process.
      */
     public static void initializeControl(Object control, String path) {
@@ -95,7 +95,7 @@ public class GuiUtils {
         }
     }
 
-    public static Stage generatePopupStage(String title, Parent node, Stage ownerStage) {
+    public static Stage generatePopupStage(String title, Parent rootNode, Stage ownerStage) {
         Stage result = new Stage();
 
         result.initOwner(ownerStage);
@@ -103,7 +103,7 @@ public class GuiUtils {
         result.setTitle(title);
         result.setResizable(false);
 
-        Scene scene = new Scene(node);
+        Scene scene = new Scene(rootNode);
         scene.getStylesheets().add("/gui/javafx/style.css");
         result.setScene(scene);
 
@@ -119,19 +119,6 @@ public class GuiUtils {
         controller.initialize(message, popupStage);
 
         popupStage.showAndWait();
-    }
-
-    public static boolean showAgreementPopup(String message, String yesText, String noText, Stage ownerStage) {
-        FormInfo nodeInfo = loadForm("/gui/javafx/forms/common/agreement_popup_form.fxml");
-
-        Stage popupStage = generatePopupStage("Please confirm", nodeInfo.getRootNode(), ownerStage);
-
-        AgreementPopupFormController controller = nodeInfo.getController();
-        controller.initialize(message, null, yesText, noText, popupStage);
-
-        popupStage.showAndWait();
-
-        return controller.getResult() == AgreementResult.YES;
     }
 
     public static AgreementResult showAgreementPopup(
@@ -153,6 +140,14 @@ public class GuiUtils {
         return controller.getResult();
     }
 
+    /**
+     * A brief version of the agreement popup without an "apply to all" option.
+     */
+    public static boolean showAgreementPopup(String message, String yesText, String noText, Stage ownerStage) {
+        AgreementResult result = showAgreementPopup(message, null, yesText, noText, ownerStage);
+        return result == AgreementResult.YES;
+    }
+
     public static void setVisibleAndManaged(Node node, boolean value) {
         node.setVisible(value);
         node.setManaged(value);
@@ -164,7 +159,7 @@ public class GuiUtils {
     }
 
     /**
-     * Returns the shortened version of a string if necessary. The string will be shortened only if its size is larger
+     * Returns the shortened version of the string if necessary. The string will be shortened only if its size is larger
      * than or equal to charsBeforeEllipsis + charsAfterEllipsis + 3. These 3 extra characters are needed because if
      * less than 3 characters are shortened it would look weird.
      *
@@ -353,7 +348,7 @@ public class GuiUtils {
         }
 
         /*
-         * There are two border cases - when the whole part is 99 or 9. Because after adding fractional part and
+         * There are two border cases - when the whole part is 99 or 9. Because after adding the fractional part and
          * rounding the whole part may start to have more digits than before.
          */
         if (wholePart.compareTo(BigInteger.valueOf(99)) != 0 && wholePart.compareTo(BigInteger.valueOf(9)) != 0) {
