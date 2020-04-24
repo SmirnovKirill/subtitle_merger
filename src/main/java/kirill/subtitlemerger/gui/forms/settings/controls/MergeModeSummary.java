@@ -18,7 +18,7 @@ public class MergeModeSummary extends GridPane {
     private Label diskUsageLabel;
 
     public MergeModeSummary() {
-        GuiUtils.initializeControl(this, "/gui/javafx/forms/settings/merge_mode_summary.fxml");
+        GuiUtils.initializeControl(this, "/gui/javafx/forms/settings/controls/merge_mode_summary.fxml");
     }
 
     public StringProperty convenienceTextProperty() {

@@ -32,7 +32,7 @@ public class ActionResultPane extends HBox {
     private BooleanProperty empty;
 
     public ActionResultPane() {
-        GuiUtils.initializeControl(this, "/gui/javafx/custom_controls/action_result_pane.fxml");
+        GuiUtils.initializeControl(this, "/gui/javafx/common_controls/action_result_pane.fxml");
 
         wrapText = new SimpleBooleanProperty(false);
         alwaysManaged = new SimpleBooleanProperty(false);
