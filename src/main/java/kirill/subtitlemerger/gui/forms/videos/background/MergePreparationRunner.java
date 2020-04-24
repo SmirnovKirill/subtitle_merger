@@ -6,7 +6,6 @@ import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableSubtitleOption;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithFiles;
-import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.logic.core.SubRipParser;
@@ -21,6 +20,7 @@ import kirill.subtitlemerger.logic.files.entities.FileWithSubtitles;
 import kirill.subtitlemerger.logic.files.entities.SubtitleOption;
 import kirill.subtitlemerger.logic.settings.MergeMode;
 import kirill.subtitlemerger.logic.settings.Settings;
+import kirill.subtitlemerger.logic.utils.Utils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
@@ -238,7 +238,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         for (FfmpegSubtitleStream ffmpegStream : streamsToLoad) {
             backgroundManager.updateMessage(
                     progressMessagePrefix + ": loading subtitles "
-                            + GuiUtils.languageToString(ffmpegStream.getLanguage()).toUpperCase()
+                            + Utils.languageToString(ffmpegStream.getLanguage()).toUpperCase()
                             + (StringUtils.isBlank(ffmpegStream.getTitle()) ? "" : " " + ffmpegStream.getTitle())
                             + "..."
             );

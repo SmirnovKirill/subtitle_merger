@@ -5,10 +5,8 @@ import javafx.application.Platform;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableSubtitleOption;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithFiles;
-import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
@@ -22,6 +20,8 @@ import kirill.subtitlemerger.logic.files.entities.FileWithSubtitles;
 import kirill.subtitlemerger.logic.files.entities.SubtitleOption;
 import kirill.subtitlemerger.logic.settings.MergeMode;
 import kirill.subtitlemerger.logic.settings.Settings;
+import kirill.subtitlemerger.logic.utils.Utils;
+import kirill.subtitlemerger.logic.utils.entities.ActionResult;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
@@ -73,7 +73,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
             FileInfo fileInfo = FileInfo.getById(fileMergeInfo.getId(), allFilesInfo);
 
             if (fileMergeInfo.getStatus() == MergePreparationRunner.FileMergeStatus.FAILED_TO_LOAD_SUBTITLES) {
-                String message = GuiUtils.getTextDependingOnCount(
+                String message = Utils.getTextDependingOnCount(
                         fileMergeInfo.getFailedToLoadSubtitlesCount(),
                         "Merge is unavailable because failed to load subtitles",
                         "Merge is unavailable because failed to load %d subtitles"
@@ -311,25 +311,25 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
         if (processedCount == 0) {
             warn = "Task has been cancelled, nothing was done";
         } else if (finishedSuccessfullyCount == allFileCount) {
-            success = GuiUtils.getTextDependingOnCount(
+            success = Utils.getTextDependingOnCount(
                     finishedSuccessfullyCount,
                     "Merge has finished successfully for the file",
                     "Merge has finished successfully for all %d files"
             );
         } else if (noAgreementCount == allFileCount) {
-            warn = GuiUtils.getTextDependingOnCount(
+            warn = Utils.getTextDependingOnCount(
                     noAgreementCount,
                     "Merge is not possible because you didn't agree to overwrite the file",
                     "Merge is not possible because you didn't agree to overwrite all %d files"
             );
         } else if (alreadyMergedCount == allFileCount) {
-            warn = GuiUtils.getTextDependingOnCount(
+            warn = Utils.getTextDependingOnCount(
                     alreadyMergedCount,
                     "Selected subtitles have already been merged",
                     "Selected subtitles have already been merged for all %d files"
             );
         } else if (failedCount == allFileCount) {
-            error = GuiUtils.getTextDependingOnCount(
+            error = Utils.getTextDependingOnCount(
                     failedCount,
                     "Failed to merge subtitles for the file",
                     "Failed to merge subtitles for all %d files"

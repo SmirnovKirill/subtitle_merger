@@ -4,13 +4,13 @@ import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithFiles;
-import kirill.subtitlemerger.gui.utils.GuiUtils;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
+import kirill.subtitlemerger.logic.files.entities.FileInfo;
 import kirill.subtitlemerger.logic.settings.SortBy;
 import kirill.subtitlemerger.logic.settings.SortDirection;
+import kirill.subtitlemerger.logic.utils.Utils;
 import kirill.subtitlemerger.logic.utils.file_validation.FileValidator;
-import kirill.subtitlemerger.logic.files.entities.FileInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
@@ -148,7 +148,7 @@ public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner
     }
 
     private static String unavailabilityReasonToString(DirectoryUnavailabilityReason reason, String path) {
-        path = GuiUtils.getShortenedString(path, 20, 40);
+        path = Utils.getShortenedString(path, 20, 40);
 
         switch (reason) {
             case PATH_EMPTY:

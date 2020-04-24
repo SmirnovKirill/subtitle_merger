@@ -7,8 +7,8 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
-import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
+import kirill.subtitlemerger.logic.settings.Settings;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 

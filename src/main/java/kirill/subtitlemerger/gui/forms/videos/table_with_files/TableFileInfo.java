@@ -1,7 +1,7 @@
 package kirill.subtitlemerger.gui.forms.videos.table_with_files;
 
 import javafx.beans.property.*;
-import kirill.subtitlemerger.gui.utils.entities.ActionResult;
+import kirill.subtitlemerger.logic.utils.entities.ActionResult;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;

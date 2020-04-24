@@ -14,10 +14,11 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import kirill.subtitlemerger.gui.GuiConstants;
-import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.common_controls.ActionResultPane;
-import kirill.subtitlemerger.gui.utils.entities.ActionResult;
+import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.logic.LogicConstants;
+import kirill.subtitlemerger.logic.utils.Utils;
+import kirill.subtitlemerger.logic.utils.entities.ActionResult;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
@@ -255,7 +256,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         Label sizeTitle = new Label("size");
         Label lastModifiedTitle = new Label("last modified");
 
-        Label size = new Label(GuiUtils.getFileSizeTextual(fileInfo.getSize(), false));
+        Label size = new Label(Utils.getFileSizeTextual(fileInfo.getSize(), false));
         Label lastModified = new Label(FORMATTER.print(fileInfo.getLastModified()));
 
         result.addRow(0, sizeTitle, size);
@@ -468,7 +469,7 @@ public class TableWithFiles extends TableView<TableFileInfo> {
         Label sizeLabel = new Label();
         sizeLabel.textProperty().bind(
                 Bindings.createStringBinding(() ->
-                        "Size: " + GuiUtils.getFileSizeTextual(subtitleOption.getSize(), true),
+                        "Size: " + Utils.getFileSizeTextual(subtitleOption.getSize(), true),
                         subtitleOption.sizeProperty()
                 )
         );

@@ -2,13 +2,10 @@ package kirill.subtitlemerger.gui.forms.videos.background;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.application.Platform;
-import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableSubtitleOption;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithFiles;
-import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
-import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
@@ -17,9 +14,11 @@ import kirill.subtitlemerger.logic.files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.files.entities.FileInfo;
 import kirill.subtitlemerger.logic.files.entities.FileUnavailabilityReason;
 import kirill.subtitlemerger.logic.files.entities.SubtitleOptionUnavailabilityReason;
+import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.logic.settings.SortBy;
 import kirill.subtitlemerger.logic.settings.SortDirection;
 import kirill.subtitlemerger.logic.utils.Utils;
+import kirill.subtitlemerger.logic.utils.entities.ActionResult;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.EnumUtils;
@@ -164,7 +163,7 @@ class VideoTabBackgroundUtils {
     }
 
     private static String tableOptionTitleFrom(FfmpegSubtitleStream stream) {
-        String result = GuiUtils.languageToString(stream.getLanguage()).toUpperCase();
+        String result = Utils.languageToString(stream.getLanguage()).toUpperCase();
 
         if (!StringUtils.isBlank(stream.getTitle())) {
             result += " (" + stream.getTitle() + ")";
@@ -299,7 +298,7 @@ class VideoTabBackgroundUtils {
                 : "Getting subtitles ";
 
         return progressPrefix
-                + GuiUtils.languageToString(subtitleStream.getLanguage()).toUpperCase()
+                + Utils.languageToString(subtitleStream.getLanguage()).toUpperCase()
                 + (StringUtils.isBlank(subtitleStream.getTitle()) ? "" : " " + subtitleStream.getTitle())
                 + " in " + file.getName();
     }
@@ -342,13 +341,13 @@ class VideoTabBackgroundUtils {
         } else if (processedCount == 0) {
             warn = "Task has been cancelled, nothing was loaded";
         } else if (loadedSuccessfullyCount == subtitlesToLoadCount) {
-            success = GuiUtils.getTextDependingOnCount(
+            success = Utils.getTextDependingOnCount(
                     loadedSuccessfullyCount,
                     "Subtitles have been loaded successfully",
                     "All %d subtitles have been loaded successfully"
             );
         } else if (failedToLoadCount == subtitlesToLoadCount) {
-            error = GuiUtils.getTextDependingOnCount(
+            error = Utils.getTextDependingOnCount(
                     failedToLoadCount,
                     "Failed to load subtitles",
                     "Failed to load all %d subtitles"
@@ -364,7 +363,7 @@ class VideoTabBackgroundUtils {
 
             if (processedCount != subtitlesToLoadCount) {
                 if (loadedSuccessfullyCount == 0) {
-                    warn = GuiUtils.getTextDependingOnCount(
+                    warn = Utils.getTextDependingOnCount(
                             subtitlesToLoadCount - processedCount,
                             String.format(
                                     "1/%d subtitle loadings has been cancelled",

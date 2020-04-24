@@ -14,7 +14,6 @@ import kirill.subtitlemerger.gui.forms.common.SubtitlePreviewResult;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.background.BackgroundCallback;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import kirill.subtitlemerger.gui.utils.entities.FileOrigin;
 import kirill.subtitlemerger.gui.utils.entities.FormInfo;
 import kirill.subtitlemerger.logic.LogicConstants;
@@ -26,6 +25,7 @@ import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.settings.SettingException;
 import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.logic.utils.Utils;
+import kirill.subtitlemerger.logic.utils.entities.ActionResult;
 import kirill.subtitlemerger.logic.utils.file_validation.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -477,7 +477,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
     }
 
     private static String getShortenedPath(String path) {
-        return GuiUtils.getShortenedString(path, 20, 40);
+        return Utils.getShortenedString(path, 20, 40);
     }
 
     private static String getErrorText(String path, IncorrectMergedFileReason reason) {
@@ -559,7 +559,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
     private boolean agreeToOverwrite(MergedFileInfo mergedFileInfo) {
         agreeToOverwriteInProgress = true;
 
-        String fileName = GuiUtils.getShortenedString(
+        String fileName = Utils.getShortenedString(
                 mergedFileInfo.getFile().getName(),
                 0,
                 32

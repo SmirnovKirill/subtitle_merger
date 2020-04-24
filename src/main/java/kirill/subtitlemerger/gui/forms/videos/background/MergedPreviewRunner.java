@@ -4,7 +4,6 @@ import javafx.application.Platform;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableSubtitleOption;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithFiles;
-import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.logic.core.SubRipParser;
@@ -17,6 +16,7 @@ import kirill.subtitlemerger.logic.files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.files.entities.FileInfo;
 import kirill.subtitlemerger.logic.files.entities.MergedSubtitleInfo;
 import kirill.subtitlemerger.logic.files.entities.SubtitleOption;
+import kirill.subtitlemerger.logic.utils.Utils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
@@ -159,7 +159,7 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
 
     private static String getUpdateMessage(FfmpegSubtitleStream subtitleStream, File file) {
         return "Getting subtitles "
-                + GuiUtils.languageToString(subtitleStream.getLanguage()).toUpperCase()
+                + Utils.languageToString(subtitleStream.getLanguage()).toUpperCase()
                 + (StringUtils.isBlank(subtitleStream.getTitle()) ? "" : " " + subtitleStream.getTitle())
                 + " in " + file.getName();
     }

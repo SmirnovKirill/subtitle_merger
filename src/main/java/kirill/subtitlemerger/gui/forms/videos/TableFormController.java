@@ -9,6 +9,10 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
+import kirill.subtitlemerger.gui.common_controls.ActionResultPane;
+import kirill.subtitlemerger.gui.forms.common.AgreementResult;
+import kirill.subtitlemerger.gui.forms.common.BackgroundTaskFormController;
+import kirill.subtitlemerger.gui.forms.common.SubtitlePreviewFormController;
 import kirill.subtitlemerger.gui.forms.videos.background.*;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableSubtitleOption;
@@ -16,13 +20,8 @@ import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.background.BackgroundCallback;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.gui.forms.common.BackgroundTaskFormController;
-import kirill.subtitlemerger.gui.utils.entities.ActionResult;
 import kirill.subtitlemerger.gui.utils.entities.FileOrigin;
 import kirill.subtitlemerger.gui.utils.entities.FormInfo;
-import kirill.subtitlemerger.gui.common_controls.ActionResultPane;
-import kirill.subtitlemerger.gui.forms.common.AgreementResult;
-import kirill.subtitlemerger.gui.forms.common.SubtitlePreviewFormController;
 import kirill.subtitlemerger.logic.files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.files.entities.FileInfo;
 import kirill.subtitlemerger.logic.files.entities.FileWithSubtitles;
@@ -31,6 +30,8 @@ import kirill.subtitlemerger.logic.settings.SettingException;
 import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.logic.settings.SortBy;
 import kirill.subtitlemerger.logic.settings.SortDirection;
+import kirill.subtitlemerger.logic.utils.Utils;
+import kirill.subtitlemerger.logic.utils.entities.ActionResult;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.EnumUtils;
@@ -138,7 +139,7 @@ public class TableFormController extends BackgroundTaskFormController {
 
     private void updateSelectedLabelText(int selected) {
         selectedLabel.setText(
-                GuiUtils.getTextDependingOnCount(
+                Utils.getTextDependingOnCount(
                         selected,
                         "1 file selected",
                         "%d files selected"
@@ -399,7 +400,7 @@ public class TableFormController extends BackgroundTaskFormController {
             FfmpegSubtitleStream ffmpegStream = (FfmpegSubtitleStream) subtitleOption;
 
             String title = fileInfo.getFile().getName()
-                    + ", " + GuiUtils.languageToString(ffmpegStream.getLanguage()).toUpperCase()
+                    + ", " + Utils.languageToString(ffmpegStream.getLanguage()).toUpperCase()
                     + (!StringUtils.isBlank(ffmpegStream.getTitle()) ? " " + ffmpegStream.getTitle() : "");
 
             result.initializeSimple(
@@ -570,7 +571,7 @@ public class TableFormController extends BackgroundTaskFormController {
         if (option instanceof FfmpegSubtitleStream) {
             FfmpegSubtitleStream ffmpegStream = (FfmpegSubtitleStream) option;
 
-            return GuiUtils.languageToString(ffmpegStream.getLanguage()).toUpperCase()
+            return Utils.languageToString(ffmpegStream.getLanguage()).toUpperCase()
                     + (!StringUtils.isBlank(ffmpegStream.getTitle()) ? " " + ffmpegStream.getTitle() : "");
         } else if (option instanceof FileWithSubtitles) {
             FileWithSubtitles fileWithSubtitles = (FileWithSubtitles) option;
@@ -934,9 +935,9 @@ public class TableFormController extends BackgroundTaskFormController {
 
           return Optional.of(
                   "Merge requires approximately "
-                          + GuiUtils.getFileSizeTextual(preparationResult.getRequiredTempSpace(), false)
+                          + Utils.getFileSizeTextual(preparationResult.getRequiredTempSpace(), false)
                           + " of free disk space during the process but only "
-                          + GuiUtils.getFileSizeTextual(preparationResult.getAvailableTempSpace(), false)
+                          + Utils.getFileSizeTextual(preparationResult.getAvailableTempSpace(), false)
                           + " is available, proceed anyway?"
           );
       } else {
@@ -956,7 +957,7 @@ public class TableFormController extends BackgroundTaskFormController {
 
         int filesToOverwriteLeft = mergePreparationResult.getFilesToOverwrite().size();
         for (File fileToOverwrite : mergePreparationResult.getFilesToOverwrite()) {
-            String fileName = GuiUtils.getShortenedString(
+            String fileName = Utils.getShortenedString(
                     fileToOverwrite.getName(),
                     0,
                     32

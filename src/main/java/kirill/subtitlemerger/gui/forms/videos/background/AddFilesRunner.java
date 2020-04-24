@@ -4,13 +4,13 @@ import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithFiles;
-import kirill.subtitlemerger.gui.utils.GuiUtils;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
-import kirill.subtitlemerger.gui.utils.entities.ActionResult;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.logic.files.entities.FileInfo;
 import kirill.subtitlemerger.logic.settings.SortBy;
 import kirill.subtitlemerger.logic.settings.SortDirection;
+import kirill.subtitlemerger.logic.utils.Utils;
+import kirill.subtitlemerger.logic.utils.entities.ActionResult;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -123,19 +123,19 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
         int actuallyAdded = taskResult.getActuallyAddedCount();
 
         if (actuallyAdded == 0) {
-            success = GuiUtils.getTextDependingOnCount(
+            success = Utils.getTextDependingOnCount(
                     filesToAdd,
                     "File has been added already",
                     "All %d files have been added already"
             );
         } else if (filesToAdd == actuallyAdded) {
-            success = GuiUtils.getTextDependingOnCount(
+            success = Utils.getTextDependingOnCount(
                     actuallyAdded,
                     "File has been added successfully",
                     "All %d files have been added successfully"
             );
         } else {
-            success = GuiUtils.getTextDependingOnCount(
+            success = Utils.getTextDependingOnCount(
                     actuallyAdded,
                     String.format("1/%d files has been added successfully, ", filesToAdd),
                     String.format("%%d/%d files have been added successfully, ", filesToAdd)

@@ -1,21 +1,20 @@
 package kirill.subtitlemerger.gui.forms.videos.background;
 
 import javafx.application.Platform;
-import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableSubtitleOption;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithFiles;
-import kirill.subtitlemerger.gui.utils.GuiUtils;
-import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
-import kirill.subtitlemerger.gui.utils.entities.ActionResult;
+import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.files.entities.FileInfo;
+import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.logic.utils.Utils;
+import kirill.subtitlemerger.logic.utils.entities.ActionResult;
 import lombok.AllArgsConstructor;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
@@ -236,7 +235,7 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
                 : "Getting subtitles ";
 
         return progressPrefix
-                + GuiUtils.languageToString(subtitleStream.getLanguage()).toUpperCase()
+                + Utils.languageToString(subtitleStream.getLanguage()).toUpperCase()
                 + (StringUtils.isBlank(subtitleStream.getTitle()) ? "" : " " + subtitleStream.getTitle())
                 + " in " + file.getName();
     }
@@ -250,7 +249,7 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
             return;
         }
 
-        String message = GuiUtils.getTextDependingOnCount(
+        String message = Utils.getTextDependingOnCount(
                 failedToLoadForFile,
                 "Auto-select has failed because failed to load subtitles",
                 "Auto-select has failed because failed to load %d subtitles"
@@ -273,19 +272,19 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
         if (processedCount == 0) {
             warn = "Task has been cancelled, nothing was done";
         } else if (finishedSuccessfullyCount == allFileCount) {
-            success = GuiUtils.getTextDependingOnCount(
+            success = Utils.getTextDependingOnCount(
                     finishedSuccessfullyCount,
                     "Auto-selection has finished successfully for the file",
                     "Auto-selection has finished successfully for all %d files"
             );
         } else if (notPossibleCount == allFileCount) {
-            warn = GuiUtils.getTextDependingOnCount(
+            warn = Utils.getTextDependingOnCount(
                     notPossibleCount,
                     "Auto-selection is not possible for this file",
                     "Auto-selection is not possible for all %d files"
             );
         } else if (failedCount == allFileCount) {
-            error = GuiUtils.getTextDependingOnCount(
+            error = Utils.getTextDependingOnCount(
                     failedCount,
                     "Failed to perform auto-selection for the file",
                     "Failed to perform auto-selection for all %d files"
