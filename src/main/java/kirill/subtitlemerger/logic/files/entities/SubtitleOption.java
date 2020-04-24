@@ -20,8 +20,8 @@ public abstract class SubtitleOption {
     protected Charset encoding;
 
     /**
-     * We will keep track of all options for the file even if they can't be used for subtitle merging (for better
-     * diagnostics). Enum contains the reason why this option can't be used for subtitle merging.
+     * We will keep track of all options for the file even if they can't be used for the subtitle merging (for better
+     * diagnostics). The enum contains the reason why this option can't be used for the subtitle merging.
      */
     private SubtitleOptionUnavailabilityReason unavailabilityReason;
 

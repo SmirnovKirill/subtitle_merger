@@ -7,7 +7,7 @@ import java.util.Map;
 
 /**
  * This class is a very simple but helpful cache implementation. It stores items eternally unless the number of the
- * items exceeds maxSize in which case the oldest item is evicted.
+ * items exceeds the maxSize in which case the oldest item is evicted.
  */
 @AllArgsConstructor
 public class CacheMap<K,V> extends LinkedHashMap<K, V> {

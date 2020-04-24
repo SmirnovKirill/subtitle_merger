@@ -40,13 +40,15 @@ public class SubRipWriter {
     }
 
     /**
-     * This method removes HTML and ASS tags using regular expressions. I realize that it's not right to work with HTML
-     * using regular expressions and I could have used jsoup to clear tags but here are the arguments not to do it:
-     * 1) Subtitle text is not an html text, it's a regular text with html tags as far as I know. So for example string
-     * "<test" is correct in terms of subtitles but incorrect in terms of HTML because brackets that are not tags have
-     * to be encoded. So if I use jsoup it will simply remove the text "<test" completely instead of leaving it as is.
+     * This method removes HTML and SubStation Alpha tags using regular expressions. I realize that it's not right to
+     * work with HTML using regular expressions and I could have used jsoup to clear tags but here are the arguments not
+     * to do it:
+     * 1) A subtitle text is not an html text, it's a regular text with html tags as far as I know. So for example the
+     * string "<test" is correct in terms of subtitles but incorrect in terms of HTML because brackets that are not tags
+     * have to be encoded. So if I use jsoup it will simply remove the text "<test" completely instead of leaving it as
+     * is.
      * 2) All not removed basic html entities will be html-encoded so I have to decode them back.
-     * 3) Even if I use jsoup there are no well-known libraries for removing ASS tags.
+     * 3) Even if I use jsoup there are no well-known libraries for removing SubStation Alpha tags.
      * 4) Regular expressions are faster than jsoup.
      * 5) If it's possible not to use another library it's better to do so to reduce the jar's size.
      * So I think in general for our purposes regular expressions will suffice.

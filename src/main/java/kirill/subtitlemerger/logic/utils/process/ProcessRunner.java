@@ -20,17 +20,18 @@ import java.util.concurrent.TimeoutException;
 @CommonsLog
 public class ProcessRunner {
     /**
-     * This is a helper method to run native processes. The main feature of this class is work with the console output.
-     * Output is handled in a separate thread so the process can be properly interrupted. Otherwise if output is being
-     * read in the main thread, interruption will have no effect because Reader::read method ignores interruptions.
+     * This is a helper method to run native processes. The main feature of this class is the work with the console
+     * output. The output is handled in a separate thread so the process can be properly interrupted. Otherwise if the
+     * output is being read in the main thread, an interruption will have no effect because the Reader::read method
+     * ignores interruptions.
      *
      * @param arguments command line arguments to start the process
-     * @return string containing the console output (standard and error streams are combined, it's convenient
-     * for out goals)
+     * @return the string containing the console output (standard and error streams are combined, it's convenient for
+     * our goals)
      * @throws ProcessException with different codes inside when errors happen
      */
     public static String run(List<String> arguments) throws ProcessException, InterruptedException {
-        log.debug("run process " + StringUtils.join(arguments, " "));
+        log.debug("run the process " + StringUtils.join(arguments, " "));
 
         Process process = startProcess(arguments);
         String consoleOutput = readAllConsoleOutput(process);
@@ -41,7 +42,7 @@ public class ProcessRunner {
         }
 
         if (consoleOutput == null) {
-            log.error("console output is null, that can't happen");
+            log.error("the console output is null, that can't happen, most likely a bug");
             throw new IllegalStateException();
         }
 
@@ -73,10 +74,10 @@ public class ProcessRunner {
                 OutputStream ignored3 = process.getOutputStream()
         ) {
             result = task.get();
-            log.debug("process console output: " + result);
+            log.debug("the process's console output: " + result);
             return result;
         } catch (InterruptedException e) {
-            log.info("process is going to be terminated because of the interruption");
+            log.info("the process is going to be terminated because of the interruption");
 
             closeQuietly(process.getInputStream());
             closeQuietly(process.getErrorStream());
@@ -84,7 +85,7 @@ public class ProcessRunner {
 
             try {
                 result = task.get(1000, TimeUnit.MILLISECONDS);
-                log.debug("process console output: " + result);
+                log.debug("the process's console output: " + result);
             } catch (TimeoutException timeoutException) {
                 log.error("failed to wait for the thread after closing the streams, something is wrong");
             } catch (InterruptedException ignored) {
@@ -102,7 +103,7 @@ public class ProcessRunner {
                 throw (ProcessException) cause;
             }
 
-            log.error("process has failed for an unexpected reason: " + ExceptionUtils.getStackTrace(cause));
+            log.error("the process has failed for an unexpected reason: " + ExceptionUtils.getStackTrace(cause));
             throw new ProcessException(ProcessException.Code.FAILED_TO_READ_OUTPUT, null);
         } catch (IOException e) {
             log.warn("failed to close the streams: " + ExceptionUtils.getStackTrace(e));
@@ -124,7 +125,7 @@ public class ProcessRunner {
     ) throws ProcessException, InterruptedException {
         try {
             if (!process.waitFor(5000, TimeUnit.MILLISECONDS)) {
-                log.error("process has not finished in 5 seconds after producing all the output, that's weird");
+                log.error("the process has not finished in 5 seconds after producing all the output, that's weird");
                 process.destroyForcibly();
                 throw new ProcessException(ProcessException.Code.PROCESS_KILLED, consoleOutput);
             }
@@ -138,9 +139,9 @@ public class ProcessRunner {
         ReadAllConsoleOutputTask(Process process) {
             super(() -> {
                 /*
-                 * Code below is basically copied from the IOUtils::toString. I decided to make my own implementation
-                 * instead of using the existing one because if some exception occurs I want to see what output was
-                 * generated before that exception for better diagnostics.
+                 * The code below is basically copied from the IOUtils::toString. I decided to make my own
+                 * implementation instead of using the existing one because if some exception occurs I want to see what
+                 * output was generated before that exception for better diagnostics.
                  */
                 StringBuilderWriter result = new StringBuilderWriter();
 

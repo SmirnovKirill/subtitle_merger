@@ -23,7 +23,7 @@ public class SubRipParser {
 
     /*
      * The main idea of this method is to find lines with time ranges, they are the most stable and reliable parts of
-     * the text with subtitles.
+     * a text with subtitles.
      */
     public static Subtitles from(String text) throws SubtitleFormatException {
         List<Subtitle> result = new ArrayList<>();
@@ -38,48 +38,48 @@ public class SubRipParser {
         }
 
         /*
-         * linesBeforeTimeLine contains at least one line with the subtitle number and arbitrary number of blank lines,
-         * linesAfterTimeLine contains the text of the subtitle and the number of the following subtitle if it's
+         * linesBeforeTimeRange contains at least one line with the subtitle number and an arbitrary number of blank
+         * lines, linesAfterTimeRange contains the text of the subtitle and the number of the following subtitle if it's
          * present.
          */
-        List<String> linesBeforeTimeLine = new ArrayList<>();
-        List<String> linesAfterTimeLine = new ArrayList<>();
+        List<String> linesBeforeTimeRange = new ArrayList<>();
+        List<String> linesAfterTimeRange = new ArrayList<>();
         Range<LocalTime> timeRange = null;
 
         for (String line : LogicConstants.LINE_SEPARATOR_PATTERN.split(text)) {
             if (isLineWithTimeRange(line)) {
                 if (timeRange != null) {
-                    /* We can get here only after parsing the second line with time range.*/
-                    validateNumber(linesBeforeTimeLine);
-                    List<String> subtitleLines =  getTrimmedLines(
-                            linesAfterTimeLine.subList(0, linesAfterTimeLine.size() - 1)
+                    /* We can get here only after parsing the second line with the time range.*/
+                    validateNumber(linesBeforeTimeRange);
+                    List<String> subtitleLines = getTrimmedLines(
+                            linesAfterTimeRange.subList(0, linesAfterTimeRange.size() - 1)
                     );
                     result.add(new Subtitle(timeRange.getMinimum(), timeRange.getMaximum(), subtitleLines));
 
-                    linesBeforeTimeLine.clear();
-                    linesBeforeTimeLine.add(linesAfterTimeLine.get(linesAfterTimeLine.size() - 1));
-                    linesAfterTimeLine = new ArrayList<>();
+                    linesBeforeTimeRange.clear();
+                    linesBeforeTimeRange.add(linesAfterTimeRange.get(linesAfterTimeRange.size() - 1));
+                    linesAfterTimeRange = new ArrayList<>();
                 }
 
                 timeRange = getTimeRange(line);
             } else {
                 if (timeRange == null) {
                     /*
-                     * We can get here only before parsing the first line with time range, after that lines before will
-                     * be extracted from lines after.
+                     * We can get here only before parsing the first line with the time range, after that lines before
+                     * will be extracted from the lines after.
                      */
-                    linesBeforeTimeLine.add(line);
+                    linesBeforeTimeRange.add(line);
                 } else {
-                    linesAfterTimeLine.add(line);
+                    linesAfterTimeRange.add(line);
                 }
             }
         }
 
         if (timeRange != null) {
-            validateNumber(linesBeforeTimeLine);
-            List<String> subtitleLines = getTrimmedLines(linesAfterTimeLine);
+            validateNumber(linesBeforeTimeRange);
+            List<String> subtitleLines = getTrimmedLines(linesAfterTimeRange);
             result.add(new Subtitle(timeRange.getMinimum(), timeRange.getMaximum(), subtitleLines));
-        } else if (!CollectionUtils.isEmpty(linesBeforeTimeLine)) {
+        } else if (!CollectionUtils.isEmpty(linesBeforeTimeRange)) {
             throw new SubtitleFormatException();
         }
 
@@ -101,7 +101,7 @@ public class SubRipParser {
     private static Range<LocalTime> getTimeRange(String line) throws SubtitleFormatException {
         Matcher matcher = TIME_RANGE_PATTERN.matcher(line.trim());
         if (!matcher.matches()) {
-            log.error("line doesn't match time range pattern, most likely a bug");
+            log.error("the line doesn't match the time range pattern, most likely a bug");
             throw new IllegalStateException();
         }
 
@@ -145,7 +145,7 @@ public class SubRipParser {
     }
 
     /**
-     * @return lines with leading and trailing blank lines removed.
+     * @return lines with the leading and trailing blank lines removed.
      */
     private static List<String> getTrimmedLines(List<String> lines) {
         Integer firstNotBlankIndex = null;

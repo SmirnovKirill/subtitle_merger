@@ -60,8 +60,8 @@ public class Ffmpeg {
         String consoleOutput;
         try {
             /*
-             * We have to pass -y to agree with file overwriting, it's always required because java will have created
-             * temporary file by the time ffmpeg is called.
+             * We have to pass -y to agree with the file overwriting, it's always required because java will have
+             * created a temporary file by the time ffmpeg is called.
              */
             List<String> arguments = new ArrayList<>(
                     Arrays.asList(
@@ -86,7 +86,7 @@ public class Ffmpeg {
         try {
             return FileUtils.readFileToString(TEMP_SUBTITLE_FILE, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            log.warn("failed to read subtitles from the file: " + ExceptionUtils.getStackTrace(e));
+            log.warn("failed to read the subtitles from the file: " + ExceptionUtils.getStackTrace(e));
             throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, consoleOutput);
         }
     }
@@ -100,7 +100,7 @@ public class Ffmpeg {
         /*
          * Ffmpeg can't add subtitles on the fly. So we need to add subtitles to some temporary file
          * and then rename it. Later we'll also check that the size of the new file is bigger than the size of the
-         * original one because it's important not to spoil the original file with video.
+         * original one because it's important not to spoil the original file with the video.
          */
         File outputTemp = new File(
                 injectInfo.getDirectoryForTempFile(),
@@ -110,7 +110,7 @@ public class Ffmpeg {
         try {
             FileUtils.writeStringToFile(TEMP_SUBTITLE_FILE, injectInfo.getSubtitles(), StandardCharsets.UTF_8);
         } catch (IOException e) {
-            log.warn("failed to write merged subtitles to the temp file: " + ExceptionUtils.getStackTrace(e));
+            log.warn("failed to write the merged subtitles to the temporary file: " + ExceptionUtils.getStackTrace(e));
             throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, null);
         }
 
@@ -124,14 +124,14 @@ public class Ffmpeg {
             }
 
             if (outputTemp.length() <= injectInfo.getFileWithVideo().length()) {
-                log.error("resulting file size is less than the original one");
+                log.error("the resulting file size is less than the original one");
                 throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, consoleOutput);
             }
 
             overwriteOriginalVideo(outputTemp, injectInfo.getFileWithVideo(), consoleOutput);
         } finally {
             if (outputTemp.exists() && !outputTemp.delete()) {
-                log.warn("failed to delete temp video file " + outputTemp.getAbsolutePath());
+                log.warn("failed to delete the temporary video file " + outputTemp.getAbsolutePath());
             }
         }
     }
@@ -191,25 +191,25 @@ public class Ffmpeg {
     ) throws FfmpegException {
         /*
          * Save this flag here to restore it at the end of the method. Because otherwise if the file has had only
-         * read access initially we will give it write access as well before renaming, and leave it like that.
+         * read access initially we will give it the write access as well before renaming, and leave it like that.
          */
         boolean originallyWritable = fileWithVideo.canWrite();
 
         if (!fileWithVideo.setWritable(true, true)) {
-            log.warn("failed to make video file " + fileWithVideo.getAbsolutePath() + " writable");
+            log.warn("failed to make the video file " + fileWithVideo.getAbsolutePath() + " writable");
             throw new FfmpegException(FfmpegException.Code.FAILED_TO_MOVE_TEMP_VIDEO, consoleOutput);
         }
 
         try {
             Files.move(outputTemp.toPath(), fileWithVideo.toPath(), StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
-            log.warn("failed to move temp video: " + ExceptionUtils.getStackTrace(e));
+            log.warn("failed to move the temporary video: " + ExceptionUtils.getStackTrace(e));
             throw new FfmpegException(FfmpegException.Code.FAILED_TO_MOVE_TEMP_VIDEO, consoleOutput);
         }
 
         if (!originallyWritable) {
             if (!fileWithVideo.setWritable(false, true)) {
-                log.warn("failed to make video file " + fileWithVideo.getAbsolutePath() + " not writable");
+                log.warn("failed to make the video file " + fileWithVideo.getAbsolutePath() + " not writable");
             }
         }
     }

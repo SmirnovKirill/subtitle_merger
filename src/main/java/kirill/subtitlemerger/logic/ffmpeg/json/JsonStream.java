@@ -17,7 +17,7 @@ public class JsonStream {
     /*
      * Ffmpeg uses ISO 639-2 for language codes, below is the SO answer from one of the ffmpeg's developers.
      * https://stackoverflow.com/questions/44351606/ffmpeg-set-the-language-of-an-audio-stream.
-     * Later it turned out that there's more to the format, it's possible to use hyphens as well, see the documentation
+     * Later I found out that there's more to the format, it's possible to use hyphens as well, see the documentation
      * https://www.ffmpeg.org/ffmpeg-formats.html#matroska.
      */
     private Map<String, String> tags;

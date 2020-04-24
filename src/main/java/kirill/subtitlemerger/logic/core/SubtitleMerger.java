@@ -113,7 +113,7 @@ public class SubtitleMerger {
     }
 
     /*
-     * We should check only current index and the next one (if there is one) because subtitles go consequentially.
+     * We should check only the current index and the next one (if there is one) because subtitles go consequentially.
      */
     private static Optional<Integer> getIndexMatchingTime(
             int currentIndex,
@@ -152,11 +152,11 @@ public class SubtitleMerger {
      * This method fixes "jumps" that appear after splitting into smaller segments. If for example for some segment
      * there are lines from only one source (upper) and on the next segment lines from the other source (lower)
      * are added it looks like the jump of the lines from the upper source because for some period of time they go alone
-     * and later when lines from the other source are added they are not alone anymore and are moved to the top.
+     * and later when the lines from the other source are added they are not alone anymore and are moved to the top.
      * This method kind of "expands" subtitles so they start and end together at the same time if they
      * appear together somewhere. If some lines are taken from the only one source no expanding happens - this is the
-     * common case for english subtitles when there are descriptions of sounds that usually are not present for
-     * other languages, so no expanding happens there.
+     * common case for english subtitles where there are descriptions of sounds that are usually not present for other
+     * languages, so no expanding happens there.
      */
     private static List<MergerSubtitle> getExpandedSubtitles(
             List<MergerSubtitle> subtitles

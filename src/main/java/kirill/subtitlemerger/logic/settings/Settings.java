@@ -73,7 +73,7 @@ public class Settings {
     }
 
     /**
-     * @return value of the given type from the preferences if the value is not empty and is valid.
+     * @return the value of the given type from the preferences if the value is not empty and is valid.
      */
     private static <T> Optional<T> getSetting(
             SettingType settingType,
@@ -88,7 +88,7 @@ public class Settings {
         try {
             return Optional.of(validator.getValidatedValue(rawValue));
         } catch (SettingException e) {
-            log.warn("incorrect value for " + settingType.getCode() + " in saved preferences: " + e.getMessage());
+            log.warn("an incorrect value for " + settingType.getCode() + " in saved preferences: " + e.getMessage());
             return Optional.empty();
         }
     }
@@ -100,7 +100,7 @@ public class Settings {
 
         File result = new File(rawValue);
         if (!result.exists() || !result.isDirectory()) {
-            throw new SettingException("file " + rawValue + " does not exist or is not a directory");
+            throw new SettingException("the file " + rawValue + " does not exist or is not a directory");
         }
 
         return result;
@@ -113,11 +113,11 @@ public class Settings {
 
         LanguageAlpha3Code result = LanguageAlpha3Code.getByCodeIgnoreCase(rawValue);
         if (result == null) {
-            throw new SettingException("language code " + rawValue + " is not valid");
+            throw new SettingException("the language code " + rawValue + " is not valid");
         }
 
         if (!LogicConstants.ALLOWED_LANGUAGES.contains(result)) {
-            throw new SettingException("language code " + rawValue + " is not allowed");
+            throw new SettingException("the language code " + rawValue + " is not allowed");
         }
 
         return result;
@@ -130,7 +130,7 @@ public class Settings {
 
         MergeMode result = EnumUtils.getEnum(MergeMode.class, rawValue);
         if (result == null) {
-            throw new SettingException("value " + rawValue + " is not a valid merge mode");
+            throw new SettingException("the value " + rawValue + " is not a valid merge mode");
         }
 
         return result;
@@ -146,7 +146,7 @@ public class Settings {
         } else if ("false".equals(rawValue)) {
             return false;
         } else {
-            throw new SettingException("value " + rawValue + " is not a valid boolean type");
+            throw new SettingException("the value " + rawValue + " is not a valid boolean type");
         }
     }
 
@@ -157,7 +157,7 @@ public class Settings {
 
         SortBy result = EnumUtils.getEnum(SortBy.class, rawValue);
         if (result == null) {
-            throw new SettingException("value " + rawValue + " is not a valid sort option");
+            throw new SettingException("the value " + rawValue + " is not a valid sort option");
         }
 
         return result;
@@ -170,7 +170,7 @@ public class Settings {
 
         SortDirection result = EnumUtils.getEnum(SortDirection.class, rawValue);
         if (result == null) {
-            throw new SettingException("value " + rawValue + " is not a valid sort direction");
+            throw new SettingException("the value " + rawValue + " is not a valid sort direction");
         }
 
         return result;
@@ -186,7 +186,7 @@ public class Settings {
                 saveSortDirection(SortDirection.ASCENDING.toString());
             }
         } catch (SettingException e) {
-            log.error("failed to save sort parameters, should not happen: " + e.getMessage());
+            log.error("failed to save the sort parameters, should not happen: " + e.getMessage());
         }
     }
 
@@ -252,7 +252,7 @@ public class Settings {
     
     private static class EmptyValueException extends SettingException {
         EmptyValueException() {
-            super("empty value");
+            super("an empty value");
         }
     }
 

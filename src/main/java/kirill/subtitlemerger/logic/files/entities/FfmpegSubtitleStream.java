@@ -14,7 +14,7 @@ public class FfmpegSubtitleStream extends SubtitleOption {
             + "(external|unknown|undefined|[a-z]{3})-(external|unknown|undefined|[a-z]{3})$";
     /*
      * The word "ffmpeg" here emphasizes the fact that it's not a regular index, but an index got from ffmpeg. For
-     * example the first subtitle stream may have index 2 because the first two indices are assigned to the video and
+     * example the first subtitle stream may have an index 2 because the first two indices are assigned to the video and
      * audio streams.
      */
     private int ffmpegIndex;

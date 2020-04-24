@@ -38,19 +38,19 @@ public class FileInfoGetter {
             return new FileInfo(file, null, NOT_ALLOWED_EXTENSION, null, null);
         }
         /*
-         * There can be other errors if the file is removed or turned into a directory between selection and validation
-         * but we'll just let them be and let ffprobe return an error. Because these errors can happen only if the user
-         * causes them on purpose, so I think it's not worthy to handle these situations in any special way.
+         * There can be other errors if the file is removed or turned into a directory between the selection and the
+         * validation but we'll just let them be and let ffprobe return an error. Because these errors can happen only
+         * if the user causes them on purpose, so I think it's not worthy to handle these situations in any special way.
          */
 
         JsonFfprobeFileInfo ffprobeInfo;
         try {
             ffprobeInfo = ffprobe.getFileInfo(file);
         } catch (FfmpegException e) {
-            log.warn("failed to get ffprobe info: " + e.getCode() + ", console output " + e.getConsoleOutput());
+            log.warn("failed to get the ffprobe info: " + e.getCode() + ", the console output " + e.getConsoleOutput());
             return new FileInfo(file, null, FFPROBE_FAILED, null, null);
         } catch (InterruptedException e) {
-            log.error("something's not right, process can't be interrupted");
+            log.error("something's not right, the process can't be interrupted");
             throw new IllegalStateException();
         }
 
