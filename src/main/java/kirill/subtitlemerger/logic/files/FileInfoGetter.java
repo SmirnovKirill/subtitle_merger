@@ -47,7 +47,7 @@ public class FileInfoGetter {
         try {
             ffprobeInfo = ffprobe.getFileInfo(file);
         } catch (FfmpegException e) {
-            log.warn("failed to get the ffprobe info: " + e.getCode() + ", the console output " + e.getConsoleOutput());
+            log.warn("failed to get the ffprobe info: " + e.getCode() + ", console output " + e.getConsoleOutput());
             return new FileInfo(file, null, FFPROBE_FAILED, null, null);
         } catch (InterruptedException e) {
             log.error("something's not right, the process can't be interrupted");

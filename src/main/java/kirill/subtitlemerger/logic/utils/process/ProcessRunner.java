@@ -31,7 +31,7 @@ public class ProcessRunner {
      * @throws ProcessException with different codes inside when errors happen
      */
     public static String run(List<String> arguments) throws ProcessException, InterruptedException {
-        log.debug("run the process " + StringUtils.join(arguments, " "));
+        log.debug("run process " + StringUtils.join(arguments, " "));
 
         Process process = startProcess(arguments);
         String consoleOutput = readAllConsoleOutput(process);
@@ -42,7 +42,7 @@ public class ProcessRunner {
         }
 
         if (consoleOutput == null) {
-            log.error("the console output is null, that can't happen, most likely a bug");
+            log.error("console output is null, that can't happen, most likely a bug");
             throw new IllegalStateException();
         }
 
@@ -74,7 +74,7 @@ public class ProcessRunner {
                 OutputStream ignored3 = process.getOutputStream()
         ) {
             result = task.get();
-            log.debug("the process's console output: " + result);
+            log.debug("process console output: " + result);
             return result;
         } catch (InterruptedException e) {
             log.info("the process is going to be terminated because of the interruption");
@@ -85,7 +85,7 @@ public class ProcessRunner {
 
             try {
                 result = task.get(1000, TimeUnit.MILLISECONDS);
-                log.debug("the process's console output: " + result);
+                log.debug("process console output: " + result);
             } catch (TimeoutException timeoutException) {
                 log.error("failed to wait for the thread after closing the streams, something is wrong");
             } catch (InterruptedException ignored) {

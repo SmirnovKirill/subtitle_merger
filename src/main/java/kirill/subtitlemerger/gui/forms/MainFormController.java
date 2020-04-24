@@ -17,18 +17,18 @@ public class MainFormController {
     private Tab settingsTab;
 
     @FXML
-    private SubtitleFilesFormController subtitleFilesTabController;
+    private SubtitleFilesFormController subtitleFilesFormController;
 
     @FXML
-    private VideosFormController videosTabController;
+    private VideosFormController videosFormController;
 
     @FXML
-    private SettingsFormController settingsTabController;
+    private SettingsFormController settingsFormController;
 
     public void initialize(Stage stage, GuiContext guiContext) {
-        this.subtitleFilesTabController.initialize(stage, guiContext);
-        this.videosTabController.initialize(this, stage, guiContext);
-        this.settingsTabController.initialize(guiContext);
+        this.subtitleFilesFormController.initialize(stage, guiContext);
+        this.videosFormController.initialize(this, stage, guiContext);
+        this.settingsFormController.initialize(guiContext);
     }
 
     public void openSettingsTab() {

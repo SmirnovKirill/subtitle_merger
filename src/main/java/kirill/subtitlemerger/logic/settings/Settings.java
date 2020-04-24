@@ -88,7 +88,7 @@ public class Settings {
         try {
             return Optional.of(validator.getValidatedValue(rawValue));
         } catch (SettingException e) {
-            log.warn("an incorrect value for " + settingType.getCode() + " in saved preferences: " + e.getMessage());
+            log.warn("incorrect value for " + settingType.getCode() + " in saved preferences: " + e.getMessage());
             return Optional.empty();
         }
     }
@@ -186,7 +186,7 @@ public class Settings {
                 saveSortDirection(SortDirection.ASCENDING.toString());
             }
         } catch (SettingException e) {
-            log.error("failed to save the sort parameters, should not happen: " + e.getMessage());
+            log.error("failed to save sort parameters, should not happen: " + e.getMessage());
         }
     }
 
