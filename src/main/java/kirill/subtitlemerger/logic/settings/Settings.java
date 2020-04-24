@@ -48,7 +48,7 @@ public class Settings {
         preferences = Preferences.userRoot().node(PREFERENCES_ROOT_NODE);
         initSavedSettings(preferences);
 
-        setDefaultSettingsIfNecessary();
+        setDefaultSettings();
     }
 
     private void initSavedSettings(Preferences preferences) {
@@ -176,7 +176,7 @@ public class Settings {
         return result;
     }
 
-    private void setDefaultSettingsIfNecessary() {
+    private void setDefaultSettings() {
         try {
             if (sortBy == null) {
                 saveSortBy(SortBy.MODIFICATION_TIME.toString());

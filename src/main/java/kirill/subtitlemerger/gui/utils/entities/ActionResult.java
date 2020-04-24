@@ -1,14 +1,14 @@
 package kirill.subtitlemerger.gui.utils.entities;
 
-import kirill.subtitlemerger.gui.utils.forms_and_controls.ActionResultLabels;
+import kirill.subtitlemerger.gui.common_controls.ActionResultPane;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * This class helps to represent results of complex actions that may for example finish successfully partly and partly
- * fail. This class is a POJO and isn't bound to any gui library and so can be easily tested. To display the data there
- * is a special class ActionResultLabels.
- * @see ActionResultLabels
+ * This class helps to represent the results of complex actions that may for example finish successfully partly and
+ * partly fail. This class is a POJO and isn't bound to any gui library and so can be easily tested. To display the data
+ * there is a special class MultiPartTextPane.
+ * @see ActionResultPane
  */
 @AllArgsConstructor
 @Getter

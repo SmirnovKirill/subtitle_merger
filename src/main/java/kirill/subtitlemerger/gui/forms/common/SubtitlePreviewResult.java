@@ -1,0 +1,15 @@
+package kirill.subtitlemerger.gui.forms.common;
+
+import kirill.subtitlemerger.logic.core.entities.Subtitles;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+import java.nio.charset.Charset;
+
+@AllArgsConstructor
+@Getter
+public class SubtitlePreviewResult {
+    private Subtitles subtitles;
+
+    private Charset encoding;
+}

@@ -17,10 +17,10 @@ import javafx.scene.layout.Region;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import kirill.subtitlemerger.gui.utils.forms_and_controls.AgreementPopupController;
-import kirill.subtitlemerger.gui.utils.forms_and_controls.AgreementResult;
-import kirill.subtitlemerger.gui.utils.forms_and_controls.ErrorPopupController;
-import kirill.subtitlemerger.gui.utils.entities.NodeInfo;
+import kirill.subtitlemerger.gui.forms.common.AgreementPopupFormController;
+import kirill.subtitlemerger.gui.forms.common.AgreementResult;
+import kirill.subtitlemerger.gui.forms.common.ErrorPopupFormController;
+import kirill.subtitlemerger.gui.utils.entities.FormInfo;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -36,13 +36,13 @@ import java.util.function.Consumer;
 @CommonsLog
 public class GuiUtils {
     /**
-     * Uses FXML loader to load the provided fxml file.
+     * Uses FXML loader to load the form based on the provided fxml file.
      *
      * @param path path to the fxml file.
      * @return a wrapper containing root node and its controller.
      * @throws IllegalStateException if something goes wrong during the process.
      */
-    public static NodeInfo loadNode(String path) {
+    public static FormInfo loadForm(String path) {
         FXMLLoader fxmlLoader = new FXMLLoader(GuiUtils.class.getResource(path));
 
         Parent node;
@@ -67,7 +67,90 @@ public class GuiUtils {
             throw new IllegalStateException();
         }
 
-        return new NodeInfo(node, controller);
+        return new FormInfo(node, controller);
+    }
+
+    /**
+     * Uses FXML loader to initialize the given control based on the provided fxml file.
+     *
+     * @param control the control to initialize
+     * @param path path to the fxml file. Note that it shouldn't contain fx:controller inside because the controller
+     *             for the control is the control itself.
+     * @throws IllegalStateException if something goes wrong during the process.
+     */
+    public static void initializeControl(Object control, String path) {
+        FXMLLoader fxmlLoader = new FXMLLoader(GuiUtils.class.getResource(path));
+
+        fxmlLoader.setRoot(control);
+        fxmlLoader.setController(control);
+
+        try {
+            fxmlLoader.load();
+        } catch (IOException e) {
+            log.error("failed to load fxml " + path + ": " + ExceptionUtils.getStackTrace(e));
+            throw new IllegalStateException();
+        } catch (ClassCastException e) {
+            log.error("controller has an incorrect class");
+            throw new IllegalStateException();
+        }
+    }
+
+    public static Stage generatePopupStage(String title, Parent node, Stage ownerStage) {
+        Stage result = new Stage();
+
+        result.initOwner(ownerStage);
+        result.initModality(Modality.APPLICATION_MODAL);
+        result.setTitle(title);
+        result.setResizable(false);
+
+        Scene scene = new Scene(node);
+        scene.getStylesheets().add("/gui/javafx/style.css");
+        result.setScene(scene);
+
+        return result;
+    }
+
+    public static void showErrorPopup(String message, Stage ownerStage) {
+        FormInfo nodeInfo = loadForm("/gui/javafx/forms/common/error_popup_form.fxml");
+
+        Stage popupStage = generatePopupStage("Error!", nodeInfo.getRootNode(), ownerStage);
+
+        ErrorPopupFormController controller = nodeInfo.getController();
+        controller.initialize(message, popupStage);
+
+        popupStage.showAndWait();
+    }
+
+    public static boolean showAgreementPopup(String message, String yesText, String noText, Stage ownerStage) {
+        FormInfo nodeInfo = loadForm("/gui/javafx/forms/common/agreement_popup_form.fxml");
+
+        Stage popupStage = generatePopupStage("Please confirm", nodeInfo.getRootNode(), ownerStage);
+
+        AgreementPopupFormController controller = nodeInfo.getController();
+        controller.initialize(message, null, yesText, noText, popupStage);
+
+        popupStage.showAndWait();
+
+        return controller.getResult() == AgreementResult.YES;
+    }
+
+    public static AgreementResult showAgreementPopup(
+            String message,
+            String applyToAllText,
+            String yesText,
+            String noText,
+            Stage ownerStage
+    ) {
+        FormInfo nodeInfo = loadForm("/gui/javafx/forms/common/agreement_popup_form.fxml");
+
+        Stage popupStage = generatePopupStage("Please confirm", nodeInfo.getRootNode(), ownerStage);
+
+        AgreementPopupFormController controller = nodeInfo.getController();
+        controller.initialize(message, applyToAllText, yesText, noText, popupStage);
+
+        popupStage.showAndWait();
+
+        return controller.getResult();
     }
 
     public static void setVisibleAndManaged(Node node, boolean value) {
@@ -181,7 +264,7 @@ public class GuiUtils {
      *                               argument %d inside
      * @return the text depending on the count.
      */
-    public static String getTextDependingOnTheCount(int count, String oneItemText, String zeroOrSeveralItemsText) {
+    public static String getTextDependingOnCount(int count, String oneItemText, String zeroOrSeveralItemsText) {
         if (count == 1) {
             return oneItemText;
         } else {
@@ -194,20 +277,6 @@ public class GuiUtils {
      */
     public static String languageToString(LanguageAlpha3Code language) {
         return language != null ? language.toString() : "unknown language";
-    }
-
-    public static void initializeCustomControl(String path, Object root) {
-        FXMLLoader fxmlLoader = new FXMLLoader(GuiUtils.class.getResource(path));
-
-        fxmlLoader.setRoot(root);
-        fxmlLoader.setController(root);
-
-        try {
-            fxmlLoader.load();
-        } catch (IOException e) {
-            log.error("failed to load fxml " + path + ": " + ExceptionUtils.getStackTrace(e));
-            throw new IllegalStateException();
-        }
     }
 
     public static Region generateFixedHeightSpacer(int height) {
@@ -224,67 +293,19 @@ public class GuiUtils {
         region.setMaxWidth(width);
     }
 
-    public static Stage generatePopupStage(String title, Parent node, Stage ownerStage) {
-        Stage result = new Stage();
-
-        result.initOwner(ownerStage);
-        result.initModality(Modality.APPLICATION_MODAL);
-        result.setTitle(title);
-        result.setResizable(false);
-
-        Scene scene = new Scene(node);
-        scene.getStylesheets().add("/gui/javafx/style.css");
-        result.setScene(scene);
-
-        return result;
-    }
-
-    public static void showErrorPopup(String message, Stage ownerStage) {
-        NodeInfo nodeInfo = loadNode("/gui/javafx/forms_and_controls/error_popup.fxml");
-
-        Stage popupStage = generatePopupStage("Error!", nodeInfo.getNode(), ownerStage);
-
-        ErrorPopupController controller = nodeInfo.getController();
-        controller.initialize(message, popupStage);
-
-        popupStage.showAndWait();
-    }
-
-    public static boolean showAgreementPopup(String message, String yesText, String noText, Stage ownerStage) {
-        NodeInfo nodeInfo = loadNode("/gui/javafx/forms_and_controls/agreement_popup.fxml");
-
-        Stage popupStage = generatePopupStage("Please confirm", nodeInfo.getNode(), ownerStage);
-
-        AgreementPopupController controller = nodeInfo.getController();
-        controller.initialize(message, null, yesText, noText, popupStage);
-
-        popupStage.showAndWait();
-
-        return controller.getResult() == AgreementResult.YES;
-    }
-
-    public static AgreementResult showAgreementPopup(
-            String message,
-            String applyToAllText,
-            String yesText,
-            String noText,
-            Stage ownerStage
-    ) {
-        NodeInfo nodeInfo = loadNode("/gui/javafx/forms_and_controls/agreement_popup.fxml");
-
-        Stage popupStage = generatePopupStage("Please confirm", nodeInfo.getNode(), ownerStage);
-
-        AgreementPopupController controller = nodeInfo.getController();
-        controller.initialize(message, applyToAllText, yesText, noText, popupStage);
-
-        popupStage.showAndWait();
-
-        return controller.getResult();
-    }
-
     /*
      * This method is used only be the TableWithFiles class but because it's a JavaFX's Control class it has a static
      * initializer that requires JavaFX environment and thus can't be used in unit tests.
+     */
+    /**
+     * Returns the textual representation of the size.
+     *
+     * @param size the size to represent.
+     * @param keepShort if set to true the result will be for example "100 KB" instead of "100.00 KB", "99.9 KB" instead
+     *                  of "99.91 KB" and so on - the number of digits after the decimal point will be reduced depending
+     *                  on the whole part so that in general there are no more than four symbols in the textual
+     *                  representation (plus the size suffix). Otherwise there will be 2 digits after the point.
+     * @return the textual representation of the size (for example 21.39 KB).
      */
     public static String getFileSizeTextual(long size, boolean keepShort) {
         List<String> suffixes = Arrays.asList("B", "KB", "MB", "GB", "TB");
@@ -302,19 +323,23 @@ public class GuiUtils {
             suffixIndex++;
         }
 
-        int scale = getScale(keepShort, sizeBigDecimal, divisor);
+        int scale = getScale(sizeBigDecimal, divisor, keepShort);
 
         return sizeBigDecimal.divide(divisor, scale, RoundingMode.HALF_UP) + " " + suffixes.get(suffixIndex);
     }
 
-    private static int getScale(boolean keepShort, BigDecimal sizeBigDecimal, BigDecimal divisor) {
+    private static int getScale(BigDecimal size, BigDecimal divisor, boolean keepShort) {
         if (!keepShort) {
             return 2;
         }
 
-        BigInteger wholePart = sizeBigDecimal.divide(divisor, 0, RoundingMode.FLOOR).toBigInteger();
+        BigInteger wholePart = size.divide(divisor, 0, RoundingMode.FLOOR).toBigInteger();
         if (wholePart.compareTo(BigInteger.valueOf(9999)) >= 0) {
-            log.error("it's impossible to keep short the size that big: " + sizeBigDecimal);
+            /*
+             * If we got here it means that the size is more than 9999 terabytes because otherwise as soon as the size
+             * is equal to or more than 1024 it's automatically divided by 1024.
+             */
+            log.error("it's impossible to keep short the size that big: " + size);
             throw new IllegalArgumentException();
         }
 
@@ -328,15 +353,14 @@ public class GuiUtils {
         }
 
         /*
-         * There are two border cases - when the whole part is 99 and 9. Because after adding fractional part and
-         * rounding whole part may start to have more digits than before.
+         * There are two border cases - when the whole part is 99 or 9. Because after adding fractional part and
+         * rounding the whole part may start to have more digits than before.
          */
         if (wholePart.compareTo(BigInteger.valueOf(99)) != 0 && wholePart.compareTo(BigInteger.valueOf(9)) != 0) {
             return preliminaryResult;
         }
 
-        BigInteger wholePartAfterwards = sizeBigDecimal.divide(divisor, preliminaryResult, RoundingMode.HALF_UP)
-                .toBigInteger();
+        BigInteger wholePartAfterwards = size.divide(divisor, preliminaryResult, RoundingMode.HALF_UP).toBigInteger();
         if (wholePartAfterwards.compareTo(wholePart) > 0) {
             return preliminaryResult - 1;
         } else {

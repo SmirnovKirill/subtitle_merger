@@ -5,9 +5,9 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
-import kirill.subtitlemerger.gui.tabs.TabPaneController;
+import kirill.subtitlemerger.gui.forms.MainFormController;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
-import kirill.subtitlemerger.gui.utils.entities.NodeInfo;
+import kirill.subtitlemerger.gui.utils.entities.FormInfo;
 
 import java.awt.*;
 
@@ -24,15 +24,15 @@ public class GuiLauncher extends Application {
     public void start(Stage stage) {
         Application.setUserAgentStylesheet(STYLESHEET_MODENA);
 
-        NodeInfo nodeInfo = GuiUtils.loadNode("/gui/javafx/tabs/tab_pane.fxml");
+        FormInfo mainFormInfo = GuiUtils.loadForm("/gui/javafx/forms/main_form.fxml");
 
-        TabPaneController controller = nodeInfo.getController();
+        MainFormController controller = mainFormInfo.getController();
         controller.initialize(stage, new GuiContext());
 
         stage.getIcons().add(new Image(GuiLauncher.class.getResourceAsStream("/gui/icons/icon.png")));
         stage.setTitle("Subtitle Merger");
         stage.setResizable(true);
-        stage.setScene(generateScene(nodeInfo.getNode()));
+        stage.setScene(generateScene(mainFormInfo.getRootNode()));
 
         stage.show();
         closeSplashScreen();
@@ -53,8 +53,8 @@ public class GuiLauncher extends Application {
         stage.setMinHeight(stage.getHeight());
     }
 
-    private static Scene generateScene(Parent node) {
-        Scene result = new Scene(node);
+    private static Scene generateScene(Parent rootNode) {
+        Scene result = new Scene(rootNode);
 
         result.getStylesheets().add("/gui/javafx/style.css");
 

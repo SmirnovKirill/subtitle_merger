@@ -72,7 +72,8 @@ After you see the videos you should do the following:
 preferred languages that you've set at the settings tab. If there are more than one subtitles for one of the preferred 
 languages, the application will choose the biggest one. Note that subtitle sizes will be loaded automatically if they
 are needed and this operation may take a while, although you can cancel the task at any moment.
-    2. If auto-selection is not possible for some files or if you want to select subtitles manually you can always do so.
+    2. If auto-selection is not possible for some files or if you want to select subtitles manually you can always do 
+    so.
 Note that initially you can't see the subtitle sizes (the reasons for that are described [here](#why_question_marks)). 
 But you can always load the subtitles by pressing the corresponding buttons. 
 3. Press the "Merge" button, it is the final step.

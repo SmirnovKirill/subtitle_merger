@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import kirill.subtitlemerger.gui.GuiConstants?>
+<?import kirill.subtitlemerger.gui.common_controls.ActionResultPane?>
+<Tab xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+     fx:controller="kirill.subtitlemerger.gui.forms.subtitle_files.SubtitleFilesFormController"
+     text="Subtitle files">
+    <StackPane>
+        <GridPane fx:id="mainPane" hgap="35" vgap="40" stylesheets="/gui/javafx/forms/subtitle_files/subtitle_files_form.css">
+            <gridLinesVisible><GuiConstants fx:constant="GRID_LINES_VISIBLE"/></gridLinesVisible>
+
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
+
+            <Label text="Please choose the file with the upper subtitles"
+                   GridPane.halignment="LEFT" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <HBox alignment="CENTER_RIGHT" spacing="20"
+                  GridPane.halignment="RIGHT" GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS">
+                <HBox alignment="CENTER" spacing="10" HBox.hgrow="ALWAYS">
+                    <TextField fx:id="upperPathField" HBox.hgrow="ALWAYS" promptText="not selected"/>
+                    <Button fx:id="upperPreview" onAction="#upperPreviewClicked" styleClass="image-button" disable="true">
+                        <graphic>
+                            <ImageView fitHeight="14" fitWidth="21">
+                                <Image url="/gui/icons/eye.png"/>
+                            </ImageView>
+                        </graphic>
+                    </Button>
+                </HBox>
+                <Button fx:id="upperChooseButton" onAction="#upperChooseClicked" text="Choose file"/>
+            </HBox>
+
+            <Label text="Please choose the file with the lower subtitles"
+                   GridPane.halignment="LEFT" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <HBox alignment="CENTER_RIGHT" spacing="20"
+                  GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS">
+                <HBox alignment="CENTER" spacing="10" HBox.hgrow="ALWAYS">
+                    <TextField fx:id="lowerPathField" HBox.hgrow="ALWAYS" promptText="not selected"/>
+                    <Button fx:id="lowerPreview" onAction="#lowerPreviewClicked" styleClass="image-button" disable="true">
+                        <graphic>
+                            <ImageView fitHeight="14" fitWidth="21">
+                                <Image url="/gui/icons/eye.png"/>
+                            </ImageView>
+                        </graphic>
+                    </Button>
+                </HBox>
+                <Button fx:id="lowerChooseButton" onAction="#lowerChooseClicked" text="Choose file"/>
+            </HBox>
+
+            <Label text="Please choose where to save the result"
+                   GridPane.halignment="LEFT" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <HBox alignment="CENTER_RIGHT" spacing="20"
+                  GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS">
+                <HBox alignment="CENTER" spacing="10" HBox.hgrow="ALWAYS">
+                    <TextField fx:id="mergedPathField" HBox.hgrow="ALWAYS" promptText="not selected"/>
+                    <Button fx:id="mergedPreview" onAction="#mergedPreviewClicked" styleClass="image-button" disable="true">
+                        <graphic>
+                            <ImageView fitHeight="14" fitWidth="21">
+                                <Image url="/gui/icons/eye.png"/>
+                            </ImageView>
+                        </graphic>
+                    </Button>
+                </HBox>
+                <Button fx:id="mergedChooseButton" onAction="#mergedSubtitlesButtonClicked" text="Choose file"/>
+            </HBox>
+
+            <Button fx:id="mergeButton" onAction="#mergeButtonClicked"
+                    text="Merge subtitles" disable="true"
+                    GridPane.rowIndex="3" GridPane.columnSpan="2"/>
+
+            <ActionResultPane fx:id="actionResultPane" wrapText="true"
+                              GridPane.rowIndex="4" GridPane.columnSpan="2"/>
+        </GridPane>
+        <VBox fx:id="progressPane" spacing="10" alignment="CENTER" visible="false">
+            <ProgressIndicator fx:id="progressIndicator"/>
+            <Label fx:id="progressLabel"/>
+            <HBox fx:id="cancelTaskPane" alignment="CENTER">
+                <Label fx:id="cancelDescriptionLabel"/>
+                <Label text="If you want to cancel the task click "/>
+                <Hyperlink text="here" onAction="#cancelTaskClicked">
+                    <padding>
+                        <Insets/>
+                    </padding>
+                </Hyperlink>
+                <Label text="."/>
+            </HBox>
+        </VBox>
+    </StackPane>
+</Tab>
