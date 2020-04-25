@@ -88,16 +88,16 @@ Below are the most expected questions about the application.
 <a name="merge_mode"></a>
 #### What merge mode should I choose?
 There are two merge options:
-1. Modify original videos. With this option application will inject merged subtitles into original video files. It is 
-the most convenient option since everything will look as before except for the new merged subtitles in the subtitle 
+1. Modify original videos. With this option the application will inject merged subtitles into original video files. It
+is the most convenient option since everything will look as before except for the new merged subtitles in the subtitle 
 list. This approach requires extra disk space during the merge process (equal to the size of the largest video to
-process) because application will create a temporary file first and then will overwrite the original video with this 
+process) because the application will create a temporary file first and then will overwrite the original video with this 
 temporary one. Note that the original files will be overwritten! And if something goes wrong during the merge you may 
 lose your video files.
-2. Create separate subtitle files. With this option application will create separate subtitle files next to the videos.
-This option is not so convenient because after the merge you will have to add subtitle files manually when watching
-videos. But this option is safe because original files won't be modified in any way. And it also doesn't require almost 
-any extra disk space.
+2. Create separate subtitle files. With this option the application will create separate subtitle files next to the 
+videos. This option is not so convenient because after the merge you will have to add the subtitle files manually when 
+watching videos. But this option is safe because the original files won't be modified in any way. And it also doesn't
+require almost any extra disk space.
 
 
 <a name="why_question_marks"></a>

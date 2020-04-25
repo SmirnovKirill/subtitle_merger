@@ -3,10 +3,12 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import kirill.subtitlemerger.gui.GuiConstants?>
 <GridPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:id="choicePane"
           fx:controller="kirill.subtitlemerger.gui.forms.videos.ChoiceFormController"
-          stylesheets="/gui/javafx/forms/videos/choice_form.css" vgap="10"
->
+          stylesheets="/gui/javafx/forms/videos/choice_form.css" vgap="10">
+    <gridLinesVisible><GuiConstants fx:constant="GRID_LINES_VISIBLE"/></gridLinesVisible>
+
     <columnConstraints>
         <ColumnConstraints percentWidth="50"/>
         <ColumnConstraints percentWidth="50"/>

@@ -22,7 +22,7 @@ public class FileInfo {
     private String format;
 
     /**
-     * We will keep track of all the selected files even if they can't be used for the subtitle merging (for better
+     * We will keep track of all the selected files even if they can't be used for subtitle merging (for better
      * diagnostics). The enum contains the reason why this file can't be used for the subtitle merging.
      */
     private FileUnavailabilityReason unavailabilityReason;

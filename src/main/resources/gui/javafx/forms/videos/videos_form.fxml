@@ -4,8 +4,7 @@
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.layout.StackPane?>
 <Tab xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-     fx:controller="kirill.subtitlemerger.gui.forms.videos.VideosFormController" text="Videos"
->
+     fx:controller="kirill.subtitlemerger.gui.forms.videos.VideosFormController" text="Videos">
     <StackPane>
         <padding>
             <Insets top="20" right="20" bottom="20" left="20"/>
