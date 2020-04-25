@@ -3,21 +3,12 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <fx:root xmlns:fx="http://javafx.com/fxml" type="javafx.scene.layout.GridPane" hgap="25">
-    <Label styleClass="characteristic-title" GridPane.rowIndex="0" GridPane.columnIndex="0">
-        Convenience:
-    </Label>
-    <Label fx:id="convenienceLabel" styleClass="characteristic-value"
-           GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+    <Label GridPane.rowIndex="0" GridPane.columnIndex="0" styleClass="characteristic-title">Convenience:</Label>
+    <Label fx:id="convenienceLabel" GridPane.rowIndex="0" GridPane.columnIndex="1" styleClass="characteristic-value"/>
 
-    <Label styleClass="characteristic-title" GridPane.rowIndex="1" GridPane.columnIndex="0">
-        Safe:
-    </Label>
-    <Label fx:id="safetyLabel" styleClass="characteristic-value"
-           GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+    <Label GridPane.rowIndex="1" GridPane.columnIndex="0" styleClass="characteristic-title">Safe:</Label>
+    <Label fx:id="safetyLabel" GridPane.rowIndex="1" GridPane.columnIndex="1" styleClass="characteristic-value"/>
 
-    <Label styleClass="characteristic-title" GridPane.rowIndex="2" GridPane.columnIndex="0">
-        Disk usage:
-    </Label>
-    <Label fx:id="diskUsageLabel" styleClass="characteristic-value"
-           GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+    <Label GridPane.rowIndex="2" GridPane.columnIndex="0" styleClass="characteristic-title">Disk usage:</Label>
+    <Label fx:id="diskUsageLabel" GridPane.rowIndex="2" GridPane.columnIndex="1" styleClass="characteristic-value"/>
 </fx:root>

@@ -13,12 +13,12 @@
     <Region minWidth="5" HBox.hgrow="ALWAYS"/>
     <Label>
         <graphic>
-            <ImageView fitHeight="16" fitWidth="16">
+            <ImageView fitWidth="16" fitHeight="16">
                 <Image url="/gui/icons/question.png"/>
             </ImageView>
         </graphic>
         <tooltip>
-            <Tooltip fx:id="tooltip" wrapText="true" prefWidth="300">
+            <Tooltip fx:id="tooltip" prefWidth="300" wrapText="true">
                 <showDelay><Duration fx:constant="ZERO"/></showDelay>
                 <showDuration><Duration fx:constant="INDEFINITE"/></showDuration>
             </Tooltip>

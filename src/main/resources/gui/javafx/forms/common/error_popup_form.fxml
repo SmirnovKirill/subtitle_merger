@@ -8,21 +8,19 @@
 <?import javafx.scene.layout.*?>
 <VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="kirill.subtitlemerger.gui.forms.common.ErrorPopupFormController"
-      spacing="20" prefWidth="450"
+      prefWidth="450" spacing="20"
 >
     <padding>
-        <Insets top="10" left="10" right="10" bottom="10"/>
+        <Insets top="10" right="10" bottom="10" left="10"/>
     </padding>
-    <HBox spacing="20" alignment="CENTER_LEFT">
-        <HBox alignment="CENTER">
-            <Label>
-                <graphic>
-                    <ImageView fitHeight="24" fitWidth="24">
-                        <Image url="/gui/icons/popup_error.png"/>
-                    </ImageView>
-                </graphic>
-            </Label>
-        </HBox>
+    <HBox alignment="CENTER_LEFT" spacing="20">
+        <Label>
+            <graphic>
+                <ImageView fitWidth="24" fitHeight="24">
+                    <Image url="/gui/icons/popup_error.png"/>
+                </ImageView>
+            </graphic>
+        </Label>
         <Label fx:id="messageLabel" wrapText="true"/>
     </HBox>
     <HBox alignment="CENTER">

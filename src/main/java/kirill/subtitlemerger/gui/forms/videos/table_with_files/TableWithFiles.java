@@ -546,7 +546,6 @@ public class TableWithFiles extends TableView<TableFileInfo> {
     private static Label generateFailedToLoadLabel(TableSubtitleOption subtitleOption) {
         Label result = new Label();
 
-        result.setAlignment(Pos.CENTER);
         result.setGraphic(GuiUtils.generateImageView("/gui/icons/error.png", 12, 12));
 
         result.setTooltip(GuiUtils.generateTooltip(subtitleOption.failedToLoadReasonProperty()));

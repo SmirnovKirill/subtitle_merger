@@ -7,22 +7,20 @@
 <?import javafx.scene.layout.*?>
 <VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="kirill.subtitlemerger.gui.forms.common.AgreementPopupFormController"
-      spacing="10" prefWidth="600"
+      prefWidth="600" spacing="10"
 >
     <padding>
-        <Insets top="10" left="10" right="10" bottom="10"/>
+        <Insets top="10" right="10" bottom="10" left="10"/>
     </padding>
-    <HBox spacing="20" alignment="CENTER_LEFT">
-        <HBox alignment="CENTER">
-            <Label>
-                <graphic>
-                    <ImageView fitHeight="24" fitWidth="24">
-                        <Image url="/gui/icons/popup_agreement.png"/>
-                    </ImageView>
-                </graphic>
-            </Label>
-        </HBox>
-        <VBox spacing="10">
+    <HBox alignment="CENTER_LEFT" spacing="20">
+        <Label>
+            <graphic>
+                <ImageView fitWidth="24" fitHeight="24">
+                    <Image url="/gui/icons/popup_agreement.png"/>
+                </ImageView>
+            </graphic>
+        </Label>
+        <VBox alignment="CENTER_LEFT" spacing="10">
             <Label fx:id="messageLabel" wrapText="true"/>
             <CheckBox fx:id="applyToAllCheckBox"/>
         </VBox>
