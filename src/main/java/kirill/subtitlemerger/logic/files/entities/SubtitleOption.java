@@ -3,11 +3,13 @@ package kirill.subtitlemerger.logic.files.entities;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.extern.apachecommons.CommonsLog;
 
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Objects;
 
+@CommonsLog
 @AllArgsConstructor
 @Getter
 public abstract class SubtitleOption {
@@ -45,8 +47,14 @@ public abstract class SubtitleOption {
     }
 
     public static <T extends SubtitleOption> T getById(String id, List<T> subtitleOptions) {
-        return subtitleOptions.stream()
+        T result = subtitleOptions.stream()
                 .filter(option -> Objects.equals(option.getId(), id))
-                .findFirst().orElseThrow(IllegalAccessError::new);
+                .findFirst().orElse(null);
+        if (result == null) {
+            log.error("no subtitle option for id " + id + ", most likely a bug");
+            throw new IllegalStateException();
+        }
+
+        return result;
     }
 }

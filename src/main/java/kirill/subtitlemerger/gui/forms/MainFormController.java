@@ -25,10 +25,10 @@ public class MainFormController {
     @FXML
     private SettingsFormController settingsFormController;
 
-    public void initialize(Stage stage, GuiContext guiContext) {
-        subtitleFilesFormController.initialize(stage, guiContext);
-        videosFormController.initialize(this, stage, guiContext);
-        settingsFormController.initialize(guiContext);
+    public void initialize(Stage stage, GuiContext context) {
+        subtitleFilesFormController.initialize(stage, context);
+        videosFormController.initialize(this, stage, context);
+        settingsFormController.initialize(context);
     }
 
     public void openSettingsForm() {

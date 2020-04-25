@@ -2,6 +2,7 @@ package kirill.subtitlemerger.logic.files.entities;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.apachecommons.CommonsLog;
 import org.joda.time.LocalDateTime;
 
 import java.io.File;
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@CommonsLog
 @Getter
 public class FileInfo {
     private String id;
@@ -54,9 +56,15 @@ public class FileInfo {
     }
 
     public static FileInfo getById(String id, List<FileInfo> filesInfo) {
-        return filesInfo.stream()
+        FileInfo result = filesInfo.stream()
                 .filter(fileInfo -> Objects.equals(fileInfo.getId(), id))
-                .findFirst().orElseThrow(IllegalAccessError::new);
+                .findFirst().orElse(null);
+        if (result == null) {
+            log.error("no file info for id " + id + ", most likely a bug");
+            throw new IllegalStateException();
+        }
+
+        return result;
     }
 
     public List<FfmpegSubtitleStream> getFfmpegSubtitleStreams() {
