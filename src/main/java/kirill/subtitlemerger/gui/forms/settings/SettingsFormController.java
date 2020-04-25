@@ -35,12 +35,10 @@ public class SettingsFormController {
 
     private static final LanguageCodeStringConverter LANGUAGE_CODE_STRING_CONVERTER = new LanguageCodeStringConverter();
 
-    private GuiContext context;
-
-    private Settings settings;
+    private BooleanProperty makeDefaultVisible;
 
     @FXML
-    private Pane unavailablePane;
+    private ToggleGroup mergeModeToggleGroup;
 
     @FXML
     private Pane settingsPane;
@@ -50,19 +48,14 @@ public class SettingsFormController {
     private ComboBox<LanguageAlpha3Code> upperLanguageComboBox;
 
     @FXML
+    private Button swapButton;
+
+    @FXML
     //todo make editable with drop-down
     private ComboBox<LanguageAlpha3Code> lowerLanguageComboBox;
 
     @FXML
-    private Button swapLanguagesButton;
-
-    @FXML
-    private ToggleGroup mergeModeToggleGroup;
-
-    @FXML
-    private CheckBox makeMergedStreamsDefaultCheckBox;
-
-    private BooleanProperty markStreamCheckBoxVisible;
+    private CheckBox makeDefaultCheckBox;
 
     @FXML
     private CheckBox plainTextCheckBox;
@@ -70,71 +63,74 @@ public class SettingsFormController {
     @FXML
     private ActionResultPane actionResultPane;
 
+    @FXML
+    private Pane unavailablePane;
+
+    private GuiContext context;
+
+    private Settings settings;
+
     public SettingsFormController() {
-        markStreamCheckBoxVisible = new SimpleBooleanProperty(false);
+        makeDefaultVisible = new SimpleBooleanProperty(false);
     }
 
-    public boolean isMarkStreamCheckBoxVisible() {
-        return markStreamCheckBoxVisible.get();
+    public boolean getMakeDefaultVisible() {
+        return makeDefaultVisible.get();
     }
 
-    public BooleanProperty markStreamCheckBoxVisibleProperty() {
-        return markStreamCheckBoxVisible;
+    public BooleanProperty makeDefaultVisibleProperty() {
+        return makeDefaultVisible;
     }
 
-    public void setMarkStreamCheckBoxVisible(boolean markStreamCheckBoxVisible) {
-        this.markStreamCheckBoxVisible.set(markStreamCheckBoxVisible);
+    public void setMakeDefaultVisible(boolean makeDefaultVisible) {
+        this.makeDefaultVisible.set(makeDefaultVisible);
     }
 
     public void initialize(GuiContext context) {
         this.context = context;
-        this.settings = context.getSettings();
+        settings = context.getSettings();
 
         upperLanguageComboBox.getItems().setAll(ALLOWED_LANGUAGES);
         upperLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
         lowerLanguageComboBox.getItems().setAll(ALLOWED_LANGUAGES);
         lowerLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
 
-        setInitialValues();
+        setUpperSubtitles();
+        setSwapButtonVisibility();
+        setLowerSubtitles();
+        setMergeMode();
+        setMakeDefaultVisible(settings.getMergeMode() == MergeMode.ORIGINAL_VIDEOS);
+        makeDefaultCheckBox.setSelected(settings.isMakeMergedStreamsDefault());
+        plainTextCheckBox.setSelected(settings.isPlainTextSubtitles());
+
         mergeModeToggleGroup.selectedToggleProperty().addListener(this::mergeModeChanged);
-        makeMergedStreamsDefaultCheckBox.selectedProperty().addListener(this::makeMergedStreamsDefaultChanged);
+        makeDefaultCheckBox.selectedProperty().addListener(this::makeDefaultChanged);
         plainTextCheckBox.selectedProperty().addListener(this::plainTextChanged);
         context.videosInProgressProperty().addListener(this::videosInProgressChanged);
     }
 
-    private void setInitialValues() {
-        setUpperSubtitlesInitialValue();
-        setSwapLanguagesButtonVisibility();
-        setLowerSubtitlesInitialValue();
-        setMergeModeInitialValue();
-        setMarkCheckBoxVisibility();
-
-        makeMergedStreamsDefaultCheckBox.setSelected(settings.isMakeMergedStreamsDefault());
-        plainTextCheckBox.setSelected(settings.isPlainTextSubtitles());
-    }
-
-    private void setUpperSubtitlesInitialValue() {
+    private void setUpperSubtitles() {
         LanguageAlpha3Code upperLanguage = settings.getUpperLanguage();
         if (upperLanguage != null) {
             upperLanguageComboBox.getSelectionModel().select(upperLanguage);
         }
     }
 
-    private void setSwapLanguagesButtonVisibility() {
+    private void setSwapButtonVisibility() {
         boolean swapButtonDisable = settings.getUpperLanguage() == null || settings.getLowerLanguage() == null;
 
-        swapLanguagesButton.setDisable(swapButtonDisable);
+        swapButton.setDisable(swapButtonDisable);
     }
 
-    private void setLowerSubtitlesInitialValue() {
+    private void setLowerSubtitles() {
         LanguageAlpha3Code lowerLanguage = settings.getLowerLanguage();
         if (lowerLanguage != null) {
             lowerLanguageComboBox.getSelectionModel().select(lowerLanguage);
         }
     }
 
-    private void setMergeModeInitialValue() {
-        MergeMode mergeMode = context.getSettings().getMergeMode();
+    private void setMergeMode() {
+        MergeMode mergeMode = settings.getMergeMode();
         if (mergeMode == null) {
             return;
         }
@@ -148,6 +144,7 @@ public class SettingsFormController {
                 value = MERGE_MODE_SEPARATE_SUBTITLE_FILES;
                 break;
             default:
+                log.error("unknown merge mode " + mergeMode + ", most likely a bug");
                 throw new IllegalStateException();
         }
 
@@ -159,12 +156,8 @@ public class SettingsFormController {
             }
         }
 
+        log.error("no radio button for merge mode " + mergeMode + ", most likely a bug");
         throw new IllegalStateException();
-    }
-
-    private void setMarkCheckBoxVisibility() {
-        MergeMode mergeMode = context.getSettings().getMergeMode();
-        setMarkStreamCheckBoxVisible(mergeMode == MergeMode.ORIGINAL_VIDEOS);
     }
 
     private void mergeModeChanged(ObservableValue<? extends Toggle> observable, Toggle oldValue, Toggle newValue) {
@@ -179,13 +172,14 @@ public class SettingsFormController {
                 mergeMode = MergeMode.SEPARATE_SUBTITLE_FILES;
                 break;
             default:
+                log.error("unexpected radio button value " + radioButton.getText() + ", most likely a bug");
                 throw new IllegalStateException();
         }
 
         try {
             settings.saveMergeMode(mergeMode.toString());
             context.getMissingSettings().remove(SettingType.MERGE_MODE);
-            setMarkCheckBoxVisibility();
+            setMakeDefaultVisible(settings.getMergeMode() == MergeMode.ORIGINAL_VIDEOS);
 
             actionResultPane.setOnlySuccess("Merge mode has been saved successfully");
         } catch (SettingException e) {
@@ -195,13 +189,9 @@ public class SettingsFormController {
         }
     }
 
-    private void makeMergedStreamsDefaultChanged(
-            ObservableValue<? extends Boolean> observable,
-            Boolean oldValue,
-            Boolean newValue
-    ) {
+    private void makeDefaultChanged(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
         try {
-            context.getSettings().saveMakeMergedStreamsDefault(newValue.toString());
+            settings.saveMakeMergedStreamsDefault(newValue.toString());
 
             if (newValue) {
                 actionResultPane.setOnlySuccess("Merged subtitles will be selected as default from now on");
@@ -217,7 +207,7 @@ public class SettingsFormController {
 
     private void plainTextChanged(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
         try {
-            context.getSettings().savePlainTextSubtitles(newValue.toString());
+            settings.savePlainTextSubtitles(newValue.toString());
 
             if (newValue) {
                 actionResultPane.setOnlySuccess("Merged subtitles will be in plain text from now on");
@@ -263,7 +253,7 @@ public class SettingsFormController {
         try {
             settings.saveUpperLanguage(value.toString());
             context.getMissingSettings().remove(SettingType.UPPER_LANGUAGE);
-            setSwapLanguagesButtonVisibility();
+            setSwapButtonVisibility();
 
             if (hadValueBefore) {
                 actionResultPane.setOnlySuccess("Language for upper subtitles has been updated successfully");
@@ -278,7 +268,7 @@ public class SettingsFormController {
     }
 
     @FXML
-    private void swapLanguagesButtonClicked() {
+    private void swapButtonClicked() {
         LanguageAlpha3Code oldUpperLanguage = settings.getUpperLanguage();
         LanguageAlpha3Code oldLowerLanguage = settings.getLowerLanguage();
 
@@ -315,7 +305,7 @@ public class SettingsFormController {
         try {
             settings.saveLowerLanguage(value.toString());
             context.getMissingSettings().remove(SettingType.LOWER_LANGUAGE);
-            setSwapLanguagesButtonVisibility();
+            setSwapButtonVisibility();
 
             if (hadValueBefore) {
                 actionResultPane.setOnlySuccess("Language for lower subtitles has been updated successfully");

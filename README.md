@@ -125,7 +125,7 @@ The application has several additional features that can be managed through sett
 
 <a name="mark_as_default"></a>
 #### Mark merged subtitles as default
-The application can mark merged subtitles as default which means that they should be played by your media player 
+The application can mark merged subtitles as default which means that they should be played by your video player 
 automatically so you don't need to select them manually when watching the video. It works only if you select the "Modify
 original videos" mode. 
 ![Encoding](/readme_images/mark_as_default.png)

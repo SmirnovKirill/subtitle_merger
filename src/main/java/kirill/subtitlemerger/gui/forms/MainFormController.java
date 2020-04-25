@@ -14,13 +14,13 @@ public class MainFormController {
     private TabPane mainForm;
 
     @FXML
-    private Tab settingsForm;
-
-    @FXML
     private SubtitleFilesFormController subtitleFilesFormController;
 
     @FXML
     private VideosFormController videosFormController;
+
+    @FXML
+    private Tab settingsForm;
 
     @FXML
     private SettingsFormController settingsFormController;

@@ -15,7 +15,10 @@ public class TextAndQuestionMark extends HBox {
     private Tooltip tooltip;
 
     public TextAndQuestionMark() {
-        GuiUtils.initializeControl(this, "/gui/javafx/forms/settings/controls/text_and_question_mark.fxml");
+        GuiUtils.initializeControl(
+                this,
+                "/gui/javafx/forms/settings/controls/text_and_question_mark.fxml"
+        );
     }
 
     public StringProperty labelTextProperty() {

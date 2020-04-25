@@ -44,8 +44,8 @@
                       onAction="#upperLanguageChanged" maxWidth="Infinity"/>
 
             <Region GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-            <Button fx:id="swapLanguagesButton" GridPane.rowIndex="1" GridPane.columnIndex="1"
-                    onAction="#swapLanguagesButtonClicked" styleClass="image-button">
+            <Button fx:id="swapButton" GridPane.rowIndex="1" GridPane.columnIndex="1"
+                    onAction="#swapButtonClicked" styleClass="image-button">
                 <GridPane.margin>
                     <Insets top="8" bottom="8" left="10"/>
                 </GridPane.margin>
@@ -119,19 +119,17 @@
             </GridPane>
 
             <TextAndQuestionMark GridPane.rowIndex="4" GridPane.columnIndex="0"
-                                 visible="${controller.markStreamCheckBoxVisible}"
-                                 managed="${controller.markStreamCheckBoxVisible}">
+                                 visible="${controller.makeDefaultVisible}" managed="${controller.makeDefaultVisible}">
                 <labelText>Mark merged subtitles as default</labelText>
                 <tooltipText>
-                    Merged subtitles will be displayed by the video player by default automatically.
+                    Merged subtitles will be played by the video player by default automatically.
                 </tooltipText>
             </TextAndQuestionMark>
-            <CheckBox fx:id="makeMergedStreamsDefaultCheckBox" GridPane.rowIndex="4" GridPane.columnIndex="1"
-                      visible="${controller.markStreamCheckBoxVisible}"
-                      managed="${controller.markStreamCheckBoxVisible}"/>
+            <CheckBox fx:id="makeDefaultCheckBox" GridPane.rowIndex="4" GridPane.columnIndex="1"
+                      visible="${controller.makeDefaultVisible}" managed="${controller.makeDefaultVisible}"/>
 
             <Region GridPane.rowIndex="5" GridPane.columnIndex="0" GridPane.columnSpan="2"
-                    visible="${controller.markStreamCheckBoxVisible}" managed="${controller.markStreamCheckBoxVisible}">
+                    visible="${controller.makeDefaultVisible}" managed="${controller.makeDefaultVisible}">
                 <GridPane.margin>
                     <Insets top="20" bottom="20"/>
                 </GridPane.margin>
