@@ -6,11 +6,9 @@
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
 <?import javafx.util.Duration?>
-<fx:root xmlns:fx="http://javafx.com/fxml" type="javafx.scene.layout.HBox" alignment="CENTER_LEFT">
+<fx:root xmlns:fx="http://javafx.com/fxml" type="javafx.scene.layout.HBox" alignment="CENTER_LEFT" spacing="10">
     <RadioButton fx:id="radioButton"/>
-    <Region minWidth="5" HBox.hgrow="ALWAYS"/>
     <Label>
         <graphic>
             <ImageView fitWidth="16" fitHeight="16">

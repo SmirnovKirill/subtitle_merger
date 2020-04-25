@@ -3,25 +3,29 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:id="choicePane"
-      fx:controller="kirill.subtitlemerger.gui.forms.videos.ChoiceFormController"
-      stylesheets="/gui/javafx/forms/videos/choice_form.css" spacing="10"
+<GridPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:id="choicePane"
+          fx:controller="kirill.subtitlemerger.gui.forms.videos.ChoiceFormController"
+          stylesheets="/gui/javafx/forms/videos/choice_form.css" vgap="10"
 >
-    <Label maxWidth="Infinity" alignment="CENTER" styleClass="choose-title">Please choose</Label>
-    <HBox>
-        <HBox HBox.hgrow="ALWAYS" alignment="CENTER" spacing="10" styleClass="files-pane">
-            <padding>
-                <Insets top="20" right="20" bottom="20" left="20"/>
-            </padding>
-            <Label>One or more videos</Label>
-            <Button onAction="#separateFilesButtonClicked" text="choose videos"/>
-        </HBox>
-        <HBox HBox.hgrow="ALWAYS" alignment="CENTER" spacing="10" styleClass="directory-pane">
-            <padding>
-                <Insets top="20" right="20" bottom="20" left="20"/>
-            </padding>
-            <Label>All videos from the directory</Label>
-            <Button onAction="#directoryButtonClicked" text="choose directory"/>
-        </HBox>
+    <columnConstraints>
+        <ColumnConstraints percentWidth="50"/>
+        <ColumnConstraints percentWidth="50"/>
+    </columnConstraints>
+
+    <Label GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.columnSpan="2"
+           maxWidth="Infinity" alignment="CENTER" styleClass="choose-title">Please choose</Label>
+    <HBox GridPane.rowIndex="1" GridPane.columnIndex="0" alignment="CENTER" spacing="10" styleClass="files-pane">
+        <padding>
+            <Insets top="20" right="20" bottom="20" left="20"/>
+        </padding>
+        <Label>One or more videos</Label>
+        <Button onAction="#separateFilesButtonClicked" text="choose videos"/>
     </HBox>
-</VBox>
+    <HBox GridPane.rowIndex="1" GridPane.columnIndex="1" alignment="CENTER" spacing="10" styleClass="directory-pane">
+        <padding>
+            <Insets top="20" right="20" bottom="20" left="20"/>
+        </padding>
+        <Label>All videos from the directory</Label>
+        <Button onAction="#directoryButtonClicked" text="choose directory"/>
+    </HBox>
+</GridPane>

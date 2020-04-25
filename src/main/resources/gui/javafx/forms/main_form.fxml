@@ -2,10 +2,10 @@
 
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.layout.Region?>
-<TabPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-         fx:id="tabPane" fx:controller="kirill.subtitlemerger.gui.forms.MainFormController"
+<TabPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:id="tabPane"
+         fx:controller="kirill.subtitlemerger.gui.forms.MainFormController" prefWidth="900" prefHeight="600"
          tabClosingPolicy="UNAVAILABLE" tabDragPolicy="FIXED"
-         prefWidth="900" prefHeight="600">
+>
     <!--
     Note that there is a weird bug in JavaFX - when the TableView's width is odd then there is a horizontal scrollbar.
     But it's not enough just to use an even number - Windows can scale the screen so that all pixels are multiplied to a

@@ -6,8 +6,7 @@
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
-<VBox xmlns:fx="http://javafx.com/fxml"
-      fx:controller="kirill.subtitlemerger.gui.forms.common.ErrorPopupFormController"
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="kirill.subtitlemerger.gui.forms.common.ErrorPopupFormController"
       prefWidth="450" spacing="20"
 >
     <padding>
