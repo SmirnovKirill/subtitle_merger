@@ -11,8 +11,8 @@
             <Insets top="20" right="20" bottom="20" left="20"/>
         </padding>
 
-        <fx:include fx:id="missingSettingsPane" source="missing_settings_form.fxml"/>
-        <fx:include fx:id="choicePane" source="choice_form.fxml"/>
-        <fx:include fx:id="contentPane" source="table_form.fxml"/>
+        <fx:include fx:id="missingSettingsForm" source="missing_settings_form.fxml"/>
+        <fx:include fx:id="choiceForm" source="choice_form.fxml"/>
+        <fx:include fx:id="contentForm" source="table_form.fxml"/>
     </StackPane>
 </Tab>

@@ -11,22 +11,22 @@ import org.apache.commons.collections4.CollectionUtils;
 @CommonsLog
 public class VideosFormController {
     @FXML
-    private MissingSettingsFormController missingSettingsPaneController;
+    private MissingSettingsFormController missingSettingsFormController;
 
     @FXML
-    private ChoiceFormController choicePaneController;
+    private ChoiceFormController choiceFormController;
 
     @FXML
-    private TableFormController contentPaneController;
+    private TableFormController contentFormController;
 
-    private MainFormController mainPaneController;
+    private MainFormController mainFormController;
 
-    public void initialize(MainFormController mainPaneController, Stage stage, GuiContext context) {
-        this.mainPaneController = mainPaneController;
+    public void initialize(MainFormController mainFormController, Stage stage, GuiContext context) {
+        this.mainFormController = mainFormController;
 
-        this.missingSettingsPaneController.initialize(this, context);
-        this.choicePaneController.initialize(this, contentPaneController, stage, context);
-        this.contentPaneController.initialize(this, stage, context);
+        this.missingSettingsFormController.initialize(this, context);
+        this.choiceFormController.initialize(this, contentFormController, stage, context);
+        this.contentFormController.initialize(this, stage, context);
 
         context.getMissingSettings().addListener((InvalidationListener) observable -> {
             setActivePane(haveMissingSettings(context) ? ActivePane.MISSING_SETTINGS : ActivePane.CHOICE);
@@ -41,24 +41,24 @@ public class VideosFormController {
 
     void setActivePane(ActivePane activePane) {
         if (activePane == ActivePane.MISSING_SETTINGS) {
-            missingSettingsPaneController.show();
-            choicePaneController.hide();
-            contentPaneController.hide();
+            missingSettingsFormController.show();
+            choiceFormController.hide();
+            contentFormController.hide();
         } else if (activePane == ActivePane.CHOICE) {
-            missingSettingsPaneController.hide();
-            choicePaneController.show();
-            contentPaneController.hide();
+            missingSettingsFormController.hide();
+            choiceFormController.show();
+            contentFormController.hide();
         } else if (activePane == ActivePane.CONTENT) {
-            missingSettingsPaneController.hide();
-            choicePaneController.hide();
-            contentPaneController.show();
+            missingSettingsFormController.hide();
+            choiceFormController.hide();
+            contentFormController.show();
         } else {
             throw new IllegalStateException();
         }
     }
 
     void openSettingsTab() {
-        mainPaneController.openSettingsTab();
+        mainFormController.openSettingsTab();
     }
 
     public enum ActivePane {
