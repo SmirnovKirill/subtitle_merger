@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.joda.time.LocalTime;
 
@@ -14,6 +15,7 @@ import java.util.*;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
+@CommonsLog
 public class SubtitleMerger {
     public static Subtitles mergeSubtitles(
             Subtitles upperSubtitles,
@@ -172,6 +174,7 @@ public class SubtitleMerger {
             Set<Source> sources = subtitle.getLines().stream().map(MergerSubtitleLine::getSource).collect(toSet());
 
             if (sources.size() != 1 && sources.size() != 2) {
+                log.error("unexpected amount of sources: " + sources.size() + ", most likely a bug");
                 throw new IllegalStateException();
             }
 
@@ -299,6 +302,7 @@ public class SubtitleMerger {
         }
 
         if (firstMatchingSubtitleForward == null && firstMatchingSubtitleBackward == null) {
+            log.error("no matching subtitles, most likely a bug");
             throw new IllegalStateException();
         } else if (firstMatchingSubtitleForward != null && firstMatchingSubtitleBackward != null) {
             MergerSubtitle mainSubtitle = subtitles.get(subtitleIndex);
