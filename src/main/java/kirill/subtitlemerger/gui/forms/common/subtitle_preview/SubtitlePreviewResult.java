@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.gui.forms.common;
+package kirill.subtitlemerger.gui.forms.common.subtitle_preview;
 
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import lombok.AllArgsConstructor;

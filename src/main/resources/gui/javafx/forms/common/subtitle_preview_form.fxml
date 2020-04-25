@@ -5,18 +5,16 @@
 <?import javafx.scene.layout.*?>
 <?import kirill.subtitlemerger.gui.common_controls.ActionResultPane?>
 <?import kirill.subtitlemerger.gui.GuiConstants?>
-<StackPane xmlns:fx="http://javafx.com/fxml" prefHeight="600" prefWidth="900"
-           fx:controller="kirill.subtitlemerger.gui.forms.common.SubtitlePreviewFormController"
-           stylesheets="/gui/javafx/forms/common/subtitle_preview_form.css"
->
+<StackPane xmlns:fx="http://javafx.com/fxml"
+           fx:controller="kirill.subtitlemerger.gui.forms.common.subtitle_preview.SubtitlePreviewFormController"
+           prefWidth="900" prefHeight="600" stylesheets="/gui/javafx/forms/common/subtitle_preview_form.css">
     <padding>
         <Insets top="20" right="20" bottom="20" left="20"/>
     </padding>
+
     <VBox fx:id="mainPane" spacing="10">
-        <HBox>
-            <Label fx:id="title" alignment="CENTER" textAlignment="CENTER" wrapText="true"
-                   maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
-        </HBox>
+        <Label fx:id="title" maxWidth="Infinity" HBox.hgrow="ALWAYS" alignment="CENTER" textAlignment="CENTER"
+               wrapText="true"/>
         <HBox fx:id="mergedUpperPane" alignment="CENTER_LEFT">
             <Label text="&#8226; "/>
             <Label fx:id="mergedUpperTitle"/>
@@ -37,18 +35,18 @@
                text="Lines that are longer than 1000 symbols were truncated">
             <styleClass><GuiConstants fx:constant="LABEL_WARN_CLASS"/></styleClass>
         </Label>
-        <ListView fx:id="listView" focusTraversable="false" VBox.vgrow="ALWAYS"/>
+        <ListView fx:id="listView" VBox.vgrow="ALWAYS" focusTraversable="false"/>
         <StackPane>
-            <HBox fx:id="okPane" spacing="10" alignment="CENTER">
+            <HBox fx:id="okPane" alignment="CENTER" spacing="10">
                 <Button onAction="#okButtonClicked" text="OK"/>
             </HBox>
-            <HBox fx:id="cancelSavePane" spacing="10" alignment="CENTER">
+            <HBox fx:id="cancelSavePane" alignment="CENTER" spacing="10">
                 <Button onAction="#cancelButtonClicked" text="Cancel"/>
-                <Button fx:id="saveButton" onAction="#saveButtonClicked" text="Save changes" disable="true"/>
+                <Button fx:id="saveButton" onAction="#saveButtonClicked" disable="true" text="Save changes"/>
             </HBox>
         </StackPane>
     </VBox>
-    <VBox fx:id="progressPane" spacing="10" alignment="CENTER" visible="false">
+    <VBox fx:id="progressPane" alignment="CENTER" visible="false" spacing="10">
         <ProgressIndicator fx:id="progressIndicator"/>
         <Label fx:id="progressLabel"/>
     </VBox>

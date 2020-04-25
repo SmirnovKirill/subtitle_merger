@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.gui.forms.common;
+package kirill.subtitlemerger.gui.forms.common.agreement_popup;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;

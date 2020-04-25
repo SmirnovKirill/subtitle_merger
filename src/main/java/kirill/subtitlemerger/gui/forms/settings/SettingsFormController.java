@@ -96,7 +96,7 @@ public class SettingsFormController {
         lowerLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
 
         setUpperSubtitles();
-        setSwapButtonVisibility();
+        swapButton.setDisable(settings.getUpperLanguage() == null || settings.getLowerLanguage() == null);
         setLowerSubtitles();
         setMergeMode();
         setMakeDefaultVisible(settings.getMergeMode() == MergeMode.ORIGINAL_VIDEOS);
@@ -114,12 +114,6 @@ public class SettingsFormController {
         if (upperLanguage != null) {
             upperLanguageComboBox.getSelectionModel().select(upperLanguage);
         }
-    }
-
-    private void setSwapButtonVisibility() {
-        boolean swapButtonDisable = settings.getUpperLanguage() == null || settings.getLowerLanguage() == null;
-
-        swapButton.setDisable(swapButtonDisable);
     }
 
     private void setLowerSubtitles() {
@@ -253,7 +247,7 @@ public class SettingsFormController {
         try {
             settings.saveUpperLanguage(value.toString());
             context.getMissingSettings().remove(SettingType.UPPER_LANGUAGE);
-            setSwapButtonVisibility();
+            swapButton.setDisable(settings.getUpperLanguage() == null || settings.getLowerLanguage() == null);
 
             if (hadValueBefore) {
                 actionResultPane.setOnlySuccess("Language for upper subtitles has been updated successfully");
@@ -305,7 +299,7 @@ public class SettingsFormController {
         try {
             settings.saveLowerLanguage(value.toString());
             context.getMissingSettings().remove(SettingType.LOWER_LANGUAGE);
-            setSwapButtonVisibility();
+            swapButton.setDisable(settings.getUpperLanguage() == null || settings.getLowerLanguage() == null);
 
             if (hadValueBefore) {
                 actionResultPane.setOnlySuccess("Language for lower subtitles has been updated successfully");

@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.gui.forms.common;
+package kirill.subtitlemerger.gui.forms.common.subtitle_preview;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -10,6 +10,7 @@ import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import kirill.subtitlemerger.gui.common_controls.ActionResultPane;
+import kirill.subtitlemerger.gui.forms.common.BackgroundTaskFormController;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.background.BackgroundCallback;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
@@ -30,6 +31,8 @@ import java.util.Objects;
 
 public class SubtitlePreviewFormController extends BackgroundTaskFormController {
     private static final CharsetStringConverter CHARSET_STRING_CONVERTER = new CharsetStringConverter();
+
+    private BooleanProperty linesTruncated;
 
     @FXML
     private Label title;
@@ -67,8 +70,6 @@ public class SubtitlePreviewFormController extends BackgroundTaskFormController 
     @FXML
     private Button saveButton;
 
-    private BooleanProperty linesTruncated;
-
     private Mode mode;
 
     private byte[] data;
@@ -89,6 +90,18 @@ public class SubtitlePreviewFormController extends BackgroundTaskFormController 
 
     public SubtitlePreviewFormController() {
         linesTruncated = new SimpleBooleanProperty(false);
+    }
+
+    public boolean isLinesTruncated() {
+        return linesTruncated.get();
+    }
+
+    public BooleanProperty linesTruncatedProperty() {
+        return linesTruncated;
+    }
+
+    public void setLinesTruncated(boolean linesTruncated) {
+        this.linesTruncated.set(linesTruncated);
     }
 
     public void initializeSimple(Subtitles subtitles, String title, Stage dialogStage) {
@@ -246,18 +259,6 @@ public class SubtitlePreviewFormController extends BackgroundTaskFormController 
         getPreviewInfoAndUpdateScene(true);
     }
 
-    public boolean isLinesTruncated() {
-        return linesTruncated.get();
-    }
-
-    public BooleanProperty linesTruncatedProperty() {
-        return linesTruncated;
-    }
-
-    public void setLinesTruncated(boolean linesTruncated) {
-        this.linesTruncated.set(linesTruncated);
-    }
-
     public SubtitlePreviewResult getResult() {
         if (mode != Mode.WITH_ENCODING) {
             throw new IllegalStateException();
@@ -323,6 +324,10 @@ public class SubtitlePreviewFormController extends BackgroundTaskFormController 
         private boolean linesTruncated;
     }
 
+    /*
+     * A special class created so that when the user clicks on the list view there are no errors. It does nothing and
+     * that's the whole point.
+     */
     private static class NoSelectionModel<T> extends MultipleSelectionModel<T> {
         @Override
         public ObservableList<Integer> getSelectedIndices() {

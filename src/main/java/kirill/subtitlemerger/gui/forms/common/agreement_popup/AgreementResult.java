@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.gui.forms.common;
+package kirill.subtitlemerger.gui.forms.common.agreement_popup;
 
 public enum AgreementResult {
     CANCELED,
