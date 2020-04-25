@@ -62,6 +62,6 @@ public class MissingSettingsFormController {
 
     @FXML
     private void goToSettingsLinkClicked() {
-        videosTabController.openSettingsTab();
+        videosTabController.openSettingsForm();
     }
 }

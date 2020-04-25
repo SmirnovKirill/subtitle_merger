@@ -2,7 +2,7 @@
 
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.layout.Region?>
-<TabPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:id="tabPane"
+<TabPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:id="mainForm"
          fx:controller="kirill.subtitlemerger.gui.forms.MainFormController" prefWidth="900" prefHeight="600"
          tabClosingPolicy="UNAVAILABLE" tabDragPolicy="FIXED"
 >

@@ -11,10 +11,10 @@ import kirill.subtitlemerger.gui.forms.videos.VideosFormController;
 
 public class MainFormController {
     @FXML
-    private TabPane tabPane;
+    private TabPane mainForm;
 
     @FXML
-    private Tab settingsTab;
+    private Tab settingsForm;
 
     @FXML
     private SubtitleFilesFormController subtitleFilesFormController;
@@ -31,7 +31,7 @@ public class MainFormController {
         this.settingsFormController.initialize(guiContext);
     }
 
-    public void openSettingsTab() {
-        tabPane.getSelectionModel().select(settingsTab);
+    public void openSettingsForm() {
+        mainForm.getSelectionModel().select(settingsForm);
     }
 }

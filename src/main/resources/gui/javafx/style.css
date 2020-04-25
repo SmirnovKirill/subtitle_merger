@@ -36,30 +36,16 @@
     -fx-underline: true;
 }
 
-.hyperlink,
-.hyperlink:focused  {
+.hyperlink {
     -fx-border-style: none;
     -fx-border-width: 0;
     -fx-padding: 0;
-}
-
-.hyperlink:hover,
-.hyperlink:hover:visited {
-    -fx-underline: true;
-}
-
-.hyperlink:visited,
-.hyperlink:visited:armed {
     -fx-underline: false;
+    -fx-text-fill: -fx-accent;
 }
 
-.hyperlink,
-.hyperlink:hover,
-.hyperlink:armed,
-.hyperlink:hover:armed,
-.hyperlink:visited,
-.hyperlink:hover:visited {
-    -fx-text-fill: -fx-accent;
+.hyperlink:hover {
+    -fx-underline: true;
 }
 
 .tooltip {
@@ -67,7 +53,7 @@
     -fx-text-fill: -fx-text-base-color;
 }
 
-/* button that consists only of one image or image and text, it should look very simple, without any borders */
+/* A button that consists of only one image or an image and a text, it should look very simple, without any borders. */
 .image-button {
     -fx-padding: 0;
     -fx-background-color: transparent;

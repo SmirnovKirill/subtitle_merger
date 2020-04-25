@@ -57,8 +57,8 @@ public class VideosFormController {
         }
     }
 
-    void openSettingsTab() {
-        mainFormController.openSettingsTab();
+    void openSettingsForm() {
+        mainFormController.openSettingsForm();
     }
 
     public enum ActivePane {
