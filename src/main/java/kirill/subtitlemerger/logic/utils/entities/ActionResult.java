@@ -1,6 +1,5 @@
 package kirill.subtitlemerger.logic.utils.entities;
 
-import kirill.subtitlemerger.gui.common_controls.ActionResultPane;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

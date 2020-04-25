@@ -1,7 +1,6 @@
 package kirill.subtitlemerger.gui;
 
 import javafx.application.Application;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
@@ -32,7 +31,9 @@ public class GuiLauncher extends Application {
         stage.getIcons().add(new Image(GuiLauncher.class.getResourceAsStream("/gui/icons/icon.png")));
         stage.setTitle("Subtitle Merger");
         stage.setResizable(true);
-        stage.setScene(generateScene(mainFormInfo.getRootNode()));
+        Scene scene = new Scene(mainFormInfo.getRootNode());
+        scene.getStylesheets().add("/gui/javafx/style.css");
+        stage.setScene(scene);
 
         stage.show();
         closeSplashScreen();
@@ -40,7 +41,7 @@ public class GuiLauncher extends Application {
         /*
          * I've encountered a very strange behaviour - at first the stage's width and height are set to their computed
          * sizes but very soon after this method (start) is called during the startup window the sizes are changed for a
-         * reason completely unknown to me. Sizes are changed because the com.sun.glass.ui.Window::notifyResize is
+         * reason completely unknown to me. The sizes are changed because the com.sun.glass.ui.Window::notifyResize is
          * called. This method is called from a native method com.sun.glass.ui.gtk.GtkApplication::_runLoop so I can't
          * understand why that happens. Anyway, I've discovered that if I set the stage's width and height explicitly
          * these original sizes will be restored after these weird changes. And it reproduces only in Kubuntu for me, in
@@ -51,14 +52,6 @@ public class GuiLauncher extends Application {
 
         stage.setMinWidth(stage.getWidth());
         stage.setMinHeight(stage.getHeight());
-    }
-
-    private static Scene generateScene(Parent rootNode) {
-        Scene result = new Scene(rootNode);
-
-        result.getStylesheets().add("/gui/javafx/style.css");
-
-        return result;
     }
 
     private void closeSplashScreen() {

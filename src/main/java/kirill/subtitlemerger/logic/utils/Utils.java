@@ -34,7 +34,14 @@ public class Utils {
     }
 
     /**
-     * Language are considered to be equal if their codes are the same or if they represent the same language and are
+     * Returns the language code if the language is not empty or the string "unknown language" otherwise.
+     */
+    public static String languageToString(LanguageAlpha3Code language) {
+        return language != null ? language.toString() : "unknown language";
+    }
+
+    /**
+     * Languages are considered to be equal if their codes are the same or if they represent the same language and are
      * just synonyms (bibliographic and terminological versions).
      */
     public static boolean languagesEqual(LanguageAlpha3Code first, LanguageAlpha3Code second) {
@@ -77,8 +84,8 @@ public class Utils {
      * @param count the number of items
      * @param oneItemText the text to return when there is only one item, this text can't use any format arguments
      *                   because there is always only one item
-     * @param zeroOrSeveralItemsText the text to return when there are zero or several items, this text can use format
-     *                               argument %d inside
+     * @param zeroOrSeveralItemsText the text to return when there are zero or several items, this text can use the
+     *                               format argument %d inside
      * @return the text depending on the count.
      */
     public static String getTextDependingOnCount(int count, String oneItemText, String zeroOrSeveralItemsText) {
@@ -90,20 +97,13 @@ public class Utils {
     }
 
     /**
-     * Returns the language code if the language is not empty or the string "unknown language" otherwise.
-     */
-    public static String languageToString(LanguageAlpha3Code language) {
-        return language != null ? language.toString() : "unknown language";
-    }
-
-    /**
      * Returns the textual representation of the size.
      *
      * @param size the size to represent.
      * @param keepShort if set to true the result will be for example "100 KB" instead of "100.00 KB", "99.9 KB" instead
      *                  of "99.91 KB" and so on - the number of digits after the decimal point will be reduced depending
      *                  on the whole part so that in general there are no more than four symbols in the textual
-     *                  representation (plus the size suffix). Otherwise there will be 2 digits after the point.
+     *                  representation (plus the size suffix). Otherwise there will always be 2 digits after the point.
      * @return the textual representation of the size (for example 21.39 KB).
      */
     public static String getFileSizeTextual(long size, boolean keepShort) {
