@@ -39,7 +39,7 @@ public class FileInfo {
             List<SubtitleOption> subtitleOptions,
             MergedSubtitleInfo mergedSubtitleInfo
     ) {
-        this.id = file.getAbsolutePath();
+        id = file.getAbsolutePath();
         this.file = file;
         setCurrentSizeAndLastModified();
         this.format = format;

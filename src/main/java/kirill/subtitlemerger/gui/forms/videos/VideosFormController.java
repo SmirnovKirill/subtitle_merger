@@ -24,9 +24,9 @@ public class VideosFormController {
     public void initialize(MainFormController mainFormController, Stage stage, GuiContext context) {
         this.mainFormController = mainFormController;
 
-        this.missingSettingsFormController.initialize(this, context);
-        this.choiceFormController.initialize(this, contentFormController, stage, context);
-        this.contentFormController.initialize(this, stage, context);
+        missingSettingsFormController.initialize(this, context);
+        choiceFormController.initialize(this, contentFormController, stage, context);
+        contentFormController.initialize(this, stage, context);
 
         context.getMissingSettings().addListener((InvalidationListener) observable -> {
             setActivePane(haveMissingSettings(context) ? ActivePane.MISSING_SETTINGS : ActivePane.CHOICE);

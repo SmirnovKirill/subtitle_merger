@@ -93,8 +93,8 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
 
     public void initialize(Stage stage, GuiContext context) {
         this.stage = stage;
-        this.settings = context.getSettings();
-        this.filesInfo = new FilesInfo(null, null, null, null);
+        settings = context.getSettings();
+        filesInfo = new FilesInfo(null, null, null, null);
 
         GuiUtils.setTextFieldChangeListeners(
                 upperPathField,

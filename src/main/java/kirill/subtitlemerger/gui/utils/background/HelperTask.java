@@ -20,7 +20,7 @@ class HelperTask<T> extends Task<Void> {
     private BackgroundCallback<T> callback;
 
     HelperTask(BackgroundRunner<T> runner, BackgroundCallback<T> callback) {
-        this.manager = new BackgroundManager(this);
+        manager = new BackgroundManager(this);
         this.runner = runner;
         this.callback = callback;
 

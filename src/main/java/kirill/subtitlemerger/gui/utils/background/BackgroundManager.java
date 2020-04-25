@@ -19,8 +19,8 @@ public class BackgroundManager {
     private HelperTask<?> task;
 
     BackgroundManager(HelperTask task) {
-        this.cancellationPossible = new ReadOnlyBooleanWrapper(false);
-        this.cancellationDescription = new ReadOnlyStringWrapper();
+        cancellationPossible = new ReadOnlyBooleanWrapper(false);
+        cancellationDescription = new ReadOnlyStringWrapper();
         this.task = task;
     }
 

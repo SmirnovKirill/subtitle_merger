@@ -26,9 +26,9 @@ public class MainFormController {
     private SettingsFormController settingsFormController;
 
     public void initialize(Stage stage, GuiContext guiContext) {
-        this.subtitleFilesFormController.initialize(stage, guiContext);
-        this.videosFormController.initialize(this, stage, guiContext);
-        this.settingsFormController.initialize(guiContext);
+        subtitleFilesFormController.initialize(stage, guiContext);
+        videosFormController.initialize(this, stage, guiContext);
+        settingsFormController.initialize(guiContext);
     }
 
     public void openSettingsForm() {
