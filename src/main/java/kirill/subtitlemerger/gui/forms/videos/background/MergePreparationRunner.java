@@ -14,10 +14,10 @@ import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
-import kirill.subtitlemerger.logic.video_files.entities.FfmpegSubtitleStream;
-import kirill.subtitlemerger.logic.video_files.entities.VideoFile;
-import kirill.subtitlemerger.logic.video_files.entities.FileWithSubtitles;
-import kirill.subtitlemerger.logic.video_files.entities.SubtitleOption;
+import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
+import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
+import kirill.subtitlemerger.logic.videos.entities.ExternalSubtitleOption;
+import kirill.subtitlemerger.logic.videos.entities.SubtitleOption;
 import kirill.subtitlemerger.logic.settings.MergeMode;
 import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.logic.utils.Utils;
@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 public class MergePreparationRunner implements BackgroundRunner<MergePreparationRunner.Result> {
     private List<TableFileInfo> displayedTableFilesInfo;
 
-    private List<VideoFile> filesInfo;
+    private List<VideoInfo> filesInfo;
 
     private TableWithFiles tableWithFiles;
 
@@ -128,7 +128,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         String progressMessagePrefix = getProgressMessagePrefix(processedCount, allCount, tableFileInfo);
         backgroundManager.updateMessage(progressMessagePrefix + "...");
 
-        VideoFile fileInfo = VideoFile.getById(tableFileInfo.getId(), filesInfo);
+        VideoInfo fileInfo = VideoInfo.getById(tableFileInfo.getId(), filesInfo);
 
         TableSubtitleOption tableUpperOption = tableFileInfo.getUpperOption();
         TableSubtitleOption tableLowerOption = tableFileInfo.getLowerOption();
@@ -200,16 +200,16 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
     private static Set<LanguageAlpha3Code> getLanguagesToCheck(SubtitleOption upperOption, SubtitleOption lowerOption) {
         Set<LanguageAlpha3Code> result = new HashSet<>();
 
-        if (upperOption instanceof FfmpegSubtitleStream) {
-            LanguageAlpha3Code language = ((FfmpegSubtitleStream) upperOption).getLanguage();
+        if (upperOption instanceof BuiltInSubtitleOption) {
+            LanguageAlpha3Code language = ((BuiltInSubtitleOption) upperOption).getLanguage();
             if (language != null) {
                 result.add(language);
                 result.add(language.getSynonym());
             }
         }
 
-        if (lowerOption instanceof FfmpegSubtitleStream) {
-            LanguageAlpha3Code language = ((FfmpegSubtitleStream) lowerOption).getLanguage();
+        if (lowerOption instanceof BuiltInSubtitleOption) {
+            LanguageAlpha3Code language = ((BuiltInSubtitleOption) lowerOption).getLanguage();
             if (language != null) {
                 result.add(language);
                 result.add(language.getSynonym());
@@ -223,19 +223,19 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
 
     private int loadStreams(
             TableFileInfo tableFileInfo,
-            VideoFile fileInfo,
+            VideoInfo fileInfo,
             Set<LanguageAlpha3Code> languagesToCheck,
             String progressMessagePrefix,
             BackgroundManager backgroundManager
     ) throws InterruptedException {
         int failedToLoad = 0;
 
-        List<FfmpegSubtitleStream> streamsToLoad = fileInfo.getFfmpegSubtitleStreams().stream()
+        List<BuiltInSubtitleOption> streamsToLoad = fileInfo.getBuiltInSubtitleOptions().stream()
                 .filter(stream -> stream.getLanguage() == null || languagesToCheck.contains(stream.getLanguage()))
                 .filter(stream -> stream.getSubtitles() == null)
                 .collect(Collectors.toList());
 
-        for (FfmpegSubtitleStream ffmpegStream : streamsToLoad) {
+        for (BuiltInSubtitleOption ffmpegStream : streamsToLoad) {
             backgroundManager.updateMessage(
                     progressMessagePrefix + ": loading subtitles "
                             + Utils.languageToString(ffmpegStream.getLanguage()).toUpperCase()
@@ -289,10 +289,10 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
     private static boolean isDuplicate(
             String mergedText,
             Set<LanguageAlpha3Code> languagesToCheck,
-            VideoFile fileInfo,
+            VideoInfo fileInfo,
             boolean plainText
     ) {
-        for (FfmpegSubtitleStream subtitleStream : fileInfo.getFfmpegSubtitleStreams()) {
+        for (BuiltInSubtitleOption subtitleStream : fileInfo.getBuiltInSubtitleOptions()) {
             if (subtitleStream.getLanguage() == null || languagesToCheck.contains(subtitleStream.getLanguage())) {
                 String subtitleText = SubRipWriter.toText(subtitleStream.getSubtitles(), plainText);
                 if (Objects.equals(mergedText, subtitleText)) {
@@ -305,7 +305,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
     }
 
     private static File getFileWithResult(
-            VideoFile fileInfo,
+            VideoInfo fileInfo,
             SubtitleOption upperOption,
             SubtitleOption lowerOption,
             Settings settings
@@ -324,10 +324,10 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
     }
 
     private static String getOptionTitleForFile(SubtitleOption subtitleOption) {
-        if (subtitleOption instanceof FileWithSubtitles) {
+        if (subtitleOption instanceof ExternalSubtitleOption) {
             return "external";
-        } else if (subtitleOption instanceof FfmpegSubtitleStream) {
-            LanguageAlpha3Code language = ((FfmpegSubtitleStream) subtitleOption).getLanguage();
+        } else if (subtitleOption instanceof BuiltInSubtitleOption) {
+            LanguageAlpha3Code language = ((BuiltInSubtitleOption) subtitleOption).getLanguage();
             return language != null ? language.toString() : "unknown";
         } else {
             throw new IllegalStateException();
@@ -336,7 +336,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
 
     private static Optional<RequiredAndAvailableSpace> getRequiredAndAvailableTempSpace(
             List<FileMergeInfo> filesMergeInfo,
-            List<VideoFile> filesInfo,
+            List<VideoInfo> filesInfo,
             Settings settings,
             BackgroundManager backgroundManager
     ) {
@@ -357,7 +357,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                 continue;
             }
 
-            VideoFile fileInfo = VideoFile.getById(fileMergeInfo.getId(), filesInfo);
+            VideoInfo fileInfo = VideoInfo.getById(fileMergeInfo.getId(), filesInfo);
 
             long currentRequiredSpace = fileInfo.getFile().length();
             long currentAvailableSpace = fileInfo.getFile().getFreeSpace();

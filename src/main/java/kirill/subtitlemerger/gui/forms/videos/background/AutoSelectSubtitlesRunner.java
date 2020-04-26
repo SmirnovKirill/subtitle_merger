@@ -10,8 +10,8 @@ import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
-import kirill.subtitlemerger.logic.video_files.entities.FfmpegSubtitleStream;
-import kirill.subtitlemerger.logic.video_files.entities.VideoFile;
+import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
+import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
 import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.logic.utils.Utils;
 import kirill.subtitlemerger.logic.utils.entities.ActionResult;
@@ -29,13 +29,13 @@ import java.util.stream.Collectors;
 @CommonsLog
 @AllArgsConstructor
 public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult> {
-    private static final Comparator<FfmpegSubtitleStream> STREAM_COMPARATOR = Comparator.comparing(
-            FfmpegSubtitleStream::getSize
+    private static final Comparator<BuiltInSubtitleOption> STREAM_COMPARATOR = Comparator.comparing(
+            BuiltInSubtitleOption::getSize
     ).reversed();
 
     private List<TableFileInfo> displayedTableFilesInfo;
 
-    private List<VideoFile> filesInfo;
+    private List<VideoInfo> filesInfo;
 
     private TableWithFiles tableWithFiles;
 
@@ -68,15 +68,15 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
                     VideoTabBackgroundUtils.getProcessFileProgressMessage(processedCount, allFileCount, tableFileInfo)
             );
 
-            VideoFile fileInfo = VideoFile.getById(tableFileInfo.getId(), filesInfo);
-            if (CollectionUtils.isEmpty(fileInfo.getFfmpegSubtitleStreams())) {
+            VideoInfo fileInfo = VideoInfo.getById(tableFileInfo.getId(), filesInfo);
+            if (CollectionUtils.isEmpty(fileInfo.getBuiltInSubtitleOptions())) {
                 notPossibleCount++;
                 processedCount++;
                 continue;
             }
 
-            List<FfmpegSubtitleStream> matchingUpperSubtitles = getMatchingUpperSubtitles(fileInfo, settings);
-            List<FfmpegSubtitleStream> matchingLowerSubtitles = getMatchingLowerSubtitles(fileInfo, settings);
+            List<BuiltInSubtitleOption> matchingUpperSubtitles = getMatchingUpperSubtitles(fileInfo, settings);
+            List<BuiltInSubtitleOption> matchingLowerSubtitles = getMatchingLowerSubtitles(fileInfo, settings);
             if (CollectionUtils.isEmpty(matchingUpperSubtitles) || CollectionUtils.isEmpty(matchingLowerSubtitles)) {
                 notPossibleCount++;
                 processedCount++;
@@ -130,15 +130,15 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
         );
     }
 
-    private static List<FfmpegSubtitleStream> getMatchingUpperSubtitles(VideoFile fileInfo, Settings settings) {
-        return fileInfo.getFfmpegSubtitleStreams().stream()
+    private static List<BuiltInSubtitleOption> getMatchingUpperSubtitles(VideoInfo fileInfo, Settings settings) {
+        return fileInfo.getBuiltInSubtitleOptions().stream()
                 .filter(stream -> stream.getNotValidReason() == null)
                 .filter(stream -> Utils.languagesEqual(stream.getLanguage(), settings.getUpperLanguage()))
                 .collect(Collectors.toList());
     }
 
-    private static List<FfmpegSubtitleStream> getMatchingLowerSubtitles(VideoFile fileInfo, Settings settings) {
-        return fileInfo.getFfmpegSubtitleStreams().stream()
+    private static List<BuiltInSubtitleOption> getMatchingLowerSubtitles(VideoInfo fileInfo, Settings settings) {
+        return fileInfo.getBuiltInSubtitleOptions().stream()
                 .filter(stream -> stream.getNotValidReason() == null)
                 .filter(stream -> Utils.languagesEqual(stream.getLanguage(), settings.getLowerLanguage()))
                 .collect(Collectors.toList());
@@ -146,16 +146,16 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
 
     private boolean loadStreams(
             TableFileInfo tableFileInfo,
-            VideoFile fileInfo,
-            List<FfmpegSubtitleStream> matchingUpperSubtitles,
-            List<FfmpegSubtitleStream> matchingLowerSubtitles,
+            VideoInfo fileInfo,
+            List<BuiltInSubtitleOption> matchingUpperSubtitles,
+            List<BuiltInSubtitleOption> matchingLowerSubtitles,
             int processedCount,
             int allFileCount,
             BackgroundManager backgroundManager
     ) throws InterruptedException {
         boolean result = true;
 
-        List<FfmpegSubtitleStream> ffmpegStreams = new ArrayList<>();
+        List<BuiltInSubtitleOption> ffmpegStreams = new ArrayList<>();
         if (matchingUpperSubtitles.size() > 1) {
             ffmpegStreams.addAll(matchingUpperSubtitles);
         }
@@ -165,7 +165,7 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
 
         int failedToLoadForFile = 0;
 
-        for (FfmpegSubtitleStream ffmpegStream : ffmpegStreams) {
+        for (BuiltInSubtitleOption ffmpegStream : ffmpegStreams) {
             backgroundManager.updateMessage(
                     getUpdateMessage(processedCount, allFileCount, ffmpegStream, fileInfo.getFile())
             );
@@ -227,7 +227,7 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
     private static String getUpdateMessage(
             int processedCount,
             int allFileCount,
-            FfmpegSubtitleStream subtitleStream,
+            BuiltInSubtitleOption subtitleStream,
             File file
     ) {
         String progressPrefix = allFileCount > 1

@@ -12,10 +12,10 @@ import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
-import kirill.subtitlemerger.logic.video_files.entities.FfmpegSubtitleStream;
-import kirill.subtitlemerger.logic.video_files.entities.VideoFile;
-import kirill.subtitlemerger.logic.video_files.entities.MergedSubtitleInfo;
-import kirill.subtitlemerger.logic.video_files.entities.SubtitleOption;
+import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
+import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
+import kirill.subtitlemerger.logic.videos.entities.MergedSubtitleInfo;
+import kirill.subtitlemerger.logic.videos.entities.SubtitleOption;
 import kirill.subtitlemerger.logic.utils.Utils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -34,7 +34,7 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
 
     private SubtitleOption lowerOption;
 
-    private VideoFile fileInfo;
+    private VideoInfo fileInfo;
 
     private TableFileInfo tableFileInfo;
 
@@ -103,15 +103,15 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
     }
 
     private void loadStreams(BackgroundManager backgroundManager) throws InterruptedException {
-        List<FfmpegSubtitleStream> streamsToLoad = new ArrayList<>();
-        if (upperOption instanceof FfmpegSubtitleStream) {
-            streamsToLoad.add((FfmpegSubtitleStream) upperOption);
+        List<BuiltInSubtitleOption> streamsToLoad = new ArrayList<>();
+        if (upperOption instanceof BuiltInSubtitleOption) {
+            streamsToLoad.add((BuiltInSubtitleOption) upperOption);
         }
-        if (lowerOption instanceof FfmpegSubtitleStream) {
-            streamsToLoad.add((FfmpegSubtitleStream) lowerOption);
+        if (lowerOption instanceof BuiltInSubtitleOption) {
+            streamsToLoad.add((BuiltInSubtitleOption) lowerOption);
         }
 
-        for (FfmpegSubtitleStream ffmpegStream : streamsToLoad) {
+        for (BuiltInSubtitleOption ffmpegStream : streamsToLoad) {
             backgroundManager.updateMessage(getUpdateMessage(ffmpegStream, fileInfo.getFile()));
 
             if (ffmpegStream.getSubtitles() != null) {
@@ -157,7 +157,7 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
         }
     }
 
-    private static String getUpdateMessage(FfmpegSubtitleStream subtitleStream, File file) {
+    private static String getUpdateMessage(BuiltInSubtitleOption subtitleStream, File file) {
         return "Getting subtitles "
                 + Utils.languageToString(subtitleStream.getLanguage()).toUpperCase()
                 + (StringUtils.isBlank(subtitleStream.getTitle()) ? "" : " " + subtitleStream.getTitle())

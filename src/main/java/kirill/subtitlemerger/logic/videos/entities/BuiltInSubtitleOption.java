@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.logic.video_files.entities;
+package kirill.subtitlemerger.logic.videos.entities;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 
 @CommonsLog
 @Getter
-public class FfmpegSubtitleStream extends SubtitleOption {
+public class BuiltInSubtitleOption extends SubtitleOption {
     private static final String MERGED_SUBTITLE_REGEXP = "^merged-"
             + "(external|unknown|undefined|[a-z]{3})-(external|unknown|undefined|[a-z]{3})$";
     /*
@@ -29,11 +29,11 @@ public class FfmpegSubtitleStream extends SubtitleOption {
 
     private boolean merged;
 
-    public FfmpegSubtitleStream(
+    public BuiltInSubtitleOption(
             int ffmpegIndex,
             Subtitles subtitles,
             Integer size,
-            SubtitleOptionNotValidReason notValidReason,
+            OptionNotValidReason notValidReason,
             boolean selectedAsUpper,
             boolean selectedAsLower,
             String format,

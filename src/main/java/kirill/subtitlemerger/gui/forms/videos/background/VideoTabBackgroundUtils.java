@@ -9,11 +9,11 @@ import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
-import kirill.subtitlemerger.logic.video_files.VideoFiles;
-import kirill.subtitlemerger.logic.video_files.entities.FfmpegSubtitleStream;
-import kirill.subtitlemerger.logic.video_files.entities.VideoFile;
-import kirill.subtitlemerger.logic.video_files.entities.VideoFileNotValidReason;
-import kirill.subtitlemerger.logic.video_files.entities.SubtitleOptionNotValidReason;
+import kirill.subtitlemerger.logic.videos.Videos;
+import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
+import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
+import kirill.subtitlemerger.logic.videos.entities.VideoNotValidReason;
+import kirill.subtitlemerger.logic.videos.entities.OptionNotValidReason;
 import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.logic.settings.SortBy;
 import kirill.subtitlemerger.logic.settings.SortDirection;
@@ -34,12 +34,12 @@ import java.util.stream.Collectors;
 class VideoTabBackgroundUtils {
     static final String FAILED_TO_LOAD_STREAM_INCORRECT_FORMAT = "Subtitles seem to have an incorrect format";
 
-    static List<VideoFile> getFilesInfo(
+    static List<VideoInfo> getFilesInfo(
             List<File> files,
             Ffprobe ffprobe,
             BackgroundManager backgroundManager
     ) {
-        List<VideoFile> result = new ArrayList<>();
+        List<VideoInfo> result = new ArrayList<>();
 
         backgroundManager.updateProgress(0, files.size());
 
@@ -49,7 +49,7 @@ class VideoTabBackgroundUtils {
 
             if (file.isFile() && file.exists()) {
                 result.add(
-                        VideoFiles.getWithoutLoadingSubtitles(
+                        Videos.getVideoInfo(
                                 file,
                                 LogicConstants.ALLOWED_VIDEO_EXTENSIONS,
                                 ffprobe
@@ -66,7 +66,7 @@ class VideoTabBackgroundUtils {
     }
 
     static List<TableFileInfo> tableFilesInfoFrom(
-            List<VideoFile> filesInfo,
+            List<VideoInfo> filesInfo,
             boolean showFullPath,
             boolean selectByDefault,
             BackgroundManager backgroundManager,
@@ -76,7 +76,7 @@ class VideoTabBackgroundUtils {
 
         List<TableFileInfo> result = new ArrayList<>();
 
-        for (VideoFile fileInfo : filesInfo) {
+        for (VideoInfo fileInfo : filesInfo) {
             backgroundManager.updateMessage("Creating object for " + fileInfo.getFile().getName() + "...");
 
             result.add(tableFileInfoFrom(fileInfo, showFullPath, selectByDefault, settings));
@@ -86,7 +86,7 @@ class VideoTabBackgroundUtils {
     }
 
     private static TableFileInfo tableFileInfoFrom(
-            VideoFile fileInfo,
+            VideoInfo fileInfo,
             boolean showFullPath,
             boolean selected,
             Settings settings
@@ -94,14 +94,14 @@ class VideoTabBackgroundUtils {
         String pathToDisplay = showFullPath ? fileInfo.getFile().getAbsolutePath() : fileInfo.getFile().getName();
 
         List<TableSubtitleOption> subtitleOptions = new ArrayList<>();
-        if (!CollectionUtils.isEmpty(fileInfo.getFfmpegSubtitleStreams())) {
-            boolean fileHasPreferredUpperLanguage = fileInfo.getFfmpegSubtitleStreams().stream()
+        if (!CollectionUtils.isEmpty(fileInfo.getBuiltInSubtitleOptions())) {
+            boolean fileHasPreferredUpperLanguage = fileInfo.getBuiltInSubtitleOptions().stream()
                     .anyMatch(stream -> Utils.languagesEqual(stream.getLanguage(), settings.getUpperLanguage()));
-            boolean fileHasPreferredLowerLanguage = fileInfo.getFfmpegSubtitleStreams().stream()
+            boolean fileHasPreferredLowerLanguage = fileInfo.getBuiltInSubtitleOptions().stream()
                     .anyMatch(stream -> Utils.languagesEqual(stream.getLanguage(), settings.getLowerLanguage()));
             boolean hideableOptionsPossible = fileHasPreferredUpperLanguage && fileHasPreferredLowerLanguage;
 
-            subtitleOptions = fileInfo.getFfmpegSubtitleStreams().stream()
+            subtitleOptions = fileInfo.getBuiltInSubtitleOptions().stream()
                     .map(subtitleStream -> tableSubtitleOptionFrom(subtitleStream, hideableOptionsPossible, settings))
                     .collect(Collectors.toList());
         }
@@ -141,7 +141,7 @@ class VideoTabBackgroundUtils {
     }
 
     static TableSubtitleOption tableSubtitleOptionFrom(
-            FfmpegSubtitleStream subtitleStream,
+            BuiltInSubtitleOption subtitleStream,
             boolean hideableOptionsPossible,
             Settings settings
     ) {
@@ -162,7 +162,7 @@ class VideoTabBackgroundUtils {
         );
     }
 
-    private static String tableOptionTitleFrom(FfmpegSubtitleStream stream) {
+    private static String tableOptionTitleFrom(BuiltInSubtitleOption stream) {
         String result = Utils.languageToString(stream.getLanguage()).toUpperCase();
 
         if (!StringUtils.isBlank(stream.getTitle())) {
@@ -172,7 +172,7 @@ class VideoTabBackgroundUtils {
         return result;
     }
 
-    private static boolean isOptionHideable(FfmpegSubtitleStream subtitleStream, Settings settings) {
+    private static boolean isOptionHideable(BuiltInSubtitleOption subtitleStream, Settings settings) {
         LanguageAlpha3Code streamLanguage = subtitleStream.getLanguage();
 
         return !Utils.languagesEqual(streamLanguage, settings.getUpperLanguage())
@@ -180,7 +180,7 @@ class VideoTabBackgroundUtils {
     }
 
     private static TableSubtitleOption.UnavailabilityReason tableUnavailabilityReasonFrom(
-            SubtitleOptionNotValidReason reason
+            OptionNotValidReason reason
     ) {
         if (reason == null) {
             return null;
@@ -189,7 +189,7 @@ class VideoTabBackgroundUtils {
         return EnumUtils.getEnum(TableSubtitleOption.UnavailabilityReason.class, reason.toString());
     }
 
-    private static TableFileInfo.UnavailabilityReason tableUnavailabilityReasonFrom(VideoFileNotValidReason reason) {
+    private static TableFileInfo.UnavailabilityReason tableUnavailabilityReasonFrom(VideoNotValidReason reason) {
         if (reason == null) {
             return null;
         }
@@ -290,7 +290,7 @@ class VideoTabBackgroundUtils {
     static String getLoadSubtitlesProgressMessage(
             int processedCount,
             int subtitlesToLoadCount,
-            FfmpegSubtitleStream subtitleStream,
+            BuiltInSubtitleOption subtitleStream,
             File file
     ) {
         String progressPrefix = subtitlesToLoadCount > 1

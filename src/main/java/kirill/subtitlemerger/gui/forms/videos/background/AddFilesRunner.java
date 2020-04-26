@@ -6,7 +6,7 @@ import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.logic.video_files.entities.VideoFile;
+import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
 import kirill.subtitlemerger.logic.settings.SortBy;
 import kirill.subtitlemerger.logic.settings.SortDirection;
 import kirill.subtitlemerger.logic.utils.Utils;
@@ -21,7 +21,7 @@ import java.util.Objects;
 
 @AllArgsConstructor
 public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
-    private List<VideoFile> filesInfo;
+    private List<VideoInfo> filesInfo;
 
     private List<File> filesToAdd;
 
@@ -39,7 +39,7 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
 
     @Override
     public Result run(BackgroundManager backgroundManager) {
-        List<VideoFile> filesToAddInfo = VideoTabBackgroundUtils.getFilesInfo(
+        List<VideoInfo> filesToAddInfo = VideoTabBackgroundUtils.getFilesInfo(
                 filesToAdd,
                 context.getFfprobe(),
                 backgroundManager
@@ -96,17 +96,17 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
     }
 
     private static void removeAlreadyAdded(
-            List<VideoFile> filesToAddInfo,
-            List<VideoFile> allFilesInfo,
+            List<VideoInfo> filesToAddInfo,
+            List<VideoInfo> allFilesInfo,
             BackgroundManager backgroundManager
     ) {
         backgroundManager.setIndeterminateProgress();
         backgroundManager.updateMessage("Removing already added files...");
 
-        Iterator<VideoFile> iterator = filesToAddInfo.iterator();
+        Iterator<VideoInfo> iterator = filesToAddInfo.iterator();
 
         while (iterator.hasNext()) {
-            VideoFile fileToAddInfo = iterator.next();
+            VideoInfo fileToAddInfo = iterator.next();
 
             boolean alreadyAdded = allFilesInfo.stream()
                     .anyMatch(fileInfo -> Objects.equals(fileInfo.getFile(), fileToAddInfo.getFile()));
@@ -155,7 +155,7 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
 
         private int actuallyAddedCount;
 
-        private List<VideoFile> filesInfo;
+        private List<VideoInfo> filesInfo;
 
         private List<TableFileInfo> allTableFilesInfo;
 

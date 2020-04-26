@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.logic.video_files.entities;
+package kirill.subtitlemerger.logic.videos.entities;
 
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import lombok.Getter;
@@ -7,12 +7,12 @@ import java.io.File;
 import java.nio.charset.Charset;
 
 @Getter
-public class FileWithSubtitles extends SubtitleOption {
+public class ExternalSubtitleOption extends SubtitleOption {
     private File file;
 
     private byte[] rawData;
 
-    public FileWithSubtitles(
+    public ExternalSubtitleOption(
             File file,
             Subtitles subtitles,
             int size,

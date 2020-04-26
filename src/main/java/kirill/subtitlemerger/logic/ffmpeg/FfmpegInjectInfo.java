@@ -18,9 +18,9 @@ public class FfmpegInjectInfo {
 
     private String title;
 
-    private boolean defaultDisposition;
+    private boolean makeDefault;
 
-    private List<Integer> defaultDispositionStreamIndices;
+    private List<Integer> streamToMakeNotDefaultIndices;
 
     private File originalVideoFile;
 

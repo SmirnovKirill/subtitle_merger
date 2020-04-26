@@ -7,8 +7,8 @@ import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
-import kirill.subtitlemerger.logic.video_files.entities.VideoFile;
-import kirill.subtitlemerger.logic.video_files.entities.FileWithSubtitles;
+import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
+import kirill.subtitlemerger.logic.videos.entities.ExternalSubtitleOption;
 import kirill.subtitlemerger.logic.utils.file_validation.FileValidator;
 import kirill.subtitlemerger.logic.utils.file_validation.InputFileInfo;
 import kirill.subtitlemerger.logic.utils.file_validation.InputFileNotValidReason;
@@ -30,7 +30,7 @@ import java.util.Objects;
 public class AddFileWithSubtitlesRunner implements BackgroundRunner<AddFileWithSubtitlesRunner.Result> {
     private File fileWithSubtitlesToAdd;
 
-    private VideoFile videoFileInfo;
+    private VideoInfo videoFileInfo;
 
     @Override
     public Result run(BackgroundManager backgroundManager) {
@@ -64,7 +64,7 @@ public class AddFileWithSubtitlesRunner implements BackgroundRunner<AddFileWithS
         }
 
         return new Result(
-                new FileWithSubtitles(
+                new ExternalSubtitleOption(
                         fileWithSubtitlesToAdd,
                         subtitles,
                         validatorFileInfo.getContent().length,
@@ -91,8 +91,8 @@ public class AddFileWithSubtitlesRunner implements BackgroundRunner<AddFileWithS
         );
     }
 
-    private static boolean isDuplicate(File fileToAdd, VideoFile fileInfo) {
-        List<FileWithSubtitles> filesWithSubtitles = fileInfo.getFilesWithSubtitles();
+    private static boolean isDuplicate(File fileToAdd, VideoInfo fileInfo) {
+        List<ExternalSubtitleOption> filesWithSubtitles = fileInfo.getExternalSubtitles();
         if (CollectionUtils.isEmpty(filesWithSubtitles)) {
             return false;
         } else if (filesWithSubtitles.size() == 1) {
@@ -108,7 +108,7 @@ public class AddFileWithSubtitlesRunner implements BackgroundRunner<AddFileWithS
     @AllArgsConstructor
     @Getter
     public static class Result {
-        private FileWithSubtitles fileWithSubtitles;
+        private ExternalSubtitleOption fileWithSubtitles;
 
         private int size;
 

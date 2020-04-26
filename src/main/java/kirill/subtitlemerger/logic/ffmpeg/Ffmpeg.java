@@ -59,10 +59,6 @@ public class Ffmpeg {
     ) throws FfmpegException, InterruptedException {
         String consoleOutput;
         try {
-            /*
-             * We have to pass -y to agree with the file overwriting, it's always required because java will have
-             * created a temporary file by the time ffmpeg is called.
-             */
             List<String> arguments = new ArrayList<>(
                     Arrays.asList(
                             ffmpegFile.getAbsolutePath(),
@@ -86,7 +82,7 @@ public class Ffmpeg {
         try {
             return FileUtils.readFileToString(TEMP_SUBTITLE_FILE, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            log.warn("failed to read the subtitles from the video: " + ExceptionUtils.getStackTrace(e));
+            log.warn("failed to read subtitles from video: " + ExceptionUtils.getStackTrace(e));
             throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, consoleOutput);
         }
     }
@@ -167,9 +163,9 @@ public class Ffmpeg {
         result.add("-metadata:s:s:" + injectInfo.getNewStreamIndex());
         result.add("title=" + injectInfo.getTitle());
 
-        if (injectInfo.isDefaultDisposition()) {
-            if (!CollectionUtils.isEmpty(injectInfo.getDefaultDispositionStreamIndices())) {
-                for (int index : injectInfo.getDefaultDispositionStreamIndices()) {
+        if (injectInfo.isMakeDefault()) {
+            if (!CollectionUtils.isEmpty(injectInfo.getStreamToMakeNotDefaultIndices())) {
+                for (int index : injectInfo.getStreamToMakeNotDefaultIndices()) {
                     result.addAll(Arrays.asList("-disposition:" + index, "0"));
                 }
             }

@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.logic.video_files;
+package kirill.subtitlemerger.logic.videos;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.logic.LogicConstants;
@@ -6,9 +6,9 @@ import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
 import kirill.subtitlemerger.logic.ffmpeg.json.JsonFfprobeVideoInfo;
 import kirill.subtitlemerger.logic.ffmpeg.json.JsonStream;
-import kirill.subtitlemerger.logic.video_files.entities.FfmpegSubtitleStream;
-import kirill.subtitlemerger.logic.video_files.entities.VideoFile;
-import kirill.subtitlemerger.logic.video_files.entities.SubtitleOptionNotValidReason;
+import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
+import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
+import kirill.subtitlemerger.logic.videos.entities.OptionNotValidReason;
 import kirill.subtitlemerger.logic.utils.file_validation.FileValidator;
 import kirill.subtitlemerger.logic.utils.file_validation.InputFileInfo;
 import kirill.subtitlemerger.logic.utils.file_validation.InputFileNotValidReason;
@@ -22,20 +22,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static kirill.subtitlemerger.logic.video_files.entities.VideoFileNotValidReason.*;
+import static kirill.subtitlemerger.logic.videos.entities.VideoNotValidReason.*;
 
 @CommonsLog
-public class VideoFiles {
-    public static VideoFile getWithoutLoadingSubtitles(File file, List<String> allowedExtensions, Ffprobe ffprobe) {
+public class Videos {
+    /**
+     * Returns the information on the given file. Not that it doesn't load the subtitles because it's a pretty
+     * time-consuming operation.
+     */
+    public static VideoInfo getVideoInfo(File file, List<String> allowedExtensions, Ffprobe ffprobe) {
         InputFileValidationOptions validationOptions = InputFileValidationOptions.builder()
                 .allowedExtensions(allowedExtensions)
                 .allowEmpty(true)
                 .build();
         InputFileInfo inputFileInfo = FileValidator.getInputFileInfo(file.getAbsolutePath(), validationOptions);
         if (inputFileInfo.getNotValidReason() == InputFileNotValidReason.NO_EXTENSION) {
-            return new VideoFile(file, null, NO_EXTENSION, null, null);
+            return new VideoInfo(file, null, NO_EXTENSION, null, null);
         } else if (inputFileInfo.getNotValidReason() == InputFileNotValidReason.NOT_ALLOWED_EXTENSION) {
-            return new VideoFile(file, null, NOT_ALLOWED_EXTENSION, null, null);
+            return new VideoInfo(file, null, NOT_ALLOWED_EXTENSION, null, null);
         }
         /*
          * There can be other errors if the file is removed or turned into a directory between the selection and the
@@ -48,7 +52,7 @@ public class VideoFiles {
             ffprobeInfo = ffprobe.getVideoInfo(file);
         } catch (FfmpegException e) {
             log.warn("failed to get ffprobe info: " + e.getCode() + ", console output " + e.getConsoleOutput());
-            return new VideoFile(file, null, FFPROBE_FAILED, null, null);
+            return new VideoInfo(file, null, FFPROBE_FAILED, null, null);
         } catch (InterruptedException e) {
             log.error("the process can't be interrupted, most likely a bug");
             throw new IllegalStateException();
@@ -56,10 +60,10 @@ public class VideoFiles {
 
         String format = ffprobeInfo.getFormat().getFormatName();
         if (!LogicConstants.ALLOWED_VIDEO_FORMATS.contains(format)) {
-            return new VideoFile(file, format, NOT_ALLOWED_FORMAT, null, null);
+            return new VideoInfo(file, format, NOT_ALLOWED_FORMAT, null, null);
         }
 
-        return new VideoFile(
+        return new VideoInfo(
                 file,
                 format,
                 null,
@@ -68,8 +72,8 @@ public class VideoFiles {
         );
     }
 
-    public static List<FfmpegSubtitleStream> getSubtitleOptions(JsonFfprobeVideoInfo ffprobeInfo) {
-        List<FfmpegSubtitleStream> result = new ArrayList<>();
+    public static List<BuiltInSubtitleOption> getSubtitleOptions(JsonFfprobeVideoInfo ffprobeInfo) {
+        List<BuiltInSubtitleOption> result = new ArrayList<>();
 
         for (JsonStream stream : ffprobeInfo.getStreams()) {
             if (!"subtitle".equals(stream.getCodecType())) {
@@ -77,13 +81,13 @@ public class VideoFiles {
             }
 
             String format = stream.getCodecName();
-            SubtitleOptionNotValidReason notValidReason = null;
+            OptionNotValidReason notValidReason = null;
             if (!LogicConstants.ALLOWED_SUBTITLE_FORMATS.contains(format)) {
-                notValidReason = SubtitleOptionNotValidReason.NOT_ALLOWED_FORMAT;
+                notValidReason = OptionNotValidReason.NOT_ALLOWED_FORMAT;
             }
 
             result.add(
-                    new FfmpegSubtitleStream(
+                    new BuiltInSubtitleOption(
                             stream.getIndex(),
                             null,
                             null,

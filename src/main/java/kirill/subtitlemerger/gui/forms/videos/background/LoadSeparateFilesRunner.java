@@ -4,7 +4,7 @@ import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.logic.video_files.entities.VideoFile;
+import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
 import kirill.subtitlemerger.logic.settings.SortBy;
 import kirill.subtitlemerger.logic.settings.SortDirection;
 import lombok.AllArgsConstructor;
@@ -25,7 +25,7 @@ public class LoadSeparateFilesRunner implements BackgroundRunner<LoadSeparateFil
 
     @Override
     public Result run(BackgroundManager backgroundManager) {
-        List<VideoFile> filesInfo = VideoTabBackgroundUtils.getFilesInfo(files, context.getFfprobe(), backgroundManager);
+        List<VideoInfo> filesInfo = VideoTabBackgroundUtils.getFilesInfo(files, context.getFfprobe(), backgroundManager);
         List<TableFileInfo> allTableFilesInfo = VideoTabBackgroundUtils.tableFilesInfoFrom(
                 filesInfo,
                 true,
@@ -56,7 +56,7 @@ public class LoadSeparateFilesRunner implements BackgroundRunner<LoadSeparateFil
     @AllArgsConstructor
     @Getter
     public static class Result {
-        private List<VideoFile> filesInfo;
+        private List<VideoInfo> filesInfo;
 
         private List<TableFileInfo> allTableFilesInfo;
 

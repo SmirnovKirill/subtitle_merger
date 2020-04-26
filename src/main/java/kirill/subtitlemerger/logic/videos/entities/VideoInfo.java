@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.logic.video_files.entities;
+package kirill.subtitlemerger.logic.videos.entities;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 @CommonsLog
 @Getter
-public class VideoFile {
+public class VideoInfo {
     private String id;
 
     private File file;
@@ -24,20 +24,20 @@ public class VideoFile {
     private String format;
 
     /**
-     * We will keep track of all the selected files even if they can't be used for subtitle merging (for better
-     * diagnostics). The enum contains the reason why this file can't be used for the subtitle merging.
+     * We will keep track of all the selected videos even if they can't be used for subtitle merging (for better
+     * diagnostics). The enum contains the reason why this video can't be used for the subtitle merging.
      */
-    private VideoFileNotValidReason notValidReason;
+    private VideoNotValidReason notValidReason;
 
     private List<SubtitleOption> subtitleOptions;
 
     @Setter
     private MergedSubtitleInfo mergedSubtitleInfo;
 
-    public VideoFile(
+    public VideoInfo(
             File file,
             String format,
-            VideoFileNotValidReason notValidReason,
+            VideoNotValidReason notValidReason,
             List<SubtitleOption> subtitleOptions,
             MergedSubtitleInfo mergedSubtitleInfo
     ) {
@@ -55,37 +55,37 @@ public class VideoFile {
         size = file.length();
     }
 
-    public static VideoFile getById(String id, List<VideoFile> filesInfo) {
-        VideoFile result = filesInfo.stream()
-                .filter(fileInfo -> Objects.equals(fileInfo.getId(), id))
+    public static VideoInfo getById(String id, List<VideoInfo> videosInfo) {
+        VideoInfo result = videosInfo.stream()
+                .filter(videoInfo -> Objects.equals(videoInfo.getId(), id))
                 .findFirst().orElse(null);
         if (result == null) {
-            log.error("no file info for id " + id + ", most likely a bug");
+            log.error("no video info for id " + id + ", most likely a bug");
             throw new IllegalStateException();
         }
 
         return result;
     }
 
-    public List<FfmpegSubtitleStream> getFfmpegSubtitleStreams() {
+    public List<BuiltInSubtitleOption> getBuiltInSubtitleOptions() {
         if (subtitleOptions == null) {
             return null;
         }
 
         return subtitleOptions.stream()
-                .filter(option -> option instanceof FfmpegSubtitleStream)
-                .map(FfmpegSubtitleStream.class::cast)
+                .filter(option -> option instanceof BuiltInSubtitleOption)
+                .map(BuiltInSubtitleOption.class::cast)
                 .collect(Collectors.toList());
     }
 
-    public List<FileWithSubtitles> getFilesWithSubtitles() {
+    public List<ExternalSubtitleOption> getExternalSubtitles() {
         if (subtitleOptions == null) {
             return null;
         }
 
         return subtitleOptions.stream()
-                .filter(option -> option instanceof FileWithSubtitles)
-                .map(FileWithSubtitles.class::cast)
+                .filter(option -> option instanceof ExternalSubtitleOption)
+                .map(ExternalSubtitleOption.class::cast)
                 .collect(Collectors.toList());
     }
 }

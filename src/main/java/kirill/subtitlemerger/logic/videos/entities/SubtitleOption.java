@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.logic.video_files.entities;
+package kirill.subtitlemerger.logic.videos.entities;
 
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import lombok.AllArgsConstructor;
@@ -9,6 +9,10 @@ import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * This class represents the subtitles to choose from for the video. There are two kinds of subtitles - external
+ * subtitles (an arbitrary file with subtitles) and subtitles that are already built-in.
+ */
 @CommonsLog
 @AllArgsConstructor
 @Getter
@@ -25,7 +29,7 @@ public abstract class SubtitleOption {
      * We will keep track of all options for the video even if they can't be used for subtitle merging (for better
      * diagnostics). The enum contains the reason why this option can't be used for the subtitle merging.
      */
-    private SubtitleOptionNotValidReason notValidReason;
+    private OptionNotValidReason notValidReason;
 
     private boolean selectedAsUpper;
 
