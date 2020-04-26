@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.logic.files.entities;
+package kirill.subtitlemerger.logic.video_files.entities;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 @CommonsLog
 @Getter
-public class FileInfo {
+public class VideoFile {
     private String id;
 
     private File file;
@@ -27,17 +27,17 @@ public class FileInfo {
      * We will keep track of all the selected files even if they can't be used for subtitle merging (for better
      * diagnostics). The enum contains the reason why this file can't be used for the subtitle merging.
      */
-    private FileUnavailabilityReason unavailabilityReason;
+    private VideoFileNotValidReason notValidReason;
 
     private List<SubtitleOption> subtitleOptions;
 
     @Setter
     private MergedSubtitleInfo mergedSubtitleInfo;
 
-    public FileInfo(
+    public VideoFile(
             File file,
             String format,
-            FileUnavailabilityReason unavailabilityReason,
+            VideoFileNotValidReason notValidReason,
             List<SubtitleOption> subtitleOptions,
             MergedSubtitleInfo mergedSubtitleInfo
     ) {
@@ -45,7 +45,7 @@ public class FileInfo {
         this.file = file;
         setCurrentSizeAndLastModified();
         this.format = format;
-        this.unavailabilityReason = unavailabilityReason;
+        this.notValidReason = notValidReason;
         this.subtitleOptions = subtitleOptions;
         this.mergedSubtitleInfo = mergedSubtitleInfo;
     }
@@ -55,8 +55,8 @@ public class FileInfo {
         size = file.length();
     }
 
-    public static FileInfo getById(String id, List<FileInfo> filesInfo) {
-        FileInfo result = filesInfo.stream()
+    public static VideoFile getById(String id, List<VideoFile> filesInfo) {
+        VideoFile result = filesInfo.stream()
                 .filter(fileInfo -> Objects.equals(fileInfo.getId(), id))
                 .findFirst().orElse(null);
         if (result == null) {

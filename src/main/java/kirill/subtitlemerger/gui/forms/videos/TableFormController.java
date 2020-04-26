@@ -22,10 +22,10 @@ import kirill.subtitlemerger.gui.utils.background.BackgroundCallback;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.entities.FileOrigin;
 import kirill.subtitlemerger.gui.utils.entities.FormInfo;
-import kirill.subtitlemerger.logic.files.entities.FfmpegSubtitleStream;
-import kirill.subtitlemerger.logic.files.entities.FileInfo;
-import kirill.subtitlemerger.logic.files.entities.FileWithSubtitles;
-import kirill.subtitlemerger.logic.files.entities.SubtitleOption;
+import kirill.subtitlemerger.logic.video_files.entities.FfmpegSubtitleStream;
+import kirill.subtitlemerger.logic.video_files.entities.VideoFile;
+import kirill.subtitlemerger.logic.video_files.entities.FileWithSubtitles;
+import kirill.subtitlemerger.logic.video_files.entities.SubtitleOption;
 import kirill.subtitlemerger.logic.settings.SettingException;
 import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.logic.settings.SortBy;
@@ -100,7 +100,7 @@ public class TableFormController extends BackgroundTaskFormController {
 
     private String directoryPath;
 
-    private List<FileInfo> filesInfo;
+    private List<VideoFile> filesInfo;
 
     private List<TableFileInfo> allTableFilesInfo;
 
@@ -309,7 +309,7 @@ public class TableFormController extends BackgroundTaskFormController {
             tableWithFiles.clearActionResult(tableFileInfo);
             lastProcessedFileInfo = tableFileInfo;
 
-            FileInfo fileInfo = FileInfo.getById(tableFileInfo.getId(), filesInfo);
+            VideoFile fileInfo = VideoFile.getById(tableFileInfo.getId(), filesInfo);
             fileInfo.getSubtitleOptions().removeIf(
                     option -> Objects.equals(option.getId(), tableSubtitleOption.getId())
             );
@@ -325,7 +325,7 @@ public class TableFormController extends BackgroundTaskFormController {
             tableWithFiles.clearActionResult(tableFileInfo);
             lastProcessedFileInfo = tableFileInfo;
 
-            FileInfo fileInfo = FileInfo.getById(tableFileInfo.getId(), filesInfo);
+            VideoFile fileInfo = VideoFile.getById(tableFileInfo.getId(), filesInfo);
             FfmpegSubtitleStream ffmpegStream = FfmpegSubtitleStream.getById(
                     tableSubtitleOption.getId(),
                     fileInfo.getFfmpegSubtitleStreams()
@@ -353,7 +353,7 @@ public class TableFormController extends BackgroundTaskFormController {
             clearLastProcessedResult();
             tableWithFiles.clearActionResult(tableFileInfo);
 
-            FileInfo fileInfo = FileInfo.getById(tableFileInfo.getId(), filesInfo);
+            VideoFile fileInfo = VideoFile.getById(tableFileInfo.getId(), filesInfo);
             SubtitleOption subtitleOption = SubtitleOption.getById(
                     tableSubtitleOption.getId(),
                     fileInfo.getSubtitleOptions()
@@ -391,7 +391,7 @@ public class TableFormController extends BackgroundTaskFormController {
     private SubtitlePreviewFormController getInitializedOptionPreviewController(
             FormInfo nodeInfo,
             SubtitleOption subtitleOption,
-            FileInfo fileInfo,
+            VideoFile fileInfo,
             Stage dialogStage
     ) {
         SubtitlePreviewFormController result = nodeInfo.getController();
@@ -431,7 +431,7 @@ public class TableFormController extends BackgroundTaskFormController {
             tableWithFiles.clearActionResult(tableFileInfo);
             lastProcessedFileInfo = tableFileInfo;
 
-            FileInfo videoFileInfo = FileInfo.getById(tableFileInfo.getId(), filesInfo);
+            VideoFile videoFileInfo = VideoFile.getById(tableFileInfo.getId(), filesInfo);
 
             File fileWithSubtitlesToAdd = getFile(videoFileInfo, stage, context.getSettings()).orElse(null);
             if (fileWithSubtitlesToAdd == null) {
@@ -471,7 +471,7 @@ public class TableFormController extends BackgroundTaskFormController {
         });
     }
 
-    private Optional<File> getFile(FileInfo fileInfo, Stage stage, Settings settings) {
+    private Optional<File> getFile(VideoFile fileInfo, Stage stage, Settings settings) {
         FileChooser fileChooser = new FileChooser();
 
         fileChooser.setTitle("Please choose a file with the subtitles");
@@ -499,7 +499,7 @@ public class TableFormController extends BackgroundTaskFormController {
             tableWithFiles.clearActionResult(tableFileInfo);
             lastProcessedFileInfo = tableFileInfo;
 
-            FileInfo fileInfo = FileInfo.getById(tableFileInfo.getId(), filesInfo);
+            VideoFile fileInfo = VideoFile.getById(tableFileInfo.getId(), filesInfo);
 
             SingleFileAllSubtitleLoader backgroundRunner = new SingleFileAllSubtitleLoader(
                     fileInfo,
@@ -521,7 +521,7 @@ public class TableFormController extends BackgroundTaskFormController {
             clearLastProcessedResult();
             tableWithFiles.clearActionResult(tableFileInfo);
 
-            FileInfo fileInfo = FileInfo.getById(tableFileInfo.getId(), filesInfo);
+            VideoFile fileInfo = VideoFile.getById(tableFileInfo.getId(), filesInfo);
             SubtitleOption upperOption = SubtitleOption.getById(
                     tableFileInfo.getUpperOption().getId(),
                     fileInfo.getSubtitleOptions()

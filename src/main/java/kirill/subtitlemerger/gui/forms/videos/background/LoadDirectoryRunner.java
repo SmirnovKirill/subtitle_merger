@@ -6,7 +6,7 @@ import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.logic.files.entities.FileInfo;
+import kirill.subtitlemerger.logic.video_files.entities.VideoFile;
 import kirill.subtitlemerger.logic.settings.SortBy;
 import kirill.subtitlemerger.logic.settings.SortDirection;
 import kirill.subtitlemerger.logic.utils.Utils;
@@ -48,7 +48,7 @@ public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner
             );
         }
 
-        List<FileInfo> filesInfo = VideoTabBackgroundUtils.getFilesInfo(
+        List<VideoFile> filesInfo = VideoTabBackgroundUtils.getFilesInfo(
                 directoryInfo.getDirectoryFiles(),
                 context.getFfprobe(),
                 backgroundManager
@@ -172,11 +172,11 @@ public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner
      * Set "hide unavailable" checkbox by default if there is at least one available video. Otherwise it should
      * not be checked because the user will see just an empty file list which isn't very user friendly.
      */
-    private static boolean shouldHideUnavailable(List<FileInfo> filesInfo, BackgroundManager backgroundManager) {
+    private static boolean shouldHideUnavailable(List<VideoFile> filesInfo, BackgroundManager backgroundManager) {
         backgroundManager.setIndeterminateProgress();
         backgroundManager.updateMessage("Calculating whether to hide unavailable files by default...");
 
-        return filesInfo.stream().anyMatch(fileInfo -> fileInfo.getUnavailabilityReason() == null);
+        return filesInfo.stream().anyMatch(fileInfo -> fileInfo.getNotValidReason() == null);
     }
 
     @AllArgsConstructor
@@ -186,7 +186,7 @@ public class LoadDirectoryRunner implements BackgroundRunner<LoadDirectoryRunner
 
         private boolean disableRefresh;
 
-        private List<FileInfo> filesInfo;
+        private List<VideoFile> filesInfo;
 
         private List<TableFileInfo> allTableFilesInfo;
 

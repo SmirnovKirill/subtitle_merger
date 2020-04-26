@@ -13,11 +13,11 @@ import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegInjectInfo;
 import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
 import kirill.subtitlemerger.logic.ffmpeg.json.JsonFfprobeFileInfo;
-import kirill.subtitlemerger.logic.files.FileInfoGetter;
-import kirill.subtitlemerger.logic.files.entities.FfmpegSubtitleStream;
-import kirill.subtitlemerger.logic.files.entities.FileInfo;
-import kirill.subtitlemerger.logic.files.entities.FileWithSubtitles;
-import kirill.subtitlemerger.logic.files.entities.SubtitleOption;
+import kirill.subtitlemerger.logic.video_files.VideoFiles;
+import kirill.subtitlemerger.logic.video_files.entities.FfmpegSubtitleStream;
+import kirill.subtitlemerger.logic.video_files.entities.VideoFile;
+import kirill.subtitlemerger.logic.video_files.entities.FileWithSubtitles;
+import kirill.subtitlemerger.logic.video_files.entities.SubtitleOption;
 import kirill.subtitlemerger.logic.settings.MergeMode;
 import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.logic.utils.Utils;
@@ -45,7 +45,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
 
     private List<TableFileInfo> displayedTableFilesInfo;
 
-    private List<FileInfo> allFilesInfo;
+    private List<VideoFile> allFilesInfo;
 
     private TableWithFiles tableWithFiles;
 
@@ -70,7 +70,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
             String progressMessagePrefix = getProgressMessagePrefix(processedCount, allFileCount, tableFileInfo);
             backgroundManager.updateMessage(progressMessagePrefix + "...");
 
-            FileInfo fileInfo = FileInfo.getById(fileMergeInfo.getId(), allFilesInfo);
+            VideoFile fileInfo = VideoFile.getById(fileMergeInfo.getId(), allFilesInfo);
 
             if (fileMergeInfo.getStatus() == MergePreparationRunner.FileMergeStatus.FAILED_TO_LOAD_SUBTITLES) {
                 String message = Utils.getTextDependingOnCount(
@@ -254,14 +254,14 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
     private static void updateFileInfo(
             Subtitles subtitles,
             int subtitleSize,
-            FileInfo fileInfo,
+            VideoFile fileInfo,
             TableFileInfo tableFileInfo,
             Ffprobe ffprobe,
             Settings settings
     ) throws FfmpegException, InterruptedException {
         //todo diagnostics
         JsonFfprobeFileInfo ffprobeInfo = ffprobe.getFileInfo(fileInfo.getFile());
-        List<FfmpegSubtitleStream> subtitleOptions = FileInfoGetter.getSubtitleOptions(ffprobeInfo);
+        List<FfmpegSubtitleStream> subtitleOptions = VideoFiles.getSubtitleOptions(ffprobeInfo);
         if (settings.isMakeMergedStreamsDefault()) {
             for (FfmpegSubtitleStream stream : subtitleOptions) {
                 stream.disableDefaultDisposition();

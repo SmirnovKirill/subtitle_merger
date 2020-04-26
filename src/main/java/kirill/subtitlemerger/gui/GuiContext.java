@@ -94,7 +94,7 @@ public class GuiContext {
             log.warn("incorrect path to ffprobe: " + e.getCode() + ", console output " + e.getConsoleOutput());
             throw new IllegalStateException();
         } catch (InterruptedException e) {
-            log.error("something's not right, process can't be interrupted");
+            log.error("the process can't be interrupted, probably a bug");
             throw new IllegalStateException();
         }
     }
@@ -180,7 +180,7 @@ public class GuiContext {
             log.warn("incorrect path to ffmpeg: " + e.getCode() + ", console output " + e.getConsoleOutput());
             throw new IllegalStateException();
         } catch (InterruptedException e) {
-            log.error("something's not right, process can't be interrupted");
+            log.error("the process can't be interrupted, most likely a bug");
             throw new IllegalStateException();
         }
     }

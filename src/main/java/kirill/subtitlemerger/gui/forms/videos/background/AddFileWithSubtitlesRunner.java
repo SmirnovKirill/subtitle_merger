@@ -7,8 +7,8 @@ import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
-import kirill.subtitlemerger.logic.files.entities.FileInfo;
-import kirill.subtitlemerger.logic.files.entities.FileWithSubtitles;
+import kirill.subtitlemerger.logic.video_files.entities.VideoFile;
+import kirill.subtitlemerger.logic.video_files.entities.FileWithSubtitles;
 import kirill.subtitlemerger.logic.utils.file_validation.FileValidator;
 import kirill.subtitlemerger.logic.utils.file_validation.InputFileInfo;
 import kirill.subtitlemerger.logic.utils.file_validation.InputFileNotValidReason;
@@ -30,7 +30,7 @@ import java.util.Objects;
 public class AddFileWithSubtitlesRunner implements BackgroundRunner<AddFileWithSubtitlesRunner.Result> {
     private File fileWithSubtitlesToAdd;
 
-    private FileInfo videoFileInfo;
+    private VideoFile videoFileInfo;
 
     @Override
     public Result run(BackgroundManager backgroundManager) {
@@ -91,7 +91,7 @@ public class AddFileWithSubtitlesRunner implements BackgroundRunner<AddFileWithS
         );
     }
 
-    private static boolean isDuplicate(File fileToAdd, FileInfo fileInfo) {
+    private static boolean isDuplicate(File fileToAdd, VideoFile fileInfo) {
         List<FileWithSubtitles> filesWithSubtitles = fileInfo.getFilesWithSubtitles();
         if (CollectionUtils.isEmpty(filesWithSubtitles)) {
             return false;

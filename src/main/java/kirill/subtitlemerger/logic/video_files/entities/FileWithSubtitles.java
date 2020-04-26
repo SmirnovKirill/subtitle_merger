@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.logic.files.entities;
+package kirill.subtitlemerger.logic.video_files.entities;
 
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import lombok.Getter;

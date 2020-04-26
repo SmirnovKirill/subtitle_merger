@@ -10,8 +10,8 @@ import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
-import kirill.subtitlemerger.logic.files.entities.FfmpegSubtitleStream;
-import kirill.subtitlemerger.logic.files.entities.FileInfo;
+import kirill.subtitlemerger.logic.video_files.entities.FfmpegSubtitleStream;
+import kirill.subtitlemerger.logic.video_files.entities.VideoFile;
 import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.logic.utils.Utils;
 import kirill.subtitlemerger.logic.utils.entities.ActionResult;
@@ -35,7 +35,7 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
 
     private List<TableFileInfo> displayedTableFilesInfo;
 
-    private List<FileInfo> filesInfo;
+    private List<VideoFile> filesInfo;
 
     private TableWithFiles tableWithFiles;
 
@@ -68,7 +68,7 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
                     VideoTabBackgroundUtils.getProcessFileProgressMessage(processedCount, allFileCount, tableFileInfo)
             );
 
-            FileInfo fileInfo = FileInfo.getById(tableFileInfo.getId(), filesInfo);
+            VideoFile fileInfo = VideoFile.getById(tableFileInfo.getId(), filesInfo);
             if (CollectionUtils.isEmpty(fileInfo.getFfmpegSubtitleStreams())) {
                 notPossibleCount++;
                 processedCount++;
@@ -130,23 +130,23 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
         );
     }
 
-    private static List<FfmpegSubtitleStream> getMatchingUpperSubtitles(FileInfo fileInfo, Settings settings) {
+    private static List<FfmpegSubtitleStream> getMatchingUpperSubtitles(VideoFile fileInfo, Settings settings) {
         return fileInfo.getFfmpegSubtitleStreams().stream()
-                .filter(stream -> stream.getUnavailabilityReason() == null)
+                .filter(stream -> stream.getNotValidReason() == null)
                 .filter(stream -> Utils.languagesEqual(stream.getLanguage(), settings.getUpperLanguage()))
                 .collect(Collectors.toList());
     }
 
-    private static List<FfmpegSubtitleStream> getMatchingLowerSubtitles(FileInfo fileInfo, Settings settings) {
+    private static List<FfmpegSubtitleStream> getMatchingLowerSubtitles(VideoFile fileInfo, Settings settings) {
         return fileInfo.getFfmpegSubtitleStreams().stream()
-                .filter(stream -> stream.getUnavailabilityReason() == null)
+                .filter(stream -> stream.getNotValidReason() == null)
                 .filter(stream -> Utils.languagesEqual(stream.getLanguage(), settings.getLowerLanguage()))
                 .collect(Collectors.toList());
     }
 
     private boolean loadStreams(
             TableFileInfo tableFileInfo,
-            FileInfo fileInfo,
+            VideoFile fileInfo,
             List<FfmpegSubtitleStream> matchingUpperSubtitles,
             List<FfmpegSubtitleStream> matchingLowerSubtitles,
             int processedCount,

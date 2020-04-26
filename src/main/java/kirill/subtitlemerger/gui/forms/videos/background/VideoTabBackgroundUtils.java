@@ -9,11 +9,11 @@ import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
-import kirill.subtitlemerger.logic.files.FileInfoGetter;
-import kirill.subtitlemerger.logic.files.entities.FfmpegSubtitleStream;
-import kirill.subtitlemerger.logic.files.entities.FileInfo;
-import kirill.subtitlemerger.logic.files.entities.FileUnavailabilityReason;
-import kirill.subtitlemerger.logic.files.entities.SubtitleOptionUnavailabilityReason;
+import kirill.subtitlemerger.logic.video_files.VideoFiles;
+import kirill.subtitlemerger.logic.video_files.entities.FfmpegSubtitleStream;
+import kirill.subtitlemerger.logic.video_files.entities.VideoFile;
+import kirill.subtitlemerger.logic.video_files.entities.VideoFileNotValidReason;
+import kirill.subtitlemerger.logic.video_files.entities.SubtitleOptionNotValidReason;
 import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.logic.settings.SortBy;
 import kirill.subtitlemerger.logic.settings.SortDirection;
@@ -34,12 +34,12 @@ import java.util.stream.Collectors;
 class VideoTabBackgroundUtils {
     static final String FAILED_TO_LOAD_STREAM_INCORRECT_FORMAT = "Subtitles seem to have an incorrect format";
 
-    static List<FileInfo> getFilesInfo(
+    static List<VideoFile> getFilesInfo(
             List<File> files,
             Ffprobe ffprobe,
             BackgroundManager backgroundManager
     ) {
-        List<FileInfo> result = new ArrayList<>();
+        List<VideoFile> result = new ArrayList<>();
 
         backgroundManager.updateProgress(0, files.size());
 
@@ -49,7 +49,7 @@ class VideoTabBackgroundUtils {
 
             if (file.isFile() && file.exists()) {
                 result.add(
-                        FileInfoGetter.getWithoutLoadingSubtitles(
+                        VideoFiles.getWithoutLoadingSubtitles(
                                 file,
                                 LogicConstants.ALLOWED_VIDEO_EXTENSIONS,
                                 ffprobe
@@ -66,7 +66,7 @@ class VideoTabBackgroundUtils {
     }
 
     static List<TableFileInfo> tableFilesInfoFrom(
-            List<FileInfo> filesInfo,
+            List<VideoFile> filesInfo,
             boolean showFullPath,
             boolean selectByDefault,
             BackgroundManager backgroundManager,
@@ -76,7 +76,7 @@ class VideoTabBackgroundUtils {
 
         List<TableFileInfo> result = new ArrayList<>();
 
-        for (FileInfo fileInfo : filesInfo) {
+        for (VideoFile fileInfo : filesInfo) {
             backgroundManager.updateMessage("Creating object for " + fileInfo.getFile().getName() + "...");
 
             result.add(tableFileInfoFrom(fileInfo, showFullPath, selectByDefault, settings));
@@ -86,7 +86,7 @@ class VideoTabBackgroundUtils {
     }
 
     private static TableFileInfo tableFileInfoFrom(
-            FileInfo fileInfo,
+            VideoFile fileInfo,
             boolean showFullPath,
             boolean selected,
             Settings settings
@@ -132,7 +132,7 @@ class VideoTabBackgroundUtils {
                 pathToDisplay,
                 fileInfo.getSize(),
                 fileInfo.getLastModified(),
-                tableUnavailabilityReasonFrom(fileInfo.getUnavailabilityReason()),
+                tableUnavailabilityReasonFrom(fileInfo.getNotValidReason()),
                 fileInfo.getFormat(),
                 subtitleOptions,
                 haveHideableOptions,
@@ -155,7 +155,7 @@ class VideoTabBackgroundUtils {
                         ? subtitleStream.getSize()
                         : TableSubtitleOption.UNKNOWN_SIZE,
                 null,
-                tableUnavailabilityReasonFrom(subtitleStream.getUnavailabilityReason()),
+                tableUnavailabilityReasonFrom(subtitleStream.getNotValidReason()),
                 false,
                 false,
                 subtitleStream.getFormat()
@@ -180,7 +180,7 @@ class VideoTabBackgroundUtils {
     }
 
     private static TableSubtitleOption.UnavailabilityReason tableUnavailabilityReasonFrom(
-            SubtitleOptionUnavailabilityReason reason
+            SubtitleOptionNotValidReason reason
     ) {
         if (reason == null) {
             return null;
@@ -189,7 +189,7 @@ class VideoTabBackgroundUtils {
         return EnumUtils.getEnum(TableSubtitleOption.UnavailabilityReason.class, reason.toString());
     }
 
-    private static TableFileInfo.UnavailabilityReason tableUnavailabilityReasonFrom(FileUnavailabilityReason reason) {
+    private static TableFileInfo.UnavailabilityReason tableUnavailabilityReasonFrom(VideoFileNotValidReason reason) {
         if (reason == null) {
             return null;
         }

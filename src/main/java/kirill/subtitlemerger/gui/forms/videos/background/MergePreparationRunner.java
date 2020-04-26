@@ -14,10 +14,10 @@ import kirill.subtitlemerger.logic.core.SubtitleMerger;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
-import kirill.subtitlemerger.logic.files.entities.FfmpegSubtitleStream;
-import kirill.subtitlemerger.logic.files.entities.FileInfo;
-import kirill.subtitlemerger.logic.files.entities.FileWithSubtitles;
-import kirill.subtitlemerger.logic.files.entities.SubtitleOption;
+import kirill.subtitlemerger.logic.video_files.entities.FfmpegSubtitleStream;
+import kirill.subtitlemerger.logic.video_files.entities.VideoFile;
+import kirill.subtitlemerger.logic.video_files.entities.FileWithSubtitles;
+import kirill.subtitlemerger.logic.video_files.entities.SubtitleOption;
 import kirill.subtitlemerger.logic.settings.MergeMode;
 import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.logic.utils.Utils;
@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 public class MergePreparationRunner implements BackgroundRunner<MergePreparationRunner.Result> {
     private List<TableFileInfo> displayedTableFilesInfo;
 
-    private List<FileInfo> filesInfo;
+    private List<VideoFile> filesInfo;
 
     private TableWithFiles tableWithFiles;
 
@@ -128,7 +128,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         String progressMessagePrefix = getProgressMessagePrefix(processedCount, allCount, tableFileInfo);
         backgroundManager.updateMessage(progressMessagePrefix + "...");
 
-        FileInfo fileInfo = FileInfo.getById(tableFileInfo.getId(), filesInfo);
+        VideoFile fileInfo = VideoFile.getById(tableFileInfo.getId(), filesInfo);
 
         TableSubtitleOption tableUpperOption = tableFileInfo.getUpperOption();
         TableSubtitleOption tableLowerOption = tableFileInfo.getLowerOption();
@@ -223,7 +223,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
 
     private int loadStreams(
             TableFileInfo tableFileInfo,
-            FileInfo fileInfo,
+            VideoFile fileInfo,
             Set<LanguageAlpha3Code> languagesToCheck,
             String progressMessagePrefix,
             BackgroundManager backgroundManager
@@ -289,7 +289,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
     private static boolean isDuplicate(
             String mergedText,
             Set<LanguageAlpha3Code> languagesToCheck,
-            FileInfo fileInfo,
+            VideoFile fileInfo,
             boolean plainText
     ) {
         for (FfmpegSubtitleStream subtitleStream : fileInfo.getFfmpegSubtitleStreams()) {
@@ -305,7 +305,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
     }
 
     private static File getFileWithResult(
-            FileInfo fileInfo,
+            VideoFile fileInfo,
             SubtitleOption upperOption,
             SubtitleOption lowerOption,
             Settings settings
@@ -336,7 +336,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
 
     private static Optional<RequiredAndAvailableSpace> getRequiredAndAvailableTempSpace(
             List<FileMergeInfo> filesMergeInfo,
-            List<FileInfo> filesInfo,
+            List<VideoFile> filesInfo,
             Settings settings,
             BackgroundManager backgroundManager
     ) {
@@ -357,7 +357,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                 continue;
             }
 
-            FileInfo fileInfo = FileInfo.getById(fileMergeInfo.getId(), filesInfo);
+            VideoFile fileInfo = VideoFile.getById(fileMergeInfo.getId(), filesInfo);
 
             long currentRequiredSpace = fileInfo.getFile().length();
             long currentAvailableSpace = fileInfo.getFile().getFreeSpace();

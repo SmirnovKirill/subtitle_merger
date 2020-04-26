@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.logic.files;
+package kirill.subtitlemerger.logic.video_files;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.logic.LogicConstants;
@@ -6,9 +6,9 @@ import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
 import kirill.subtitlemerger.logic.ffmpeg.json.JsonFfprobeFileInfo;
 import kirill.subtitlemerger.logic.ffmpeg.json.JsonStream;
-import kirill.subtitlemerger.logic.files.entities.FfmpegSubtitleStream;
-import kirill.subtitlemerger.logic.files.entities.FileInfo;
-import kirill.subtitlemerger.logic.files.entities.SubtitleOptionUnavailabilityReason;
+import kirill.subtitlemerger.logic.video_files.entities.FfmpegSubtitleStream;
+import kirill.subtitlemerger.logic.video_files.entities.VideoFile;
+import kirill.subtitlemerger.logic.video_files.entities.SubtitleOptionNotValidReason;
 import kirill.subtitlemerger.logic.utils.file_validation.FileValidator;
 import kirill.subtitlemerger.logic.utils.file_validation.InputFileInfo;
 import kirill.subtitlemerger.logic.utils.file_validation.InputFileNotValidReason;
@@ -22,20 +22,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static kirill.subtitlemerger.logic.files.entities.FileUnavailabilityReason.*;
+import static kirill.subtitlemerger.logic.video_files.entities.VideoFileNotValidReason.*;
 
 @CommonsLog
-public class FileInfoGetter {
-    public static FileInfo getWithoutLoadingSubtitles(File file, List<String> allowedExtensions, Ffprobe ffprobe) {
+public class VideoFiles {
+    public static VideoFile getWithoutLoadingSubtitles(File file, List<String> allowedExtensions, Ffprobe ffprobe) {
         InputFileValidationOptions validationOptions = InputFileValidationOptions.builder()
                 .allowedExtensions(allowedExtensions)
                 .allowEmpty(true)
                 .build();
         InputFileInfo inputFileInfo = FileValidator.getInputFileInfo(file.getAbsolutePath(), validationOptions);
         if (inputFileInfo.getNotValidReason() == InputFileNotValidReason.NO_EXTENSION) {
-            return new FileInfo(file, null, NO_EXTENSION, null, null);
+            return new VideoFile(file, null, NO_EXTENSION, null, null);
         } else if (inputFileInfo.getNotValidReason() == InputFileNotValidReason.NOT_ALLOWED_EXTENSION) {
-            return new FileInfo(file, null, NOT_ALLOWED_EXTENSION, null, null);
+            return new VideoFile(file, null, NOT_ALLOWED_EXTENSION, null, null);
         }
         /*
          * There can be other errors if the file is removed or turned into a directory between the selection and the
@@ -47,19 +47,19 @@ public class FileInfoGetter {
         try {
             ffprobeInfo = ffprobe.getFileInfo(file);
         } catch (FfmpegException e) {
-            log.warn("failed to get the ffprobe info: " + e.getCode() + ", console output " + e.getConsoleOutput());
-            return new FileInfo(file, null, FFPROBE_FAILED, null, null);
+            log.warn("failed to get ffprobe info: " + e.getCode() + ", console output " + e.getConsoleOutput());
+            return new VideoFile(file, null, FFPROBE_FAILED, null, null);
         } catch (InterruptedException e) {
-            log.error("something's not right, the process can't be interrupted");
+            log.error("the process can't be interrupted, most likely a bug");
             throw new IllegalStateException();
         }
 
         String format = ffprobeInfo.getFormat().getFormatName();
         if (!LogicConstants.ALLOWED_VIDEO_FORMATS.contains(format)) {
-            return new FileInfo(file, format, NOT_ALLOWED_FORMAT, null, null);
+            return new VideoFile(file, format, NOT_ALLOWED_FORMAT, null, null);
         }
 
-        return new FileInfo(
+        return new VideoFile(
                 file,
                 format,
                 null,
@@ -77,9 +77,9 @@ public class FileInfoGetter {
             }
 
             String format = stream.getCodecName();
-            SubtitleOptionUnavailabilityReason unavailabilityReason = null;
+            SubtitleOptionNotValidReason notValidReason = null;
             if (!LogicConstants.ALLOWED_SUBTITLE_FORMATS.contains(format)) {
-                unavailabilityReason = SubtitleOptionUnavailabilityReason.NOT_ALLOWED_FORMAT;
+                notValidReason = SubtitleOptionNotValidReason.NOT_ALLOWED_FORMAT;
             }
 
             result.add(
@@ -87,7 +87,7 @@ public class FileInfoGetter {
                             stream.getIndex(),
                             null,
                             null,
-                            unavailabilityReason,
+                            notValidReason,
                             false,
                             false,
                             format,

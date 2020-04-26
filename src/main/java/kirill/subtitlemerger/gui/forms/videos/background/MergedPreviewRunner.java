@@ -12,10 +12,10 @@ import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
-import kirill.subtitlemerger.logic.files.entities.FfmpegSubtitleStream;
-import kirill.subtitlemerger.logic.files.entities.FileInfo;
-import kirill.subtitlemerger.logic.files.entities.MergedSubtitleInfo;
-import kirill.subtitlemerger.logic.files.entities.SubtitleOption;
+import kirill.subtitlemerger.logic.video_files.entities.FfmpegSubtitleStream;
+import kirill.subtitlemerger.logic.video_files.entities.VideoFile;
+import kirill.subtitlemerger.logic.video_files.entities.MergedSubtitleInfo;
+import kirill.subtitlemerger.logic.video_files.entities.SubtitleOption;
 import kirill.subtitlemerger.logic.utils.Utils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -34,7 +34,7 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
 
     private SubtitleOption lowerOption;
 
-    private FileInfo fileInfo;
+    private VideoFile fileInfo;
 
     private TableFileInfo tableFileInfo;
 

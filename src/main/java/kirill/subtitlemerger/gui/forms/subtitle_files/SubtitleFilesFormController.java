@@ -86,8 +86,8 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
 
     /*
      * We need this special flag because otherwise the dialog window will be shown twice if we change the value and
-     * press enter. Because pressing the enter button will fire the event but after the dialog windows is opened an
-     * another event (losing text field's focus) is fired.
+     * press enter. Because pressing the enter button will fire the event but after the dialog window is opened
+     * another event (losing the text field's focus) is fired.
      */
     private boolean agreeToOverwriteInProgress;
 
@@ -183,7 +183,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
                             validatorFileInfo.getContent(),
                             null,
                             null,
-                            SubtitleFilesFormController.InputFileInfo.from(validatorFileInfo.getNotValidReason())
+                            validatorFileInfo.getNotValidReason()
                     )
             );
         }
@@ -213,7 +213,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
                             validatorFileInfo.getContent(),
                             StandardCharsets.UTF_8,
                             null,
-                            SubtitleFilesFormController.IncorrectInputFileReason.INCORRECT_SUBTITLE_FORMAT
+                            null
                     )
             );
         }
@@ -350,15 +350,14 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
             return true;
         }
 
-        return fileInfo.getIncorrectFileReason() != null
-                && fileInfo.getIncorrectFileReason() != IncorrectInputFileReason.INCORRECT_SUBTITLE_FORMAT;
+        return fileInfo.getNotValidReason() != null;
     }
 
     private void setMergeButtonVisibility() {
         boolean disable = !filesInfo.upperFileOk()
                 || !filesInfo.lowerFileOk()
                 || filesInfo.getMergedFileInfo() == null
-                || filesInfo.getMergedFileInfo().getIncorrectFileReason() != null;
+                || filesInfo.getMergedFileInfo().getNotValidReason() != null;
         mergeButton.setDisable(disable);
     }
 
@@ -366,33 +365,43 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
         List<String> errorMessageParts = new ArrayList<>();
 
         InputFileInfo upperFileInfo = filesInfo.getUpperFileInfo();
-        if (upperFileInfo != null && (upperFileInfo.isDuplicate() || upperFileInfo.getIncorrectFileReason() != null)) {
+        if (upperFileInfo != null && (upperFileInfo.isDuplicate() || upperFileInfo.getSubtitles() == null || upperFileInfo.getNotValidReason() != null)) {
             showFileElementsAsIncorrect(ExtendedFileType.UPPER_SUBTITLES);
 
             if (upperFileInfo.getFile() != null && upperFileInfo.isDuplicate()) {
                 errorMessageParts.add("You have already selected this file for the lower subtitles");
-            } else if (upperFileInfo.getIncorrectFileReason() != null) {
-                errorMessageParts.add(getErrorText(upperFileInfo.getPath(), upperFileInfo.getIncorrectFileReason()));
+            } else if (upperFileInfo.getSubtitles() == null) {
+                errorMessageParts.add(
+                        "File '" + upperFileInfo.getPath() + "' has an incorrect subtitle format, it can happen if the "
+                                + "file is not UTF-8-encoded, you can change the encoding pressing the preview button"
+                );
+            } else if (upperFileInfo.getNotValidReason() != null) {
+                errorMessageParts.add(getErrorText(upperFileInfo.getPath(), upperFileInfo.getNotValidReason()));
             }
         }
 
         InputFileInfo lowerFileInfo = filesInfo.getLowerFileInfo();
-        if (lowerFileInfo != null && (lowerFileInfo.isDuplicate() || lowerFileInfo.getIncorrectFileReason() != null)) {
+        if (lowerFileInfo != null && (lowerFileInfo.isDuplicate() || lowerFileInfo.getSubtitles() == null || lowerFileInfo.getNotValidReason() != null)) {
             showFileElementsAsIncorrect(ExtendedFileType.LOWER_SUBTITLES);
 
             if (lowerFileInfo.getFile() != null && lowerFileInfo.isDuplicate()) {
                 errorMessageParts.add("You have already selected this file for the upper subtitles");
-            } else if (lowerFileInfo.getIncorrectFileReason() != null) {
-                errorMessageParts.add(getErrorText(lowerFileInfo.getPath(), lowerFileInfo.getIncorrectFileReason()));
+            } else if (lowerFileInfo.getSubtitles() == null) {
+                errorMessageParts.add(
+                        "File '" + lowerFileInfo.getPath() + "' has an incorrect subtitle format, it can happen if the "
+                                + "file is not UTF-8-encoded, you can change the encoding pressing the preview button"
+                );
+            } else if (lowerFileInfo.getNotValidReason() != null) {
+                errorMessageParts.add(getErrorText(lowerFileInfo.getPath(), lowerFileInfo.getNotValidReason()));
             }
         }
 
         MergedFileInfo mergedFileInfo = filesInfo.getMergedFileInfo();
-        if (mergedFileInfo != null && mergedFileInfo.getIncorrectFileReason() != null) {
+        if (mergedFileInfo != null && mergedFileInfo.getNotValidReason() != null) {
             showFileElementsAsIncorrect(ExtendedFileType.MERGED_SUBTITLES);
 
-            if (mergedFileInfo.getIncorrectFileReason() != null) {
-                errorMessageParts.add(getErrorText(mergedFileInfo.getPath(), mergedFileInfo.getIncorrectFileReason()));
+            if (mergedFileInfo.getNotValidReason() != null) {
+                errorMessageParts.add(getErrorText(mergedFileInfo.getPath(), mergedFileInfo.getNotValidReason()));
             }
         }
 
@@ -445,7 +454,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
         }
     }
 
-    private static String getErrorText(String path, IncorrectInputFileReason reason) {
+    private static String getErrorText(String path, InputFileNotValidReason reason) {
         path = getShortenedPath(path);
 
         switch (reason) {
@@ -468,9 +477,6 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
                         + LogicConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)";
             case FAILED_TO_READ_CONTENT:
                 return path + ": failed to read the file";
-            case INCORRECT_SUBTITLE_FORMAT:
-                return "File '" + path + "' has an incorrect subtitle format, it can happen if the file is not "
-                        + "UTF-8-encoded, you can change the encoding pressing the preview button";
             default:
                 throw new IllegalStateException();
         }
@@ -480,7 +486,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
         return Utils.getShortenedString(path, 20, 40);
     }
 
-    private static String getErrorText(String path, IncorrectMergedFileReason reason) {
+    private static String getErrorText(String path, OutputFileNotValidReason reason) {
         path = getShortenedPath(path);
 
         switch (reason) {
@@ -545,9 +551,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
                         path,
                         validatorFileInfo.getFile(),
                         fileOrigin,
-                        validatorFileInfo.getNotValidReason() != null
-                                ? MergedFileInfo.from(validatorFileInfo.getNotValidReason())
-                                : null
+                        validatorFileInfo.getNotValidReason()
                 )
         );
     }
@@ -608,11 +612,6 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
 
         fileInfo.setEncoding(previewResult.getEncoding());
         fileInfo.setSubtitles(previewResult.getSubtitles());
-        if (previewResult.getSubtitles() == null) {
-            fileInfo.setIncorrectFileReason(IncorrectInputFileReason.INCORRECT_SUBTITLE_FORMAT);
-        } else {
-            fileInfo.setIncorrectFileReason(null);
-        }
         filesInfo.setMergedSubtitles(null);
 
         updateScene(fileInfo.getFileOrigin());
@@ -843,45 +842,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
         private Subtitles subtitles;
 
         @Setter
-        private IncorrectInputFileReason incorrectFileReason;
-
-        static IncorrectInputFileReason from(InputFileNotValidReason reason) {
-            switch (reason) {
-                case PATH_IS_TOO_LONG:
-                    return SubtitleFilesFormController.IncorrectInputFileReason.PATH_IS_TOO_LONG;
-                case INVALID_PATH:
-                    return SubtitleFilesFormController.IncorrectInputFileReason.INVALID_PATH;
-                case IS_A_DIRECTORY:
-                    return SubtitleFilesFormController.IncorrectInputFileReason.IS_A_DIRECTORY;
-                case DOES_NOT_EXIST:
-                    return SubtitleFilesFormController.IncorrectInputFileReason.DOES_NOT_EXIST;
-                case NO_EXTENSION:
-                    return SubtitleFilesFormController.IncorrectInputFileReason.NO_EXTENSION;
-                case NOT_ALLOWED_EXTENSION:
-                    return SubtitleFilesFormController.IncorrectInputFileReason.NOT_ALLOWED_EXTENSION;
-                case FILE_IS_EMPTY:
-                    return SubtitleFilesFormController.IncorrectInputFileReason.FILE_IS_EMPTY;
-                case FILE_IS_TOO_BIG:
-                    return SubtitleFilesFormController.IncorrectInputFileReason.FILE_IS_TOO_BIG;
-                case FAILED_TO_READ_CONTENT:
-                    return SubtitleFilesFormController.IncorrectInputFileReason.FAILED_TO_READ_CONTENT;
-                default:
-                    throw new IllegalStateException();
-            }
-        }
-    }
-
-    private enum IncorrectInputFileReason {
-        PATH_IS_TOO_LONG,
-        INVALID_PATH,
-        IS_A_DIRECTORY,
-        DOES_NOT_EXIST,
-        NO_EXTENSION,
-        NOT_ALLOWED_EXTENSION,
-        FILE_IS_EMPTY,
-        FILE_IS_TOO_BIG,
-        FAILED_TO_READ_CONTENT,
-        INCORRECT_SUBTITLE_FORMAT
+        private InputFileNotValidReason notValidReason;
     }
 
     @AllArgsConstructor
@@ -893,32 +854,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
 
         private FileOrigin fileOrigin;
 
-        private IncorrectMergedFileReason incorrectFileReason;
-
-        static IncorrectMergedFileReason from(OutputFileNotValidReason reason) {
-            switch (reason) {
-                case PATH_IS_TOO_LONG:
-                    return IncorrectMergedFileReason.PATH_IS_TOO_LONG;
-                case INVALID_PATH:
-                    return IncorrectMergedFileReason.INVALID_PATH;
-                case IS_A_DIRECTORY:
-                    return IncorrectMergedFileReason.IS_A_DIRECTORY;
-                case NO_EXTENSION:
-                    return IncorrectMergedFileReason.NO_EXTENSION;
-                case NOT_ALLOWED_EXTENSION:
-                    return IncorrectMergedFileReason.NOT_ALLOWED_EXTENSION;
-                default:
-                    throw new IllegalStateException();
-            }
-        }
-    }
-
-    private enum IncorrectMergedFileReason {
-        PATH_IS_TOO_LONG,
-        INVALID_PATH,
-        IS_A_DIRECTORY,
-        NO_EXTENSION,
-        NOT_ALLOWED_EXTENSION
+        private OutputFileNotValidReason notValidReason;
     }
 
     @AllArgsConstructor
@@ -942,7 +878,8 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
         }
 
         private static boolean inputFileOk(InputFileInfo fileInfo) {
-            return fileInfo != null && !fileInfo.isDuplicate && fileInfo.getIncorrectFileReason() == null;
+            return fileInfo != null && !fileInfo.isDuplicate && fileInfo.getNotValidReason() == null
+                    && fileInfo.getSubtitles() != null;
         }
     }
 }

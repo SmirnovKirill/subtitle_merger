@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.logic.files.entities;
+package kirill.subtitlemerger.logic.video_files.entities;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.logic.core.entities.Subtitles;
@@ -33,7 +33,7 @@ public class FfmpegSubtitleStream extends SubtitleOption {
             int ffmpegIndex,
             Subtitles subtitles,
             Integer size,
-            SubtitleOptionUnavailabilityReason unavailabilityReason,
+            SubtitleOptionNotValidReason notValidReason,
             boolean selectedAsUpper,
             boolean selectedAsLower,
             String format,
@@ -46,7 +46,7 @@ public class FfmpegSubtitleStream extends SubtitleOption {
                 subtitles,
                 size,
                 StandardCharsets.UTF_8,
-                unavailabilityReason,
+                notValidReason,
                 selectedAsUpper,
                 selectedAsLower
         );

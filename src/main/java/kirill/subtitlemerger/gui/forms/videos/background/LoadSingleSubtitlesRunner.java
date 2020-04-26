@@ -10,8 +10,8 @@ import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
-import kirill.subtitlemerger.logic.files.entities.FfmpegSubtitleStream;
-import kirill.subtitlemerger.logic.files.entities.FileInfo;
+import kirill.subtitlemerger.logic.video_files.entities.FfmpegSubtitleStream;
+import kirill.subtitlemerger.logic.video_files.entities.VideoFile;
 import kirill.subtitlemerger.logic.utils.entities.ActionResult;
 import lombok.AllArgsConstructor;
 import lombok.extern.apachecommons.CommonsLog;
@@ -21,7 +21,7 @@ import lombok.extern.apachecommons.CommonsLog;
 public class LoadSingleSubtitlesRunner implements BackgroundRunner<ActionResult> {
     private FfmpegSubtitleStream ffmpegStream;
 
-    private FileInfo fileInfo;
+    private VideoFile fileInfo;
 
     private TableSubtitleOption tableSubtitleOption;
 

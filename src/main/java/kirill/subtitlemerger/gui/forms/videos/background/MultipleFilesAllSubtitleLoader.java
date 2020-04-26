@@ -11,8 +11,8 @@ import kirill.subtitlemerger.logic.core.SubRipParser;
 import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
-import kirill.subtitlemerger.logic.files.entities.FfmpegSubtitleStream;
-import kirill.subtitlemerger.logic.files.entities.FileInfo;
+import kirill.subtitlemerger.logic.video_files.entities.FfmpegSubtitleStream;
+import kirill.subtitlemerger.logic.video_files.entities.VideoFile;
 import kirill.subtitlemerger.logic.utils.Utils;
 import kirill.subtitlemerger.logic.utils.entities.ActionResult;
 import lombok.AllArgsConstructor;
@@ -26,7 +26,7 @@ import java.util.List;
 public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionResult> {
     private List<TableFileInfo> displayedTableFilesInfo;
 
-    private List<FileInfo> filesInfo;
+    private List<VideoFile> filesInfo;
 
     private TableWithFiles tableWithFiles;
 
@@ -51,7 +51,7 @@ public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionRe
         backgroundManager.setCancellationPossible(true);
 
         mainLoop: for (TableFileInfo tableFileInfo : selectedTableFilesInfo) {
-            FileInfo fileInfo = FileInfo.getById(tableFileInfo.getId(), filesInfo);
+            VideoFile fileInfo = VideoFile.getById(tableFileInfo.getId(), filesInfo);
             if (CollectionUtils.isEmpty(fileInfo.getFfmpegSubtitleStreams())) {
                 continue;
             }
@@ -59,7 +59,7 @@ public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionRe
             int failedToLoadForFile = 0;
 
             for (FfmpegSubtitleStream ffmpegStream : fileInfo.getFfmpegSubtitleStreams()) {
-                if (ffmpegStream.getUnavailabilityReason() != null || ffmpegStream.getSubtitles() != null) {
+                if (ffmpegStream.getNotValidReason() != null || ffmpegStream.getSubtitles() != null) {
                     continue;
                 }
 
@@ -134,7 +134,7 @@ public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionRe
 
     private static int getStreamToLoadCount(
             List<TableFileInfo> selectedTableFilesInfo,
-            List<FileInfo> allFilesInfo,
+            List<VideoFile> allFilesInfo,
             BackgroundManager backgroundManager
     ) {
         backgroundManager.setIndeterminateProgress();
@@ -143,10 +143,10 @@ public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionRe
         int result = 0;
 
         for (TableFileInfo tableFileInfo : selectedTableFilesInfo) {
-            FileInfo fileInfo = FileInfo.getById(tableFileInfo.getId(), allFilesInfo);
+            VideoFile fileInfo = VideoFile.getById(tableFileInfo.getId(), allFilesInfo);
             if (!CollectionUtils.isEmpty(fileInfo.getFfmpegSubtitleStreams())) {
                 for (FfmpegSubtitleStream stream : fileInfo.getFfmpegSubtitleStreams()) {
-                    if (stream.getUnavailabilityReason() != null || stream.getSubtitles() != null) {
+                    if (stream.getNotValidReason() != null || stream.getSubtitles() != null) {
                         continue;
                     }
 

@@ -4,7 +4,7 @@ import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithFiles;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.logic.files.entities.FileInfo;
+import kirill.subtitlemerger.logic.video_files.entities.VideoFile;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 @AllArgsConstructor
 public class RemoveFilesRunner implements BackgroundRunner<RemoveFilesRunner.Result> {
-    private List<FileInfo> originalFilesInfo;
+    private List<VideoFile> originalFilesInfo;
 
     private TableWithFiles.Mode mode;
 
@@ -28,7 +28,7 @@ public class RemoveFilesRunner implements BackgroundRunner<RemoveFilesRunner.Res
         backgroundManager.setIndeterminateProgress();
         backgroundManager.updateMessage("Removing files...");
 
-        List<FileInfo> filesInfo = originalFilesInfo.stream()
+        List<VideoFile> filesInfo = originalFilesInfo.stream()
                 .filter(fileInfo -> !selectedFileIds.contains(fileInfo.getId()))
                 .collect(Collectors.toList());
         List<TableFileInfo> allTableFilesInfo = originalAllTableFilesInfo.stream()
@@ -69,7 +69,7 @@ public class RemoveFilesRunner implements BackgroundRunner<RemoveFilesRunner.Res
     public static class Result {
         private int removedCount;
 
-        private List<FileInfo> filesInfo;
+        private List<VideoFile> filesInfo;
 
         private List<TableFileInfo> allTableFilesInfo;
 
