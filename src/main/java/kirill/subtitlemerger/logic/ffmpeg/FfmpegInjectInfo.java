@@ -22,7 +22,7 @@ public class FfmpegInjectInfo {
 
     private List<Integer> defaultDispositionStreamIndices;
 
-    private File fileWithVideo;
+    private File originalVideoFile;
 
-    private File directoryForTempFile;
+    private File tempVideoDirectory;
 }

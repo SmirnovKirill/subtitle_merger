@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kirill.subtitlemerger.logic.ffmpeg.json.JsonFfprobeFileInfo;
+import kirill.subtitlemerger.logic.ffmpeg.json.JsonFfprobeVideoInfo;
 import kirill.subtitlemerger.logic.utils.process.ProcessException;
 import kirill.subtitlemerger.logic.utils.process.ProcessRunner;
 import lombok.extern.apachecommons.CommonsLog;
@@ -52,7 +52,7 @@ public class Ffprobe {
         }
     }
 
-    public JsonFfprobeFileInfo getFileInfo(File file) throws FfmpegException, InterruptedException {
+    public JsonFfprobeVideoInfo getVideoInfo(File videoFile) throws FfmpegException, InterruptedException {
         String consoleOutput;
         try {
             List<String> arguments = Arrays.asList(
@@ -63,7 +63,7 @@ public class Ffprobe {
                     "-show_streams",
                     "-print_format",
                     "json",
-                    file.getAbsolutePath()
+                    videoFile.getAbsolutePath()
             );
 
             consoleOutput = ProcessRunner.run(arguments);
@@ -72,7 +72,7 @@ public class Ffprobe {
         }
 
         try {
-            return JSON_OBJECT_MAPPER.readValue(consoleOutput, JsonFfprobeFileInfo.class);
+            return JSON_OBJECT_MAPPER.readValue(consoleOutput, JsonFfprobeVideoInfo.class);
         } catch (JsonProcessingException e) {
             log.error(
                     "failed to convert the console output to json: " + ExceptionUtils.getStackTrace(e)

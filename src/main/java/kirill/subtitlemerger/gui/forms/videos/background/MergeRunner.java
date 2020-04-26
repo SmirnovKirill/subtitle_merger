@@ -12,7 +12,7 @@ import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegInjectInfo;
 import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
-import kirill.subtitlemerger.logic.ffmpeg.json.JsonFfprobeFileInfo;
+import kirill.subtitlemerger.logic.ffmpeg.json.JsonFfprobeVideoInfo;
 import kirill.subtitlemerger.logic.video_files.VideoFiles;
 import kirill.subtitlemerger.logic.video_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.video_files.entities.VideoFile;
@@ -260,7 +260,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
             Settings settings
     ) throws FfmpegException, InterruptedException {
         //todo diagnostics
-        JsonFfprobeFileInfo ffprobeInfo = ffprobe.getFileInfo(fileInfo.getFile());
+        JsonFfprobeVideoInfo ffprobeInfo = ffprobe.getVideoInfo(fileInfo.getFile());
         List<FfmpegSubtitleStream> subtitleOptions = VideoFiles.getSubtitleOptions(ffprobeInfo);
         if (settings.isMakeMergedStreamsDefault()) {
             for (FfmpegSubtitleStream stream : subtitleOptions) {

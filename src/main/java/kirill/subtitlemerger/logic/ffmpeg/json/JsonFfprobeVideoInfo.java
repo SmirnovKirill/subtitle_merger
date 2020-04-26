@@ -7,13 +7,13 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class JsonFfprobeFileInfo {
+public class JsonFfprobeVideoInfo {
     private List<JsonStream> streams;
 
     private JsonFormat format;
 
     @JsonCreator
-    public JsonFfprobeFileInfo(
+    public JsonFfprobeVideoInfo(
             @JsonProperty(value = "streams")
                     List<JsonStream> streams,
             @JsonProperty(value = "format")

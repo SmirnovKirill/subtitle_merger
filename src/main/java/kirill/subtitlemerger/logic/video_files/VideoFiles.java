@@ -4,7 +4,7 @@ import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
-import kirill.subtitlemerger.logic.ffmpeg.json.JsonFfprobeFileInfo;
+import kirill.subtitlemerger.logic.ffmpeg.json.JsonFfprobeVideoInfo;
 import kirill.subtitlemerger.logic.ffmpeg.json.JsonStream;
 import kirill.subtitlemerger.logic.video_files.entities.FfmpegSubtitleStream;
 import kirill.subtitlemerger.logic.video_files.entities.VideoFile;
@@ -43,9 +43,9 @@ public class VideoFiles {
          * if the user causes them on purpose, so I think it's not worthy to handle these situations in any special way.
          */
 
-        JsonFfprobeFileInfo ffprobeInfo;
+        JsonFfprobeVideoInfo ffprobeInfo;
         try {
-            ffprobeInfo = ffprobe.getFileInfo(file);
+            ffprobeInfo = ffprobe.getVideoInfo(file);
         } catch (FfmpegException e) {
             log.warn("failed to get ffprobe info: " + e.getCode() + ", console output " + e.getConsoleOutput());
             return new VideoFile(file, null, FFPROBE_FAILED, null, null);
@@ -68,7 +68,7 @@ public class VideoFiles {
         );
     }
 
-    public static List<FfmpegSubtitleStream> getSubtitleOptions(JsonFfprobeFileInfo ffprobeInfo) {
+    public static List<FfmpegSubtitleStream> getSubtitleOptions(JsonFfprobeVideoInfo ffprobeInfo) {
         List<FfmpegSubtitleStream> result = new ArrayList<>();
 
         for (JsonStream stream : ffprobeInfo.getStreams()) {

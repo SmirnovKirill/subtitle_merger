@@ -86,7 +86,7 @@ public class Ffmpeg {
         try {
             return FileUtils.readFileToString(TEMP_SUBTITLE_FILE, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            log.warn("failed to read the subtitles from the file: " + ExceptionUtils.getStackTrace(e));
+            log.warn("failed to read the subtitles from the video: " + ExceptionUtils.getStackTrace(e));
             throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, consoleOutput);
         }
     }
@@ -102,9 +102,9 @@ public class Ffmpeg {
          * and then rename it. Later we'll also check that the size of the new file is bigger than the size of the
          * original one because it's important not to spoil the original file with the video.
          */
-        File outputTemp = new File(
-                injectInfo.getDirectoryForTempFile(),
-                "temp_" + injectInfo.getFileWithVideo().getName()
+        File tempVideoFile = new File(
+                injectInfo.getTempVideoDirectory(),
+                "temp_" + injectInfo.getOriginalVideoFile().getName()
         );
 
         try {
@@ -117,26 +117,26 @@ public class Ffmpeg {
         try {
             String consoleOutput;
             try {
-                List<String> arguments = getArgumentsInjectToFile(injectInfo, outputTemp);
+                List<String> arguments = getArgumentsInjectToFile(injectInfo, tempVideoFile);
                 consoleOutput = ProcessRunner.run(arguments);
             } catch (ProcessException e) {
                 throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, e.getConsoleOutput());
             }
 
-            if (outputTemp.length() <= injectInfo.getFileWithVideo().length()) {
+            if (tempVideoFile.length() <= injectInfo.getOriginalVideoFile().length()) {
                 log.error("the resulting file size is less than the original one");
                 throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, consoleOutput);
             }
 
-            overwriteOriginalVideo(outputTemp, injectInfo.getFileWithVideo(), consoleOutput);
+            overwriteOriginalVideo(tempVideoFile, injectInfo.getOriginalVideoFile(), consoleOutput);
         } finally {
-            if (outputTemp.exists() && !outputTemp.delete()) {
-                log.warn("failed to delete the temporary video file " + outputTemp.getAbsolutePath());
+            if (tempVideoFile.exists() && !tempVideoFile.delete()) {
+                log.warn("failed to delete the temporary video file " + tempVideoFile.getAbsolutePath());
             }
         }
     }
 
-    private List<String> getArgumentsInjectToFile(FfmpegInjectInfo injectInfo, File outputTemp) {
+    private List<String> getArgumentsInjectToFile(FfmpegInjectInfo injectInfo, File tempVideoFile) {
         List<String> result = new ArrayList<>();
 
         result.add(ffmpegFile.getAbsolutePath());
@@ -149,7 +149,7 @@ public class Ffmpeg {
          */
         result.add("-copy_unknown");
 
-        result.addAll(Arrays.asList("-i", injectInfo.getFileWithVideo().getAbsolutePath()));
+        result.addAll(Arrays.asList("-i", injectInfo.getOriginalVideoFile().getAbsolutePath()));
         result.addAll(Arrays.asList("-i", Ffmpeg.TEMP_SUBTITLE_FILE.getAbsolutePath()));
         result.addAll(Arrays.asList("-c", "copy"));
 
@@ -179,37 +179,37 @@ public class Ffmpeg {
 
         result.addAll(Arrays.asList("-map", "0"));
         result.addAll(Arrays.asList("-map", "1"));
-        result.add(outputTemp.getAbsolutePath());
+        result.add(tempVideoFile.getAbsolutePath());
 
         return result;
     }
 
     private static void overwriteOriginalVideo(
-            File outputTemp,
-            File fileWithVideo,
+            File tempVideoFile,
+            File originalVideoFile,
             String consoleOutput
     ) throws FfmpegException {
         /*
          * Save this flag here to restore it at the end of the method. Because otherwise if the file has had only
          * read access initially we will give it the write access as well before renaming, and leave it like that.
          */
-        boolean originallyWritable = fileWithVideo.canWrite();
+        boolean originallyWritable = originalVideoFile.canWrite();
 
-        if (!fileWithVideo.setWritable(true, true)) {
-            log.warn("failed to make the video file " + fileWithVideo.getAbsolutePath() + " writable");
+        if (!originalVideoFile.setWritable(true, true)) {
+            log.warn("failed to make video file " + originalVideoFile.getAbsolutePath() + " writable");
             throw new FfmpegException(FfmpegException.Code.FAILED_TO_MOVE_TEMP_VIDEO, consoleOutput);
         }
 
         try {
-            Files.move(outputTemp.toPath(), fileWithVideo.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            Files.move(tempVideoFile.toPath(), originalVideoFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
-            log.warn("failed to move the temporary video: " + ExceptionUtils.getStackTrace(e));
+            log.warn("failed to move temporary video: " + ExceptionUtils.getStackTrace(e));
             throw new FfmpegException(FfmpegException.Code.FAILED_TO_MOVE_TEMP_VIDEO, consoleOutput);
         }
 
         if (!originallyWritable) {
-            if (!fileWithVideo.setWritable(false, true)) {
-                log.warn("failed to make the video file " + fileWithVideo.getAbsolutePath() + " not writable");
+            if (!originalVideoFile.setWritable(false, true)) {
+                log.warn("failed to make video file " + originalVideoFile.getAbsolutePath() + " not writable");
             }
         }
     }
