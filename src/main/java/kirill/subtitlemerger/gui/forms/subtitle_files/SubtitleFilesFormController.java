@@ -45,13 +45,6 @@ import java.util.*;
 
 @CommonsLog
 public class SubtitleFilesFormController extends BackgroundTaskFormController {
-    private Stage stage;
-
-    private Settings settings;
-
-    @FXML
-    private Button upperChooseButton;
-
     @FXML
     private TextField upperPathField;
 
@@ -59,7 +52,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
     private Button upperPreview;
 
     @FXML
-    private Button lowerChooseButton;
+    private Button upperChooseButton;
 
     @FXML
     private TextField lowerPathField;
@@ -68,7 +61,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
     private Button lowerPreview;
 
     @FXML
-    private Button mergedChooseButton;
+    private Button lowerChooseButton;
 
     @FXML
     private TextField mergedPathField;
@@ -77,17 +70,24 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
     private Button mergedPreview;
 
     @FXML
+    private Button mergedChooseButton;
+
+    @FXML
     private Button mergeButton;
 
     @FXML
     private ActionResultPane actionResultPane;
 
+    private Stage stage;
+
+    private Settings settings;
+
     private FilesInfo filesInfo;
 
     /*
      * We need this special flag because otherwise the dialog window will be shown twice if we change the value and
-     * press enter. Because pressing the enter button will fire the event but after the dialog windows is opened another
-     * event (losing text field's focus) is fired.
+     * press enter. Because pressing the enter button will fire the event but after the dialog windows is opened an
+     * another event (losing text field's focus) is fired.
      */
     private boolean agreeToOverwriteInProgress;
 

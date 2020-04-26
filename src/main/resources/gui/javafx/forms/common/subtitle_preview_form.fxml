@@ -13,8 +13,7 @@
     </padding>
 
     <VBox fx:id="mainPane" spacing="10">
-        <Label fx:id="title" maxWidth="Infinity" HBox.hgrow="ALWAYS" alignment="CENTER" textAlignment="CENTER"
-               wrapText="true"/>
+        <Label fx:id="title" maxWidth="Infinity" alignment="CENTER" wrapText="true"/>
         <HBox fx:id="mergedUpperPane" alignment="CENTER_LEFT">
             <Label text="&#8226; "/>
             <Label fx:id="mergedUpperTitle"/>
