@@ -24,4 +24,6 @@ public class GuiConstants {
     public static final String PANE_UNAVAILABLE_CLASS = "pane-unavailable";
 
     public static final String PANE_ERROR_CLASS = "pane-error";
+
+    public static final String IMAGE_BUTTON_CLASS = "image-button";
 }

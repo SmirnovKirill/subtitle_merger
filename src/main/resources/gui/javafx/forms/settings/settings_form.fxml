@@ -44,11 +44,13 @@
                       onAction="#upperLanguageChanged" maxWidth="Infinity"/>
 
             <Region GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-            <Button fx:id="swapButton" GridPane.rowIndex="1" GridPane.columnIndex="1"
-                    onAction="#swapButtonClicked" styleClass="image-button">
+            <Button fx:id="swapButton" GridPane.rowIndex="1" GridPane.columnIndex="1" onAction="#swapButtonClicked">
                 <GridPane.margin>
                     <Insets top="8" bottom="8" left="10"/>
                 </GridPane.margin>
+                <styleClass>
+                    <GuiConstants fx:constant="IMAGE_BUTTON_CLASS"/>
+                </styleClass>
                 <graphic>
                     <ImageView fitWidth="24" fitHeight="24">
                         <Image url="/gui/icons/swap.png"/>

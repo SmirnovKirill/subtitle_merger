@@ -16,9 +16,10 @@ import javafx.scene.layout.Region;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import kirill.subtitlemerger.gui.GuiConstants;
+import kirill.subtitlemerger.gui.forms.common.ErrorPopupFormController;
 import kirill.subtitlemerger.gui.forms.common.agreement_popup.AgreementPopupFormController;
 import kirill.subtitlemerger.gui.forms.common.agreement_popup.AgreementResult;
-import kirill.subtitlemerger.gui.forms.common.ErrorPopupFormController;
 import kirill.subtitlemerger.gui.utils.entities.FormInfo;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -179,7 +180,7 @@ public class GuiUtils {
     public static Button generateImageButton(String text, String imageUrl, int width, int height) {
         Button result = new Button(text);
 
-        result.getStyleClass().add("image-button");
+        result.getStyleClass().add(GuiConstants.IMAGE_BUTTON_CLASS);
 
         result.setGraphic(generateImageView(imageUrl, width, height));
 
