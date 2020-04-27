@@ -1,18 +1,16 @@
 package kirill.subtitlemerger.gui.forms.videos.background;
 
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithFiles;
+import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithVideos;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.logic.LogicConstants;
-import kirill.subtitlemerger.logic.core.SubRipParser;
-import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
-import kirill.subtitlemerger.logic.core.entities.Subtitles;
-import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
-import kirill.subtitlemerger.logic.videos.entities.ExternalSubtitleOption;
+import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndInput;
 import kirill.subtitlemerger.logic.utils.file_validation.FileValidator;
 import kirill.subtitlemerger.logic.utils.file_validation.InputFileInfo;
 import kirill.subtitlemerger.logic.utils.file_validation.InputFileNotValidReason;
 import kirill.subtitlemerger.logic.utils.file_validation.InputFileValidationOptions;
+import kirill.subtitlemerger.logic.videos.entities.ExternalSubtitleOption;
+import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
@@ -53,40 +51,32 @@ public class AddFileWithSubtitlesRunner implements BackgroundRunner<AddFileWithS
         }
 
         if (isDuplicate(fileWithSubtitlesToAdd, videoFileInfo)) {
-            return Result.createUnavailable(TableWithFiles.FileWithSubtitlesUnavailabilityReason.DUPLICATE);
-        }
-
-        Subtitles subtitles;
-        try {
-            subtitles = SubRipParser.from(new String(validatorFileInfo.getContent(), StandardCharsets.UTF_8));
-        } catch (SubtitleFormatException e) {
-            subtitles = null;
+            return Result.createUnavailable(TableWithVideos.FileWithSubtitlesUnavailabilityReason.DUPLICATE);
         }
 
         return new Result(
                 new ExternalSubtitleOption(
                         fileWithSubtitlesToAdd,
-                        subtitles,
-                        validatorFileInfo.getContent().length,
-                        StandardCharsets.UTF_8,
+                        SubtitlesAndInput.from(validatorFileInfo.getContent(), StandardCharsets.UTF_8),
                         false,
-                        false,
-                        validatorFileInfo.getContent()
+                        false
                 ),
                 (int) fileWithSubtitlesToAdd.length(),
                 null
         );
     }
 
-    private static TableWithFiles.FileWithSubtitlesUnavailabilityReason unavailabilityReasonFrom(
+    private static TableWithVideos.FileWithSubtitlesUnavailabilityReason unavailabilityReasonFrom(
             InputFileNotValidReason incorrectFileReason
     ) {
         if (incorrectFileReason == InputFileNotValidReason.PATH_IS_EMPTY) {
             throw new IllegalStateException();
         }
 
+        //todo switch
+
         return EnumUtils.getEnum(
-                TableWithFiles.FileWithSubtitlesUnavailabilityReason.class,
+                TableWithVideos.FileWithSubtitlesUnavailabilityReason.class,
                 incorrectFileReason.toString()
         );
     }
@@ -99,7 +89,7 @@ public class AddFileWithSubtitlesRunner implements BackgroundRunner<AddFileWithS
             return Objects.equals(fileToAdd, filesWithSubtitles.get(0).getFile());
         } else {
             log.error(
-                    String.format("there are already enough files (%d), shouldn't happen", filesWithSubtitles.size())
+                    String.format("there are already enough files (%d), most likely a bug", filesWithSubtitles.size())
             );
             throw new IllegalStateException();
         }
@@ -112,9 +102,9 @@ public class AddFileWithSubtitlesRunner implements BackgroundRunner<AddFileWithS
 
         private int size;
 
-        private TableWithFiles.FileWithSubtitlesUnavailabilityReason unavailabilityReason;
+        private TableWithVideos.FileWithSubtitlesUnavailabilityReason unavailabilityReason;
 
-        static Result createUnavailable(TableWithFiles.FileWithSubtitlesUnavailabilityReason reason) {
+        static Result createUnavailable(TableWithVideos.FileWithSubtitlesUnavailabilityReason reason) {
             return new Result(null, 0, reason);
         }
     }

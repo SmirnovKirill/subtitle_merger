@@ -66,57 +66,61 @@ public class SettingsFormController {
     @FXML
     private Pane unavailablePane;
 
-    private GuiContext context;
-
     private Settings settings;
 
+    private GuiContext context;
+
+    @SuppressWarnings({"WeakerAccess", "RedundantSuppression"})
     public SettingsFormController() {
         makeDefaultVisible = new SimpleBooleanProperty(false);
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public boolean getMakeDefaultVisible() {
         return makeDefaultVisible.get();
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public BooleanProperty makeDefaultVisibleProperty() {
         return makeDefaultVisible;
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public void setMakeDefaultVisible(boolean makeDefaultVisible) {
         this.makeDefaultVisible.set(makeDefaultVisible);
     }
 
     public void initialize(GuiContext context) {
-        this.context = context;
         settings = context.getSettings();
+        this.context = context;
 
-        upperLanguageComboBox.getItems().setAll(ALLOWED_LANGUAGES);
-        upperLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
-        lowerLanguageComboBox.getItems().setAll(ALLOWED_LANGUAGES);
-        lowerLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
+        context.videosInProgressProperty().addListener(this::videosInProgressChanged);
 
-        setUpperSubtitles();
+        setUpperLanguage();
         swapButton.setDisable(settings.getUpperLanguage() == null || settings.getLowerLanguage() == null);
-        setLowerSubtitles();
+        setLowerLanguage();
         setMergeMode();
         setMakeDefaultVisible(settings.getMergeMode() == MergeMode.ORIGINAL_VIDEOS);
         makeDefaultCheckBox.setSelected(settings.isMakeMergedStreamsDefault());
         plainTextCheckBox.setSelected(settings.isPlainTextSubtitles());
 
         mergeModeToggleGroup.selectedToggleProperty().addListener(this::mergeModeChanged);
-        makeDefaultCheckBox.selectedProperty().addListener(this::makeDefaultChanged);
-        plainTextCheckBox.selectedProperty().addListener(this::plainTextChanged);
-        context.videosInProgressProperty().addListener(this::videosInProgressChanged);
     }
 
-    private void setUpperSubtitles() {
+    private void setUpperLanguage() {
+        upperLanguageComboBox.getItems().setAll(ALLOWED_LANGUAGES);
+        upperLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
+
         LanguageAlpha3Code upperLanguage = settings.getUpperLanguage();
         if (upperLanguage != null) {
             upperLanguageComboBox.getSelectionModel().select(upperLanguage);
         }
     }
 
-    private void setLowerSubtitles() {
+    private void setLowerLanguage() {
+        lowerLanguageComboBox.getItems().setAll(ALLOWED_LANGUAGES);
+        lowerLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
+
         LanguageAlpha3Code lowerLanguage = settings.getLowerLanguage();
         if (lowerLanguage != null) {
             lowerLanguageComboBox.getSelectionModel().select(lowerLanguage);
@@ -180,38 +184,6 @@ public class SettingsFormController {
             log.error("merge mode hasn't been saved: " + ExceptionUtils.getStackTrace(e));
 
             actionResultPane.setOnlyError("Something bad has happened, the merge mode hasn't been saved");
-        }
-    }
-
-    private void makeDefaultChanged(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-        try {
-            settings.saveMakeMergedStreamsDefault(newValue.toString());
-
-            if (newValue) {
-                actionResultPane.setOnlySuccess("Merged subtitles will be selected as default from now on");
-            } else {
-                actionResultPane.setOnlySuccess("Merged subtitles will not be selected as default from now on");
-            }
-        } catch (SettingException e) {
-            log.error("failed to save mark stream as default flag: " + ExceptionUtils.getStackTrace(e));
-
-            actionResultPane.setOnlyError("Something bad has happened, the flag value hasn't been saved");
-        }
-    }
-
-    private void plainTextChanged(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-        try {
-            settings.savePlainTextSubtitles(newValue.toString());
-
-            if (newValue) {
-                actionResultPane.setOnlySuccess("Merged subtitles will be in plain text from now on");
-            } else {
-                actionResultPane.setOnlySuccess("Merged subtitles will have the original format from now on");
-            }
-        } catch (SettingException e) {
-            log.error("failed to save plane text flag: " + ExceptionUtils.getStackTrace(e));
-
-            actionResultPane.setOnlyError("Something bad has happened, the plane text flag value hasn't been saved");
         }
     }
 
@@ -310,6 +282,44 @@ public class SettingsFormController {
             log.error("language for lower subtitles has not been saved: " + ExceptionUtils.getStackTrace(e));
 
             actionResultPane.setOnlyError("Something bad has happened, the language hasn't been saved");
+        }
+    }
+
+    @FXML
+    private void makeDefaultClicked() {
+        boolean makeDefault = makeDefaultCheckBox.isSelected();
+
+        try {
+            settings.saveMakeMergedStreamsDefault(Boolean.toString(makeDefault));
+
+            if (makeDefault) {
+                actionResultPane.setOnlySuccess("Merged subtitles will be selected as default from now on");
+            } else {
+                actionResultPane.setOnlySuccess("Merged subtitles will not be selected as default from now on");
+            }
+        } catch (SettingException e) {
+            log.error("failed to save mark stream as default flag: " + ExceptionUtils.getStackTrace(e));
+
+            actionResultPane.setOnlyError("Something bad has happened, the flag value hasn't been saved");
+        }
+    }
+
+    @FXML
+    private void plainTextClicked() {
+        boolean plainText = plainTextCheckBox.isSelected();
+
+        try {
+            settings.savePlainTextSubtitles(Boolean.toString(plainText));
+
+            if (plainText) {
+                actionResultPane.setOnlySuccess("Merged subtitles will be in plain text from now on");
+            } else {
+                actionResultPane.setOnlySuccess("Merged subtitles will have the original format from now on");
+            }
+        } catch (SettingException e) {
+            log.error("failed to save plane text flag: " + ExceptionUtils.getStackTrace(e));
+
+            actionResultPane.setOnlyError("Something bad has happened, the plane text flag value hasn't been saved");
         }
     }
 

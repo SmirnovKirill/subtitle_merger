@@ -1,13 +1,14 @@
-package kirill.subtitlemerger.logic.core;
+package kirill.subtitlemerger.logic.subtitles;
 
-import kirill.subtitlemerger.logic.core.entities.Subtitle;
-import kirill.subtitlemerger.logic.core.entities.Subtitles;
+import kirill.subtitlemerger.logic.subtitles.entities.Subtitle;
+import kirill.subtitlemerger.logic.subtitles.entities.Subtitles;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
+import org.jetbrains.annotations.Nullable;
 import org.joda.time.LocalTime;
 
 import java.util.*;
@@ -52,14 +53,14 @@ public class SubtitleMerger {
             LocalTime to = uniqueSortedPointsOfTime.get(i + 1);
 
             Subtitle upperSubtitle = null;
-            Integer matchingUpperIndex = getIndexMatchingTime(upperIndex, upperSubtitles, from, to).orElse(null);
+            Integer matchingUpperIndex = getIndexMatchingTime(upperIndex, upperSubtitles, from, to);
             if (matchingUpperIndex != null) {
                 upperIndex = matchingUpperIndex;
                 upperSubtitle = upperSubtitles.getSubtitles().get(upperIndex);
             }
 
             Subtitle lowerSubtitle = null;
-            Integer matchingLowerIndex = getIndexMatchingTime(lowerIndex, lowerSubtitles, from, to).orElse(null);
+            Integer matchingLowerIndex = getIndexMatchingTime(lowerIndex, lowerSubtitles, from, to);
             if (matchingLowerIndex != null) {
                 lowerIndex = matchingLowerIndex;
                 lowerSubtitle = lowerSubtitles.getSubtitles().get(lowerIndex);
@@ -117,28 +118,29 @@ public class SubtitleMerger {
     /*
      * We should check only the current index and the next one (if there is one) because subtitles go consequentially.
      */
-    private static Optional<Integer> getIndexMatchingTime(
+    @Nullable
+    private static Integer getIndexMatchingTime(
             int currentIndex,
             Subtitles subtitles,
             LocalTime from,
             LocalTime to
     ) {
         if (currentIndex == subtitles.getSubtitles().size()) {
-            return Optional.empty();
+            return null;
         }
 
         if (subtitleMatchesTime(subtitles.getSubtitles().get(currentIndex), from, to)) {
-            return Optional.of(currentIndex);
+            return currentIndex;
         } else {
             /* Means that it's the last subtitle and we can't check the next one. */
             if (currentIndex == subtitles.getSubtitles().size() - 1) {
-                return Optional.empty();
+                return null;
             }
 
             if (subtitleMatchesTime(subtitles.getSubtitles().get(currentIndex + 1), from, to)) {
-                return Optional.of(currentIndex + 1);
+                return currentIndex + 1;
             } else {
-                return Optional.empty();
+                return null;
             }
         }
     }

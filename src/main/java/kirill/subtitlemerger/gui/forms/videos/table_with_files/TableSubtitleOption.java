@@ -28,7 +28,7 @@ public class TableSubtitleOption {
 
     private StringProperty failedToLoadReason;
 
-    private ObjectProperty<UnavailabilityReason> unavailabilityReason;
+    private StringProperty notValidReason;
 
     private BooleanProperty selectedAsUpper;
 
@@ -45,7 +45,7 @@ public class TableSubtitleOption {
             boolean sizeAlwaysKnown,
             int size,
             String failedToLoadReason,
-            UnavailabilityReason unavailabilityReason,
+            String notValidReason,
             boolean selectedAsUpper,
             boolean selectedAsLower,
             String format
@@ -57,93 +57,114 @@ public class TableSubtitleOption {
         this.sizeAlwaysKnown = sizeAlwaysKnown;
         this.size = new SimpleIntegerProperty(size);
         this.failedToLoadReason = new SimpleStringProperty(failedToLoadReason);
-        this.unavailabilityReason = new SimpleObjectProperty<>(unavailabilityReason);
+        this.notValidReason = new SimpleStringProperty(notValidReason);
         this.selectedAsUpper = new SimpleBooleanProperty(selectedAsUpper);
         this.selectedAsLower = new SimpleBooleanProperty(selectedAsLower);
         this.format = format;
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public String getId() {
         return id.get();
     }
 
-    StringProperty idProperty() {
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public StringProperty idProperty() {
         return id;
     }
 
-    void setId(String id) {
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public void setId(String id) {
         this.id.set(id);
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public String getTitle() {
         return title.get();
     }
 
-    StringProperty titleProperty() {
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public StringProperty titleProperty() {
         return title;
     }
 
-    void setTitle(String title) {
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public void setTitle(String title) {
         this.title.set(title);
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public int getSize() {
         return size.get();
     }
 
-    IntegerProperty sizeProperty() {
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public IntegerProperty sizeProperty() {
         return size;
     }
 
-    void setSize(int size) {
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public void setSize(int size) {
         this.size.set(size);
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public String getFailedToLoadReason() {
         return failedToLoadReason.get();
     }
 
-    StringProperty failedToLoadReasonProperty() {
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public StringProperty failedToLoadReasonProperty() {
         return failedToLoadReason;
     }
 
-    void setFailedToLoadReason(String failedToLoadReason) {
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public void setFailedToLoadReason(String failedToLoadReason) {
         this.failedToLoadReason.set(failedToLoadReason);
     }
 
-    public UnavailabilityReason getUnavailabilityReason() {
-        return unavailabilityReason.get();
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public String getNotValidReason() {
+        return notValidReason.get();
     }
 
-    ObjectProperty<UnavailabilityReason> unavailabilityReasonProperty() {
-        return unavailabilityReason;
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public StringProperty notValidReasonProperty() {
+        return notValidReason;
     }
 
-    void setUnavailabilityReason(UnavailabilityReason unavailabilityReason) {
-        this.unavailabilityReason.set(unavailabilityReason);
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public void setNotValidReason(String notValidReason) {
+        this.notValidReason.set(notValidReason);
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public boolean isSelectedAsUpper() {
         return selectedAsUpper.get();
     }
 
-    BooleanProperty selectedAsUpperProperty() {
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public BooleanProperty selectedAsUpperProperty() {
         return selectedAsUpper;
     }
 
-    void setSelectedAsUpper(boolean selectedAsUpper) {
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public void setSelectedAsUpper(boolean selectedAsUpper) {
         this.selectedAsUpper.set(selectedAsUpper);
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public boolean isSelectedAsLower() {
         return selectedAsLower.get();
     }
 
-    BooleanProperty selectedAsLowerProperty() {
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public BooleanProperty selectedAsLowerProperty() {
         return selectedAsLower;
     }
 
-    void setSelectedAsLower(boolean selectedAsLower) {
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public void setSelectedAsLower(boolean selectedAsLower) {
         this.selectedAsLower.set(selectedAsLower);
     }
 
@@ -151,12 +172,5 @@ public class TableSubtitleOption {
         return subtitleOptions.stream()
                 .filter(option -> Objects.equals(option.getId(), id))
                 .findFirst().orElseThrow(IllegalStateException::new);
-    }
-
-    //todo there shouldn't be any enums, gui should be unaware of the logic
-
-    public enum UnavailabilityReason {
-        NOT_ALLOWED_FORMAT,
-        INCORRECT_FORMAT
     }
 }

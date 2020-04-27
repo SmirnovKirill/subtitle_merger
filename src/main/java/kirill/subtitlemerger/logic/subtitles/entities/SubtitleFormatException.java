@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.logic.core.entities;
+package kirill.subtitlemerger.logic.subtitles.entities;
 
 public class SubtitleFormatException extends Exception {
 }

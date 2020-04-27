@@ -11,6 +11,10 @@ public class GuiConstants {
             "mkv files (*.mkv)", "*.mkv"
     );
 
+    public static final FileChooser.ExtensionFilter SUB_RIP_EXTENSION_FILTER = new FileChooser.ExtensionFilter(
+            "subrip files (*.srt)", "*.srt"
+    );
+
     public static final String BUTTON_ERROR_CLASS = "button-error";
 
     public static final String TEXT_FIELD_ERROR_CLASS = "text-field-error";
@@ -20,10 +24,6 @@ public class GuiConstants {
     public static final String LABEL_WARN_CLASS = "label-warn";
 
     public static final String LABEL_ERROR_CLASS = "label-error";
-
-    public static final String PANE_UNAVAILABLE_CLASS = "pane-unavailable";
-
-    public static final String PANE_ERROR_CLASS = "pane-error";
 
     public static final String IMAGE_BUTTON_CLASS = "image-button";
 }

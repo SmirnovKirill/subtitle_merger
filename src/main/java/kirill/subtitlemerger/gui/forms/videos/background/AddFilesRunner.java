@@ -2,15 +2,14 @@ package kirill.subtitlemerger.gui.forms.videos.background;
 
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableFileInfo;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithFiles;
+import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableData;
+import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableVideoInfo;
+import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithVideos;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
-import kirill.subtitlemerger.logic.settings.SortBy;
-import kirill.subtitlemerger.logic.settings.SortDirection;
 import kirill.subtitlemerger.logic.utils.Utils;
 import kirill.subtitlemerger.logic.utils.entities.ActionResult;
+import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -25,21 +24,15 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
 
     private List<File> filesToAdd;
 
-    private List<TableFileInfo> allTableFilesInfo;
-
-    private TableWithFiles.Mode mode;
+    private List<TableVideoInfo> allTableFilesInfo;
 
     private boolean hideUnavailable;
-
-    private SortBy sortBy;
-
-    private SortDirection sortDirection;
 
     private GuiContext context;
 
     @Override
     public Result run(BackgroundManager backgroundManager) {
-        List<VideoInfo> filesToAddInfo = VideoTabBackgroundUtils.getFilesInfo(
+        List<VideoInfo> filesToAddInfo = VideoBackgroundUtils.getVideosInfo(
                 filesToAdd,
                 context.getFfprobe(),
                 backgroundManager
@@ -59,24 +52,24 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
 
         filesInfo.addAll(filesToAddInfo);
 
-        List<TableFileInfo> tableFilesToAddInfo = VideoTabBackgroundUtils.tableFilesInfoFrom(
+        List<TableVideoInfo> tableFilesToAddInfo = VideoBackgroundUtils.tableVideosInfoFrom(
                 filesToAddInfo,
                 true,
                 true,
-                backgroundManager,
-                context.getSettings()
+                context.getSettings(),
+                backgroundManager
         );
         allTableFilesInfo.addAll(tableFilesToAddInfo);
 
-        List<TableFileInfo> filesToShowInfo = null;
+        List<TableVideoInfo> filesToShowInfo = null;
         if (hideUnavailable) {
-            filesToShowInfo = VideoTabBackgroundUtils.getOnlyAvailableFilesInfo(allTableFilesInfo, backgroundManager);
+            filesToShowInfo = VideoBackgroundUtils.getOnlyAvailableFilesInfo(allTableFilesInfo, backgroundManager);
         }
 
-        filesToShowInfo = VideoTabBackgroundUtils.getSortedFilesInfo(
+        filesToShowInfo = VideoBackgroundUtils.getSortedVideosInfo(
                 filesToShowInfo != null ? filesToShowInfo : allTableFilesInfo,
-                sortBy,
-                sortDirection,
+                context.getSettings().getSortBy(),
+                context.getSettings().getSortDirection(),
                 backgroundManager
         );
 
@@ -86,11 +79,12 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
                 filesToAddInfo.size(),
                 filesInfo,
                 allTableFilesInfo,
-                new TableFilesToShowInfo(
+                VideoBackgroundUtils.getTableData(
+                        TableWithVideos.Mode.SEPARATE_FILES,
                         filesToShowInfo,
-                        VideoTabBackgroundUtils.getAllSelectableCount(filesToShowInfo, mode, backgroundManager),
-                        VideoTabBackgroundUtils.getSelectedAvailableCount(filesToShowInfo, backgroundManager),
-                        VideoTabBackgroundUtils.getSelectedUnavailableCount(filesToShowInfo, backgroundManager)
+                        context.getSettings().getSortBy(),
+                        context.getSettings().getSortDirection(),
+                        backgroundManager
                 )
         );
     }
@@ -116,7 +110,7 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
         }
     }
 
-    public static ActionResult generateActionResult(Result taskResult) {
+    public static ActionResult getActionResult(Result taskResult) {
         String success;
 
         int filesToAdd = taskResult.getFilesToAddCount();
@@ -157,8 +151,8 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
 
         private List<VideoInfo> filesInfo;
 
-        private List<TableFileInfo> allTableFilesInfo;
+        private List<TableVideoInfo> allTableFilesInfo;
 
-        private TableFilesToShowInfo tableFilesToShowInfo;
+        private TableData tableData;
     }
 }

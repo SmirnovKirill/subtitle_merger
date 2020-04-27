@@ -1,17 +1,13 @@
 package kirill.subtitlemerger.gui.forms.common;
 
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.StringBinding;
 import javafx.fxml.FXML;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.Pane;
+import kirill.subtitlemerger.gui.common_controls.ProgressPane;
 import kirill.subtitlemerger.gui.utils.background.Background;
 import kirill.subtitlemerger.gui.utils.background.BackgroundCallback;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * A parent class for controllers of the forms that can run background tasks. It has a helper method runInBackground
@@ -23,19 +19,7 @@ public abstract class BackgroundTaskFormController {
     protected Pane mainPane;
 
     @FXML
-    private Pane progressPane;
-
-    @FXML
-    private ProgressIndicator progressIndicator;
-
-    @FXML
-    private Label progressLabel;
-
-    @FXML
-    private Pane cancelTaskPane;
-
-    @FXML
-    private Label cancelDescriptionLabel;
+    protected ProgressPane progressPane;
 
     private BackgroundManager backgroundManager;
 
@@ -52,31 +36,17 @@ public abstract class BackgroundTaskFormController {
         };
         backgroundManager = Background.run(runner, extendedCallback);
 
-        progressIndicator.progressProperty().bind(backgroundManager.progressProperty());
-        progressLabel.textProperty().bind(backgroundManager.messageProperty());
-        if (cancelTaskPane != null) {
-            cancelTaskPane.visibleProperty().bind(backgroundManager.cancellationPossibleProperty());
-
-            /*
-             * Besides the description that can be set through the manager there is always a text after this description
-             * offering to click the link to cancel the task. So if the description is set through the manager there
-             * should be a space after that description so that texts won't be too close.
-             */
-            StringBinding descriptionBinding = Bindings.createStringBinding(
-                    () -> {
-                        String description = backgroundManager.getCancellationDescription();
-                        return StringUtils.isBlank(description) ? "" : description + " ";
-                    },
-                    backgroundManager.cancellationDescriptionProperty()
-            );
-            cancelDescriptionLabel.textProperty().bind(descriptionBinding);
-        }
+        progressPane.progressProperty().bind(backgroundManager.progressProperty());
+        progressPane.messageProperty().bind(backgroundManager.messageProperty());
+        progressPane.cancellationPossibleProperty().bind(backgroundManager.cancellationPossibleProperty());
+        progressPane.cancellationDescriptionProperty().bind(backgroundManager.cancellationDescriptionProperty());
+        progressPane.setOnCancelAction(event -> cancelTaskClicked());
     }
 
     @FXML
     private void cancelTaskClicked() {
         if (backgroundManager == null) {
-            log.error("background manager is null, that shouldn't happen");
+            log.error("background manager is null, most likely a bug");
             return;
         }
 

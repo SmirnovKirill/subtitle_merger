@@ -1,8 +1,8 @@
-package kirill.subtitlemerger.logic.core;
+package kirill.subtitlemerger.logic.subtitles;
 
 import kirill.subtitlemerger.logic.LogicConstants;
-import kirill.subtitlemerger.logic.core.entities.Subtitle;
-import kirill.subtitlemerger.logic.core.entities.Subtitles;
+import kirill.subtitlemerger.logic.subtitles.entities.Subtitle;
+import kirill.subtitlemerger.logic.subtitles.entities.Subtitles;
 
 public class SubRipWriter {
     public static String toText(Subtitles subtitles, boolean plainText) {

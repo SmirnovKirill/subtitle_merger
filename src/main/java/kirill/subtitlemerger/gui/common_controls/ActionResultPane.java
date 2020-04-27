@@ -16,12 +16,15 @@ import org.apache.commons.lang3.StringUtils;
  * @see ActionResult
  */
 public class ActionResultPane extends HBox {
+    @SuppressWarnings("unused")
     @FXML
     private Label successLabel;
 
+    @SuppressWarnings("unused")
     @FXML
     private Label warnLabel;
 
+    @SuppressWarnings("unused")
     @FXML
     private Label errorLabel;
 
@@ -46,38 +49,47 @@ public class ActionResultPane extends HBox {
         errorLabel.wrapTextProperty().bind(wrapText);
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public boolean isWrapText() {
         return wrapText.get();
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public BooleanProperty wrapTextProperty() {
         return wrapText;
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public void setWrapText(boolean wrapText) {
         this.wrapText.set(wrapText);
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public boolean isAlwaysManaged() {
         return alwaysManaged.get();
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public BooleanProperty alwaysManagedProperty() {
         return alwaysManaged;
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public void setAlwaysManaged(boolean alwaysManaged) {
         this.alwaysManaged.set(alwaysManaged);
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public boolean isEmpty() {
         return empty.get();
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public BooleanProperty emptyProperty() {
         return empty;
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public void setEmpty(boolean empty) {
         this.empty.set(empty);
     }

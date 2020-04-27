@@ -128,7 +128,8 @@
                 </tooltipText>
             </TextAndQuestionMark>
             <CheckBox fx:id="makeDefaultCheckBox" GridPane.rowIndex="4" GridPane.columnIndex="1"
-                      visible="${controller.makeDefaultVisible}" managed="${controller.makeDefaultVisible}"/>
+                      onAction="#makeDefaultClicked" visible="${controller.makeDefaultVisible}"
+                      managed="${controller.makeDefaultVisible}"/>
 
             <Region GridPane.rowIndex="5" GridPane.columnIndex="0" GridPane.columnSpan="2"
                     visible="${controller.makeDefaultVisible}" managed="${controller.makeDefaultVisible}">
@@ -143,7 +144,8 @@
                     Merged subtitles will be in plain text - no font colors, different sizes and so on.
                 </tooltipText>
             </TextAndQuestionMark>
-            <CheckBox fx:id="plainTextCheckBox" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+            <CheckBox fx:id="plainTextCheckBox" GridPane.rowIndex="6" GridPane.columnIndex="1"
+                      onAction="#plainTextClicked"/>
 
             <ActionResultPane fx:id="actionResultPane" GridPane.rowIndex="7" GridPane.columnIndex="0"
                               GridPane.columnSpan="2">

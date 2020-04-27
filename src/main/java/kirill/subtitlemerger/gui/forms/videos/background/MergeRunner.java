@@ -2,26 +2,28 @@ package kirill.subtitlemerger.gui.forms.videos.background;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.application.Platform;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableFileInfo;
+import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableData;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableSubtitleOption;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithFiles;
+import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableVideoInfo;
+import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithVideos;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegInjectInfo;
 import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
 import kirill.subtitlemerger.logic.ffmpeg.json.JsonFfprobeVideoInfo;
-import kirill.subtitlemerger.logic.videos.Videos;
-import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
-import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
-import kirill.subtitlemerger.logic.videos.entities.ExternalSubtitleOption;
-import kirill.subtitlemerger.logic.videos.entities.SubtitleOption;
 import kirill.subtitlemerger.logic.settings.MergeMode;
 import kirill.subtitlemerger.logic.settings.Settings;
+import kirill.subtitlemerger.logic.subtitles.entities.Subtitles;
+import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndInput;
 import kirill.subtitlemerger.logic.utils.Utils;
 import kirill.subtitlemerger.logic.utils.entities.ActionResult;
+import kirill.subtitlemerger.logic.videos.Videos;
+import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
+import kirill.subtitlemerger.logic.videos.entities.ExternalSubtitleOption;
+import kirill.subtitlemerger.logic.videos.entities.SubtitleOption;
+import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
@@ -43,11 +45,11 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
 
     private File directoryForTempFile;
 
-    private List<TableFileInfo> displayedTableFilesInfo;
+    private List<TableVideoInfo> displayedTableFilesInfo;
 
     private List<VideoInfo> allFilesInfo;
 
-    private TableWithFiles tableWithFiles;
+    private TableWithVideos tableWithFiles;
 
     private Ffprobe ffprobe;
 
@@ -65,7 +67,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
         int failedCount = 0;
 
         for (MergePreparationRunner.FileMergeInfo fileMergeInfo : filesMergeInfo) {
-            TableFileInfo tableFileInfo = TableFileInfo.getById(fileMergeInfo.getId(), displayedTableFilesInfo);
+            TableVideoInfo tableFileInfo = TableVideoInfo.getById(fileMergeInfo.getId(), displayedTableFilesInfo);
 
             String progressMessagePrefix = getProgressMessagePrefix(processedCount, allFileCount, tableFileInfo);
             backgroundManager.updateMessage(progressMessagePrefix + "...");
@@ -128,10 +130,11 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
                                             fileInfo,
                                             tableFileInfo,
                                             ffprobe,
+                                            ffmpeg,
                                             settings
                                     );
                                 } catch (FfmpegException | IllegalStateException e) {
-                                    String message = "Subtitles have been merged but failed to update stream list";
+                                    String message = "The subtitles have been merged but failed to update stream list";
                                     Platform.runLater(
                                             () -> tableWithFiles.setActionResult(
                                                     ActionResult.onlyWarn(message), tableFileInfo
@@ -176,7 +179,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
             processedCount++;
         }
 
-        List<TableFileInfo> filesToShowInfo = VideoTabBackgroundUtils.getSortedFilesInfo(
+        List<TableVideoInfo> filesToShowInfo = VideoBackgroundUtils.getSortedVideosInfo(
                 displayedTableFilesInfo,
                 settings.getSortBy(),
                 settings.getSortDirection(),
@@ -184,13 +187,14 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
         );
 
         return new Result(
-                new TableFilesToShowInfo(
+                VideoBackgroundUtils.getTableData(
+                        tableWithFiles.getMode(),
                         filesToShowInfo,
-                        tableWithFiles.getAllSelectableCount(),
-                        tableWithFiles.getSelectedAvailableCount(),
-                        tableWithFiles.getSelectedUnavailableCount()
+                        settings.getSortBy(),
+                        settings.getSortDirection(),
+                        backgroundManager
                 ),
-                generateActionResult(
+                getActionResult(
                         allFileCount,
                         processedCount,
                         finishedSuccessfullyCount,
@@ -201,7 +205,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
         );
     }
 
-    private static String getProgressMessagePrefix(int processedCount, int allFileCount, TableFileInfo fileInfo) {
+    private static String getProgressMessagePrefix(int processedCount, int allFileCount, TableVideoInfo fileInfo) {
         String progressPrefix = allFileCount > 1
                 ? String.format("%d/%d ", processedCount + 1, allFileCount) + "stage 2 of 2: processing file "
                 : "Stage 2 of 2: processing file ";
@@ -255,8 +259,9 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
             Subtitles subtitles,
             int subtitleSize,
             VideoInfo fileInfo,
-            TableFileInfo tableFileInfo,
+            TableVideoInfo tableFileInfo,
             Ffprobe ffprobe,
+            Ffmpeg ffmpeg,
             Settings settings
     ) throws FfmpegException, InterruptedException {
         //todo diagnostics
@@ -275,18 +280,35 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
                 .filter(option -> !currentOptionsIds.contains(option.getId()))
                 .collect(toList());
         if (newSubtitleOptions.size() != 1) {
+            //todo just mark as incorrect or something
             throw new IllegalStateException();
         }
 
         BuiltInSubtitleOption subtitleOption = newSubtitleOptions.get(0);
-        subtitleOption.setSubtitlesAndSize(subtitles, subtitleSize);
+
+        //todo background message
+        String subtitleText = ffmpeg.getSubtitleText(
+                subtitleOption.getFfmpegIndex(),
+                subtitleOption.getFormat(),
+                fileInfo.getFile()
+        );
+        SubtitlesAndInput subtitlesAndInput = SubtitlesAndInput.from(
+                subtitleText.getBytes(),
+                StandardCharsets.UTF_8
+        );
+        if (!subtitlesAndInput.isCorrectFormat()) {
+            //todo separate message
+            throw new IllegalStateException();
+        }
+
+        subtitleOption.setSubtitlesAndInput(subtitlesAndInput);
 
         fileInfo.getSubtitleOptions().add(subtitleOption);
         fileInfo.setCurrentSizeAndLastModified();
 
         boolean haveHideableOptions = tableFileInfo.getSubtitleOptions().stream()
                 .anyMatch(TableSubtitleOption::isHideable);
-        TableSubtitleOption newSubtitleOption = VideoTabBackgroundUtils.tableSubtitleOptionFrom(
+        TableSubtitleOption newSubtitleOption = VideoBackgroundUtils.tableSubtitleOptionFrom(
                 subtitleOption,
                 haveHideableOptions,
                 settings
@@ -296,7 +318,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
         tableFileInfo.updateSizeAndLastModified(fileInfo.getSize(), fileInfo.getLastModified());
     }
 
-    private static ActionResult generateActionResult(
+    private static ActionResult getActionResult(
             int allFileCount,
             int processedCount,
             int finishedSuccessfullyCount,
@@ -394,7 +416,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
     @AllArgsConstructor
     @Getter
     public static class Result {
-        private TableFilesToShowInfo tableFilesToShowInfo;
+        private TableData tableData;
 
         private ActionResult actionResult;
     }

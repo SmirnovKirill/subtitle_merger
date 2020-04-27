@@ -15,16 +15,16 @@ public class MissingSettingsFormController {
     @FXML
     private Pane labelsPane;
 
-    private VideosFormController videosTabController;
+    private VideosFormController videosFormController;
 
     private GuiContext context;
 
-    public void initialize(VideosFormController videosTabController, GuiContext context) {
-        this.videosTabController = videosTabController;
+    void initialize(VideosFormController videosTabController, GuiContext context) {
+        this.videosFormController = videosTabController;
         this.context = context;
 
-        updateLabels();
         context.getMissingSettings().addListener((InvalidationListener) observable -> updateLabels());
+        updateLabels();
     }
 
     private void updateLabels() {
@@ -42,26 +42,26 @@ public class MissingSettingsFormController {
     private static String getText(SettingType settingType) {
         switch (settingType) {
             case UPPER_LANGUAGE:
-                return "preferred language for upper subtitles";
+                return "the preferred language for upper subtitles";
             case LOWER_LANGUAGE:
-                return "preferred language for lower subtitles";
+                return "the preferred language for lower subtitles";
             case MERGE_MODE:
-                return "video merge mode";
+                return "the video merge mode";
             default:
                 throw new IllegalStateException();
         }
     }
 
-    public void show() {
+    void show() {
         missingSettingsPane.setVisible(true);
     }
 
-    public void hide() {
+    void hide() {
         missingSettingsPane.setVisible(false);
     }
 
     @FXML
-    private void goToSettingsLinkClicked() {
-        videosTabController.openSettingsForm();
+    private void goToSettingsClicked() {
+        videosFormController.openSettingsForm();
     }
 }

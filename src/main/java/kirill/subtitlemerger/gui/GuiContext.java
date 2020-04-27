@@ -15,11 +15,11 @@ import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.EnumSet;
-import java.util.Optional;
 import java.util.Set;
 
 import static kirill.subtitlemerger.logic.settings.SettingType.*;
@@ -45,14 +45,14 @@ public class GuiContext {
 
     public GuiContext() {
         settings = new Settings();
-        missingSettings = generateMissingSettings(settings);
+        missingSettings = getMissingSettings(settings);
 
         ffprobe = getPackedFfprobe();
         ffmpeg = getPackedFfmpegFile();
         videosInProgress = new SimpleBooleanProperty(false);
     }
 
-    private static ObservableSet<SettingType> generateMissingSettings(Settings settings) {
+    private static ObservableSet<SettingType> getMissingSettings(Settings settings) {
         Set<SettingType> result = EnumSet.noneOf(SettingType.class);
 
         if (settings.getUpperLanguage() == null) {
@@ -122,7 +122,7 @@ public class GuiContext {
              * If we got here it means that either folder with the application is corrupted (folder with ffmpeg has been
              * deleted) or the application is launched from IntelliJ IDEA.
              */
-            result = getDirectoryWithFfmpegIdea(directoryWithJar).orElse(null);
+            result = getDirectoryWithFfmpegIdea(directoryWithJar);
             if (result == null) {
                 log.error("directory with ffmpeg and ffprobe doesn't exist");
                 throw new IllegalStateException();
@@ -132,10 +132,11 @@ public class GuiContext {
         }
     }
 
-    private static Optional<File> getDirectoryWithFfmpegIdea(File directoryWithJar) {
+    @Nullable
+    private static File getDirectoryWithFfmpegIdea(File directoryWithJar) {
         File sourceDirectory = directoryWithJar.getParentFile();
         if (!sourceDirectory.isDirectory()) {
-            return Optional.empty();
+            return null;
         }
 
         String subDirectory;
@@ -150,10 +151,10 @@ public class GuiContext {
 
         File result = new File(sourceDirectory, "build_parts/downloads/ffmpeg/" + subDirectory);
         if (result.isDirectory()) {
-            return Optional.of(result);
+            return result;
         }
 
-        return Optional.empty();
+        return null;
     }
 
     private static Ffmpeg getPackedFfmpegFile() {
@@ -185,14 +186,17 @@ public class GuiContext {
         }
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public boolean getVideosInProgress() {
         return videosInProgress.get();
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public BooleanProperty videosInProgressProperty() {
         return videosInProgress;
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public void setVideosInProgress(boolean videosInProgress) {
         this.videosInProgress.set(videosInProgress);
     }

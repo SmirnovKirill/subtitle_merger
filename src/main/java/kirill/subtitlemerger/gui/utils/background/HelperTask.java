@@ -26,7 +26,7 @@ class HelperTask<T> extends Task<Void> {
 
         setOnFailed(event -> {
             Throwable e = event.getSource().getException();
-            log.error("task has failed, shouldn't happen, most likely a bug: " + ExceptionUtils.getStackTrace(e));
+            log.error("task has failed, most likely a bug: " + ExceptionUtils.getStackTrace(e));
             throw new IllegalStateException();
         });
 

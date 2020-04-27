@@ -13,15 +13,18 @@ public class MainFormController {
     @FXML
     private TabPane mainForm;
 
+    @SuppressWarnings("unused")
     @FXML
     private SubtitleFilesFormController subtitleFilesFormController;
 
+    @SuppressWarnings("unused")
     @FXML
     private VideosFormController videosFormController;
 
     @FXML
     private Tab settingsForm;
 
+    @SuppressWarnings("unused")
     @FXML
     private SettingsFormController settingsFormController;
 

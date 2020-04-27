@@ -26,8 +26,8 @@ public class ProcessRunner {
      * ignores interruptions.
      *
      * @param arguments command line arguments to start the process
-     * @return the string containing the console output (standard and error streams are combined, it's convenient for
-     * our goals)
+     * @return a string containing the console output (standard and error streams are combined, it's convenient for our
+     * goals)
      * @throws ProcessException with different codes inside when errors happen
      */
     public static String run(List<String> arguments) throws ProcessException, InterruptedException {

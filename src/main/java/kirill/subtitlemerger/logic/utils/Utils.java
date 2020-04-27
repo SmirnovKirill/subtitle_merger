@@ -66,7 +66,7 @@ public class Utils {
      * @param string the string to process
      * @param charsBeforeEllipsis the number of characters before the ellipsis in the shortened string
      * @param charsAfterEllipsis the number of characters after the ellipsis in the shortened string
-     * @return the shortened version of the string if it was too long or the original string otherwise
+     * @return a shortened version of the string if it was too long or the original string otherwise
      */
     public static String getShortenedString(String string, int charsBeforeEllipsis, int charsAfterEllipsis) {
         if (string.length() < charsBeforeEllipsis + charsAfterEllipsis + 3) {
@@ -86,7 +86,7 @@ public class Utils {
      *                   because there is always only one item
      * @param zeroOrSeveralItemsText the text to return when there are zero or several items, this text can use the
      *                               format argument %d inside
-     * @return the text depending on the count.
+     * @return a text depending on the count.
      */
     public static String getTextDependingOnCount(int count, String oneItemText, String zeroOrSeveralItemsText) {
         if (count == 1) {
@@ -104,7 +104,7 @@ public class Utils {
      *                  of "99.91 KB" and so on - the number of digits after the decimal point will be reduced depending
      *                  on the whole part so that in general there are no more than four symbols in the textual
      *                  representation (plus the size suffix). Otherwise there will always be 2 digits after the point.
-     * @return the textual representation of the size (for example 21.39 KB).
+     * @return a textual representation of the size (for example 21.39 KB).
      */
     public static String getFileSizeTextual(long size, boolean keepShort) {
         List<String> suffixes = Arrays.asList("B", "KB", "MB", "GB", "TB");

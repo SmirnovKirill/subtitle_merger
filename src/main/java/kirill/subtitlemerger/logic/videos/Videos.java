@@ -6,21 +6,21 @@ import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
 import kirill.subtitlemerger.logic.ffmpeg.json.JsonFfprobeVideoInfo;
 import kirill.subtitlemerger.logic.ffmpeg.json.JsonStream;
-import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
-import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
-import kirill.subtitlemerger.logic.videos.entities.OptionNotValidReason;
 import kirill.subtitlemerger.logic.utils.file_validation.FileValidator;
 import kirill.subtitlemerger.logic.utils.file_validation.InputFileInfo;
 import kirill.subtitlemerger.logic.utils.file_validation.InputFileNotValidReason;
 import kirill.subtitlemerger.logic.utils.file_validation.InputFileValidationOptions;
+import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
+import kirill.subtitlemerger.logic.videos.entities.SubtitleOptionNotValidReason;
+import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static kirill.subtitlemerger.logic.videos.entities.VideoNotValidReason.*;
 
@@ -81,22 +81,21 @@ public class Videos {
             }
 
             String format = stream.getCodecName();
-            OptionNotValidReason notValidReason = null;
+            SubtitleOptionNotValidReason notValidReason = null;
             if (!LogicConstants.ALLOWED_SUBTITLE_FORMATS.contains(format)) {
-                notValidReason = OptionNotValidReason.NOT_ALLOWED_FORMAT;
+                notValidReason = SubtitleOptionNotValidReason.NOT_ALLOWED_FORMAT;
             }
 
             result.add(
                     new BuiltInSubtitleOption(
                             stream.getIndex(),
                             null,
-                            null,
                             notValidReason,
                             false,
                             false,
                             format,
-                            getLanguage(stream).orElse(null),
-                            getTitle(stream).orElse(null),
+                            getLanguage(stream),
+                            getTitle(stream),
                             isDefaultDisposition(stream)
                     )
             );
@@ -105,14 +104,15 @@ public class Videos {
         return result;
     }
 
-    private static Optional<LanguageAlpha3Code> getLanguage(JsonStream stream) {
+    @Nullable
+    private static LanguageAlpha3Code getLanguage(JsonStream stream) {
         if (MapUtils.isEmpty(stream.getTags())) {
-            return Optional.empty();
+            return null;
         }
 
         String languageRaw = stream.getTags().get("language");
         if (StringUtils.isBlank(languageRaw)) {
-            return Optional.empty();
+            return null;
         }
 
         /*
@@ -123,15 +123,16 @@ public class Videos {
          */
         languageRaw = languageRaw.split("-")[0];
 
-        return Optional.ofNullable(LanguageAlpha3Code.getByCodeIgnoreCase(languageRaw));
+        return LanguageAlpha3Code.getByCodeIgnoreCase(languageRaw);
     }
 
-    private static Optional<String> getTitle(JsonStream stream) {
+    @Nullable
+    private static String getTitle(JsonStream stream) {
         if (MapUtils.isEmpty(stream.getTags())) {
-            return Optional.empty();
+            return null;
         }
 
-        return Optional.ofNullable(stream.getTags().get("title"));
+        return stream.getTags().get("title");
     }
 
     private static boolean isDefaultDisposition(JsonStream stream) {

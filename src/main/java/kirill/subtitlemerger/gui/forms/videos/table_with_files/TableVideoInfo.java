@@ -13,7 +13,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @CommonsLog
-public class TableFileInfo {
+public class TableVideoInfo {
     @Getter
     private String id;
 
@@ -29,7 +29,7 @@ public class TableFileInfo {
     private LocalDateTime lastModified;
 
     @Getter
-    private UnavailabilityReason unavailabilityReason;
+    private String notValidReason;
 
     @Getter
     private String format;
@@ -52,13 +52,13 @@ public class TableFileInfo {
 
     private ObjectProperty<ActionResult> actionResult;
 
-    public TableFileInfo(
+    public TableVideoInfo(
             String id,
             boolean selected,
             String filePath,
             long size,
             LocalDateTime lastModified,
-            UnavailabilityReason unavailabilityReason,
+            String notValidReason,
             String format,
             List<TableSubtitleOption> subtitleOptions,
             boolean someOptionsHidden,
@@ -71,7 +71,7 @@ public class TableFileInfo {
         this.filePath = filePath;
         this.size = size;
         this.lastModified = lastModified;
-        this.unavailabilityReason = unavailabilityReason;
+        this.notValidReason = notValidReason;
         this.format = format;
         this.subtitleOptions = subtitleOptions;
         hideableOptionCount = calculateHideableOptionCount(subtitleOptions);
@@ -173,91 +173,112 @@ public class TableFileInfo {
         }
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public boolean isSelected() {
         return selected.get();
     }
 
-    BooleanProperty selectedProperty() {
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public BooleanProperty selectedProperty() {
         return selected;
     }
 
-    void setSelected(boolean selected) {
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public void setSelected(boolean selected) {
         this.selected.set(selected);
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public boolean isSomeOptionsHidden() {
         return someOptionsHidden.get();
     }
 
-    BooleanProperty someOptionsHiddenProperty() {
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public BooleanProperty someOptionsHiddenProperty() {
         return someOptionsHidden;
     }
 
-    void setSomeOptionsHidden(boolean someOptionsHidden) {
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public void setSomeOptionsHidden(boolean someOptionsHidden) {
         this.someOptionsHidden.set(someOptionsHidden);
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public int getOptionsWithUnknownSizeCount() {
         return optionsWithUnknownSizeCount.get();
     }
 
-    IntegerProperty optionsWithUnknownSizeCountProperty() {
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public IntegerProperty optionsWithUnknownSizeCountProperty() {
         return optionsWithUnknownSizeCount;
     }
 
-    void setOptionsWithUnknownSizeCount(int optionsWithUnknownSizeCount) {
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public void setOptionsWithUnknownSizeCount(int optionsWithUnknownSizeCount) {
         this.optionsWithUnknownSizeCount.set(optionsWithUnknownSizeCount);
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public int getVisibleOptionCount() {
         return visibleOptionCount.get();
     }
 
-    IntegerProperty visibleOptionCountProperty() {
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public IntegerProperty visibleOptionCountProperty() {
         return visibleOptionCount;
     }
 
-    void setVisibleOptionCount(int visibleOptionCount) {
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public void setVisibleOptionCount(int visibleOptionCount) {
         this.visibleOptionCount.set(visibleOptionCount);
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public TableSubtitleOption getUpperOption() {
         return upperOption.get();
     }
 
-    ObjectProperty<TableSubtitleOption> upperOptionProperty() {
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public ObjectProperty<TableSubtitleOption> upperOptionProperty() {
         return upperOption;
     }
 
-    void setUpperOption(TableSubtitleOption upperOption) {
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public void setUpperOption(TableSubtitleOption upperOption) {
         this.upperOption.set(upperOption);
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public TableSubtitleOption getLowerOption() {
         return lowerOption.get();
     }
 
-    ObjectProperty<TableSubtitleOption> lowerOptionProperty() {
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public ObjectProperty<TableSubtitleOption> lowerOptionProperty() {
         return lowerOption;
     }
 
-    void setLowerOption(TableSubtitleOption lowerOption) {
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public void setLowerOption(TableSubtitleOption lowerOption) {
         this.lowerOption.set(lowerOption);
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
     public ActionResult getActionResult() {
         return actionResult.get();
     }
 
-    ObjectProperty<ActionResult> actionResultProperty() {
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public ObjectProperty<ActionResult> actionResultProperty() {
         return actionResult;
     }
 
-    void setActionResult(ActionResult actionResult) {
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public void setActionResult(ActionResult actionResult) {
         this.actionResult.set(actionResult);
     }
 
-    public static TableFileInfo getById(String id, Collection<TableFileInfo> filesInfo) {
+    public static TableVideoInfo getById(String id, Collection<TableVideoInfo> filesInfo) {
         return filesInfo.stream()
                 .filter(fileInfo -> Objects.equals(fileInfo.getId(), id))
                 .findFirst().orElseThrow(IllegalStateException::new);
@@ -279,12 +300,5 @@ public class TableFileInfo {
     public void updateFileInfo(long size, LocalDateTime lastModified) {
         this.size = size;
         this.lastModified = lastModified;
-    }
-
-    public enum UnavailabilityReason {
-        NO_EXTENSION,
-        NOT_ALLOWED_EXTENSION,
-        FFPROBE_FAILED,
-        NOT_ALLOWED_FORMAT
     }
 }

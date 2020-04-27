@@ -1,29 +1,30 @@
 package kirill.subtitlemerger.gui.forms.videos.background;
 
 import javafx.application.Platform;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableSubtitleOption;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithFiles;
+import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableVideoInfo;
+import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithVideos;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.logic.core.SubRipParser;
-import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
+import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndInput;
+import kirill.subtitlemerger.logic.utils.entities.ActionResult;
 import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
 import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
-import kirill.subtitlemerger.logic.utils.entities.ActionResult;
 import lombok.AllArgsConstructor;
 import lombok.extern.apachecommons.CommonsLog;
+
+import java.nio.charset.StandardCharsets;
 
 @CommonsLog
 @AllArgsConstructor
 public class SingleFileAllSubtitleLoader implements BackgroundRunner<ActionResult> {
     private VideoInfo fileInfo;
 
-    private TableFileInfo tableFileInfo;
+    private TableVideoInfo tableFileInfo;
 
-    private TableWithFiles tableWithFiles;
+    private TableWithVideos tableWithFiles;
 
     private Ffmpeg ffmpeg;
 
@@ -44,7 +45,7 @@ public class SingleFileAllSubtitleLoader implements BackgroundRunner<ActionResul
             }
 
             backgroundManager.updateMessage(
-                    VideoTabBackgroundUtils.getLoadSubtitlesProgressMessage(
+                    VideoBackgroundUtils.getLoadSubtitlesProgressMessage(
                             processedCount,
                             streamToLoadCount,
                             ffmpegStream,
@@ -63,30 +64,37 @@ public class SingleFileAllSubtitleLoader implements BackgroundRunner<ActionResul
                         ffmpegStream.getFormat(),
                         fileInfo.getFile()
                 );
-                ffmpegStream.setSubtitlesAndSize(SubRipParser.from(subtitleText), subtitleText.getBytes().length);
-
-                Platform.runLater(
-                        () -> tableWithFiles.subtitlesLoadedSuccessfully(
-                                ffmpegStream.getSize(),
-                                tableSubtitleOption,
-                                tableFileInfo
-                        )
+                SubtitlesAndInput subtitlesAndInput = SubtitlesAndInput.from(
+                        subtitleText.getBytes(),
+                        StandardCharsets.UTF_8
                 );
 
-                loadedSuccessfullyCount++;
+                if (subtitlesAndInput.isCorrectFormat()) {
+                    ffmpegStream.setSubtitlesAndInput(subtitlesAndInput);
+
+                    Platform.runLater(
+                            () -> tableWithFiles.subtitlesLoadedSuccessfully(
+                                    subtitlesAndInput.getSize(),
+                                    tableSubtitleOption,
+                                    tableFileInfo
+                            )
+                    );
+
+                    loadedSuccessfullyCount++;
+                } else {
+                    Platform.runLater(
+                            () -> tableWithFiles.failedToLoadSubtitles(
+                                    VideoBackgroundUtils.FAILED_TO_LOAD_STREAM_INCORRECT_FORMAT,
+                                    tableSubtitleOption
+                            )
+                    );
+                    failedToLoadCount++;
+                }
             } catch (FfmpegException e) {
                 log.warn("failed to get subtitle text: " + e.getCode() + ", console output " + e.getConsoleOutput());
                 Platform.runLater(
                         () -> tableWithFiles.failedToLoadSubtitles(
-                                VideoTabBackgroundUtils.failedToLoadReasonFrom(e.getCode()),
-                                tableSubtitleOption
-                        )
-                );
-                failedToLoadCount++;
-            } catch (SubtitleFormatException e) {
-                Platform.runLater(
-                        () -> tableWithFiles.failedToLoadSubtitles(
-                                VideoTabBackgroundUtils.FAILED_TO_LOAD_STREAM_INCORRECT_FORMAT,
+                                VideoBackgroundUtils.failedToLoadReasonFrom(e.getCode()),
                                 tableSubtitleOption
                         )
                 );
@@ -98,7 +106,7 @@ public class SingleFileAllSubtitleLoader implements BackgroundRunner<ActionResul
             processedCount++;
         }
 
-        return VideoTabBackgroundUtils.generateSubtitleLoadingActionResult(
+        return VideoBackgroundUtils.getSubtitleLoadingActionResult(
                 streamToLoadCount,
                 processedCount,
                 loadedSuccessfullyCount,

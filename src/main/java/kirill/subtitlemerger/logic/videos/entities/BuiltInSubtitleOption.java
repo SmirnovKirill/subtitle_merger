@@ -1,11 +1,9 @@
 package kirill.subtitlemerger.logic.videos.entities;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
-import kirill.subtitlemerger.logic.core.entities.Subtitles;
+import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndInput;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
-
-import java.nio.charset.StandardCharsets;
 
 @CommonsLog
 @Getter
@@ -31,9 +29,8 @@ public class BuiltInSubtitleOption extends SubtitleOption {
 
     public BuiltInSubtitleOption(
             int ffmpegIndex,
-            Subtitles subtitles,
-            Integer size,
-            OptionNotValidReason notValidReason,
+            SubtitlesAndInput subtitlesAndInput,
+            SubtitleOptionNotValidReason notValidReason,
             boolean selectedAsUpper,
             boolean selectedAsLower,
             String format,
@@ -43,9 +40,7 @@ public class BuiltInSubtitleOption extends SubtitleOption {
     ) {
         super(
                 "ffmpeg-" + ffmpegIndex,
-                subtitles,
-                size,
-                StandardCharsets.UTF_8,
+                subtitlesAndInput,
                 notValidReason,
                 selectedAsUpper,
                 selectedAsLower
@@ -58,11 +53,6 @@ public class BuiltInSubtitleOption extends SubtitleOption {
         this.defaultDisposition = defaultDisposition;
 
         merged  = title != null && title.matches(MERGED_SUBTITLE_REGEXP);
-    }
-
-    public void setSubtitlesAndSize(Subtitles subtitles, int size) {
-        this.subtitles = subtitles;
-        this.size = size;
     }
 
     public void disableDefaultDisposition() {

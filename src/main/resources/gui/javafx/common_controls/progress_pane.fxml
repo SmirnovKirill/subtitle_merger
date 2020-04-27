@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<fx:root xmlns:fx="http://javafx.com/fxml" type="javafx.scene.layout.VBox" alignment="CENTER" spacing="10">
+    <ProgressIndicator fx:id="progressIndicator"/>
+    <Label fx:id="progressLabel"/>
+    <HBox fx:id="cancelPane" alignment="CENTER">
+        <Label fx:id="cancelDescriptionLabel"/>
+        <Label text="If you want to cancel the task click "/>
+        <Hyperlink fx:id="cancelLink" text="here">
+            <padding>
+                <Insets/>
+            </padding>
+        </Hyperlink>
+        <Label text="."/>
+    </HBox>
+</fx:root>

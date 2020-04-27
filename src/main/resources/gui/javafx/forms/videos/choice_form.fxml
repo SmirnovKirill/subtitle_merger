@@ -27,7 +27,7 @@
         <padding>
             <Insets top="20" right="20" bottom="20" left="20"/>
         </padding>
-        <Label>All videos from the directory</Label>
+        <Label>All videos from a directory</Label>
         <Button onAction="#directoryButtonClicked" text="choose directory"/>
     </HBox>
 </GridPane>

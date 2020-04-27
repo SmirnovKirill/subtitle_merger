@@ -1,17 +1,81 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Tab?>
-<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import kirill.subtitlemerger.gui.common_controls.ActionResultPane?>
+<?import kirill.subtitlemerger.gui.common_controls.ProgressPane?>
+<?import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithVideos?>
 <Tab xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
      fx:controller="kirill.subtitlemerger.gui.forms.videos.VideosFormController" text="Videos">
-    <StackPane>
+    <StackPane stylesheets="/gui/javafx/forms/videos/videos_form.css">
         <padding>
             <Insets top="20" right="20" bottom="20" left="20"/>
         </padding>
 
+        <!--suppress JavaFxUnresolvedFxIdReference -->
         <fx:include fx:id="missingSettingsForm" source="missing_settings_form.fxml"/>
+        <!--suppress JavaFxUnresolvedFxIdReference -->
         <fx:include fx:id="choiceForm" source="choice_form.fxml"/>
-        <fx:include fx:id="contentForm" source="table_form.fxml"/>
+        <VBox fx:id="mainPane">
+            <Hyperlink onAction="#backToSelectionClicked" styleClass="back-link" text="back to selection"/>
+            <Region minHeight="5" maxHeight="5"/>
+            <HBox fx:id="chosenDirectoryPane" alignment="CENTER_LEFT" visible="false" managed="false" spacing="10">
+                <TextField fx:id="chosenDirectoryField" HBox.hgrow="ALWAYS"/>
+                <Button fx:id="refreshButton" onAction="#refreshClicked">
+                    <graphic>
+                        <ImageView fitWidth="16" fitHeight="16">
+                            <Image url="/gui/icons/refresh.png"/>
+                        </ImageView>
+                    </graphic>
+                </Button>
+            </HBox>
+            <ActionResultPane fx:id="totalResult" minHeight="40" alignment="CENTER" alwaysManaged="true"/>
+            <VBox fx:id="tableAndActionsPane" spacing="10">
+                <Label fx:id="selectedCountLabel"/>
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <CheckBox fx:id="hideUnavailableCheckbox" onAction="#hideUnavailableClicked"
+                              text="hide unavailable"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <!-- To be able to use a tooltip when the button is disabled. -->
+                    <HBox fx:id="autoSelectButtonWrapper" alignment="CENTER">
+                        <Button fx:id="autoSelectButton" onAction="#autoSelectClicked" text="Auto-select subtitles">
+                            <graphic>
+                                <ImageView fitWidth="16" fitHeight="16">
+                                    <Image url="/gui/icons/computer.png"/>
+                                </ImageView>
+                            </graphic>
+                        </Button>
+                    </HBox>
+                    <HBox fx:id="loadAllButtonWrapper" alignment="CENTER">
+                        <Button fx:id="loadAllButton" onAction="#loadAllSubtitlesClicked"
+                                text="Load all subtitles">
+                            <graphic>
+                                <ImageView fitWidth="16" fitHeight="16">
+                                    <Image url="/gui/icons/load.png"/>
+                                </ImageView>
+                            </graphic>
+                        </Button>
+                    </HBox>
+                    <HBox fx:id="mergeButtonWrapper" alignment="CENTER">
+                        <Button fx:id="mergeButton" onAction="#mergeClicked" text="Merge">
+                            <graphic>
+                                <ImageView fitWidth="16" fitHeight="16">
+                                    <Image url="/gui/icons/merge.png"/>
+                                </ImageView>
+                            </graphic>
+                        </Button>
+                    </HBox>
+                </HBox>
+                <TableWithVideos fx:id="table" VBox.vgrow="ALWAYS"/>
+                <HBox fx:id="addRemoveVideosPane" alignment="CENTER_RIGHT" visible="false" managed="false"
+                      spacing="10">
+                    <Button fx:id="removeVideosButton" onAction="#removeVideosClicked" text="Remove selected"/>
+                    <Button onAction="#addVideoClicked" text="Add videos"/>
+                </HBox>
+            </VBox>
+        </VBox>
+        <ProgressPane fx:id="progressPane" visible="false"/>
     </StackPane>
 </Tab>

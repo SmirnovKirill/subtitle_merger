@@ -3,24 +3,23 @@ package kirill.subtitlemerger.gui.forms.videos.background;
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.application.Platform;
 import kirill.subtitlemerger.gui.GuiContext;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableSubtitleOption;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithFiles;
+import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableVideoInfo;
+import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithVideos;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.logic.core.SubRipParser;
-import kirill.subtitlemerger.logic.core.SubRipWriter;
-import kirill.subtitlemerger.logic.core.SubtitleMerger;
-import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
-import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
-import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
-import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
-import kirill.subtitlemerger.logic.videos.entities.ExternalSubtitleOption;
-import kirill.subtitlemerger.logic.videos.entities.SubtitleOption;
 import kirill.subtitlemerger.logic.settings.MergeMode;
 import kirill.subtitlemerger.logic.settings.Settings;
+import kirill.subtitlemerger.logic.subtitles.SubRipWriter;
+import kirill.subtitlemerger.logic.subtitles.SubtitleMerger;
+import kirill.subtitlemerger.logic.subtitles.entities.Subtitles;
+import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndInput;
 import kirill.subtitlemerger.logic.utils.Utils;
+import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
+import kirill.subtitlemerger.logic.videos.entities.ExternalSubtitleOption;
+import kirill.subtitlemerger.logic.videos.entities.SubtitleOption;
+import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
@@ -28,25 +27,26 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @CommonsLog
 @AllArgsConstructor
 public class MergePreparationRunner implements BackgroundRunner<MergePreparationRunner.Result> {
-    private List<TableFileInfo> displayedTableFilesInfo;
+    private List<TableVideoInfo> displayedTableFilesInfo;
 
     private List<VideoInfo> filesInfo;
 
-    private TableWithFiles tableWithFiles;
+    private TableWithVideos tableWithFiles;
 
     private GuiContext context;
 
     @Override
     public MergePreparationRunner.Result run(BackgroundManager backgroundManager) {
-        VideoTabBackgroundUtils.clearActionResults(displayedTableFilesInfo, tableWithFiles, backgroundManager);
+        VideoBackgroundUtils.clearActionResults(displayedTableFilesInfo, tableWithFiles, backgroundManager);
 
-        List<TableFileInfo> selectedTableFilesInfo = VideoTabBackgroundUtils.getSelectedFilesInfo(
+        List<TableVideoInfo> selectedTableFilesInfo = VideoBackgroundUtils.getSelectedFilesInfo(
                 displayedTableFilesInfo,
                 backgroundManager
         );
@@ -70,7 +70,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         List<FileMergeInfo> filesMergeInfo = new ArrayList<>();
 
         int processedCount = 0;
-        for (TableFileInfo tableFileInfo : selectedTableFilesInfo) {
+        for (TableVideoInfo tableFileInfo : selectedTableFilesInfo) {
             try {
                 filesMergeInfo.add(
                         getFileMergeInfo(tableFileInfo, processedCount, selectedTableFilesInfo.size(), backgroundManager)
@@ -108,7 +108,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
     }
 
     private static int getFilesWithoutSelectionCount(
-            List<TableFileInfo> filesInfo,
+            List<TableVideoInfo> filesInfo,
             BackgroundManager backgroundManager
     ) {
         backgroundManager.setIndeterminateProgress();
@@ -120,7 +120,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
     }
 
     private FileMergeInfo getFileMergeInfo(
-            TableFileInfo tableFileInfo,
+            TableVideoInfo tableFileInfo,
             int processedCount,
             int allCount,
             BackgroundManager backgroundManager
@@ -189,7 +189,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         }
     }
 
-    private static String getProgressMessagePrefix(int processedCount, int allFileCount, TableFileInfo fileInfo) {
+    private static String getProgressMessagePrefix(int processedCount, int allFileCount, TableVideoInfo fileInfo) {
         String progressPrefix = allFileCount > 1
                 ? String.format("%d/%d ", processedCount + 1, allFileCount) + "stage 1 of 2: processing file "
                 : "Stage 1 of 2: processing file ";
@@ -222,7 +222,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
     }
 
     private int loadStreams(
-            TableFileInfo tableFileInfo,
+            TableVideoInfo tableFileInfo,
             VideoInfo fileInfo,
             Set<LanguageAlpha3Code> languagesToCheck,
             String progressMessagePrefix,
@@ -254,28 +254,35 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                         ffmpegStream.getFormat(),
                         fileInfo.getFile()
                 );
-                ffmpegStream.setSubtitlesAndSize(SubRipParser.from(subtitleText), subtitleText.getBytes().length);
-
-                Platform.runLater(
-                        () -> tableWithFiles.subtitlesLoadedSuccessfully(
-                                ffmpegStream.getSize(),
-                                tableSubtitleOption,
-                                tableFileInfo
-                        )
+                SubtitlesAndInput subtitlesAndInput = SubtitlesAndInput.from(
+                        subtitleText.getBytes(),
+                        StandardCharsets.UTF_8
                 );
+
+                if (subtitlesAndInput.isCorrectFormat()) {
+                    ffmpegStream.setSubtitlesAndInput(subtitlesAndInput);
+
+                    Platform.runLater(
+                            () -> tableWithFiles.subtitlesLoadedSuccessfully(
+                                    subtitlesAndInput.getSize(),
+                                    tableSubtitleOption,
+                                    tableFileInfo
+                            )
+                    );
+                } else {
+                    Platform.runLater(
+                            () -> tableWithFiles.failedToLoadSubtitles(
+                                    VideoBackgroundUtils.FAILED_TO_LOAD_STREAM_INCORRECT_FORMAT,
+                                    tableSubtitleOption
+                            )
+                    );
+                    failedToLoad++;
+                }
             } catch (FfmpegException e) {
                 log.warn("failed to get subtitle text: " + e.getCode() + ", console output " + e.getConsoleOutput());
                 Platform.runLater(
                         () -> tableWithFiles.failedToLoadSubtitles(
-                                VideoTabBackgroundUtils.failedToLoadReasonFrom(e.getCode()),
-                                tableSubtitleOption
-                        )
-                );
-                failedToLoad++;
-            } catch (SubtitleFormatException e) {
-                Platform.runLater(
-                        () -> tableWithFiles.failedToLoadSubtitles(
-                                VideoTabBackgroundUtils.FAILED_TO_LOAD_STREAM_INCORRECT_FORMAT,
+                                VideoBackgroundUtils.failedToLoadReasonFrom(e.getCode()),
                                 tableSubtitleOption
                         )
                 );

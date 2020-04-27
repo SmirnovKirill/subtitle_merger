@@ -9,21 +9,19 @@ import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.common_controls.ActionResultPane;
 import kirill.subtitlemerger.gui.forms.common.BackgroundTaskFormController;
-import kirill.subtitlemerger.gui.forms.common.subtitle_preview.SubtitlePreviewFormController;
-import kirill.subtitlemerger.gui.forms.common.subtitle_preview.SubtitlePreviewResult;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
+import kirill.subtitlemerger.gui.utils.Popups;
 import kirill.subtitlemerger.gui.utils.background.BackgroundCallback;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.entities.FileOrigin;
-import kirill.subtitlemerger.gui.utils.entities.FormInfo;
 import kirill.subtitlemerger.logic.LogicConstants;
-import kirill.subtitlemerger.logic.core.SubRipParser;
-import kirill.subtitlemerger.logic.core.SubRipWriter;
-import kirill.subtitlemerger.logic.core.SubtitleMerger;
-import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
-import kirill.subtitlemerger.logic.core.entities.Subtitles;
 import kirill.subtitlemerger.logic.settings.SettingException;
 import kirill.subtitlemerger.logic.settings.Settings;
+import kirill.subtitlemerger.logic.subtitles.SubRipWriter;
+import kirill.subtitlemerger.logic.subtitles.SubtitleMerger;
+import kirill.subtitlemerger.logic.subtitles.entities.Subtitles;
+import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndInput;
+import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndOutput;
 import kirill.subtitlemerger.logic.utils.Utils;
 import kirill.subtitlemerger.logic.utils.entities.ActionResult;
 import kirill.subtitlemerger.logic.utils.file_validation.*;
@@ -36,12 +34,16 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
 @CommonsLog
 public class SubtitleFilesFormController extends BackgroundTaskFormController {
@@ -76,61 +78,69 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
     private Button mergeButton;
 
     @FXML
-    private ActionResultPane actionResultPane;
+    private ActionResultPane totalResultPane;
 
     private Stage stage;
 
     private Settings settings;
 
-    private FilesInfo filesInfo;
+    private InputSubtitleInfo upperSubtitleInfo;
+
+    private InputSubtitleInfo lowerSubtitleInfo;
 
     /*
-     * We need this special flag because otherwise the dialog window will be shown twice if we change the value and
-     * press enter. Because pressing the enter button will fire the event but after the dialog window is opened
-     * another event (losing the text field's focus) is fired.
+     * Unlike with input subtitles, information regarding merged subtitles should be split between two variables
+     * because subtitles can be merged without selecting a file to write the result to (through the preview) and vice
+     * verse - selecting a file doesn't affect the merged subtitles themselves.
      */
-    private boolean agreeToOverwriteInProgress;
+    private MergedSubtitleFileInfo mergedSubtitleFileInfo;
+
+    private Subtitles mergedSubtitles;
+
+    /*
+     * We need this special flag because otherwise the popup window will be shown twice if we change the value and press
+     * enter. Because pressing the enter button will fire the event but after the popup window is opened another event
+     * (losing the text field's focus) is fired.
+     */
+    private boolean overwritePopupDisplayed;
 
     public void initialize(Stage stage, GuiContext context) {
         this.stage = stage;
         settings = context.getSettings();
-        filesInfo = new FilesInfo(null, null, null, null);
 
-        GuiUtils.setTextFieldChangeListeners(
+        GuiUtils.setTextEnteredHandler(
                 upperPathField,
-                (path) -> processInputFilePath(path, InputFileType.UPPER_SUBTITLES, FileOrigin.TEXT_FIELD)
+                (path) -> processInputSubtitlePath(path, InputSubtitleType.UPPER, FileOrigin.TEXT_FIELD)
         );
-        GuiUtils.setTextFieldChangeListeners(
+        GuiUtils.setTextEnteredHandler(
                 lowerPathField,
-                (path) -> processInputFilePath(path, InputFileType.LOWER_SUBTITLES, FileOrigin.TEXT_FIELD)
+                (path) -> processInputSubtitlePath(path, InputSubtitleType.LOWER, FileOrigin.TEXT_FIELD)
         );
-        GuiUtils.setTextFieldChangeListeners(
+        GuiUtils.setTextEnteredHandler(
                 mergedPathField,
-                (path) -> processMergedFilePath(path, FileOrigin.TEXT_FIELD)
+                (path) -> processMergedSubtitlePath(path, FileOrigin.TEXT_FIELD)
         );
     }
 
-    private void processInputFilePath(String path, InputFileType fileType, FileOrigin fileOrigin) {
-        if (fileOrigin == FileOrigin.TEXT_FIELD && pathNotChanged(path, fileType.getExtendedFileType(), filesInfo)) {
+    private void processInputSubtitlePath(String path, InputSubtitleType subtitleType, FileOrigin fileOrigin) {
+        if (fileOrigin == FileOrigin.TEXT_FIELD && pathNotChanged(path, subtitleType.getBroaderType())) {
             return;
         }
 
-        BackgroundRunner<InputFileInfo> backgroundRunner = backgroundManager -> {
-            backgroundManager.updateMessage("Processing file " + path + "...");
-            return getInputFileInfo(path, fileType, fileOrigin, filesInfo).orElse(null);
+        BackgroundRunner<InputSubtitleInfo> backgroundRunner = backgroundManager -> {
+            backgroundManager.setCancellationPossible(false);
+            backgroundManager.setIndeterminateProgress();
+            backgroundManager.updateMessage("Processing the file " + path + "...");
+            return getInputSubtitleInfo(path, subtitleType, fileOrigin);
         };
 
-        BackgroundCallback<InputFileInfo> callback = inputFileInfo -> {
-            updateFilesInfo(inputFileInfo, fileType, filesInfo);
-            markOtherFileNotDuplicate(fileType, filesInfo);
-            if (fileOrigin == FileOrigin.FILE_CHOOSER && inputFileInfo != null) {
-                @SuppressWarnings("SimplifyOptionalCallChains")
-                File parent = Utils.getParentDirectory(inputFileInfo.getFile()).orElse(null);
-                if (parent != null) {
-                    saveDirectoryInConfig(fileType.getExtendedFileType(), parent, settings);
-                }
+        BackgroundCallback<InputSubtitleInfo> callback = subtitleInfo -> {
+            updateSubtitleInfoVariable(subtitleInfo, subtitleType);
+            markOtherSubtitlesNotDuplicate(subtitleType);
+            if (fileOrigin == FileOrigin.FILE_CHOOSER && subtitleInfo != null) {
+                saveDirectoryInSettings(subtitleInfo.getFile(), subtitleType.getBroaderType(), settings);
             }
-            filesInfo.setMergedSubtitles(null);
+            mergedSubtitles = null;
 
             updateScene(fileOrigin);
         };
@@ -138,163 +148,133 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
         runInBackground(backgroundRunner, callback);
     }
 
-    private static boolean pathNotChanged(String path, ExtendedFileType fileType, FilesInfo filesInfo) {
+    private boolean pathNotChanged(String path, SubtitleType subtitleType) {
         String currentPath;
-        if (fileType == ExtendedFileType.UPPER_SUBTITLES) {
-            currentPath = filesInfo.getUpperFileInfo() != null ? filesInfo.getUpperFileInfo().getPath() : "";
-        } else if (fileType == ExtendedFileType.LOWER_SUBTITLES) {
-            currentPath = filesInfo.getLowerFileInfo() != null ? filesInfo.getLowerFileInfo().getPath() : "";
-        } else if (fileType == ExtendedFileType.MERGED_SUBTITLES) {
-            currentPath = filesInfo.getMergedFileInfo() != null ? filesInfo.getMergedFileInfo().getPath() : "";
+        if (subtitleType == SubtitleType.UPPER) {
+            currentPath = upperSubtitleInfo != null ? upperSubtitleInfo.getPath() : "";
+        } else if (subtitleType == SubtitleType.LOWER) {
+            currentPath = lowerSubtitleInfo != null ? lowerSubtitleInfo.getPath() : "";
+        } else if (subtitleType == SubtitleType.MERGED) {
+            currentPath = mergedSubtitleFileInfo != null ? mergedSubtitleFileInfo.getPath() : "";
         } else {
+            log.error("unexpected subtitle type " + subtitleType + ", most likely a bug");
             throw new IllegalStateException();
         }
 
         return Objects.equals(path, currentPath);
     }
 
-    private static Optional<InputFileInfo> getInputFileInfo(
-            String path,
-            InputFileType fileType,
-            FileOrigin fileOrigin,
-            FilesInfo filesInfo
-    ) {
+    @Nullable
+    private InputSubtitleInfo getInputSubtitleInfo(String path, InputSubtitleType subtitleType, FileOrigin fileOrigin) {
         InputFileValidationOptions validationOptions = InputFileValidationOptions.builder()
                 .allowedExtensions( Collections.singletonList("srt"))
                 .allowEmpty(false)
                 .maxAllowedSize(LogicConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES * 1024 * 1024L)
                 .loadContent(true)
                 .build();
-        kirill.subtitlemerger.logic.utils.file_validation.InputFileInfo validatorFileInfo = FileValidator.getInputFileInfo(
+        InputFileInfo fileInfo = FileValidator.getInputFileInfo(path, validationOptions);
+        if (fileInfo.getNotValidReason() == InputFileNotValidReason.PATH_IS_EMPTY) {
+            return null;
+        }
+
+        if (fileInfo.getNotValidReason() != null) {
+            return new InputSubtitleInfo(
+                    path,
+                    fileInfo.getFile(),
+                    fileOrigin,
+                    fileInfo.getNotValidReason(),
+                    isDuplicate(fileInfo.getFile(), subtitleType),
+                    null
+            );
+        }
+
+        return new InputSubtitleInfo(
                 path,
-                validationOptions
+                fileInfo.getFile(),
+                fileOrigin,
+                null,
+                isDuplicate(fileInfo.getFile(), subtitleType),
+                SubtitlesAndInput.from(fileInfo.getContent(), StandardCharsets.UTF_8)
         );
-        if (validatorFileInfo.getNotValidReason() == InputFileNotValidReason.PATH_IS_EMPTY) {
-            return Optional.empty();
-        }
-
-        if (validatorFileInfo.getNotValidReason() != null) {
-            return Optional.of(
-                    new InputFileInfo(
-                            path,
-                            validatorFileInfo.getFile(),
-                            fileOrigin,
-                            isDuplicate(path, validatorFileInfo.getFile(), fileType, filesInfo),
-                            validatorFileInfo.getContent(),
-                            null,
-                            null,
-                            validatorFileInfo.getNotValidReason()
-                    )
-            );
-        }
-
-        try {
-            Subtitles subtitles = SubRipParser.from(new String(validatorFileInfo.getContent(), StandardCharsets.UTF_8));
-
-            return Optional.of(
-                    new InputFileInfo(
-                            path,
-                            validatorFileInfo.getFile(),
-                            fileOrigin,
-                            isDuplicate(path, validatorFileInfo.getFile(), fileType, filesInfo),
-                            validatorFileInfo.getContent(),
-                            StandardCharsets.UTF_8,
-                            subtitles,
-                            null
-                    )
-            );
-        } catch (SubtitleFormatException e) {
-            return Optional.of(
-                    new InputFileInfo(
-                            path,
-                            validatorFileInfo.getFile(),
-                            fileOrigin,
-                            isDuplicate(path, validatorFileInfo.getFile(), fileType, filesInfo),
-                            validatorFileInfo.getContent(),
-                            StandardCharsets.UTF_8,
-                            null,
-                            null
-                    )
-            );
-        }
     }
 
-    private static boolean isDuplicate(String path, File file, InputFileType fileType, FilesInfo filesInfo) {
-        String otherPath;
-        File otherFile;
-        if (fileType == InputFileType.UPPER_SUBTITLES) {
-            if (filesInfo.getLowerFileInfo() == null) {
+    private boolean isDuplicate(File file, InputSubtitleType subtitleType) {
+        InputSubtitleInfo otherSubtitleInfo;
+        if (subtitleType == InputSubtitleType.UPPER) {
+            if (lowerSubtitleInfo == null) {
                 return false;
             }
 
-            otherPath = filesInfo.getLowerFileInfo().getPath();
-            otherFile = filesInfo.getLowerFileInfo().getFile();
-        } else if (fileType == InputFileType.LOWER_SUBTITLES) {
-            if (filesInfo.getUpperFileInfo() == null) {
+            otherSubtitleInfo = lowerSubtitleInfo;
+        } else if (subtitleType == InputSubtitleType.LOWER) {
+            if (upperSubtitleInfo == null) {
                 return false;
             }
 
-            otherPath = filesInfo.getUpperFileInfo().getPath();
-            otherFile = filesInfo.getUpperFileInfo().getFile();
+            otherSubtitleInfo = upperSubtitleInfo;
         } else {
+            log.error("unexpected subtitle type " + subtitleType + ", most likely a bug");
             throw new IllegalStateException();
         }
 
-        if (otherFile != null) {
-            return Objects.equals(file, otherFile);
-        } else {
-            return Objects.equals(path, otherPath);
-        }
+        return Objects.equals(file, otherSubtitleInfo.getFile());
     }
 
-    private static void updateFilesInfo(InputFileInfo inputFileInfo, InputFileType fileType, FilesInfo filesInfo) {
-        if (fileType == InputFileType.UPPER_SUBTITLES) {
-            filesInfo.setUpperFileInfo(inputFileInfo);
-        } else if (fileType == InputFileType.LOWER_SUBTITLES) {
-            filesInfo.setLowerFileInfo(inputFileInfo);
+    private void updateSubtitleInfoVariable(InputSubtitleInfo subtitleInfo, InputSubtitleType subtitleType) {
+        if (subtitleType == InputSubtitleType.UPPER) {
+            upperSubtitleInfo = subtitleInfo;
+        } else if (subtitleType == InputSubtitleType.LOWER) {
+            lowerSubtitleInfo = subtitleInfo;
         } else {
+            log.error("unexpected subtitle type " + subtitleType + ", most likely a bug");
             throw new IllegalStateException();
         }
     }
 
     /*
-     * Only one of two input files should ever be marked as duplicate, so after we process the file we should always
-     * mark the other file as not-duplicate.
+     * Only one of the two input subtitles should ever be marked as duplicate, so after we process the subtitles we
+     * should always mark the other subtitles as non-duplicate.
      */
-    private static void markOtherFileNotDuplicate(InputFileType fileType, FilesInfo filesInfo) {
-        if (fileType == InputFileType.UPPER_SUBTITLES) {
-            if (filesInfo.getLowerFileInfo() != null) {
-                filesInfo.getLowerFileInfo().setDuplicate(false);
+    private void markOtherSubtitlesNotDuplicate(InputSubtitleType subtitleType) {
+        if (subtitleType == InputSubtitleType.UPPER) {
+            if (lowerSubtitleInfo != null) {
+                lowerSubtitleInfo.setDuplicate(false);
             }
-        } else if (fileType == InputFileType.LOWER_SUBTITLES) {
-            if (filesInfo.getUpperFileInfo() != null) {
-                filesInfo.getUpperFileInfo().setDuplicate(false);
+        } else if (subtitleType == InputSubtitleType.LOWER) {
+            if (upperSubtitleInfo != null) {
+                upperSubtitleInfo.setDuplicate(false);
             }
         } else {
+            log.error("unexpected subtitle type " + subtitleType + ", most likely a bug");
             throw new IllegalStateException();
         }
     }
 
-    private static void saveDirectoryInConfig(ExtendedFileType fileType, File parent, Settings settings) {
+    private static void saveDirectoryInSettings(File file, SubtitleType subtitleType, Settings settings) {
+        File directory = Utils.getParentDirectory(file).orElse(null);
+        if (directory == null) {
+            log.warn("parent directory for file " + file.getAbsolutePath() + " is null, maybe it was removed");
+            return;
+        }
+        String pathToSave = directory.getAbsolutePath();
+
         try {
-            switch (fileType) {
-                case UPPER_SUBTITLES:
-                    settings.saveUpperDirectory(parent.getAbsolutePath());
+            switch (subtitleType) {
+                case UPPER:
+                    settings.saveUpperDirectory(pathToSave);
                     return;
-                case LOWER_SUBTITLES:
-                    settings.saveLowerDirectory(parent.getAbsolutePath());
+                case LOWER:
+                    settings.saveLowerDirectory(pathToSave);
                     return;
-                case MERGED_SUBTITLES:
-                    settings.saveMergedDirectory(parent.getAbsolutePath());
+                case MERGED:
+                    settings.saveMergedDirectory(pathToSave);
                     return;
                 default:
+                    log.error("unexpected subtitle type " + subtitleType + ", most likely a bug");
                     throw new IllegalStateException();
             }
         } catch (SettingException e) {
-            log.warn(
-                    "failed to save last directory " + parent.getAbsolutePath() + ": "
-                            + ExceptionUtils.getStackTrace(e)
-            );
+            log.warn("failed to save directory " + pathToSave + ": " + ExceptionUtils.getStackTrace(e));
         }
     }
 
@@ -318,428 +298,404 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
         mergedPathField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
         mergedChooseButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
 
-        actionResultPane.clear();
+        totalResultPane.clear();
     }
 
     private void updatePathFields() {
-        upperPathField.setText(
-                filesInfo.getUpperFileInfo() != null && filesInfo.getUpperFileInfo().getFile() != null
-                        ? filesInfo.getUpperFileInfo().getFile().getAbsolutePath()
-                        : null
-        );
-        lowerPathField.setText(
-                filesInfo.getLowerFileInfo() != null && filesInfo.getLowerFileInfo().getFile() != null
-                        ? filesInfo.getLowerFileInfo().getFile().getAbsolutePath()
-                        : null
-        );
+        upperPathField.setText(upperSubtitleInfo != null ? upperSubtitleInfo.getFile().getAbsolutePath() : null);
+        lowerPathField.setText(lowerSubtitleInfo != null ? lowerSubtitleInfo.getFile().getAbsolutePath() : null);
         mergedPathField.setText(
-                filesInfo.getMergedFileInfo() != null && filesInfo.getMergedFileInfo().getFile() != null
-                        ? filesInfo.getMergedFileInfo().getFile().getAbsolutePath()
-                        : null
+                mergedSubtitleFileInfo != null ? mergedSubtitleFileInfo.getFile().getAbsolutePath() : null
         );
     }
 
     private void setPreviewButtonsVisibility() {
-        upperPreview.setDisable(makePreviewDisabled(filesInfo.getUpperFileInfo()));
-        lowerPreview.setDisable(makePreviewDisabled(filesInfo.getLowerFileInfo()));
-        mergedPreview.setDisable(!filesInfo.upperFileOk() || !filesInfo.lowerFileOk());
+        upperPreview.setDisable(inputPreviewNotAvailable(upperSubtitleInfo));
+        lowerPreview.setDisable(inputPreviewNotAvailable(lowerSubtitleInfo));
+        mergedPreview.setDisable(cantBeMerged(upperSubtitleInfo) || cantBeMerged(lowerSubtitleInfo));
     }
 
-    private static boolean makePreviewDisabled(InputFileInfo fileInfo) {
-        if (fileInfo == null || fileInfo.isDuplicate()) {
-            return true;
-        }
+    /*
+     * Note that the preview is available if the format is incorrect because it should be possible to open the preview
+     * and change the encoding if that's what is causing the problem.
+     */
+    private static boolean inputPreviewNotAvailable(InputSubtitleInfo subtitleInfo) {
+        return subtitleInfo == null || subtitleInfo.isDuplicate() || subtitleInfo.getNotValidReason() != null;
+    }
 
-        return fileInfo.getNotValidReason() != null;
+    /*
+     * Note that unlike with previews merging should not be available if the format is incorrect.
+     */
+    private static boolean cantBeMerged(InputSubtitleInfo subtitleInfo) {
+        return subtitleInfo == null || subtitleInfo.isDuplicate() || subtitleInfo.getNotValidReason() != null
+                || !subtitleInfo.isCorrectFormat();
     }
 
     private void setMergeButtonVisibility() {
-        boolean disable = !filesInfo.upperFileOk()
-                || !filesInfo.lowerFileOk()
-                || filesInfo.getMergedFileInfo() == null
-                || filesInfo.getMergedFileInfo().getNotValidReason() != null;
+        boolean disable = cantBeMerged(upperSubtitleInfo) || cantBeMerged(lowerSubtitleInfo)
+                || mergedSubtitleFileInfo == null || mergedSubtitleFileInfo.getNotValidReason() != null;
         mergeButton.setDisable(disable);
     }
 
     private void showErrors() {
-        List<String> errorMessageParts = new ArrayList<>();
+        List<String> errorParts = new ArrayList<>();
 
-        InputFileInfo upperFileInfo = filesInfo.getUpperFileInfo();
-        if (upperFileInfo != null && (upperFileInfo.isDuplicate() || upperFileInfo.getSubtitles() == null || upperFileInfo.getNotValidReason() != null)) {
-            showFileElementsAsIncorrect(ExtendedFileType.UPPER_SUBTITLES);
-
-            if (upperFileInfo.getFile() != null && upperFileInfo.isDuplicate()) {
-                errorMessageParts.add("You have already selected this file for the lower subtitles");
-            } else if (upperFileInfo.getSubtitles() == null) {
-                errorMessageParts.add(
-                        "File '" + upperFileInfo.getPath() + "' has an incorrect subtitle format, it can happen if the "
-                                + "file is not UTF-8-encoded, you can change the encoding pressing the preview button"
-                );
-            } else if (upperFileInfo.getNotValidReason() != null) {
-                errorMessageParts.add(getErrorText(upperFileInfo.getPath(), upperFileInfo.getNotValidReason()));
-            }
+        String upperSubtitleError = getInputSubtitleError(upperSubtitleInfo);
+        if (!StringUtils.isBlank(upperSubtitleError)) {
+            displayFileElementsAsIncorrect(SubtitleType.UPPER);
+            errorParts.add(upperSubtitleError);
         }
 
-        InputFileInfo lowerFileInfo = filesInfo.getLowerFileInfo();
-        if (lowerFileInfo != null && (lowerFileInfo.isDuplicate() || lowerFileInfo.getSubtitles() == null || lowerFileInfo.getNotValidReason() != null)) {
-            showFileElementsAsIncorrect(ExtendedFileType.LOWER_SUBTITLES);
-
-            if (lowerFileInfo.getFile() != null && lowerFileInfo.isDuplicate()) {
-                errorMessageParts.add("You have already selected this file for the upper subtitles");
-            } else if (lowerFileInfo.getSubtitles() == null) {
-                errorMessageParts.add(
-                        "File '" + lowerFileInfo.getPath() + "' has an incorrect subtitle format, it can happen if the "
-                                + "file is not UTF-8-encoded, you can change the encoding pressing the preview button"
-                );
-            } else if (lowerFileInfo.getNotValidReason() != null) {
-                errorMessageParts.add(getErrorText(lowerFileInfo.getPath(), lowerFileInfo.getNotValidReason()));
-            }
+        String lowerSubtitleError = getInputSubtitleError(lowerSubtitleInfo);
+        if (!StringUtils.isBlank(lowerSubtitleError)) {
+            displayFileElementsAsIncorrect(SubtitleType.LOWER);
+            errorParts.add(lowerSubtitleError);
         }
 
-        MergedFileInfo mergedFileInfo = filesInfo.getMergedFileInfo();
-        if (mergedFileInfo != null && mergedFileInfo.getNotValidReason() != null) {
-            showFileElementsAsIncorrect(ExtendedFileType.MERGED_SUBTITLES);
-
-            if (mergedFileInfo.getNotValidReason() != null) {
-                errorMessageParts.add(getErrorText(mergedFileInfo.getPath(), mergedFileInfo.getNotValidReason()));
-            }
+        String mergedSubtitleError = getMergedSubtitleError(mergedSubtitleFileInfo);
+        if (!StringUtils.isBlank(mergedSubtitleError)) {
+            displayFileElementsAsIncorrect(SubtitleType.MERGED);
+            errorParts.add(mergedSubtitleError);
         }
 
-        if (CollectionUtils.isEmpty(errorMessageParts)) {
+        if (CollectionUtils.isEmpty(errorParts)) {
             return;
         }
 
-        StringBuilder errorMessage = new StringBuilder();
-        int index = 0;
-        for (String part : errorMessageParts) {
-            if (index != 0) {
-                errorMessage.append(System.lineSeparator());
-            }
-
-            errorMessage.append("\u2022").append(" ").append(part);
-
-            index++;
+        for (int i = 0; i < errorParts.size(); i++) {
+            errorParts.set(i, "\u2022 " + errorParts.get(i));
         }
 
-        actionResultPane.setOnlyError(errorMessage.toString());
+        totalResultPane.setOnlyError(StringUtils.join(errorParts, System.lineSeparator()));
     }
 
-    private void showFileElementsAsIncorrect(ExtendedFileType fileType) {
-        if (fileType == ExtendedFileType.UPPER_SUBTITLES) {
-            upperPathField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
-            upperPathField.getStyleClass().add(GuiConstants.TEXT_FIELD_ERROR_CLASS);
-
-            if (filesInfo.getUpperFileInfo().getFileOrigin() == FileOrigin.FILE_CHOOSER) {
-                upperChooseButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
-                upperChooseButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
-            }
-        } else if (fileType == ExtendedFileType.LOWER_SUBTITLES) {
-            lowerPathField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
-            lowerPathField.getStyleClass().add(GuiConstants.TEXT_FIELD_ERROR_CLASS);
-
-            if (filesInfo.getLowerFileInfo().getFileOrigin() == FileOrigin.FILE_CHOOSER) {
-                lowerChooseButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
-                lowerChooseButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
-            }
-        } else if (fileType == ExtendedFileType.MERGED_SUBTITLES) {
-            mergedPathField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
-            mergedPathField.getStyleClass().add(GuiConstants.TEXT_FIELD_ERROR_CLASS);
-
-            if (filesInfo.getMergedFileInfo().getFileOrigin() == FileOrigin.FILE_CHOOSER) {
-                mergedChooseButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
-                mergedChooseButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
-            }
-        } else {
-            throw new IllegalStateException();
+    @Nullable
+    private static String getInputSubtitleError(InputSubtitleInfo subtitleInfo) {
+        if (subtitleInfo == null) {
+            return null;
         }
-    }
 
-    private static String getErrorText(String path, InputFileNotValidReason reason) {
-        path = getShortenedPath(path);
-
-        switch (reason) {
-            case PATH_IS_TOO_LONG:
-                return "File path is too long";
-            case INVALID_PATH:
-                return "File path is invalid";
-            case IS_A_DIRECTORY:
-                return path + " is a directory, not a file";
-            case DOES_NOT_EXIST:
-                return "File '" + path + "' doesn't exist";
-            case NO_EXTENSION:
-                return "File '" + path + "' has no extension";
-            case NOT_ALLOWED_EXTENSION:
-                return "File '" + path + "' has an incorrect extension";
-            case FILE_IS_EMPTY:
-                return "File '" + path + "' is empty";
-            case FILE_IS_TOO_BIG:
-                return "File '" + path + "' is too big (>"
-                        + LogicConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)";
-            case FAILED_TO_READ_CONTENT:
-                return path + ": failed to read the file";
-            default:
-                throw new IllegalStateException();
+        if (subtitleInfo.isDuplicate()) {
+            return "You have already selected this file for the other subtitles";
         }
+
+        if (!subtitleInfo.isCorrectFormat()) {
+            return "The file '" + subtitleInfo.getPath() + "' has an incorrect subtitle format, it can happen if the "
+                    + "file is not UTF-8-encoded, you can change the encoding after pressing the preview button";
+        }
+
+        if (subtitleInfo.getNotValidReason() != null) {
+            String path = getShortenedPath(subtitleInfo.getPath());
+
+            InputFileNotValidReason notValidReason = subtitleInfo.getNotValidReason();
+            switch (notValidReason) {
+                case PATH_IS_TOO_LONG:
+                    return "The file path is too long";
+                case INVALID_PATH:
+                    return "The file path is invalid";
+                case IS_A_DIRECTORY:
+                    return path + " is a directory, not a file";
+                case DOES_NOT_EXIST:
+                    return "The file '" + path + "' doesn't exist";
+                case NO_EXTENSION:
+                    return "The file '" + path + "' has no extension";
+                case NOT_ALLOWED_EXTENSION:
+                    return "The file '" + path + "' has an incorrect extension";
+                case FILE_IS_EMPTY:
+                    return "The file '" + path + "' is empty";
+                case FILE_IS_TOO_BIG:
+                    return "The file '" + path + "' is too big (>" + LogicConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES
+                            + " megabytes)";
+                case FAILED_TO_READ_CONTENT:
+                    return path + ": failed to read the file";
+                default:
+                    log.error("unexpected input subtitle not valid reason: " + notValidReason + ", most likely a bug");
+                    throw new IllegalStateException();
+            }
+        }
+
+        return null;
     }
 
     private static String getShortenedPath(String path) {
         return Utils.getShortenedString(path, 20, 40);
     }
 
-    private static String getErrorText(String path, OutputFileNotValidReason reason) {
-        path = getShortenedPath(path);
+    @Nullable
+    private static String getMergedSubtitleError(MergedSubtitleFileInfo subtitleFileInfo) {
+        if (subtitleFileInfo == null) {
+            return null;
+        }
 
-        switch (reason) {
-            case PATH_IS_TOO_LONG:
-                return "File path is too long";
-            case INVALID_PATH:
-                return "File path is invalid";
-            case IS_A_DIRECTORY:
-                return path + " is a directory, not a file";
-            case NO_EXTENSION:
-                return "File '" + path + "' has no extension";
-            case NOT_ALLOWED_EXTENSION:
-                return "File '" + path + "' has an incorrect extension";
-            default:
-                throw new IllegalStateException();
+        if (subtitleFileInfo.getNotValidReason() != null) {
+            String path = getShortenedPath(subtitleFileInfo.getPath());
+
+            OutputFileNotValidReason notValidReason = subtitleFileInfo.getNotValidReason();
+            switch (notValidReason) {
+                case PATH_IS_TOO_LONG:
+                    return "The file path is too long";
+                case INVALID_PATH:
+                    return "The file path is invalid";
+                case IS_A_DIRECTORY:
+                    return path + " is a directory, not a file";
+                case NO_EXTENSION:
+                    return "The file '" + path + "' has no extension";
+                case NOT_ALLOWED_EXTENSION:
+                    return "The file '" + path + "' has an incorrect extension";
+                default:
+                    log.error("unexpected merged subtitle not valid reason: " + notValidReason + ", most likely a bug");
+                    throw new IllegalStateException();
+            }
+        }
+
+        return null;
+    }
+
+    private void displayFileElementsAsIncorrect(SubtitleType subtitleType) {
+        if (subtitleType == SubtitleType.UPPER) {
+            upperPathField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
+            upperPathField.getStyleClass().add(GuiConstants.TEXT_FIELD_ERROR_CLASS);
+
+            if (upperSubtitleInfo.getFileOrigin() == FileOrigin.FILE_CHOOSER) {
+                upperChooseButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
+                upperChooseButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
+            }
+        } else if (subtitleType == SubtitleType.LOWER) {
+            lowerPathField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
+            lowerPathField.getStyleClass().add(GuiConstants.TEXT_FIELD_ERROR_CLASS);
+
+            if (lowerSubtitleInfo.getFileOrigin() == FileOrigin.FILE_CHOOSER) {
+                lowerChooseButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
+                lowerChooseButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
+            }
+        } else if (subtitleType == SubtitleType.MERGED) {
+            mergedPathField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
+            mergedPathField.getStyleClass().add(GuiConstants.TEXT_FIELD_ERROR_CLASS);
+
+            if (mergedSubtitleFileInfo.getFileOrigin() == FileOrigin.FILE_CHOOSER) {
+                mergedChooseButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
+                mergedChooseButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
+            }
+        } else {
+            log.error("unexpected subtitle type " + subtitleType + ", most likely a bug");
+            throw new IllegalStateException();
         }
     }
 
-    private void processMergedFilePath(String path, FileOrigin fileOrigin) {
-        if (fileOrigin == FileOrigin.TEXT_FIELD && pathNotChanged(path, ExtendedFileType.MERGED_SUBTITLES, filesInfo)) {
+    private void processMergedSubtitlePath(String path, FileOrigin fileOrigin) {
+        if (fileOrigin == FileOrigin.TEXT_FIELD && pathNotChanged(path, SubtitleType.MERGED)) {
             return;
         }
 
-        MergedFileInfo mergedFileInfo = getMergedFileInfo(path, fileOrigin).orElse(null);
-        if (fileOrigin == FileOrigin.TEXT_FIELD && fileExists(mergedFileInfo)) {
-            if (agreeToOverwriteInProgress) {
+        MergedSubtitleFileInfo subtitleFileInfo = getMergedSubtitleFileInfo(path, fileOrigin);
+        if (fileOrigin == FileOrigin.TEXT_FIELD && fileExists(subtitleFileInfo)) {
+            if (overwritePopupDisplayed) {
                 return;
             }
 
-            if (!agreeToOverwrite(mergedFileInfo)) {
-                mergedPathField.setText(
-                        filesInfo.getMergedFileInfo() != null ? filesInfo.getMergedFileInfo().getPath() : ""
-                );
+            if (!agreeToOverwrite(subtitleFileInfo)) {
+                mergedPathField.setText(subtitleFileInfo.getPath());
                 return;
             }
         }
 
-        filesInfo.setMergedFileInfo(mergedFileInfo);
-        if (fileOrigin == FileOrigin.FILE_CHOOSER && mergedFileInfo != null) {
-            @SuppressWarnings("SimplifyOptionalCallChains")
-            File parent = Utils.getParentDirectory(mergedFileInfo.getFile()).orElse(null);
-            if (parent != null) {
-                saveDirectoryInConfig(ExtendedFileType.MERGED_SUBTITLES, parent, settings);
-            }
+        mergedSubtitleFileInfo = subtitleFileInfo;
+        if (fileOrigin == FileOrigin.FILE_CHOOSER && subtitleFileInfo != null) {
+            saveDirectoryInSettings(subtitleFileInfo.getFile(), SubtitleType.MERGED, settings);
         }
 
         updateScene(fileOrigin);
     }
 
-    private static Optional<MergedFileInfo> getMergedFileInfo(String path, FileOrigin fileOrigin) {
+    @Nullable
+    private static MergedSubtitleFileInfo getMergedSubtitleFileInfo(String path, FileOrigin fileOrigin) {
         OutputFileValidationOptions validationOptions = new OutputFileValidationOptions(
                 Collections.singletonList("srt"),
                 true
         );
         OutputFileInfo validatorFileInfo = FileValidator.getOutputFileInfo(path, validationOptions);
         if (validatorFileInfo.getNotValidReason() == OutputFileNotValidReason.PATH_IS_EMPTY) {
-            return Optional.empty();
+            return null;
         }
 
-        return Optional.of(
-                new MergedFileInfo(
-                        path,
-                        validatorFileInfo.getFile(),
-                        fileOrigin,
-                        validatorFileInfo.getNotValidReason()
-                )
+        return new MergedSubtitleFileInfo(
+                path,
+                validatorFileInfo.getFile(),
+                fileOrigin,
+                validatorFileInfo.getNotValidReason()
         );
     }
 
-    private static boolean fileExists(MergedFileInfo fileInfo) {
-        return fileInfo != null && fileInfo.getFile() != null && fileInfo.getFile().exists();
+    private static boolean fileExists(MergedSubtitleFileInfo subtitleFileInfo) {
+        return subtitleFileInfo != null && subtitleFileInfo.getFile().exists();
     }
 
-    private boolean agreeToOverwrite(MergedFileInfo mergedFileInfo) {
-        agreeToOverwriteInProgress = true;
+    private boolean agreeToOverwrite(MergedSubtitleFileInfo subtitleFileInfo) {
+        overwritePopupDisplayed = true;
 
         String fileName = Utils.getShortenedString(
-                mergedFileInfo.getFile().getName(),
+                subtitleFileInfo.getFile().getName(),
                 0,
                 32
         );
 
-        boolean result = GuiUtils.showAgreementPopup(
-                "File '" + fileName + "' already exists. Do you want to overwrite it?",
+        boolean result = Popups.showAgreementPopup(
+                "The file '" + fileName + "' already exists. Do you want to overwrite it?",
                 "Yes",
                 "No",
                 stage
         );
 
-        agreeToOverwriteInProgress = false;
+        overwritePopupDisplayed = false;
 
         return result;
     }
 
     @FXML
     private void upperPreviewClicked() {
-        SubtitlePreviewResult subtitlePreviewResult = showInputSubtitlePreview(filesInfo.getUpperFileInfo());
-        updateSubtitlesAndEncodingIfChanged(filesInfo.getUpperFileInfo(), subtitlePreviewResult);
-    }
-
-    private SubtitlePreviewResult showInputSubtitlePreview(InputFileInfo fileInfo) {
-        FormInfo nodeInfo = GuiUtils.loadForm("/gui/javafx/forms/common/subtitle_preview_form.fxml");
-
-        Stage previewStage = GuiUtils.generatePopupStage("Subtitle preview", nodeInfo.getRootNode(), stage);
-
-        SubtitlePreviewFormController controller = nodeInfo.getController();
-        controller.initializeWithEncoding(
-                fileInfo.getRawData(),
-                fileInfo.getEncoding(),
-                fileInfo.getPath(),
-                previewStage
+        Charset previousEncoding = upperSubtitleInfo.getEncoding();
+        SubtitlesAndInput previewSelection = Popups.showEncodingPreview(
+                upperSubtitleInfo.getPath(),
+                upperSubtitleInfo.getSubtitlesAndInput(),
+                stage
         );
 
-        previewStage.showAndWait();
-
-        return controller.getResult();
-    }
-
-    private void updateSubtitlesAndEncodingIfChanged(InputFileInfo fileInfo, SubtitlePreviewResult previewResult) {
-        if (Objects.equals(fileInfo.getEncoding(), previewResult.getEncoding())) {
-            return;
+        upperSubtitleInfo.setSubtitlesAndInput(previewSelection);
+        if (!Objects.equals(previousEncoding, previewSelection.getEncoding())) {
+            mergedSubtitles = null;
         }
-
-        fileInfo.setEncoding(previewResult.getEncoding());
-        fileInfo.setSubtitles(previewResult.getSubtitles());
-        filesInfo.setMergedSubtitles(null);
-
-        updateScene(fileInfo.getFileOrigin());
+        updateScene(upperSubtitleInfo.getFileOrigin());
     }
 
     @FXML
-    private void upperChooseClicked() {
-        File file = getInputFile(InputFileType.UPPER_SUBTITLES, stage, settings).orElse(null);
+    private void upperChooserClicked() {
+        clearState();
+
+        File file = getInputFile(InputSubtitleType.UPPER, stage, settings);
         if (file == null) {
             clearState();
             return;
         }
 
-        processInputFilePath(file.getAbsolutePath(), InputFileType.UPPER_SUBTITLES, FileOrigin.FILE_CHOOSER);
+        processInputSubtitlePath(file.getAbsolutePath(), InputSubtitleType.UPPER, FileOrigin.FILE_CHOOSER);
     }
 
-    private static Optional<File> getInputFile(InputFileType fileType, Stage stage, Settings settings) {
+    private static File getInputFile(InputSubtitleType subtitleType, Stage stage, Settings settings) {
         FileChooser fileChooser = new FileChooser();
 
         String chooserTitle;
         File chooserInitialDirectory;
-        if (fileType == InputFileType.UPPER_SUBTITLES) {
-            chooserTitle = "Please choose the file with the upper subtitles";
+        if (subtitleType == InputSubtitleType.UPPER) {
+            chooserTitle = "Please choose a file with the upper subtitles";
             chooserInitialDirectory = ObjectUtils.firstNonNull(
                     settings.getUpperDirectory(),
                     settings.getLowerDirectory(),
                     settings.getMergedDirectory()
             );
-        } else if (fileType == InputFileType.LOWER_SUBTITLES) {
-            chooserTitle = "Please choose the file with the lower subtitles";
+        } else if (subtitleType == InputSubtitleType.LOWER) {
+            chooserTitle = "Please choose a file with the lower subtitles";
             chooserInitialDirectory = ObjectUtils.firstNonNull(
                     settings.getLowerDirectory(),
                     settings.getUpperDirectory(),
                     settings.getMergedDirectory()
             );
         } else {
+            log.error("unexpected subtitle type " + subtitleType + ", most likely a bug");
             throw new IllegalStateException();
         }
 
         fileChooser.setTitle(chooserTitle);
         fileChooser.setInitialDirectory(chooserInitialDirectory);
-        fileChooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("subrip files (*.srt)", "*.srt")
-        );
+        fileChooser.getExtensionFilters().add(GuiConstants.SUB_RIP_EXTENSION_FILTER);
 
-        return Optional.ofNullable(fileChooser.showOpenDialog(stage));
+        return fileChooser.showOpenDialog(stage);
     }
 
     @FXML
     private void lowerPreviewClicked() {
-        SubtitlePreviewResult previewResult = showInputSubtitlePreview(filesInfo.getLowerFileInfo());
-        updateSubtitlesAndEncodingIfChanged(filesInfo.getLowerFileInfo(), previewResult);
+        Charset previousEncoding = lowerSubtitleInfo.getEncoding();
+        clearState();
+
+        SubtitlesAndInput previewSelection = Popups.showEncodingPreview(
+                lowerSubtitleInfo.getPath(),
+                lowerSubtitleInfo.getSubtitlesAndInput(),
+                stage
+        );
+
+        lowerSubtitleInfo.setSubtitlesAndInput(previewSelection);
+        if (!Objects.equals(previousEncoding, previewSelection.getEncoding())) {
+            mergedSubtitles = null;
+        }
+        updateScene(lowerSubtitleInfo.getFileOrigin());
     }
 
     @FXML
-    private void lowerChooseClicked() {
-        File file = getInputFile(InputFileType.LOWER_SUBTITLES, stage, settings).orElse(null);
+    private void lowerChooserClicked() {
+        File file = getInputFile(InputSubtitleType.LOWER, stage, settings);
         if (file == null) {
             clearState();
             return;
         }
 
-        processInputFilePath(file.getAbsolutePath(), InputFileType.LOWER_SUBTITLES, FileOrigin.FILE_CHOOSER);
+        processInputSubtitlePath(file.getAbsolutePath(), InputSubtitleType.LOWER, FileOrigin.FILE_CHOOSER);
     }
 
     @FXML
     private void mergedPreviewClicked() {
         clearState();
 
-        BackgroundRunner<Optional<Subtitles>> backgroundRunner = backgroundManager -> {
-            if (filesInfo.getMergedSubtitles() != null) {
-                return Optional.of(filesInfo.getMergedSubtitles());
+        BackgroundRunner<SubtitlesAndOutput> backgroundRunner = backgroundManager -> {
+            if (mergedSubtitles != null) {
+                return SubtitlesAndOutput.from(mergedSubtitles, settings.isPlainTextSubtitles());
             }
 
             backgroundManager.setCancellationPossible(true);
-            backgroundManager.updateMessage("Merging subtitles...");
-
+            backgroundManager.setIndeterminateProgress();
+            backgroundManager.updateMessage("Merging the subtitles...");
             try {
-                return Optional.of(
+                return SubtitlesAndOutput.from(
                         SubtitleMerger.mergeSubtitles(
-                                filesInfo.getUpperFileInfo().getSubtitles(),
-                                filesInfo.getLowerFileInfo().getSubtitles()
-                        )
+                                upperSubtitleInfo.getSubtitles(),
+                                lowerSubtitleInfo.getSubtitles()
+                        ),
+                        settings.isPlainTextSubtitles()
                 );
             } catch (InterruptedException e) {
-                return Optional.empty();
+                return null;
             }
         };
 
-        BackgroundCallback<Optional<Subtitles>> callback = result -> {
-            Subtitles subtitles = result.orElse(null);
-            if (subtitles == null) {
-                actionResultPane.setOnlyWarn("Merge has been cancelled");
+        BackgroundCallback<SubtitlesAndOutput> callback = subtitlesAndOutput -> {
+            if (subtitlesAndOutput == null) {
+                totalResultPane.setOnlyWarn("The merge has been cancelled");
                 return;
             }
 
-            filesInfo.setMergedSubtitles(subtitles);
+            mergedSubtitles = subtitlesAndOutput.getSubtitles();
 
-            FormInfo nodeInfo = GuiUtils.loadForm("/gui/javafx/forms/common/subtitle_preview_form.fxml");
-
-            Stage previewStage = GuiUtils.generatePopupStage("Subtitle preview", nodeInfo.getRootNode(), stage);
-
-            SubtitlePreviewFormController controller = nodeInfo.getController();
-            controller.initializeMerged(
-                    subtitles,
-                    filesInfo.getUpperFileInfo().getPath(),
-                    filesInfo.getLowerFileInfo().getPath(),
-                    settings.isPlainTextSubtitles(),
-                    previewStage
+            Popups.showMergedSubtitlesPreview(
+                    upperSubtitleInfo.getPath(),
+                    lowerSubtitleInfo.getPath(),
+                    subtitlesAndOutput.getText(),
+                    stage
             );
-
-            previewStage.showAndWait();
         };
 
         runInBackground(backgroundRunner, callback);
     }
 
     @FXML
-    private void mergedSubtitlesButtonClicked() {
-        File file = getMergedFile(stage, settings).orElse(null);
+    private void mergedChooserClicked() {
+        File file = getMergedFile(stage, settings);
         if (file == null) {
             return;
         }
 
-        processMergedFilePath(file.getAbsolutePath(), FileOrigin.FILE_CHOOSER);
+        processMergedSubtitlePath(file.getAbsolutePath(), FileOrigin.FILE_CHOOSER);
     }
 
-    private static Optional<File> getMergedFile(Stage stage, Settings settings) {
+    @Nullable
+    private static File getMergedFile(Stage stage, Settings settings) {
         FileChooser fileChooser = new FileChooser();
 
         fileChooser.setTitle("Please choose where to save the result");
@@ -750,11 +706,9 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
                         settings.getLowerDirectory()
                 )
         );
-        fileChooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("subrip files (*.srt)", "*.srt")
-        );
+        fileChooser.getExtensionFilters().add(GuiConstants.SUB_RIP_EXTENSION_FILTER);
 
-        return Optional.ofNullable(fileChooser.showSaveDialog(stage));
+        return fileChooser.showSaveDialog(stage);
     }
 
     @FXML
@@ -762,44 +716,44 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
         clearState();
 
         BackgroundRunner<ActionResult> backgroundRunner = backgroundManager -> {
-            Subtitles mergedSubtitles;
-
-            if (filesInfo.getMergedSubtitles() != null) {
-                mergedSubtitles = filesInfo.getMergedSubtitles();
-            } else {
+            if (mergedSubtitles == null) {
                 backgroundManager.setCancellationPossible(true);
-                backgroundManager.updateMessage("Merging subtitles...");
-
+                backgroundManager.setIndeterminateProgress();
+                backgroundManager.updateMessage("Merging the subtitles...");
                 try {
                     mergedSubtitles = SubtitleMerger.mergeSubtitles(
-                            filesInfo.getUpperFileInfo().getSubtitles(),
-                            filesInfo.getLowerFileInfo().getSubtitles()
+                            upperSubtitleInfo.getSubtitles(),
+                            lowerSubtitleInfo.getSubtitles()
                     );
                 } catch (InterruptedException e) {
-                    return ActionResult.onlyWarn("Merge has been cancelled");
+                    return ActionResult.onlyWarn("The merge has been cancelled");
                 }
             }
 
             try {
+                backgroundManager.setCancellationPossible(false);
+                backgroundManager.setIndeterminateProgress();
+                backgroundManager.updateMessage("Writing the result...");
+
                 FileUtils.writeStringToFile(
-                        filesInfo.getMergedFileInfo().getFile(),
+                        mergedSubtitleFileInfo.getFile(),
                         SubRipWriter.toText(mergedSubtitles, settings.isPlainTextSubtitles()),
                         StandardCharsets.UTF_8
                 );
 
-                return ActionResult.onlySuccess("Subtitles have been merged successfully!");
+                return ActionResult.onlySuccess("The subtitles have been merged successfully!");
             } catch (IOException e) {
                 return ActionResult.onlyError(
-                        "Can't merge subtitles:" + System.lineSeparator() + "\u2022 can't write to this file"
+                        "Can't write the merged subtitles to the file, please check access to the file"
                 );
             }
         };
 
         BackgroundCallback<ActionResult> callback = actionResult -> {
             if (!StringUtils.isBlank(actionResult.getError())) {
-                showFileElementsAsIncorrect(ExtendedFileType.MERGED_SUBTITLES);
+                displayFileElementsAsIncorrect(SubtitleType.MERGED);
             }
-            actionResultPane.set(actionResult);
+            totalResultPane.set(actionResult);
         };
 
         runInBackground(backgroundRunner, callback);
@@ -807,47 +761,55 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
 
     @AllArgsConstructor
     @Getter
-    private enum InputFileType {
-        UPPER_SUBTITLES(ExtendedFileType.UPPER_SUBTITLES),
+    private enum InputSubtitleType {
+        UPPER(SubtitleType.UPPER),
 
-        LOWER_SUBTITLES(ExtendedFileType.LOWER_SUBTITLES);
+        LOWER(SubtitleType.LOWER);
 
-        private ExtendedFileType extendedFileType;
+        private SubtitleType broaderType;
     }
 
-    private enum ExtendedFileType {
-        UPPER_SUBTITLES,
-        LOWER_SUBTITLES,
-        MERGED_SUBTITLES
+    private enum SubtitleType {
+        UPPER,
+        LOWER,
+        MERGED
     }
 
     @AllArgsConstructor
     @Getter
-    private static class InputFileInfo {
+    private static class InputSubtitleInfo {
         private String path;
 
         private File file;
 
         private FileOrigin fileOrigin;
 
+        private InputFileNotValidReason notValidReason;
+
         @Setter
         private boolean isDuplicate;
 
-        private byte[] rawData;
-
         @Setter
-        private Charset encoding;
+        private SubtitlesAndInput subtitlesAndInput;
 
-        @Setter
-        private Subtitles subtitles;
+        @Nullable
+        Subtitles getSubtitles() {
+            return subtitlesAndInput != null ? subtitlesAndInput.getSubtitles() : null;
+        }
 
-        @Setter
-        private InputFileNotValidReason notValidReason;
+        @Nullable
+        Charset getEncoding() {
+            return subtitlesAndInput != null ? subtitlesAndInput.getEncoding() : null;
+        }
+
+        boolean isCorrectFormat() {
+            return subtitlesAndInput != null && subtitlesAndInput.isCorrectFormat();
+        }
     }
 
     @AllArgsConstructor
     @Getter
-    private static class MergedFileInfo {
+    private static class MergedSubtitleFileInfo {
         private String path;
 
         private File file;
@@ -855,31 +817,5 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
         private FileOrigin fileOrigin;
 
         private OutputFileNotValidReason notValidReason;
-    }
-
-    @AllArgsConstructor
-    @Getter
-    @Setter
-    private static class FilesInfo {
-        private InputFileInfo upperFileInfo;
-
-        private InputFileInfo lowerFileInfo;
-
-        private MergedFileInfo mergedFileInfo;
-
-        private Subtitles mergedSubtitles;
-
-        boolean upperFileOk() {
-            return inputFileOk(upperFileInfo);
-        }
-
-        boolean lowerFileOk() {
-            return inputFileOk(lowerFileInfo);
-        }
-
-        private static boolean inputFileOk(InputFileInfo fileInfo) {
-            return fileInfo != null && !fileInfo.isDuplicate && fileInfo.getNotValidReason() == null
-                    && fileInfo.getSubtitles() != null;
-        }
     }
 }

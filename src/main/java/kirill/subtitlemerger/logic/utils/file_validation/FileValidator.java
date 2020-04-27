@@ -14,21 +14,22 @@ public class FileValidator {
     public static final int PATH_LENGTH_LIMIT = 4096;
 
     public static InputFileInfo getInputFileInfo(String path, InputFileValidationOptions validationOptions) {
+        File file = new File(path);
+
         if (StringUtils.isBlank(path)) {
-            return new InputFileInfo(null, InputFileNotValidReason.PATH_IS_EMPTY, null);
+            return new InputFileInfo(file, InputFileNotValidReason.PATH_IS_EMPTY, null);
         }
 
         if (path.length() > PATH_LENGTH_LIMIT) {
-            return new InputFileInfo(null, InputFileNotValidReason.PATH_IS_TOO_LONG, null);
+            return new InputFileInfo(file, InputFileNotValidReason.PATH_IS_TOO_LONG, null);
         }
 
         try {
             Path.of(path);
         } catch (InvalidPathException e) {
-            return new InputFileInfo(null, InputFileNotValidReason.INVALID_PATH, null);
+            return new InputFileInfo(file, InputFileNotValidReason.INVALID_PATH, null);
         }
 
-        File file = new File(path);
         if (file.isDirectory()) {
             return new InputFileInfo(file, InputFileNotValidReason.IS_A_DIRECTORY, null);
         }
@@ -68,21 +69,22 @@ public class FileValidator {
     }
 
     public static OutputFileInfo getOutputFileInfo(String path, OutputFileValidationOptions validationOptions) {
+        File file = new File(path);
+
         if (StringUtils.isBlank(path)) {
-            return new OutputFileInfo(null, OutputFileNotValidReason.PATH_IS_EMPTY);
+            return new OutputFileInfo(file, OutputFileNotValidReason.PATH_IS_EMPTY);
         }
 
         if (path.length() > PATH_LENGTH_LIMIT) {
-            return new OutputFileInfo(null, OutputFileNotValidReason.PATH_IS_TOO_LONG);
+            return new OutputFileInfo(file, OutputFileNotValidReason.PATH_IS_TOO_LONG);
         }
 
         try {
             Path.of(path);
         } catch (InvalidPathException e) {
-            return new OutputFileInfo(null, OutputFileNotValidReason.INVALID_PATH);
+            return new OutputFileInfo(file, OutputFileNotValidReason.INVALID_PATH);
         }
 
-        File file = new File(path);
         if (file.isDirectory()) {
             return new OutputFileInfo(file, OutputFileNotValidReason.IS_A_DIRECTORY);
         }

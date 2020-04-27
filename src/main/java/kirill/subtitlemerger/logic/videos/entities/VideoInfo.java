@@ -10,6 +10,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * This class contains information about a chosen video. Note that it can be used for files that are not actual
+ * videos as well. For example when the user chooses the directory with videos, each of the files from that directory
+ * will be represented by this class with the appropriate notValidReason, it's done for better diagnostics.
+ */
 @CommonsLog
 @Getter
 public class VideoInfo {

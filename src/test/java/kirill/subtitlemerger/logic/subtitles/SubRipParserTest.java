@@ -1,8 +1,8 @@
-package kirill.subtitlemerger.logic.core;
+package kirill.subtitlemerger.logic.subtitles;
 
-import kirill.subtitlemerger.logic.core.entities.Subtitle;
-import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
-import kirill.subtitlemerger.logic.core.entities.Subtitles;
+import kirill.subtitlemerger.logic.subtitles.entities.Subtitle;
+import kirill.subtitlemerger.logic.subtitles.entities.SubtitleFormatException;
+import kirill.subtitlemerger.logic.subtitles.entities.Subtitles;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
@@ -16,7 +16,7 @@ public class SubRipParserTest {
     public void testBasic() throws IOException, SubtitleFormatException {
         Subtitles subtitles = SubRipParser.from(
                 IOUtils.toString(
-                        getClass().getResourceAsStream("/logic/core/sub_rip_parser/basic.srt"),
+                        getClass().getResourceAsStream("/logic/subtitles/sub_rip_parser/basic.srt"),
                         StandardCharsets.UTF_8
                 )
         );
@@ -41,7 +41,7 @@ public class SubRipParserTest {
     public void testEmptyLines() throws IOException, SubtitleFormatException {
         Subtitles subtitles = SubRipParser.from(
                 IOUtils.toString(
-                        getClass().getResourceAsStream("/logic/core/sub_rip_parser/empty_lines.srt"),
+                        getClass().getResourceAsStream("/logic/subtitles/sub_rip_parser/empty_lines.srt"),
                         StandardCharsets.UTF_8
                 )
         );
@@ -58,7 +58,7 @@ public class SubRipParserTest {
     public void testOneSubtitle() throws IOException, SubtitleFormatException {
         Subtitles subtitles = SubRipParser.from(
                 IOUtils.toString(
-                        getClass().getResourceAsStream("/logic/core/sub_rip_parser/one_subtitle.srt"),
+                        getClass().getResourceAsStream("/logic/subtitles/sub_rip_parser/one_subtitle.srt"),
                         StandardCharsets.UTF_8
                 )
         );
@@ -78,7 +78,7 @@ public class SubRipParserTest {
     public void testTwoSubtitles() throws IOException, SubtitleFormatException {
         Subtitles subtitles = SubRipParser.from(
                 IOUtils.toString(
-                        getClass().getResourceAsStream("/logic/core/sub_rip_parser/two_subtitles.srt"),
+                        getClass().getResourceAsStream("/logic/subtitles/sub_rip_parser/two_subtitles.srt"),
                         StandardCharsets.UTF_8
                 )
         );

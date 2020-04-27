@@ -1,26 +1,26 @@
 package kirill.subtitlemerger.gui.forms.videos.background;
 
 import javafx.application.Platform;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableFileInfo;
 import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableSubtitleOption;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithFiles;
+import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableVideoInfo;
+import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithVideos;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.logic.core.SubRipParser;
-import kirill.subtitlemerger.logic.core.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
-import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
-import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
 import kirill.subtitlemerger.logic.settings.Settings;
+import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndInput;
 import kirill.subtitlemerger.logic.utils.Utils;
 import kirill.subtitlemerger.logic.utils.entities.ActionResult;
+import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
+import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
 import lombok.AllArgsConstructor;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -33,11 +33,11 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
             BuiltInSubtitleOption::getSize
     ).reversed();
 
-    private List<TableFileInfo> displayedTableFilesInfo;
+    private List<TableVideoInfo> displayedTableFilesInfo;
 
     private List<VideoInfo> filesInfo;
 
-    private TableWithFiles tableWithFiles;
+    private TableWithVideos tableWithFiles;
 
     private Ffmpeg ffmpeg;
 
@@ -45,9 +45,9 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
 
     @Override
     public ActionResult run(BackgroundManager backgroundManager) {
-        VideoTabBackgroundUtils.clearActionResults(displayedTableFilesInfo, tableWithFiles, backgroundManager);
+        VideoBackgroundUtils.clearActionResults(displayedTableFilesInfo, tableWithFiles, backgroundManager);
 
-        List<TableFileInfo> selectedTableFilesInfo = VideoTabBackgroundUtils.getSelectedFilesInfo(
+        List<TableVideoInfo> selectedTableFilesInfo = VideoBackgroundUtils.getSelectedFilesInfo(
                 displayedTableFilesInfo,
                 backgroundManager
         );
@@ -63,9 +63,9 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
         backgroundManager.setCancellationDescription("Please be patient, this may take a while depending on the size.");
         backgroundManager.setCancellationPossible(true);
 
-        for (TableFileInfo tableFileInfo : selectedTableFilesInfo) {
+        for (TableVideoInfo tableFileInfo : selectedTableFilesInfo) {
             backgroundManager.updateMessage(
-                    VideoTabBackgroundUtils.getProcessFileProgressMessage(processedCount, allFileCount, tableFileInfo)
+                    VideoBackgroundUtils.getProcessFileProgressMessage(processedCount, allFileCount, tableFileInfo)
             );
 
             VideoInfo fileInfo = VideoInfo.getById(tableFileInfo.getId(), filesInfo);
@@ -125,7 +125,7 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
             }
         }
 
-        return generateActionResult(
+        return getActionResult(
                 allFileCount, processedCount, finishedSuccessfullyCount, notPossibleCount, failedCount
         );
     }
@@ -145,7 +145,7 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
     }
 
     private boolean loadStreams(
-            TableFileInfo tableFileInfo,
+            TableVideoInfo tableFileInfo,
             VideoInfo fileInfo,
             List<BuiltInSubtitleOption> matchingUpperSubtitles,
             List<BuiltInSubtitleOption> matchingLowerSubtitles,
@@ -185,30 +185,36 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
                         ffmpegStream.getFormat(),
                         fileInfo.getFile()
                 );
-                ffmpegStream.setSubtitlesAndSize(SubRipParser.from(subtitleText), subtitleText.getBytes().length);
-
-                Platform.runLater(
-                        () -> tableWithFiles.subtitlesLoadedSuccessfully(
-                                ffmpegStream.getSize(),
-                                tableSubtitleOption,
-                                tableFileInfo
-                        )
+                SubtitlesAndInput subtitlesAndInput = SubtitlesAndInput.from(
+                        subtitleText.getBytes(),
+                        StandardCharsets.UTF_8
                 );
+                if (subtitlesAndInput.isCorrectFormat()) {
+                    ffmpegStream.setSubtitlesAndInput(subtitlesAndInput);
+
+                    Platform.runLater(
+                            () -> tableWithFiles.subtitlesLoadedSuccessfully(
+                                    subtitlesAndInput.getSize(),
+                                    tableSubtitleOption,
+                                    tableFileInfo
+                            )
+                    );
+                } else {
+                    result = false;
+                    Platform.runLater(
+                            () -> tableWithFiles.failedToLoadSubtitles(
+                                    VideoBackgroundUtils.FAILED_TO_LOAD_STREAM_INCORRECT_FORMAT,
+                                    tableSubtitleOption
+                            )
+                    );
+                    failedToLoadForFile++;
+                }
             } catch (FfmpegException e) {
                 log.warn("failed to get subtitle text: " + e.getCode() + ", console output " + e.getConsoleOutput());
                 result = false;
                 Platform.runLater(
                         () -> tableWithFiles.failedToLoadSubtitles(
-                                VideoTabBackgroundUtils.failedToLoadReasonFrom(e.getCode()),
-                                tableSubtitleOption
-                        )
-                );
-                failedToLoadForFile++;
-            } catch (SubtitleFormatException e) {
-                result = false;
-                Platform.runLater(
-                        () -> tableWithFiles.failedToLoadSubtitles(
-                                VideoTabBackgroundUtils.FAILED_TO_LOAD_STREAM_INCORRECT_FORMAT,
+                                VideoBackgroundUtils.failedToLoadReasonFrom(e.getCode()),
                                 tableSubtitleOption
                         )
                 );
@@ -242,8 +248,8 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
 
     private static void setFileInfoError(
             int failedToLoadForFile,
-            TableFileInfo fileInfo,
-            TableWithFiles tableWithFiles
+            TableVideoInfo fileInfo,
+            TableWithVideos tableWithFiles
     ) {
         if (failedToLoadForFile == 0) {
             return;
@@ -258,7 +264,7 @@ public class AutoSelectSubtitlesRunner implements BackgroundRunner<ActionResult>
         Platform.runLater(() -> tableWithFiles.setActionResult(ActionResult.onlyError(message), fileInfo));
     }
 
-    private static ActionResult generateActionResult(
+    private static ActionResult getActionResult(
             int allFileCount,
             int processedCount,
             int finishedSuccessfullyCount,

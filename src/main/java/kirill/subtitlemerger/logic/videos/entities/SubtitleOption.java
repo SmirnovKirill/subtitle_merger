@@ -1,11 +1,13 @@
 package kirill.subtitlemerger.logic.videos.entities;
 
-import kirill.subtitlemerger.logic.core.entities.Subtitles;
+import kirill.subtitlemerger.logic.subtitles.entities.Subtitles;
+import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndInput;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
+import org.jetbrains.annotations.Nullable;
 
-import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Objects;
 
@@ -19,21 +21,30 @@ import java.util.Objects;
 public abstract class SubtitleOption {
     private String id;
 
-    protected Subtitles subtitles;
-
-    protected Integer size;
-
-    protected Charset encoding;
+    @Setter
+    private SubtitlesAndInput subtitlesAndInput;
 
     /**
      * We will keep track of all options for the video even if they can't be used for subtitle merging (for better
      * diagnostics). The enum contains the reason why this option can't be used for the subtitle merging.
      */
-    private OptionNotValidReason notValidReason;
+    private SubtitleOptionNotValidReason notValidReason;
 
     private boolean selectedAsUpper;
 
     private boolean selectedAsLower;
+
+    @Nullable
+    public Subtitles getSubtitles() {
+        return subtitlesAndInput != null && subtitlesAndInput.isCorrectFormat()
+                ? subtitlesAndInput.getSubtitles()
+                : null;
+    }
+
+    @Nullable
+    public Integer getSize() {
+        return subtitlesAndInput != null ? subtitlesAndInput.getSize() : null;
+    }
 
     public void selectAsUpper() {
         selectedAsUpper = true;

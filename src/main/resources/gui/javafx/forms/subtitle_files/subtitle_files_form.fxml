@@ -4,6 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import kirill.subtitlemerger.gui.common_controls.ActionResultPane?>
+<?import kirill.subtitlemerger.gui.common_controls.ProgressPane?>
 <?import kirill.subtitlemerger.gui.forms.subtitle_files.controls.PreviewButton?>
 <?import kirill.subtitlemerger.gui.GuiConstants?>
 <Tab xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
@@ -29,7 +30,7 @@
                 <Region minWidth="10" maxWidth="10"/>
                 <PreviewButton fx:id="upperPreview" onAction="#upperPreviewClicked" disable="true"/>
                 <Region minWidth="20" maxWidth="20"/>
-                <Button fx:id="upperChooseButton" onAction="#upperChooseClicked" text="Choose file"/>
+                <Button fx:id="upperChooseButton" onAction="#upperChooserClicked" text="Choose file"/>
             </HBox>
 
             <Label GridPane.rowIndex="1" GridPane.columnIndex="0"
@@ -39,7 +40,7 @@
                 <Region minWidth="10" maxWidth="10"/>
                 <PreviewButton fx:id="lowerPreview" onAction="#lowerPreviewClicked" disable="true"/>
                 <Region minWidth="20" maxWidth="20"/>
-                <Button fx:id="lowerChooseButton" onAction="#lowerChooseClicked" text="Choose file"/>
+                <Button fx:id="lowerChooseButton" onAction="#lowerChooserClicked" text="Choose file"/>
             </HBox>
 
             <Label GridPane.rowIndex="2" GridPane.columnIndex="0" text="Please choose where to save the result"/>
@@ -48,28 +49,15 @@
                 <Region minWidth="10" maxWidth="10"/>
                 <PreviewButton fx:id="mergedPreview" onAction="#mergedPreviewClicked" disable="true"/>
                 <Region minWidth="20" maxWidth="20"/>
-                <Button fx:id="mergedChooseButton" onAction="#mergedSubtitlesButtonClicked" text="Choose file"/>
+                <Button fx:id="mergedChooseButton" onAction="#mergedChooserClicked" text="Choose file"/>
             </HBox>
 
             <Button fx:id="mergeButton" GridPane.rowIndex="3" GridPane.columnIndex="0" GridPane.columnSpan="2"
                     onAction="#mergeButtonClicked" disable="true" text="Merge subtitles"/>
 
-            <ActionResultPane fx:id="actionResultPane" GridPane.rowIndex="4" GridPane.columnIndex="0"
+            <ActionResultPane fx:id="totalResultPane" GridPane.rowIndex="4" GridPane.columnIndex="0"
                               GridPane.columnSpan="2" wrapText="true"/>
         </GridPane>
-        <VBox fx:id="progressPane" alignment="CENTER" visible="false" spacing="10">
-            <ProgressIndicator fx:id="progressIndicator"/>
-            <Label fx:id="progressLabel"/>
-            <HBox fx:id="cancelTaskPane" alignment="CENTER">
-                <Label fx:id="cancelDescriptionLabel"/>
-                <Label text="If you want to cancel the task click "/>
-                <Hyperlink onAction="#cancelTaskClicked" text="here">
-                    <padding>
-                        <Insets/>
-                    </padding>
-                </Hyperlink>
-                <Label text="."/>
-            </HBox>
-        </VBox>
+        <ProgressPane fx:id="progressPane" visible="false"/>
     </StackPane>
 </Tab>

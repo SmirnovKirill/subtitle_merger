@@ -6,9 +6,10 @@ import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.Optional;
+import java.util.Objects;
 import java.util.prefs.Preferences;
 
 import static kirill.subtitlemerger.logic.settings.SettingType.*;
@@ -52,44 +53,43 @@ public class Settings {
     }
 
     private void initSavedSettings(Preferences preferences) {
-        upperDirectory = getSetting(UPPER_DIRECTORY, Settings::getValidatedDirectory, preferences).orElse(null);
-        lowerDirectory = getSetting(LOWER_DIRECTORY, Settings::getValidatedDirectory, preferences).orElse(null);
-        mergedDirectory = getSetting(MERGED_DIRECTORY, Settings::getValidatedDirectory, preferences).orElse(null);
+        upperDirectory = getSetting(UPPER_DIRECTORY, Settings::getValidatedDirectory, preferences);
+        lowerDirectory = getSetting(LOWER_DIRECTORY, Settings::getValidatedDirectory, preferences);
+        mergedDirectory = getSetting(MERGED_DIRECTORY, Settings::getValidatedDirectory, preferences);
 
-        upperLanguage = getSetting(UPPER_LANGUAGE, Settings::getValidatedLanguage, preferences).orElse(null);
-        lowerLanguage = getSetting(LOWER_LANGUAGE, Settings::getValidatedLanguage, preferences).orElse(null);
-        mergeMode = getSetting(MERGE_MODE, Settings::getValidatedMergeMode, preferences).orElse(null);
-        makeMergedStreamsDefault = getSetting(
-                MAKE_MERGED_STREAMS_DEFAULT,
-                Settings::getValidatedBoolean,
-                preferences
-        ).orElse(false);
-        plainTextSubtitles = getSetting(PLAIN_TEXT_SUBTITLES, Settings::getValidatedBoolean, preferences).orElse(false);
+        upperLanguage = getSetting(UPPER_LANGUAGE, Settings::getValidatedLanguage, preferences);
+        lowerLanguage = getSetting(LOWER_LANGUAGE, Settings::getValidatedLanguage, preferences);
+        mergeMode = getSetting(MERGE_MODE, Settings::getValidatedMergeMode, preferences);
+        makeMergedStreamsDefault = Objects.requireNonNullElse(
+                getSetting(MAKE_MERGED_STREAMS_DEFAULT, Settings::getValidatedBoolean, preferences),
+                false
+        );
+        plainTextSubtitles = Objects.requireNonNullElse(
+                getSetting(PLAIN_TEXT_SUBTITLES, Settings::getValidatedBoolean, preferences),
+                false
+        );
 
-        videosDirectory = getSetting(VIDEOS_DIRECTORY, Settings::getValidatedDirectory, preferences).orElse(null);
-        sortBy = getSetting(SORT_BY, Settings::getValidatedSortBy, preferences).orElse(null);
-        sortDirection = getSetting(SORT_DIRECTION, Settings::getValidatedSortDirection, preferences).orElse(null);
-        externalDirectory = getSetting(EXTERNAL_DIRECTORY, Settings::getValidatedDirectory, preferences).orElse(null);
+        videosDirectory = getSetting(VIDEOS_DIRECTORY, Settings::getValidatedDirectory, preferences);
+        sortBy = getSetting(SORT_BY, Settings::getValidatedSortBy, preferences);
+        sortDirection = getSetting(SORT_DIRECTION, Settings::getValidatedSortDirection, preferences);
+        externalDirectory = getSetting(EXTERNAL_DIRECTORY, Settings::getValidatedDirectory, preferences);
     }
 
     /**
-     * @return the value of the given type from the preferences if the value is not empty and is valid.
+     * @return a value of the given type from the preferences if the value is not empty and is valid.
      */
-    private static <T> Optional<T> getSetting(
-            SettingType settingType,
-            SettingValidator<T> validator,
-            Preferences preferences
-    ) {
+    @Nullable
+    private static <T> T getSetting(SettingType settingType, SettingValidator<T> validator, Preferences preferences) {
         String rawValue = preferences.get(settingType.getCode(), "");
         if (StringUtils.isBlank(rawValue)) {
-            return Optional.empty();
+            return null;
         }
 
         try {
-            return Optional.of(validator.getValidatedValue(rawValue));
+            return validator.getValidatedValue(rawValue);
         } catch (SettingException e) {
             log.warn("incorrect value for " + settingType.getCode() + " in saved preferences: " + e.getMessage());
-            return Optional.empty();
+            return null;
         }
     }
 
@@ -186,7 +186,7 @@ public class Settings {
                 saveSortDirection(SortDirection.ASCENDING.toString());
             }
         } catch (SettingException e) {
-            log.error("failed to save sort parameters, should not happen: " + e.getMessage());
+            log.error("failed to save sort parameters, most likely a bug " + e.getMessage());
         }
     }
 

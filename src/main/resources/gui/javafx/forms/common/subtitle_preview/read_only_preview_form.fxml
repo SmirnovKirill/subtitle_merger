@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import kirill.subtitlemerger.gui.common_controls.ProgressPane?>
+<?import kirill.subtitlemerger.gui.GuiConstants?>
+<StackPane xmlns:fx="http://javafx.com/fxml"
+           fx:controller="kirill.subtitlemerger.gui.forms.common.subtitle_preview.ReadOnlyPreviewFormController"
+           prefWidth="900" prefHeight="600" stylesheets="/gui/javafx/forms/common/subtitle_preview/preview_form.css">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <VBox fx:id="mainPane" spacing="10">
+        <Label fx:id="title" maxWidth="Infinity" alignment="CENTER" wrapText="true"/>
+        <HBox fx:id="upperSubtitlesPane" alignment="CENTER_LEFT">
+            <Label text="&#8226; "/>
+            <Label fx:id="upperSubtitlesTitle"/>
+        </HBox>
+        <HBox fx:id="lowerSubtitlesPane" alignment="CENTER_LEFT">
+            <Label text="&#8226; "/>
+            <Label fx:id="lowerSubtitlesTitle"/>
+        </HBox>
+        <Label visible="${controller.linesTruncated}" managed="${controller.linesTruncated}"
+               text="Lines that are longer than 1000 symbols were truncated">
+            <styleClass><GuiConstants fx:constant="LABEL_WARN_CLASS"/></styleClass>
+        </Label>
+        <ListView fx:id="listView" VBox.vgrow="ALWAYS" focusTraversable="false"/>
+        <HBox alignment="CENTER" spacing="10">
+            <Button onAction="#okButtonClicked" text="OK"/>
+        </HBox>
+    </VBox>
+    <ProgressPane fx:id="progressPane" visible="false"/>
+</StackPane>

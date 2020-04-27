@@ -1,11 +1,13 @@
 package kirill.subtitlemerger.gui.utils;
 
-import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.IntegerExpression;
+import javafx.beans.binding.StringBinding;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
@@ -13,14 +15,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Region;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 import kirill.subtitlemerger.gui.GuiConstants;
-import kirill.subtitlemerger.gui.forms.common.ErrorPopupFormController;
-import kirill.subtitlemerger.gui.forms.common.agreement_popup.AgreementPopupFormController;
-import kirill.subtitlemerger.gui.forms.common.agreement_popup.AgreementResult;
 import kirill.subtitlemerger.gui.utils.entities.FormInfo;
+import kirill.subtitlemerger.logic.utils.Utils;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -90,81 +88,28 @@ public class GuiUtils {
         }
     }
 
-    public static Stage generatePopupStage(String title, Parent rootNode, Stage ownerStage) {
-        Stage result = new Stage();
-
-        result.initOwner(ownerStage);
-        result.initModality(Modality.APPLICATION_MODAL);
-        result.setTitle(title);
-        result.setResizable(false);
-
-        Scene scene = new Scene(rootNode);
-        scene.getStylesheets().add("/gui/javafx/style.css");
-        result.setScene(scene);
-
-        return result;
-    }
-
-    public static void showErrorPopup(String message, Stage ownerStage) {
-        FormInfo nodeInfo = loadForm("/gui/javafx/forms/common/error_popup_form.fxml");
-
-        Stage popupStage = generatePopupStage("Error!", nodeInfo.getRootNode(), ownerStage);
-
-        ErrorPopupFormController controller = nodeInfo.getController();
-        controller.initialize(message, popupStage);
-
-        popupStage.showAndWait();
-    }
-
-    public static AgreementResult showAgreementPopup(
-            String message,
-            String applyToAllText,
-            String yesText,
-            String noText,
-            Stage ownerStage
-    ) {
-        FormInfo nodeInfo = loadForm("/gui/javafx/forms/common/agreement_popup_form.fxml");
-
-        Stage popupStage = generatePopupStage("Please confirm", nodeInfo.getRootNode(), ownerStage);
-
-        AgreementPopupFormController controller = nodeInfo.getController();
-        controller.initialize(message, applyToAllText, yesText, noText, popupStage);
-
-        popupStage.showAndWait();
-
-        return controller.getResult();
-    }
-
-    /**
-     * A brief version of the agreement popup without an "apply to all" option.
-     */
-    public static boolean showAgreementPopup(String message, String yesText, String noText, Stage ownerStage) {
-        AgreementResult result = showAgreementPopup(message, null, yesText, noText, ownerStage);
-        return result == AgreementResult.YES;
-    }
-
     public static void setVisibleAndManaged(Node node, boolean value) {
         node.setVisible(value);
         node.setManaged(value);
     }
 
-    public static void bindVisibleAndManaged(Node node, BooleanBinding binding) {
-        node.visibleProperty().bind(binding);
-        node.managedProperty().bind(binding);
+    public static void bindVisibleAndManaged(Node node, ObservableValue<? extends Boolean> value) {
+        node.visibleProperty().bind(value);
+        node.managedProperty().bind(value);
     }
 
     /**
-     * Sets the change listeners so that the value handler method will be invoked each time the Enter button is pressed
-     * or the focus is lost.
+     * Configures the text field so that the value processor is invoked each time the Enter button is pressed or the
+     * focus is lost.
      */
-    public static void setTextFieldChangeListeners(TextField textField, Consumer<String> valueHandler) {
+    public static void setTextEnteredHandler(TextField textField, Consumer<String> valueProcessor) {
         textField.focusedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
                 return;
             }
 
             String value = textField.getText();
-            valueHandler.accept(value);
+            valueProcessor.accept(value);
         });
 
         textField.setOnKeyPressed(keyEvent -> {
@@ -173,21 +118,21 @@ public class GuiUtils {
             }
 
             String value = textField.getText();
-            valueHandler.accept(value);
+            valueProcessor.accept(value);
         });
     }
 
-    public static Button generateImageButton(String text, String imageUrl, int width, int height) {
+    public static Button getImageButton(String text, String imageUrl, int width, int height) {
         Button result = new Button(text);
 
         result.getStyleClass().add(GuiConstants.IMAGE_BUTTON_CLASS);
 
-        result.setGraphic(generateImageView(imageUrl, width, height));
+        result.setGraphic(getImageView(imageUrl, width, height));
 
         return result;
     }
 
-    public static ImageView generateImageView(String imageUrl, int width, int height) {
+    public static ImageView getImageView(String imageUrl, int width, int height) {
         ImageView result = new ImageView(new Image(imageUrl));
 
         result.setFitWidth(width);
@@ -199,7 +144,7 @@ public class GuiUtils {
     /**
      * Generates the tooltip that is shown indefinitely and without delays.
      */
-    public static Tooltip generateTooltip(String text) {
+    public static Tooltip getTooltip(String text) {
         Tooltip result = new Tooltip(text);
 
         setTooltipProperties(result);
@@ -215,7 +160,7 @@ public class GuiUtils {
     /**
      * Generates the tooltip that is shown indefinitely and without delays.
      */
-    public static Tooltip generateTooltip(StringProperty text) {
+    public static Tooltip getTooltip(StringProperty text) {
         Tooltip result = new Tooltip();
 
         result.textProperty().bind(text);
@@ -224,7 +169,7 @@ public class GuiUtils {
         return result;
     }
 
-    public static Region generateFixedHeightSpacer(int height) {
+    public static Region getFixedHeightSpacer(int height) {
         Region result = new Region();
 
         result.setMinHeight(height);
@@ -236,5 +181,30 @@ public class GuiUtils {
     public static void setFixedWidth(Region region, int width) {
         region.setMinWidth(width);
         region.setMaxWidth(width);
+    }
+
+    /**
+     * This method is helpful for displaying English texts.
+     *
+     * @param count the observable value with the number of items
+     * @param oneItemText the text to return when there is only one item, this text can't use any format arguments
+     *                   because there is always only one item
+     * @param zeroOrSeveralItemsText the text to return when there are zero or several items, this text can use the
+     *                               format argument %d inside
+     * @return a binding that returns the text depending on the count.
+     */
+    /*
+     * This method is here and not in the regular Utils class because it uses observable values that are part of the
+     * JavaFX and thus gui-specific.
+     */
+    public static StringBinding getTextDependingOnCount(
+            IntegerExpression count,
+            String oneItemText,
+            String zeroOrSeveralItemsText
+    ) {
+        return Bindings.createStringBinding(
+                () -> Utils.getTextDependingOnCount(count.getValue(), oneItemText, zeroOrSeveralItemsText),
+                count
+        );
     }
 }
