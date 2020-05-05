@@ -174,17 +174,11 @@ public class SettingsFormController {
                 throw new IllegalStateException();
         }
 
-        try {
-            settings.saveMergeMode(mergeMode.toString());
-            context.getMissingSettings().remove(SettingType.MERGE_MODE);
-            setMakeDefaultVisible(settings.getMergeMode() == MergeMode.ORIGINAL_VIDEOS);
+        settings.save(mergeMode, SettingType.MERGE_MODE);
+        context.getMissingSettings().remove(SettingType.MERGE_MODE);
+        setMakeDefaultVisible(settings.getMergeMode() == MergeMode.ORIGINAL_VIDEOS);
 
-            actionResultPane.setOnlySuccess("The merge mode has been saved successfully");
-        } catch (SettingException e) {
-            log.error("merge mode hasn't been saved: " + ExceptionUtils.getStackTrace(e));
-
-            actionResultPane.setOnlyError("Something bad has happened, the merge mode hasn't been saved");
-        }
+        actionResultPane.setOnlySuccess("The merge mode has been saved successfully");
     }
 
     private void videosInProgressChanged(
@@ -216,20 +210,14 @@ public class SettingsFormController {
 
         boolean hadValueBefore = settings.getUpperLanguage() != null;
 
-        try {
-            settings.saveUpperLanguage(value.toString());
-            context.getMissingSettings().remove(SettingType.UPPER_LANGUAGE);
-            swapButton.setDisable(settings.getUpperLanguage() == null || settings.getLowerLanguage() == null);
+        settings.save(value, SettingType.UPPER_LANGUAGE);
+        context.getMissingSettings().remove(SettingType.UPPER_LANGUAGE);
+        swapButton.setDisable(settings.getUpperLanguage() == null || settings.getLowerLanguage() == null);
 
-            if (hadValueBefore) {
-                actionResultPane.setOnlySuccess("The language for upper subtitles has been updated successfully");
-            } else {
-                actionResultPane.setOnlySuccess("The language for upper subtitles has been saved successfully");
-            }
-        } catch (SettingException e) {
-            log.error("language for upper subtitles has not been saved: " + ExceptionUtils.getStackTrace(e));
-
-            actionResultPane.setOnlyError("Something bad has happened, the language hasn't been saved");
+        if (hadValueBefore) {
+            actionResultPane.setOnlySuccess("The language for upper subtitles has been updated successfully");
+        } else {
+            actionResultPane.setOnlySuccess("The language for upper subtitles has been saved successfully");
         }
     }
 
@@ -238,19 +226,13 @@ public class SettingsFormController {
         LanguageAlpha3Code oldUpperLanguage = settings.getUpperLanguage();
         LanguageAlpha3Code oldLowerLanguage = settings.getLowerLanguage();
 
-        try {
-            settings.saveUpperLanguage(oldLowerLanguage.toString());
-            upperLanguageComboBox.getSelectionModel().select(oldLowerLanguage);
+        settings.save(oldLowerLanguage, SettingType.UPPER_LANGUAGE);
+        upperLanguageComboBox.getSelectionModel().select(oldLowerLanguage);
 
-            settings.saveLowerLanguage(oldUpperLanguage.toString());
-            lowerLanguageComboBox.getSelectionModel().select(oldUpperLanguage);
+        settings.save(oldUpperLanguage, SettingType.LOWER_LANGUAGE);
+        lowerLanguageComboBox.getSelectionModel().select(oldUpperLanguage);
 
-            actionResultPane.setOnlySuccess("The languages have been swapped successfully");
-        } catch (SettingException e) {
-            log.error("languages haven't been swapped: " + ExceptionUtils.getStackTrace(e));
-
-            actionResultPane.setOnlyError("Something bad has happened, the languages haven't been swapped");
-        }
+        actionResultPane.setOnlySuccess("The languages have been swapped successfully");
     }
 
     @FXML
@@ -268,20 +250,14 @@ public class SettingsFormController {
 
         boolean hadValueBefore = settings.getLowerLanguage() != null;
 
-        try {
-            settings.saveLowerLanguage(value.toString());
-            context.getMissingSettings().remove(SettingType.LOWER_LANGUAGE);
-            swapButton.setDisable(settings.getUpperLanguage() == null || settings.getLowerLanguage() == null);
+        settings.save(value, SettingType.LOWER_LANGUAGE);
+        context.getMissingSettings().remove(SettingType.LOWER_LANGUAGE);
+        swapButton.setDisable(settings.getUpperLanguage() == null || settings.getLowerLanguage() == null);
 
-            if (hadValueBefore) {
-                actionResultPane.setOnlySuccess("The language for lower subtitles has been updated successfully");
-            } else {
-                actionResultPane.setOnlySuccess("The language for lower subtitles has been saved successfully");
-            }
-        } catch (SettingException e) {
-            log.error("language for lower subtitles has not been saved: " + ExceptionUtils.getStackTrace(e));
-
-            actionResultPane.setOnlyError("Something bad has happened, the language hasn't been saved");
+        if (hadValueBefore) {
+            actionResultPane.setOnlySuccess("The language for lower subtitles has been updated successfully");
+        } else {
+            actionResultPane.setOnlySuccess("The language for lower subtitles has been saved successfully");
         }
     }
 
@@ -289,18 +265,12 @@ public class SettingsFormController {
     private void makeDefaultClicked() {
         boolean makeDefault = makeDefaultCheckBox.isSelected();
 
-        try {
-            settings.saveMakeMergedStreamsDefault(Boolean.toString(makeDefault));
+        settings.save(makeDefault, SettingType.MAKE_MERGED_STREAMS_DEFAULT);
 
-            if (makeDefault) {
-                actionResultPane.setOnlySuccess("Merged subtitles will be selected as default from now on");
-            } else {
-                actionResultPane.setOnlySuccess("Merged subtitles will not be selected as default from now on");
-            }
-        } catch (SettingException e) {
-            log.error("failed to save mark stream as default flag: " + ExceptionUtils.getStackTrace(e));
-
-            actionResultPane.setOnlyError("Something bad has happened, the flag value hasn't been saved");
+        if (makeDefault) {
+            actionResultPane.setOnlySuccess("Merged subtitles will be selected as default from now on");
+        } else {
+            actionResultPane.setOnlySuccess("Merged subtitles will not be selected as default from now on");
         }
     }
 
@@ -309,7 +279,7 @@ public class SettingsFormController {
         boolean plainText = plainTextCheckBox.isSelected();
 
         try {
-            settings.savePlainTextSubtitles(Boolean.toString(plainText));
+            settings.save(plainText, SettingType.PLAIN_TEXT_SUBTITLES);
 
             if (plainText) {
                 actionResultPane.setOnlySuccess("Merged subtitles will be in plain text from now on");

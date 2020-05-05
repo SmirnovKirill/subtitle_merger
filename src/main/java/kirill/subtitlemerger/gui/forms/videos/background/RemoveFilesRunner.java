@@ -1,12 +1,12 @@
 package kirill.subtitlemerger.gui.forms.videos.background;
 
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableData;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableVideoInfo;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithVideos;
+import kirill.subtitlemerger.gui.forms.videos.table.TableData;
+import kirill.subtitlemerger.gui.forms.videos.table.TableMode;
+import kirill.subtitlemerger.gui.forms.videos.table.TableVideo;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.logic.settings.Settings;
-import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
+import kirill.subtitlemerger.logic.videos.entities.Video;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -15,13 +15,13 @@ import java.util.stream.Collectors;
 
 @AllArgsConstructor
 public class RemoveFilesRunner implements BackgroundRunner<RemoveFilesRunner.Result> {
-    private List<VideoInfo> originalFilesInfo;
+    private List<Video> originalFilesInfo;
 
-    private TableWithVideos.Mode mode;
+    private TableMode mode;
 
-    private List<TableVideoInfo> originalAllTableFilesInfo;
+    private List<TableVideo> originalAllTableFilesInfo;
 
-    private List<TableVideoInfo> originalTableFilesToShowInfo;
+    private List<TableVideo> originalTableFilesToShowInfo;
 
     private Settings settings;
 
@@ -32,13 +32,13 @@ public class RemoveFilesRunner implements BackgroundRunner<RemoveFilesRunner.Res
         backgroundManager.setIndeterminateProgress();
         backgroundManager.updateMessage("Removing files...");
 
-        List<VideoInfo> filesInfo = originalFilesInfo.stream()
+        List<Video> filesInfo = originalFilesInfo.stream()
                 .filter(fileInfo -> !selectedFileIds.contains(fileInfo.getId()))
                 .collect(Collectors.toList());
-        List<TableVideoInfo> allTableFilesInfo = originalAllTableFilesInfo.stream()
+        List<TableVideo> allTableFilesInfo = originalAllTableFilesInfo.stream()
                 .filter(fileInfo -> !selectedFileIds.contains(fileInfo.getId()))
                 .collect(Collectors.toList());
-        List<TableVideoInfo> tableFilesToShowInfo = originalTableFilesToShowInfo.stream()
+        List<TableVideo> tableFilesToShowInfo = originalTableFilesToShowInfo.stream()
                 .filter(fileInfo -> !selectedFileIds.contains(fileInfo.getId()))
                 .collect(Collectors.toList());
 
@@ -46,7 +46,7 @@ public class RemoveFilesRunner implements BackgroundRunner<RemoveFilesRunner.Res
                 originalFilesInfo.size() - filesInfo.size(),
                 filesInfo,
                 allTableFilesInfo,
-                VideoBackgroundUtils.getTableData(
+                VideosBackgroundUtils.getTableData(
                         mode,
                         tableFilesToShowInfo,
                         settings.getSortBy(),
@@ -57,15 +57,15 @@ public class RemoveFilesRunner implements BackgroundRunner<RemoveFilesRunner.Res
     }
 
     private static List<String> getSelectedFileIds(
-            List<TableVideoInfo> filesInfo,
+            List<TableVideo> filesInfo,
             BackgroundManager backgroundManager
     ) {
         backgroundManager.setIndeterminateProgress();
         backgroundManager.updateMessage("Getting list of files to remove...");
 
         return filesInfo.stream()
-                .filter(TableVideoInfo::isSelected)
-                .map(TableVideoInfo::getId)
+                .filter(TableVideo::isSelected)
+                .map(TableVideo::getId)
                 .collect(Collectors.toList());
     }
 
@@ -74,9 +74,9 @@ public class RemoveFilesRunner implements BackgroundRunner<RemoveFilesRunner.Res
     public static class Result {
         private int removedCount;
 
-        private List<VideoInfo> filesInfo;
+        private List<Video> filesInfo;
 
-        private List<TableVideoInfo> allTableFilesInfo;
+        private List<TableVideo> allTableFilesInfo;
 
         private TableData tableData;
     }

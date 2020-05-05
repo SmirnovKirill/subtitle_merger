@@ -1,12 +1,13 @@
 package kirill.subtitlemerger.gui.forms.videos.background;
 
 import kirill.subtitlemerger.gui.GuiContext;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableData;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableVideoInfo;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithVideos;
+import kirill.subtitlemerger.gui.forms.videos.table.TableData;
+import kirill.subtitlemerger.gui.forms.videos.table.TableMode;
+import kirill.subtitlemerger.gui.forms.videos.table.TableVideo;
+import kirill.subtitlemerger.gui.forms.videos.table.TableWithVideos;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
+import kirill.subtitlemerger.logic.videos.entities.Video;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -17,20 +18,23 @@ import java.util.List;
 public class LoadSeparateFilesRunner implements BackgroundRunner<LoadSeparateFilesRunner.Result> {
     private List<File> files;
 
+    private TableWithVideos table;
+
     private GuiContext context;
 
     @Override
     public Result run(BackgroundManager backgroundManager) {
-        List<VideoInfo> filesInfo = VideoBackgroundUtils.getVideosInfo(files, context.getFfprobe(), backgroundManager);
-        List<TableVideoInfo> allTableFilesInfo = VideoBackgroundUtils.tableVideosInfoFrom(
+        List<Video> filesInfo = VideosBackgroundUtils.getVideos(files, context.getFfprobe(), backgroundManager);
+        List<TableVideo> allTableFilesInfo = VideosBackgroundUtils.tableVideosFrom(
                 filesInfo,
                 true,
                 true,
+                table,
                 context.getSettings(),
                 backgroundManager
         );
 
-        List<TableVideoInfo> tableFilesToShowInfo = VideoBackgroundUtils.getSortedVideosInfo(
+        List<TableVideo> tableFilesToShowInfo = VideosBackgroundUtils.getSortedVideos(
                 allTableFilesInfo,
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
@@ -40,8 +44,8 @@ public class LoadSeparateFilesRunner implements BackgroundRunner<LoadSeparateFil
         return new Result(
                 filesInfo,
                 allTableFilesInfo,
-                VideoBackgroundUtils.getTableData(
-                        TableWithVideos.Mode.SEPARATE_FILES,
+                VideosBackgroundUtils.getTableData(
+                        TableMode.SEPARATE_VIDEOS,
                         tableFilesToShowInfo,
                         context.getSettings().getSortBy(),
                         context.getSettings().getSortDirection(),
@@ -53,9 +57,9 @@ public class LoadSeparateFilesRunner implements BackgroundRunner<LoadSeparateFil
     @AllArgsConstructor
     @Getter
     public static class Result {
-        private List<VideoInfo> filesInfo;
+        private List<Video> filesInfo;
 
-        private List<TableVideoInfo> allTableFilesInfo;
+        private List<TableVideo> allTableFilesInfo;
 
         private TableData tableData;
     }

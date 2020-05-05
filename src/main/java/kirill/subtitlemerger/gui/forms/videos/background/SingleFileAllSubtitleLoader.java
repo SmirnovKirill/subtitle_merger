@@ -1,9 +1,8 @@
 package kirill.subtitlemerger.gui.forms.videos.background;
 
 import javafx.application.Platform;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableSubtitleOption;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableVideoInfo;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithVideos;
+import kirill.subtitlemerger.gui.forms.videos.table.TableSubtitleOption;
+import kirill.subtitlemerger.gui.forms.videos.table.TableVideo;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
@@ -11,20 +10,21 @@ import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndInput;
 import kirill.subtitlemerger.logic.utils.entities.ActionResult;
 import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
-import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
+import kirill.subtitlemerger.logic.videos.entities.Video;
 import lombok.AllArgsConstructor;
 import lombok.extern.apachecommons.CommonsLog;
 
 import java.nio.charset.StandardCharsets;
 
+import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackgroundUtils.FAILED_TO_LOAD_INCORRECT_FORMAT;
+import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackgroundUtils.failedToLoadReasonFrom;
+
 @CommonsLog
 @AllArgsConstructor
 public class SingleFileAllSubtitleLoader implements BackgroundRunner<ActionResult> {
-    private VideoInfo fileInfo;
+    private Video fileInfo;
 
-    private TableVideoInfo tableFileInfo;
-
-    private TableWithVideos tableWithFiles;
+    private TableVideo tableFileInfo;
 
     private Ffmpeg ffmpeg;
 
@@ -45,7 +45,7 @@ public class SingleFileAllSubtitleLoader implements BackgroundRunner<ActionResul
             }
 
             backgroundManager.updateMessage(
-                    VideoBackgroundUtils.getLoadSubtitlesProgressMessage(
+                    VideosBackgroundUtils.getLoadSubtitlesProgressMessage(
                             processedCount,
                             streamToLoadCount,
                             ffmpegStream,
@@ -71,33 +71,15 @@ public class SingleFileAllSubtitleLoader implements BackgroundRunner<ActionResul
 
                 if (subtitlesAndInput.isCorrectFormat()) {
                     ffmpegStream.setSubtitlesAndInput(subtitlesAndInput);
-
-                    Platform.runLater(
-                            () -> tableWithFiles.subtitlesLoadedSuccessfully(
-                                    subtitlesAndInput.getSize(),
-                                    tableSubtitleOption,
-                                    tableFileInfo
-                            )
-                    );
-
+                    Platform.runLater(() -> tableSubtitleOption.loadedSuccessfully(subtitlesAndInput.getSize()));
                     loadedSuccessfullyCount++;
                 } else {
-                    Platform.runLater(
-                            () -> tableWithFiles.failedToLoadSubtitles(
-                                    VideoBackgroundUtils.FAILED_TO_LOAD_STREAM_INCORRECT_FORMAT,
-                                    tableSubtitleOption
-                            )
-                    );
+                    Platform.runLater(() -> tableSubtitleOption.failedToLoad(FAILED_TO_LOAD_INCORRECT_FORMAT));
                     failedToLoadCount++;
                 }
             } catch (FfmpegException e) {
                 log.warn("failed to get subtitle text: " + e.getCode() + ", console output " + e.getConsoleOutput());
-                Platform.runLater(
-                        () -> tableWithFiles.failedToLoadSubtitles(
-                                VideoBackgroundUtils.failedToLoadReasonFrom(e.getCode()),
-                                tableSubtitleOption
-                        )
-                );
+                Platform.runLater(() -> tableSubtitleOption.failedToLoad(failedToLoadReasonFrom(e.getCode())));
                 failedToLoadCount++;
             } catch (InterruptedException e) {
                 break;
@@ -106,7 +88,7 @@ public class SingleFileAllSubtitleLoader implements BackgroundRunner<ActionResul
             processedCount++;
         }
 
-        return VideoBackgroundUtils.getSubtitleLoadingActionResult(
+        return VideosBackgroundUtils.getSubtitleLoadingActionResult(
                 streamToLoadCount,
                 processedCount,
                 loadedSuccessfullyCount,
@@ -114,7 +96,7 @@ public class SingleFileAllSubtitleLoader implements BackgroundRunner<ActionResul
         );
     }
 
-    private static int getStreamToLoadCount(VideoInfo fileInfo, BackgroundManager backgroundManager) {
+    private static int getStreamToLoadCount(Video fileInfo, BackgroundManager backgroundManager) {
         backgroundManager.setIndeterminateProgress();
         backgroundManager.updateMessage("Calculating number of subtitles to load...");
 

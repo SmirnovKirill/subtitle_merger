@@ -49,7 +49,7 @@ public class ChoiceFormController {
         }
 
         if (files.size() > GuiConstants.TABLE_FILE_LIMIT) {
-            Popups.showErrorPopup(
+            Popups.showError(
                     String.format(
                             "Unfortunately, it's impossible to add more than %d files",
                             GuiConstants.TABLE_FILE_LIMIT
@@ -60,6 +60,7 @@ public class ChoiceFormController {
             return;
         }
 
+        context.setVideosInProgress(true);
         videosFormController.setActivePane(ActivePane.MAIN);
         videosFormController.processChosenFiles(files);
     }
@@ -68,7 +69,7 @@ public class ChoiceFormController {
         FileChooser fileChooser = new FileChooser();
 
         fileChooser.setTitle("Please choose videos");
-        fileChooser.setInitialDirectory(settings.getVideosDirectory());
+        fileChooser.setInitialDirectory(settings.getVideoDirectory());
         fileChooser.getExtensionFilters().add(GuiConstants.VIDEO_EXTENSION_FILTER);
 
         return fileChooser.showOpenMultipleDialog(stage);
@@ -81,6 +82,7 @@ public class ChoiceFormController {
             return;
         }
 
+        context.setVideosInProgress(true);
         videosFormController.setActivePane(ActivePane.MAIN);
         videosFormController.processChosenDirectory(directory);
     }
@@ -90,7 +92,7 @@ public class ChoiceFormController {
         DirectoryChooser directoryChooser = new DirectoryChooser();
 
         directoryChooser.setTitle("Choose a directory with videos");
-        directoryChooser.setInitialDirectory(settings.getVideosDirectory());
+        directoryChooser.setInitialDirectory(settings.getVideoDirectory());
 
         return directoryChooser.showDialog(stage);
     }

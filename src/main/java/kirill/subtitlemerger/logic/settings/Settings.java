@@ -2,262 +2,254 @@ package kirill.subtitlemerger.logic.settings;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import kirill.subtitlemerger.logic.LogicConstants;
-import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.Objects;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.prefs.Preferences;
 
 import static kirill.subtitlemerger.logic.settings.SettingType.*;
 
 @CommonsLog
-@Getter
 public class Settings {
     private static final String PREFERENCES_ROOT_NODE = "subtitle-merger";
 
     private Preferences preferences;
 
-    private File upperDirectory;
-
-    private File lowerDirectory;
-
-    private File mergedDirectory;
-
-    private LanguageAlpha3Code upperLanguage;
-
-    private LanguageAlpha3Code lowerLanguage;
-
-    private MergeMode mergeMode;
-
-    private boolean makeMergedStreamsDefault;
-
-    private boolean plainTextSubtitles;
-
-    private File videosDirectory;
-
-    private SortBy sortBy;
-
-    private SortDirection sortDirection;
-
-    private File externalDirectory;
+    private Map<SettingType, Object> settings;
 
     public Settings() {
         preferences = Preferences.userRoot().node(PREFERENCES_ROOT_NODE);
-        initSavedSettings(preferences);
-
-        setDefaultSettings();
+        settings = getSavedSettings(preferences);
+        setDefaultSettings(settings);
     }
 
-    private void initSavedSettings(Preferences preferences) {
-        upperDirectory = getSetting(UPPER_DIRECTORY, Settings::getValidatedDirectory, preferences);
-        lowerDirectory = getSetting(LOWER_DIRECTORY, Settings::getValidatedDirectory, preferences);
-        mergedDirectory = getSetting(MERGED_DIRECTORY, Settings::getValidatedDirectory, preferences);
+    private static Map<SettingType, Object> getSavedSettings(Preferences preferences) {
+        Map<SettingType, Object> result = new HashMap<>();
 
-        upperLanguage = getSetting(UPPER_LANGUAGE, Settings::getValidatedLanguage, preferences);
-        lowerLanguage = getSetting(LOWER_LANGUAGE, Settings::getValidatedLanguage, preferences);
-        mergeMode = getSetting(MERGE_MODE, Settings::getValidatedMergeMode, preferences);
-        makeMergedStreamsDefault = Objects.requireNonNullElse(
-                getSetting(MAKE_MERGED_STREAMS_DEFAULT, Settings::getValidatedBoolean, preferences),
-                false
-        );
-        plainTextSubtitles = Objects.requireNonNullElse(
-                getSetting(PLAIN_TEXT_SUBTITLES, Settings::getValidatedBoolean, preferences),
-                false
-        );
+        for (SettingType settingType : SettingType.values()) {
+            String rawValue = preferences.get(settingType.getCode(), "");
+            if (StringUtils.isEmpty(rawValue)) {
+                result.put(settingType, null);
+                continue;
+            }
 
-        videosDirectory = getSetting(VIDEOS_DIRECTORY, Settings::getValidatedDirectory, preferences);
-        sortBy = getSetting(SORT_BY, Settings::getValidatedSortBy, preferences);
-        sortDirection = getSetting(SORT_DIRECTION, Settings::getValidatedSortDirection, preferences);
-        externalDirectory = getSetting(EXTERNAL_DIRECTORY, Settings::getValidatedDirectory, preferences);
+            try {
+                Object convertedObject = stringToObject(rawValue, settingType);
+                validateObject(convertedObject, settingType);
+                result.put(settingType, convertedObject);
+            } catch (SettingException e) {
+                log.warn("incorrect " + settingType + " value in saved settings: " + e.getMessage());
+                result.put(settingType, null);
+            }
+        }
+
+        return result;
+    }
+
+    private static Object stringToObject(String string, SettingType settingType) {
+        if (StringUtils.isEmpty(string)) {
+            return null;
+        }
+
+        switch (settingType) {
+            case UPPER_DIRECTORY:
+            case LOWER_DIRECTORY:
+            case MERGED_DIRECTORY:
+            case VIDEO_DIRECTORY:
+            case VIDEO_SUBTITLE_DIRECTORY:
+                return new File(string);
+            case UPPER_LANGUAGE:
+            case LOWER_LANGUAGE:
+                LanguageAlpha3Code languageCode = LanguageAlpha3Code.getByCodeIgnoreCase(string);
+                if (languageCode == null) {
+                    throw new SettingException("incorrect language code: " + string);
+                }
+                return languageCode;
+            case MERGE_MODE:
+                MergeMode mergeMode = EnumUtils.getEnum(MergeMode.class, string);
+                if (mergeMode == null) {
+                    throw new SettingException("incorrect merge code: " + string);
+                }
+                return mergeMode;
+            case MAKE_MERGED_STREAMS_DEFAULT:
+            case PLAIN_TEXT_SUBTITLES:
+                if ("true".equals(string)) {
+                    return true;
+                } else if ("false".equals(string)) {
+                    return false;
+                } else {
+                    throw new SettingException("incorrect boolean value: " + string);
+                }
+            case SORT_BY:
+                SortBy sortBy = EnumUtils.getEnum(SortBy.class, string);
+                if (sortBy == null) {
+                    throw new SettingException("incorrect sort by: " + string);
+                }
+                return sortBy;
+            case SORT_DIRECTION:
+                SortDirection sortDirection = EnumUtils.getEnum(SortDirection.class, string);
+                if (sortDirection == null) {
+                    throw new SettingException("incorrect sort direction: " + string);
+                }
+                return sortDirection;
+            default:
+                log.error("unexpected setting type: " + settingType + ", most likely a bug");
+                throw new IllegalStateException();
+        }
+    }
+
+    @SuppressWarnings("WeakerAccess")
+    public static void validateObject(Object object, SettingType settingType) throws SettingException {
+        if (!settingType.getObjectClass().isInstance(object)) {
+            log.error("incorrect class for object of " + settingType + ", most likely a bug");
+            throw new IllegalStateException();
+        }
+
+        switch (settingType) {
+            case UPPER_DIRECTORY:
+            case LOWER_DIRECTORY:
+            case MERGED_DIRECTORY:
+            case VIDEO_DIRECTORY:
+            case VIDEO_SUBTITLE_DIRECTORY:
+                validateDirectory((File) object);
+                return;
+            case UPPER_LANGUAGE:
+            case LOWER_LANGUAGE:
+                validateLanguage((LanguageAlpha3Code) object);
+                return;
+            case MERGE_MODE:
+            case MAKE_MERGED_STREAMS_DEFAULT:
+            case PLAIN_TEXT_SUBTITLES:
+            case SORT_BY:
+            case SORT_DIRECTION:
+                /*
+                 * Don't do anything here because if the object was converted then it's valid.
+                 */
+                return;
+            default:
+                log.error("unexpected setting type: " + settingType + ", most likely a bug");
+                throw new IllegalStateException();
+        }
+    }
+
+    private static void validateDirectory(File directory) {
+        if (!directory.isDirectory()) {
+            throw new SettingException(directory.getAbsolutePath() + " does not exist or is not a directory");
+        }
+    }
+
+    private static void validateLanguage(LanguageAlpha3Code language) {
+        if (!LogicConstants.ALLOWED_LANGUAGES.contains(language)) {
+            throw new SettingException("language " + language.getName() + " is not allowed");
+        }
+    }
+
+    private static void setDefaultSettings(Map<SettingType, Object> savedSettings) {
+        savedSettings.putIfAbsent(SORT_BY, SortBy.MODIFICATION_TIME);
+        savedSettings.putIfAbsent(SORT_DIRECTION, SortDirection.ASCENDING);
+        savedSettings.putIfAbsent(MAKE_MERGED_STREAMS_DEFAULT, false);
+        savedSettings.putIfAbsent(PLAIN_TEXT_SUBTITLES, false);
+    }
+
+    public File getUpperDirectory() {
+        return (File) settings.get(UPPER_DIRECTORY);
+    }
+
+    public File getLowerDirectory() {
+        return (File) settings.get(LOWER_DIRECTORY);
+    }
+
+    public File getMergedDirectory() {
+        return (File) settings.get(MERGED_DIRECTORY);
+    }
+
+    public LanguageAlpha3Code getUpperLanguage() {
+        return (LanguageAlpha3Code) settings.get(UPPER_LANGUAGE);
+    }
+
+    public LanguageAlpha3Code getLowerLanguage() {
+        return (LanguageAlpha3Code) settings.get(LOWER_LANGUAGE);
+    }
+
+    public MergeMode getMergeMode() {
+        return (MergeMode) settings.get(MERGE_MODE);
+    }
+
+    public boolean isMakeMergedStreamsDefault() {
+        return Boolean.TRUE.equals(settings.get(MAKE_MERGED_STREAMS_DEFAULT));
+    }
+
+    public boolean isPlainTextSubtitles() {
+        return Boolean.TRUE.equals(settings.get(PLAIN_TEXT_SUBTITLES));
+    }
+
+    public File getVideoDirectory() {
+        return (File) settings.get(VIDEO_DIRECTORY);
+    }
+
+    public File getVideoSubtitleDirectory() {
+        return (File) settings.get(VIDEO_SUBTITLE_DIRECTORY);
+    }
+
+    public SortBy getSortBy() {
+        return (SortBy) settings.get(SORT_BY);
+    }
+
+    public SortDirection getSortDirection() {
+        return (SortDirection) settings.get(SORT_DIRECTION);
     }
 
     /**
-     * @return a value of the given type from the preferences if the value is not empty and is valid.
+     * Saves the given setting value without throwing any exceptions. If the value is incorrect then there will be a log
+     * warning record.
+     * It was designed mostly for saving directories because it's never enough just to check the directory before
+     * saving, it can always be removed during the saving process and thus become invalid.
      */
-    @Nullable
-    private static <T> T getSetting(SettingType settingType, SettingValidator<T> validator, Preferences preferences) {
-        String rawValue = preferences.get(settingType.getCode(), "");
-        if (StringUtils.isBlank(rawValue)) {
+    public void saveQuietly(Object object, SettingType settingType) {
+        try {
+            save(object, settingType);
+        } catch (SettingException e) {
+            log.warn("failed to save " + settingType + ": " + e.getMessage());
+        }
+    }
+
+    /**
+     * Saves the given setting value if it is valid and throws an exception otherwise.
+     * @throws SettingException if the value is incorrect
+     */
+    public void save(Object object, SettingType settingType) {
+        validateObject(object, settingType);
+        preferences.put(settingType.getCode(), objectToString(object, settingType));
+        settings.put(settingType, object);
+    }
+
+    private static String objectToString(Object object, SettingType settingType) {
+        if (object == null) {
             return null;
         }
 
-        try {
-            return validator.getValidatedValue(rawValue);
-        } catch (SettingException e) {
-            log.warn("incorrect value for " + settingType.getCode() + " in saved preferences: " + e.getMessage());
-            return null;
+        switch (settingType) {
+            case UPPER_DIRECTORY:
+            case LOWER_DIRECTORY:
+            case MERGED_DIRECTORY:
+            case VIDEO_DIRECTORY:
+            case VIDEO_SUBTITLE_DIRECTORY:
+                return ((File) object).getAbsolutePath();
+            case UPPER_LANGUAGE:
+            case LOWER_LANGUAGE:
+            case MERGE_MODE:
+            case MAKE_MERGED_STREAMS_DEFAULT:
+            case PLAIN_TEXT_SUBTITLES:
+            case SORT_BY:
+            case SORT_DIRECTION:
+                return object.toString();
+            default:
+                log.error("unexpected setting type: " + settingType + ", most likely a bug");
+                throw new IllegalStateException();
         }
-    }
-
-    private static File getValidatedDirectory(String rawValue) throws SettingException {
-        if (StringUtils.isBlank(rawValue)) {
-            throw new EmptyValueException();
-        }
-
-        File result = new File(rawValue);
-        if (!result.exists() || !result.isDirectory()) {
-            throw new SettingException("the file " + rawValue + " does not exist or is not a directory");
-        }
-
-        return result;
-    }
-
-    private static LanguageAlpha3Code getValidatedLanguage(String rawValue) throws SettingException {
-        if (StringUtils.isBlank(rawValue)) {
-            throw new EmptyValueException();
-        }
-
-        LanguageAlpha3Code result = LanguageAlpha3Code.getByCodeIgnoreCase(rawValue);
-        if (result == null) {
-            throw new SettingException("the language code " + rawValue + " is not valid");
-        }
-
-        if (!LogicConstants.ALLOWED_LANGUAGES.contains(result)) {
-            throw new SettingException("the language code " + rawValue + " is not allowed");
-        }
-
-        return result;
-    }
-
-    private static MergeMode getValidatedMergeMode(String rawValue) throws SettingException {
-        if (StringUtils.isBlank(rawValue)) {
-            throw new EmptyValueException();
-        }
-
-        MergeMode result = EnumUtils.getEnum(MergeMode.class, rawValue);
-        if (result == null) {
-            throw new SettingException("the value " + rawValue + " is not a valid merge mode");
-        }
-
-        return result;
-    }
-
-    private static Boolean getValidatedBoolean(String rawValue) throws SettingException {
-        if (StringUtils.isBlank(rawValue)) {
-            throw new EmptyValueException();
-        }
-
-        if ("true".equals(rawValue)) {
-            return true;
-        } else if ("false".equals(rawValue)) {
-            return false;
-        } else {
-            throw new SettingException("the value " + rawValue + " is not a valid boolean type");
-        }
-    }
-
-    private static SortBy getValidatedSortBy(String rawValue) throws SettingException {
-        if (StringUtils.isBlank(rawValue)) {
-            throw new EmptyValueException();
-        }
-
-        SortBy result = EnumUtils.getEnum(SortBy.class, rawValue);
-        if (result == null) {
-            throw new SettingException("the value " + rawValue + " is not a valid sort option");
-        }
-
-        return result;
-    }
-
-    private static SortDirection getValidatedSortDirection(String rawValue) throws SettingException {
-        if (StringUtils.isBlank(rawValue)) {
-            throw new EmptyValueException();
-        }
-
-        SortDirection result = EnumUtils.getEnum(SortDirection.class, rawValue);
-        if (result == null) {
-            throw new SettingException("the value " + rawValue + " is not a valid sort direction");
-        }
-
-        return result;
-    }
-
-    private void setDefaultSettings() {
-        try {
-            if (sortBy == null) {
-                saveSortBy(SortBy.MODIFICATION_TIME.toString());
-            }
-
-            if (sortDirection == null) {
-                saveSortDirection(SortDirection.ASCENDING.toString());
-            }
-        } catch (SettingException e) {
-            log.error("failed to save sort parameters, most likely a bug " + e.getMessage());
-        }
-    }
-
-    public void saveUpperDirectory(String rawValue) throws SettingException {
-        upperDirectory = getValidatedDirectory(rawValue);
-        preferences.put(UPPER_DIRECTORY.getCode(), upperDirectory.getAbsolutePath());
-    }
-
-    public void saveLowerDirectory(String rawValue) throws SettingException {
-        lowerDirectory = getValidatedDirectory(rawValue);
-        preferences.put(LOWER_DIRECTORY.getCode(), lowerDirectory.getAbsolutePath());
-    }
-
-    public void saveMergedDirectory(String rawValue) throws SettingException {
-        mergedDirectory = getValidatedDirectory(rawValue);
-        preferences.put(MERGED_DIRECTORY.getCode(), mergedDirectory.getAbsolutePath());
-    }
-
-    public void saveUpperLanguage(String rawValue) throws SettingException {
-        upperLanguage = getValidatedLanguage(rawValue);
-        preferences.put(UPPER_LANGUAGE.getCode(), upperLanguage.toString());
-    }
-
-    public void saveLowerLanguage(String rawValue) throws SettingException {
-        lowerLanguage = getValidatedLanguage(rawValue);
-        preferences.put(LOWER_LANGUAGE.getCode(), lowerLanguage.toString());
-    }
-
-    public void saveMergeMode(String rawValue) throws SettingException {
-        mergeMode = getValidatedMergeMode(rawValue);
-        preferences.put(MERGE_MODE.getCode(), mergeMode.toString());
-    }
-
-    public void saveMakeMergedStreamsDefault(String rawValue) throws SettingException {
-        makeMergedStreamsDefault = getValidatedBoolean(rawValue);
-        preferences.put(MAKE_MERGED_STREAMS_DEFAULT.getCode(), Boolean.toString(makeMergedStreamsDefault));
-    }
-
-    public void savePlainTextSubtitles(String rawValue) throws SettingException {
-        plainTextSubtitles = getValidatedBoolean(rawValue);
-        preferences.put(PLAIN_TEXT_SUBTITLES.getCode(), Boolean.toString(plainTextSubtitles));
-    }
-
-    public void saveVideosDirectory(String rawValue) throws SettingException {
-        videosDirectory = getValidatedDirectory(rawValue);
-        preferences.put(VIDEOS_DIRECTORY.getCode(), videosDirectory.getAbsolutePath());
-    }
-
-    public void saveSortBy(String rawValue) throws SettingException {
-        sortBy = getValidatedSortBy(rawValue);
-        preferences.put(SORT_BY.getCode(), sortBy.toString());
-    }
-
-    public void saveSortDirection(String rawValue) throws SettingException {
-        sortDirection = getValidatedSortDirection(rawValue);
-        preferences.put(SORT_DIRECTION.getCode(), sortDirection.toString());
-    }
-
-    public void saveExternalDirectory(String rawValue) throws SettingException {
-        externalDirectory = getValidatedDirectory(rawValue);
-        preferences.put(EXTERNAL_DIRECTORY.getCode(), externalDirectory.getAbsolutePath());
-    }
-    
-    private static class EmptyValueException extends SettingException {
-        EmptyValueException() {
-            super("an empty value");
-        }
-    }
-
-    @FunctionalInterface
-    private interface SettingValidator<T> {
-        T getValidatedValue(String rawValue) throws SettingException;
     }
 }

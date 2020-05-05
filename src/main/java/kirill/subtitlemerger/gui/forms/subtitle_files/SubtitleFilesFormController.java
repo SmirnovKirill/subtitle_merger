@@ -15,7 +15,7 @@ import kirill.subtitlemerger.gui.utils.background.BackgroundCallback;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.entities.FileOrigin;
 import kirill.subtitlemerger.logic.LogicConstants;
-import kirill.subtitlemerger.logic.settings.SettingException;
+import kirill.subtitlemerger.logic.settings.SettingType;
 import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.logic.subtitles.SubRipWriter;
 import kirill.subtitlemerger.logic.subtitles.SubtitleMerger;
@@ -33,7 +33,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -251,30 +250,19 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
     }
 
     private static void saveDirectoryInSettings(File file, SubtitleType subtitleType, Settings settings) {
-        File directory = Utils.getParentDirectory(file).orElse(null);
-        if (directory == null) {
-            log.warn("parent directory for file " + file.getAbsolutePath() + " is null, maybe it was removed");
-            return;
-        }
-        String pathToSave = directory.getAbsolutePath();
-
-        try {
-            switch (subtitleType) {
-                case UPPER:
-                    settings.saveUpperDirectory(pathToSave);
-                    return;
-                case LOWER:
-                    settings.saveLowerDirectory(pathToSave);
-                    return;
-                case MERGED:
-                    settings.saveMergedDirectory(pathToSave);
-                    return;
-                default:
-                    log.error("unexpected subtitle type " + subtitleType + ", most likely a bug");
-                    throw new IllegalStateException();
-            }
-        } catch (SettingException e) {
-            log.warn("failed to save directory " + pathToSave + ": " + ExceptionUtils.getStackTrace(e));
+        switch (subtitleType) {
+            case UPPER:
+                settings.saveQuietly(file.getParentFile(), SettingType.UPPER_DIRECTORY);
+                return;
+            case LOWER:
+                settings.saveQuietly(file.getParentFile(), SettingType.LOWER_DIRECTORY);
+                return;
+            case MERGED:
+                settings.saveQuietly(file.getParentFile(), SettingType.MERGED_DIRECTORY);
+                return;
+            default:
+                log.error("unexpected subtitle type " + subtitleType + ", most likely a bug");
+                throw new IllegalStateException();
         }
     }
 
@@ -380,12 +368,12 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
         }
 
         if (!subtitleInfo.isCorrectFormat()) {
-            return "The file '" + subtitleInfo.getPath() + "' has an incorrect subtitle format, it can happen if the "
-                    + "file is not UTF-8-encoded, you can change the encoding after pressing the preview button";
+            return "Subtitles in '" + subtitleInfo.getPath() + "'can't be parsed, it can happen if the file is not "
+                    + "UTF-8-encoded, you can change the encoding after pressing the preview button";
         }
 
         if (subtitleInfo.getNotValidReason() != null) {
-            String path = getShortenedPath(subtitleInfo.getPath());
+            String shortenedPath = getShortenedPath(subtitleInfo.getPath());
 
             InputFileNotValidReason notValidReason = subtitleInfo.getNotValidReason();
             switch (notValidReason) {
@@ -394,20 +382,20 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
                 case INVALID_PATH:
                     return "The file path is invalid";
                 case IS_A_DIRECTORY:
-                    return path + " is a directory, not a file";
+                    return "'" + shortenedPath + "' is a directory, not a file";
                 case DOES_NOT_EXIST:
-                    return "The file '" + path + "' doesn't exist";
+                    return "The file '" + shortenedPath + "' doesn't exist";
                 case NO_EXTENSION:
-                    return "The file '" + path + "' has no extension";
+                    return "The file '" + shortenedPath + "' has no extension";
                 case NOT_ALLOWED_EXTENSION:
-                    return "The file '" + path + "' has an incorrect extension";
+                    return "The file '" + shortenedPath + "' has an incorrect extension";
                 case FILE_IS_EMPTY:
-                    return "The file '" + path + "' is empty";
+                    return "The file '" + shortenedPath + "' is empty";
                 case FILE_IS_TOO_BIG:
-                    return "The file '" + path + "' is too big (>" + LogicConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES
-                            + " megabytes)";
+                    return "The file '" + shortenedPath + "' is too big (>"
+                            + LogicConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES + " megabytes)";
                 case FAILED_TO_READ_CONTENT:
-                    return path + ": failed to read the file";
+                    return shortenedPath + ": failed to read the file";
                 default:
                     log.error("unexpected input subtitle not valid reason: " + notValidReason + ", most likely a bug");
                     throw new IllegalStateException();
@@ -428,7 +416,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
         }
 
         if (subtitleFileInfo.getNotValidReason() != null) {
-            String path = getShortenedPath(subtitleFileInfo.getPath());
+            String shortenedPath = getShortenedPath(subtitleFileInfo.getPath());
 
             OutputFileNotValidReason notValidReason = subtitleFileInfo.getNotValidReason();
             switch (notValidReason) {
@@ -437,11 +425,11 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
                 case INVALID_PATH:
                     return "The file path is invalid";
                 case IS_A_DIRECTORY:
-                    return path + " is a directory, not a file";
+                    return "'" + shortenedPath + "' is a directory, not a file";
                 case NO_EXTENSION:
-                    return "The file '" + path + "' has no extension";
+                    return "The file '" + shortenedPath + "' has no extension";
                 case NOT_ALLOWED_EXTENSION:
-                    return "The file '" + path + "' has an incorrect extension";
+                    return "The file '" + shortenedPath + "' has an incorrect extension";
                 default:
                     log.error("unexpected merged subtitle not valid reason: " + notValidReason + ", most likely a bug");
                     throw new IllegalStateException();
@@ -539,7 +527,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
                 32
         );
 
-        boolean result = Popups.showAgreementPopup(
+        boolean result = Popups.askAgreement(
                 "The file '" + fileName + "' already exists. Do you want to overwrite it?",
                 "Yes",
                 "No",
@@ -581,8 +569,6 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
     }
 
     private static File getInputFile(InputSubtitleType subtitleType, Stage stage, Settings settings) {
-        FileChooser fileChooser = new FileChooser();
-
         String chooserTitle;
         File chooserInitialDirectory;
         if (subtitleType == InputSubtitleType.UPPER) {
@@ -603,6 +589,8 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
             log.error("unexpected subtitle type " + subtitleType + ", most likely a bug");
             throw new IllegalStateException();
         }
+
+        FileChooser fileChooser = new FileChooser();
 
         fileChooser.setTitle(chooserTitle);
         fileChooser.setInitialDirectory(chooserInitialDirectory);
@@ -753,7 +741,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
             if (!StringUtils.isBlank(actionResult.getError())) {
                 displayFileElementsAsIncorrect(SubtitleType.MERGED);
             }
-            totalResultPane.set(actionResult);
+            totalResultPane.setActionResult(actionResult);
         };
 
         runInBackground(backgroundRunner, callback);

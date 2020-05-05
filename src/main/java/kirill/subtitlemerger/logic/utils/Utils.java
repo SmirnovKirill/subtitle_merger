@@ -3,36 +3,17 @@ package kirill.subtitlemerger.logic.utils;
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import lombok.extern.apachecommons.CommonsLog;
 
-import java.io.File;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * This class contains different helper methods that can be useful for our application.
  */
 @CommonsLog
 public class Utils {
-    /**
-     * This method returns the parent directory for the given file if it exists and is actually a directory. Method
-     * doesn't throw any exceptions and its main purpose is to help saving the directory with the file to the settings.
-     */
-    public static Optional<File> getParentDirectory(File file) {
-        File result = file.getParentFile();
-        if (result == null) {
-            return Optional.empty();
-        }
-
-        if (!result.isDirectory()) {
-            return Optional.empty();
-        }
-
-        return Optional.of(result);
-    }
-
     /**
      * Returns the language code if the language is not empty or the string "unknown language" otherwise.
      */
@@ -106,7 +87,7 @@ public class Utils {
      *                  representation (plus the size suffix). Otherwise there will always be 2 digits after the point.
      * @return a textual representation of the size (for example 21.39 KB).
      */
-    public static String getFileSizeTextual(long size, boolean keepShort) {
+    public static String getSizeTextual(long size, boolean keepShort) {
         List<String> suffixes = Arrays.asList("B", "KB", "MB", "GB", "TB");
 
         BigDecimal sizeBigDecimal = new BigDecimal(size);

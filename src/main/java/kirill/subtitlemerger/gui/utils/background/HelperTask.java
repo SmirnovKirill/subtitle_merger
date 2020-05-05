@@ -31,7 +31,7 @@ class HelperTask<T> extends Task<Void> {
         });
 
         setOnCancelled(e -> {
-            Platform.runLater(() -> manager.setCancellationPossible(false));
+            manager.setCancellationPossible(false);
             manager.setIndeterminateProgress();
             manager.updateMessage("Waiting for the task to cancel...");
         });
@@ -41,8 +41,8 @@ class HelperTask<T> extends Task<Void> {
     protected Void call() {
         T result = runner.run(manager);
 
+        manager.setCancellationPossible(false);
         Platform.runLater(() -> {
-            manager.setCancellationPossible(false);
             callback.run(result);
         });
 

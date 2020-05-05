@@ -3,9 +3,8 @@ package kirill.subtitlemerger.gui.forms.videos.background;
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.application.Platform;
 import kirill.subtitlemerger.gui.GuiContext;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableSubtitleOption;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableVideoInfo;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithVideos;
+import kirill.subtitlemerger.gui.forms.videos.table.TableSubtitleOption;
+import kirill.subtitlemerger.gui.forms.videos.table.TableVideo;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
@@ -19,7 +18,7 @@ import kirill.subtitlemerger.logic.utils.Utils;
 import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
 import kirill.subtitlemerger.logic.videos.entities.ExternalSubtitleOption;
 import kirill.subtitlemerger.logic.videos.entities.SubtitleOption;
-import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
+import kirill.subtitlemerger.logic.videos.entities.Video;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
@@ -31,22 +30,23 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackgroundUtils.FAILED_TO_LOAD_INCORRECT_FORMAT;
+import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackgroundUtils.failedToLoadReasonFrom;
+
 @CommonsLog
 @AllArgsConstructor
 public class MergePreparationRunner implements BackgroundRunner<MergePreparationRunner.Result> {
-    private List<TableVideoInfo> displayedTableFilesInfo;
+    private List<TableVideo> displayedTableFilesInfo;
 
-    private List<VideoInfo> filesInfo;
-
-    private TableWithVideos tableWithFiles;
+    private List<Video> filesInfo;
 
     private GuiContext context;
 
     @Override
     public MergePreparationRunner.Result run(BackgroundManager backgroundManager) {
-        VideoBackgroundUtils.clearActionResults(displayedTableFilesInfo, tableWithFiles, backgroundManager);
+        VideosBackgroundUtils.clearActionResults(displayedTableFilesInfo, backgroundManager);
 
-        List<TableVideoInfo> selectedTableFilesInfo = VideoBackgroundUtils.getSelectedFilesInfo(
+        List<TableVideo> selectedTableFilesInfo = VideosBackgroundUtils.getSelectedVideos(
                 displayedTableFilesInfo,
                 backgroundManager
         );
@@ -70,7 +70,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         List<FileMergeInfo> filesMergeInfo = new ArrayList<>();
 
         int processedCount = 0;
-        for (TableVideoInfo tableFileInfo : selectedTableFilesInfo) {
+        for (TableVideo tableFileInfo : selectedTableFilesInfo) {
             try {
                 filesMergeInfo.add(
                         getFileMergeInfo(tableFileInfo, processedCount, selectedTableFilesInfo.size(), backgroundManager)
@@ -108,7 +108,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
     }
 
     private static int getFilesWithoutSelectionCount(
-            List<TableVideoInfo> filesInfo,
+            List<TableVideo> filesInfo,
             BackgroundManager backgroundManager
     ) {
         backgroundManager.setIndeterminateProgress();
@@ -120,7 +120,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
     }
 
     private FileMergeInfo getFileMergeInfo(
-            TableVideoInfo tableFileInfo,
+            TableVideo tableFileInfo,
             int processedCount,
             int allCount,
             BackgroundManager backgroundManager
@@ -128,7 +128,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         String progressMessagePrefix = getProgressMessagePrefix(processedCount, allCount, tableFileInfo);
         backgroundManager.updateMessage(progressMessagePrefix + "...");
 
-        VideoInfo fileInfo = VideoInfo.getById(tableFileInfo.getId(), filesInfo);
+        Video fileInfo = Video.getById(tableFileInfo.getId(), filesInfo);
 
         TableSubtitleOption tableUpperOption = tableFileInfo.getUpperOption();
         TableSubtitleOption tableLowerOption = tableFileInfo.getLowerOption();
@@ -152,7 +152,6 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                     upperSubtitles,
                     lowerSubtitles,
                     null,
-                    null,
                     getFileWithResult(fileInfo, upperSubtitles, lowerSubtitles, context.getSettings())
             );
         }
@@ -171,7 +170,6 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                     0,
                     upperSubtitles,
                     lowerSubtitles,
-                    mergedSubtitles,
                     mergesSubtitleText,
                     getFileWithResult(fileInfo, upperSubtitles, lowerSubtitles, context.getSettings())
             );
@@ -182,14 +180,13 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                     0,
                     upperSubtitles,
                     lowerSubtitles,
-                    mergedSubtitles,
                     mergesSubtitleText,
                     getFileWithResult(fileInfo, upperSubtitles, lowerSubtitles, context.getSettings())
             );
         }
     }
 
-    private static String getProgressMessagePrefix(int processedCount, int allFileCount, TableVideoInfo fileInfo) {
+    private static String getProgressMessagePrefix(int processedCount, int allFileCount, TableVideo fileInfo) {
         String progressPrefix = allFileCount > 1
                 ? String.format("%d/%d ", processedCount + 1, allFileCount) + "stage 1 of 2: processing file "
                 : "Stage 1 of 2: processing file ";
@@ -222,8 +219,8 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
     }
 
     private int loadStreams(
-            TableVideoInfo tableFileInfo,
-            VideoInfo fileInfo,
+            TableVideo tableFileInfo,
+            Video fileInfo,
             Set<LanguageAlpha3Code> languagesToCheck,
             String progressMessagePrefix,
             BackgroundManager backgroundManager
@@ -261,31 +258,14 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
 
                 if (subtitlesAndInput.isCorrectFormat()) {
                     ffmpegStream.setSubtitlesAndInput(subtitlesAndInput);
-
-                    Platform.runLater(
-                            () -> tableWithFiles.subtitlesLoadedSuccessfully(
-                                    subtitlesAndInput.getSize(),
-                                    tableSubtitleOption,
-                                    tableFileInfo
-                            )
-                    );
+                    Platform.runLater(() -> tableSubtitleOption.loadedSuccessfully(subtitlesAndInput.getSize()));
                 } else {
-                    Platform.runLater(
-                            () -> tableWithFiles.failedToLoadSubtitles(
-                                    VideoBackgroundUtils.FAILED_TO_LOAD_STREAM_INCORRECT_FORMAT,
-                                    tableSubtitleOption
-                            )
-                    );
+                    Platform.runLater(() -> tableSubtitleOption.failedToLoad(FAILED_TO_LOAD_INCORRECT_FORMAT));
                     failedToLoad++;
                 }
             } catch (FfmpegException e) {
                 log.warn("failed to get subtitle text: " + e.getCode() + ", console output " + e.getConsoleOutput());
-                Platform.runLater(
-                        () -> tableWithFiles.failedToLoadSubtitles(
-                                VideoBackgroundUtils.failedToLoadReasonFrom(e.getCode()),
-                                tableSubtitleOption
-                        )
-                );
+                Platform.runLater(() -> tableSubtitleOption.failedToLoad(failedToLoadReasonFrom(e.getCode())));
                 failedToLoad++;
             }
         }
@@ -296,7 +276,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
     private static boolean isDuplicate(
             String mergedText,
             Set<LanguageAlpha3Code> languagesToCheck,
-            VideoInfo fileInfo,
+            Video fileInfo,
             boolean plainText
     ) {
         for (BuiltInSubtitleOption subtitleStream : fileInfo.getBuiltInSubtitleOptions()) {
@@ -312,7 +292,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
     }
 
     private static File getFileWithResult(
-            VideoInfo fileInfo,
+            Video fileInfo,
             SubtitleOption upperOption,
             SubtitleOption lowerOption,
             Settings settings
@@ -343,7 +323,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
 
     private static Optional<RequiredAndAvailableSpace> getRequiredAndAvailableTempSpace(
             List<FileMergeInfo> filesMergeInfo,
-            List<VideoInfo> filesInfo,
+            List<Video> filesInfo,
             Settings settings,
             BackgroundManager backgroundManager
     ) {
@@ -364,7 +344,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                 continue;
             }
 
-            VideoInfo fileInfo = VideoInfo.getById(fileMergeInfo.getId(), filesInfo);
+            Video fileInfo = Video.getById(fileMergeInfo.getId(), filesInfo);
 
             long currentRequiredSpace = fileInfo.getFile().length();
             long currentAvailableSpace = fileInfo.getFile().getFreeSpace();
@@ -439,8 +419,6 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         private SubtitleOption upperSubtitles;
 
         private SubtitleOption lowerSubtitles;
-
-        private Subtitles mergedSubtitles;
 
         private String mergedSubtitleText;
 

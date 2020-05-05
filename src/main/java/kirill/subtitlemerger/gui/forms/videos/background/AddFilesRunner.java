@@ -2,14 +2,15 @@ package kirill.subtitlemerger.gui.forms.videos.background;
 
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableData;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableVideoInfo;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithVideos;
+import kirill.subtitlemerger.gui.forms.videos.table.TableData;
+import kirill.subtitlemerger.gui.forms.videos.table.TableMode;
+import kirill.subtitlemerger.gui.forms.videos.table.TableVideo;
+import kirill.subtitlemerger.gui.forms.videos.table.TableWithVideos;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.logic.utils.Utils;
 import kirill.subtitlemerger.logic.utils.entities.ActionResult;
-import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
+import kirill.subtitlemerger.logic.videos.entities.Video;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -20,19 +21,21 @@ import java.util.Objects;
 
 @AllArgsConstructor
 public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
-    private List<VideoInfo> filesInfo;
+    private List<Video> filesInfo;
 
     private List<File> filesToAdd;
 
-    private List<TableVideoInfo> allTableFilesInfo;
+    private List<TableVideo> allTableFilesInfo;
 
     private boolean hideUnavailable;
+
+    private TableWithVideos table;
 
     private GuiContext context;
 
     @Override
     public Result run(BackgroundManager backgroundManager) {
-        List<VideoInfo> filesToAddInfo = VideoBackgroundUtils.getVideosInfo(
+        List<Video> filesToAddInfo = VideosBackgroundUtils.getVideos(
                 filesToAdd,
                 context.getFfprobe(),
                 backgroundManager
@@ -52,21 +55,22 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
 
         filesInfo.addAll(filesToAddInfo);
 
-        List<TableVideoInfo> tableFilesToAddInfo = VideoBackgroundUtils.tableVideosInfoFrom(
+        List<TableVideo> tableFilesToAddInfo = VideosBackgroundUtils.tableVideosFrom(
                 filesToAddInfo,
                 true,
                 true,
+                table,
                 context.getSettings(),
                 backgroundManager
         );
         allTableFilesInfo.addAll(tableFilesToAddInfo);
 
-        List<TableVideoInfo> filesToShowInfo = null;
+        List<TableVideo> filesToShowInfo = null;
         if (hideUnavailable) {
-            filesToShowInfo = VideoBackgroundUtils.getOnlyAvailableFilesInfo(allTableFilesInfo, backgroundManager);
+            filesToShowInfo = VideosBackgroundUtils.getOnlyValidVideos(allTableFilesInfo, backgroundManager);
         }
 
-        filesToShowInfo = VideoBackgroundUtils.getSortedVideosInfo(
+        filesToShowInfo = VideosBackgroundUtils.getSortedVideos(
                 filesToShowInfo != null ? filesToShowInfo : allTableFilesInfo,
                 context.getSettings().getSortBy(),
                 context.getSettings().getSortDirection(),
@@ -79,8 +83,8 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
                 filesToAddInfo.size(),
                 filesInfo,
                 allTableFilesInfo,
-                VideoBackgroundUtils.getTableData(
-                        TableWithVideos.Mode.SEPARATE_FILES,
+                VideosBackgroundUtils.getTableData(
+                        TableMode.SEPARATE_VIDEOS,
                         filesToShowInfo,
                         context.getSettings().getSortBy(),
                         context.getSettings().getSortDirection(),
@@ -90,17 +94,17 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
     }
 
     private static void removeAlreadyAdded(
-            List<VideoInfo> filesToAddInfo,
-            List<VideoInfo> allFilesInfo,
+            List<Video> filesToAddInfo,
+            List<Video> allFilesInfo,
             BackgroundManager backgroundManager
     ) {
         backgroundManager.setIndeterminateProgress();
         backgroundManager.updateMessage("Removing already added files...");
 
-        Iterator<VideoInfo> iterator = filesToAddInfo.iterator();
+        Iterator<Video> iterator = filesToAddInfo.iterator();
 
         while (iterator.hasNext()) {
-            VideoInfo fileToAddInfo = iterator.next();
+            Video fileToAddInfo = iterator.next();
 
             boolean alreadyAdded = allFilesInfo.stream()
                     .anyMatch(fileInfo -> Objects.equals(fileInfo.getFile(), fileToAddInfo.getFile()));
@@ -149,9 +153,9 @@ public class AddFilesRunner implements BackgroundRunner<AddFilesRunner.Result> {
 
         private int actuallyAddedCount;
 
-        private List<VideoInfo> filesInfo;
+        private List<Video> filesInfo;
 
-        private List<TableVideoInfo> allTableFilesInfo;
+        private List<TableVideo> allTableFilesInfo;
 
         private TableData tableData;
     }

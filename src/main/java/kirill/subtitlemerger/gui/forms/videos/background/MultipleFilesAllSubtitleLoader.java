@@ -2,9 +2,8 @@ package kirill.subtitlemerger.gui.forms.videos.background;
 
 
 import javafx.application.Platform;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableSubtitleOption;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableVideoInfo;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithVideos;
+import kirill.subtitlemerger.gui.forms.videos.table.TableSubtitleOption;
+import kirill.subtitlemerger.gui.forms.videos.table.TableVideo;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
@@ -13,7 +12,7 @@ import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndInput;
 import kirill.subtitlemerger.logic.utils.Utils;
 import kirill.subtitlemerger.logic.utils.entities.ActionResult;
 import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
-import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
+import kirill.subtitlemerger.logic.videos.entities.Video;
 import lombok.AllArgsConstructor;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
@@ -21,22 +20,23 @@ import org.apache.commons.collections4.CollectionUtils;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackgroundUtils.FAILED_TO_LOAD_INCORRECT_FORMAT;
+import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackgroundUtils.failedToLoadReasonFrom;
+
 @CommonsLog
 @AllArgsConstructor
 public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionResult> {
-    private List<TableVideoInfo> displayedTableFilesInfo;
+    private List<TableVideo> displayedTableFilesInfo;
 
-    private List<VideoInfo> filesInfo;
-
-    private TableWithVideos tableWithFiles;
+    private List<Video> filesInfo;
 
     private Ffmpeg ffmpeg;
 
     @Override
     public ActionResult run(BackgroundManager backgroundManager) {
-        VideoBackgroundUtils.clearActionResults(displayedTableFilesInfo, tableWithFiles, backgroundManager);
+        VideosBackgroundUtils.clearActionResults(displayedTableFilesInfo, backgroundManager);
 
-        List<TableVideoInfo> selectedTableFilesInfo = VideoBackgroundUtils.getSelectedFilesInfo(
+        List<TableVideo> selectedTableFilesInfo = VideosBackgroundUtils.getSelectedVideos(
                 displayedTableFilesInfo,
                 backgroundManager
         );
@@ -50,8 +50,8 @@ public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionRe
         backgroundManager.setCancellationDescription("Please be patient, this may take a while depending on the size.");
         backgroundManager.setCancellationPossible(true);
 
-        mainLoop: for (TableVideoInfo tableFileInfo : selectedTableFilesInfo) {
-            VideoInfo fileInfo = VideoInfo.getById(tableFileInfo.getId(), filesInfo);
+        mainLoop: for (TableVideo tableFileInfo : selectedTableFilesInfo) {
+            Video fileInfo = Video.getById(tableFileInfo.getId(), filesInfo);
             if (CollectionUtils.isEmpty(fileInfo.getBuiltInSubtitleOptions())) {
                 continue;
             }
@@ -64,7 +64,7 @@ public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionRe
                 }
 
                 backgroundManager.updateMessage(
-                        VideoBackgroundUtils.getLoadSubtitlesProgressMessage(
+                        VideosBackgroundUtils.getLoadSubtitlesProgressMessage(
                                 processedCount,
                                 streamToLoadCount,
                                 ffmpegStream,
@@ -90,48 +90,32 @@ public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionRe
 
                     if (subtitlesAndInput.isCorrectFormat()) {
                         ffmpegStream.setSubtitlesAndInput(subtitlesAndInput);
-
-                        Platform.runLater(
-                                () -> tableWithFiles.subtitlesLoadedSuccessfully(
-                                        subtitlesAndInput.getSize(),
-                                        tableSubtitleOption,
-                                        tableFileInfo
-                                )
-                        );
-
+                        Platform.runLater(() -> tableSubtitleOption.loadedSuccessfully(subtitlesAndInput.getSize()));
                         loadedSuccessfullyCount++;
                     } else {
-                        Platform.runLater(
-                                () -> tableWithFiles.failedToLoadSubtitles(
-                                        VideoBackgroundUtils.FAILED_TO_LOAD_STREAM_INCORRECT_FORMAT,
-                                        tableSubtitleOption
-                                )
-                        );
+                        Platform.runLater(() -> tableSubtitleOption.failedToLoad(FAILED_TO_LOAD_INCORRECT_FORMAT));
                         failedToLoadCount++;
                         failedToLoadForFile++;
                     }
                 } catch (FfmpegException e) {
-                    log.warn("failed to get subtitle text: " + e.getCode() + ", console output " + e.getConsoleOutput());
-                    Platform.runLater(
-                            () -> tableWithFiles.failedToLoadSubtitles(
-                                    VideoBackgroundUtils.failedToLoadReasonFrom(e.getCode()),
-                                    tableSubtitleOption
-                            )
+                    log.warn(
+                            "failed to get subtitle text: " + e.getCode() + ", console output " + e.getConsoleOutput()
                     );
+                    Platform.runLater(() -> tableSubtitleOption.failedToLoad(failedToLoadReasonFrom(e.getCode())));
                     failedToLoadCount++;
                     failedToLoadForFile++;
                 } catch (InterruptedException e) {
-                    setFileInfoError(failedToLoadForFile, tableFileInfo, tableWithFiles);
+                    setFileInfoError(failedToLoadForFile, tableFileInfo);
                     break mainLoop;
                 }
 
                 processedCount++;
             }
 
-            setFileInfoError(failedToLoadForFile, tableFileInfo, tableWithFiles);
+            setFileInfoError(failedToLoadForFile, tableFileInfo);
         }
 
-        return VideoBackgroundUtils.getSubtitleLoadingActionResult(
+        return VideosBackgroundUtils.getSubtitleLoadingActionResult(
                 streamToLoadCount,
                 processedCount,
                 loadedSuccessfullyCount,
@@ -140,8 +124,8 @@ public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionRe
     }
 
     private static int getStreamToLoadCount(
-            List<TableVideoInfo> selectedTableFilesInfo,
-            List<VideoInfo> allFilesInfo,
+            List<TableVideo> selectedTableFilesInfo,
+            List<Video> allFilesInfo,
             BackgroundManager backgroundManager
     ) {
         backgroundManager.setIndeterminateProgress();
@@ -149,8 +133,8 @@ public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionRe
 
         int result = 0;
 
-        for (TableVideoInfo tableFileInfo : selectedTableFilesInfo) {
-            VideoInfo fileInfo = VideoInfo.getById(tableFileInfo.getId(), allFilesInfo);
+        for (TableVideo tableFileInfo : selectedTableFilesInfo) {
+            Video fileInfo = Video.getById(tableFileInfo.getId(), allFilesInfo);
             if (!CollectionUtils.isEmpty(fileInfo.getBuiltInSubtitleOptions())) {
                 for (BuiltInSubtitleOption stream : fileInfo.getBuiltInSubtitleOptions()) {
                     if (stream.getNotValidReason() != null || stream.getSubtitles() != null) {
@@ -165,11 +149,7 @@ public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionRe
         return result;
     }
 
-    private static void setFileInfoError(
-            int failedToLoadForFile,
-            TableVideoInfo fileInfo,
-            TableWithVideos tableWithFiles
-    ) {
+    private static void setFileInfoError(int failedToLoadForFile, TableVideo fileInfo) {
         if (failedToLoadForFile == 0) {
             return;
         }
@@ -180,6 +160,6 @@ public class MultipleFilesAllSubtitleLoader implements BackgroundRunner<ActionRe
                 "Failed to load %d subtitles"
         );
 
-        Platform.runLater(() -> tableWithFiles.setActionResult(ActionResult.onlyError(message), fileInfo));
+        Platform.runLater(() -> fileInfo.setOnlyError(message));
     }
 }

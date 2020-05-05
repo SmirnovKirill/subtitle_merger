@@ -2,7 +2,7 @@ package kirill.subtitlemerger.gui.forms.videos.background;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.application.Platform;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.*;
+import kirill.subtitlemerger.gui.forms.videos.table.*;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
@@ -15,11 +15,10 @@ import kirill.subtitlemerger.logic.utils.entities.ActionResult;
 import kirill.subtitlemerger.logic.videos.Videos;
 import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
 import kirill.subtitlemerger.logic.videos.entities.SubtitleOptionNotValidReason;
-import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
+import kirill.subtitlemerger.logic.videos.entities.Video;
 import kirill.subtitlemerger.logic.videos.entities.VideoNotValidReason;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,21 +29,21 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @CommonsLog
-public class VideoBackgroundUtils {
-    static final String FAILED_TO_LOAD_STREAM_INCORRECT_FORMAT = "Subtitles seem to have an incorrect format";
+public class VideosBackgroundUtils {
+    static final String FAILED_TO_LOAD_INCORRECT_FORMAT = "Subtitles seem to have an incorrect format";
 
-    static List<VideoInfo> getVideosInfo(List<File> files, Ffprobe ffprobe, BackgroundManager backgroundManager) {
-        List<VideoInfo> result = new ArrayList<>();
-
+    static List<Video> getVideos(List<File> files, Ffprobe ffprobe, BackgroundManager backgroundManager) {
         backgroundManager.setCancellationPossible(false);
         backgroundManager.updateProgress(0, files.size());
 
+        List<Video> result = new ArrayList<>();
+
         int i = 0;
         for (File file : files) {
-            backgroundManager.updateMessage("Getting video info " + file.getName() + "...");
+            backgroundManager.updateMessage("Getting the video info " + file.getName() + "...");
 
             if (file.isFile() && file.exists()) {
-                result.add(Videos.getVideoInfo(file, LogicConstants.ALLOWED_VIDEO_EXTENSIONS, ffprobe));
+                result.add(Videos.getVideo(file, LogicConstants.ALLOWED_VIDEO_EXTENSIONS, ffprobe));
             }
 
             backgroundManager.updateProgress(i + 1, files.size());
@@ -55,131 +54,65 @@ public class VideoBackgroundUtils {
         return result;
     }
 
-    static List<TableVideoInfo> tableVideosInfoFrom(
-            List<VideoInfo> videosInfo,
+    static List<TableVideo> tableVideosFrom(
+            List<Video> videos,
             boolean showFullPath,
             boolean selectByDefault,
+            TableWithVideos table,
             Settings settings,
             BackgroundManager backgroundManager
     ) {
         backgroundManager.setCancellationPossible(false);
         backgroundManager.setIndeterminateProgress();
 
-        List<TableVideoInfo> result = new ArrayList<>();
+        List<TableVideo> result = new ArrayList<>();
 
-        for (VideoInfo videoInfo : videosInfo) {
-            backgroundManager.updateMessage("Creating an object for " + videoInfo.getFile().getName() + "...");
+        for (Video video : videos) {
+            backgroundManager.updateMessage("Creating an object for " + video.getFile().getName() + "...");
 
-            result.add(tableVideoInfoFrom(videoInfo, showFullPath, selectByDefault, settings));
+            result.add(tableVideoFrom(video, showFullPath, selectByDefault, table, settings));
         }
 
         return result;
     }
 
-    private static TableVideoInfo tableVideoInfoFrom(
-            VideoInfo videoInfo,
+    private static TableVideo tableVideoFrom(
+            Video video,
             boolean showFullPath,
             boolean selected,
+            TableWithVideos table,
             Settings settings
     ) {
-        String pathToDisplay = showFullPath ? videoInfo.getFile().getAbsolutePath() : videoInfo.getFile().getName();
+        String pathToDisplay = showFullPath ? video.getFile().getAbsolutePath() : video.getFile().getName();
+
+        TableVideo result = new TableVideo(
+                video.getId(),
+                table,
+                selected,
+                pathToDisplay,
+                video.getSize(),
+                video.getLastModified(),
+                getTextualReason(video.getNotValidReason(), video.getFormat()),
+                video.getFormat(),
+                null
+        );
 
         List<TableSubtitleOption> subtitleOptions = new ArrayList<>();
-        if (!CollectionUtils.isEmpty(videoInfo.getBuiltInSubtitleOptions())) {
-            boolean hasUpperLanguage = videoInfo.getBuiltInSubtitleOptions().stream()
+        if (!CollectionUtils.isEmpty(video.getBuiltInSubtitleOptions())) {
+            boolean hasUpperLanguage = video.getBuiltInSubtitleOptions().stream()
                     .anyMatch(option -> Utils.languagesEqual(option.getLanguage(), settings.getUpperLanguage()));
-            boolean hasLowerLanguage = videoInfo.getBuiltInSubtitleOptions().stream()
+            boolean hasLowerLanguage = video.getBuiltInSubtitleOptions().stream()
                     .anyMatch(option -> Utils.languagesEqual(option.getLanguage(), settings.getLowerLanguage()));
             boolean canHideOptions = hasUpperLanguage && hasLowerLanguage;
 
-            subtitleOptions = videoInfo.getBuiltInSubtitleOptions().stream()
-                    .map(option -> tableSubtitleOptionFrom(option, canHideOptions, settings))
+            subtitleOptions = video.getBuiltInSubtitleOptions().stream()
+                    .map(option -> tableSubtitleOptionFrom(option, canHideOptions, result, settings))
                     .collect(Collectors.toList());
         }
 
-        for (int i = 0; i < 2; i++) {
-            subtitleOptions.add(
-                    new TableSubtitleOption(
-                            null,
-                            null,
-                            false,
-                            true,
-                            true,
-                            TableSubtitleOption.UNKNOWN_SIZE,
-                            null,
-                            null,
-                            false,
-                            false,
-                            LogicConstants.SUB_RIP_FORMAT
-                    )
-            );
-        }
-
-        boolean haveHideableOptions = subtitleOptions.stream().anyMatch(TableSubtitleOption::isHideable);
-
-        return new TableVideoInfo(
-                videoInfo.getId(),
-                selected,
-                pathToDisplay,
-                videoInfo.getSize(),
-                videoInfo.getLastModified(),
-                getTextualReason(videoInfo.getNotValidReason(), videoInfo.getFormat()),
-                videoInfo.getFormat(),
-                subtitleOptions,
-                haveHideableOptions,
-                null
-        );
-    }
-
-    static TableSubtitleOption tableSubtitleOptionFrom(
-            BuiltInSubtitleOption subtitleOption,
-            boolean canHideOptions,
-            Settings settings
-    ) {
-        return new TableSubtitleOption(
-                subtitleOption.getId(),
-                getOptionTitle(subtitleOption),
-                canHideOptions && isOptionHideable(subtitleOption, settings),
-                false,
-                false,
-                ObjectUtils.firstNonNull(subtitleOption.getSize(), TableSubtitleOption.UNKNOWN_SIZE),
-                null,
-                getTextualReason(subtitleOption.getNotValidReason(), subtitleOption.getFormat()),
-                false,
-                false,
-                subtitleOption.getFormat()
-        );
-    }
-
-    private static String getOptionTitle(BuiltInSubtitleOption stream) {
-        String result = Utils.languageToString(stream.getLanguage()).toUpperCase();
-
-        if (!StringUtils.isBlank(stream.getTitle())) {
-            result += " (" + stream.getTitle() + ")";
-        }
+        result.setSubtitleOptions(subtitleOptions);
 
         return result;
-    }
-
-    private static boolean isOptionHideable(BuiltInSubtitleOption subtitleOption, Settings settings) {
-        LanguageAlpha3Code optionLanguage = subtitleOption.getLanguage();
-
-        return !Utils.languagesEqual(optionLanguage, settings.getUpperLanguage())
-                && !Utils.languagesEqual(optionLanguage, settings.getLowerLanguage());
-    }
-
-    @Nullable
-    private static String getTextualReason(SubtitleOptionNotValidReason reason, String format) {
-        if (reason == null) {
-            return null;
-        }
-
-        if (reason == SubtitleOptionNotValidReason.NOT_ALLOWED_FORMAT) {
-            return "The subtitles have a not allowed format (" + format + ")";
-        } else {
-            log.error("unexpected subtitle option unavailability reason: " + reason + ", most likely a bug");
-            throw new IllegalStateException();
-        }
     }
 
     @Nullable
@@ -203,26 +136,99 @@ public class VideoBackgroundUtils {
         }
     }
 
-    public static List<TableVideoInfo> getSortedVideosInfo(
-            List<TableVideoInfo> unsortedVideosInfo,
+    static TableSubtitleOption tableSubtitleOptionFrom(
+            BuiltInSubtitleOption subtitleOption,
+            boolean canHideOptions,
+            TableVideo video,
+            Settings settings
+    ) {
+        return TableSubtitleOption.createBuiltIn(
+                subtitleOption.getId(),
+                video,
+                getTextualReason(subtitleOption.getNotValidReason(), subtitleOption.getFormat()),
+                getOptionTitle(subtitleOption),
+                canHideOptions && isOptionHideable(subtitleOption, settings),
+                subtitleOption.isMerged(),
+                subtitleOption.getSize(),
+                null,
+                false,
+                false
+        );
+    }
+
+    @Nullable
+    private static String getTextualReason(SubtitleOptionNotValidReason reason, String format) {
+        if (reason == null) {
+            return null;
+        }
+
+        if (reason == SubtitleOptionNotValidReason.NOT_ALLOWED_FORMAT) {
+            return "The subtitles have a not allowed format (" + format + ")";
+        } else {
+            log.error("unexpected subtitle option unavailability reason: " + reason + ", most likely a bug");
+            throw new IllegalStateException();
+        }
+    }
+
+    private static String getOptionTitle(BuiltInSubtitleOption stream) {
+        if (stream.isMerged()) {
+            String upperCode = stream.getMergedUpperCode().toUpperCase();
+            if ("EXTERNAL".equals(upperCode)) {
+                upperCode = "FILE";
+            }
+            String lowerCode = stream.getMergedLowerCode().toUpperCase();
+            if ("EXTERNAL".equals(lowerCode)) {
+                lowerCode = "FILE";
+            }
+            return upperCode + "+" + lowerCode + " merged subtitles";
+        } else {
+            String result = Utils.languageToString(stream.getLanguage()).toUpperCase();
+
+            if (!StringUtils.isBlank(stream.getTitle())) {
+                result += " (" + stream.getTitle() + ")";
+            }
+
+            return result;
+        }
+    }
+
+    private static boolean isOptionHideable(BuiltInSubtitleOption subtitleOption, Settings settings) {
+        LanguageAlpha3Code optionLanguage = subtitleOption.getLanguage();
+
+        return !Utils.languagesEqual(optionLanguage, settings.getUpperLanguage())
+                && !Utils.languagesEqual(optionLanguage, settings.getLowerLanguage());
+    }
+
+    public static List<TableVideo> getOnlyValidVideos(List<TableVideo> allVideos, BackgroundManager backgroundManager) {
+        backgroundManager.setCancellationPossible(false);
+        backgroundManager.setIndeterminateProgress();
+        backgroundManager.updateMessage("Filtering unavailable...");
+
+        return allVideos.stream()
+                .filter(video -> StringUtils.isBlank(video.getNotValidReason()))
+                .collect(Collectors.toList());
+    }
+
+    public static List<TableVideo> getSortedVideos(
+            List<TableVideo> unsortedVideos,
             SortBy sortBy,
             SortDirection sortDirection,
             BackgroundManager backgroundManager
     ) {
         backgroundManager.setCancellationPossible(false);
         backgroundManager.setIndeterminateProgress();
-        backgroundManager.updateMessage("Sorting video list...");
+        backgroundManager.updateMessage("Sorting the video list...");
 
-        Comparator<TableVideoInfo> comparator;
+        Comparator<TableVideo> comparator;
         switch (sortBy) {
             case NAME:
-                comparator = Comparator.comparing(TableVideoInfo::getFilePath);
+                comparator = Comparator.comparing(TableVideo::getFilePath);
                 break;
             case MODIFICATION_TIME:
-                comparator = Comparator.comparing(TableVideoInfo::getLastModified);
+                comparator = Comparator.comparing(TableVideo::getLastModified);
                 break;
             case SIZE:
-                comparator = Comparator.comparing(TableVideoInfo::getSize);
+                comparator = Comparator.comparing(TableVideo::getSize);
                 break;
             default:
                 log.error("unexpected sortBy value: " + sortBy + ", most likely a bug");
@@ -233,25 +239,12 @@ public class VideoBackgroundUtils {
             comparator = comparator.reversed();
         }
 
-        return unsortedVideosInfo.stream().sorted(comparator).collect(Collectors.toList());
-    }
-
-    public static List<TableVideoInfo> getOnlyAvailableFilesInfo(
-            List<TableVideoInfo> allFilesInfo,
-            BackgroundManager backgroundManager
-    ) {
-        backgroundManager.setCancellationPossible(false);
-        backgroundManager.setIndeterminateProgress();
-        backgroundManager.updateMessage("Filtering unavailable...");
-
-        return allFilesInfo.stream()
-                .filter(fileInfo -> StringUtils.isBlank(fileInfo.getNotValidReason()))
-                .collect(Collectors.toList());
+        return unsortedVideos.stream().sorted(comparator).collect(Collectors.toList());
     }
 
     public static TableData getTableData(
-            TableWithVideos.Mode mode,
-            List<TableVideoInfo> videosInfo,
+            TableMode mode,
+            List<TableVideo> videos,
             SortBy sortBy,
             SortDirection sortDirection,
             BackgroundManager backgroundManager
@@ -259,25 +252,25 @@ public class VideoBackgroundUtils {
         backgroundManager.setCancellationPossible(false);
         backgroundManager.setIndeterminateProgress();
 
-        int allSelectableCount = 0;
+        int selectableCount = 0;
         int selectedAvailableCount = 0;
         int selectedUnavailableCount = 0;
 
         backgroundManager.updateMessage("Calculating the number of videos...");
-        for (TableVideoInfo videoInfo : videosInfo) {
-            if (videoInfo.isSelected()) {
-                if (StringUtils.isBlank(videoInfo.getNotValidReason())) {
+        for (TableVideo video : videos) {
+            if (video.isSelected()) {
+                if (StringUtils.isBlank(video.getNotValidReason())) {
                     selectedAvailableCount++;
                 } else {
                     selectedUnavailableCount++;
                 }
             }
 
-            if (mode == TableWithVideos.Mode.SEPARATE_FILES) {
-                allSelectableCount++;
-            } else if (mode == TableWithVideos.Mode.DIRECTORY) {
-                if (StringUtils.isBlank(videoInfo.getNotValidReason())) {
-                    allSelectableCount++;
+            if (mode == TableMode.SEPARATE_VIDEOS) {
+                selectableCount++;
+            } else if (mode == TableMode.WHOLE_DIRECTORY) {
+                if (StringUtils.isBlank(video.getNotValidReason())) {
+                    selectableCount++;
                 }
             } else {
                 log.error("unexpected mode " + mode + ", most likely a bug");
@@ -287,8 +280,8 @@ public class VideoBackgroundUtils {
 
         return new TableData(
                 mode,
-                videosInfo,
-                allSelectableCount,
+                videos,
+                selectableCount,
                 selectedAvailableCount,
                 selectedUnavailableCount,
                 getTableSortBy(sortBy),
@@ -322,7 +315,7 @@ public class VideoBackgroundUtils {
         }
     }
 
-    public static String getLoadSubtitlesProgressMessage(
+    static String getLoadSubtitlesProgressMessage(
             int processedCount,
             int subtitlesToLoadCount,
             BuiltInSubtitleOption subtitleStream,
@@ -338,30 +331,23 @@ public class VideoBackgroundUtils {
                 + " in " + file.getName();
     }
 
-    public static void clearActionResults(
-            List<TableVideoInfo> filesInfo,
-            TableWithVideos tableWithFiles,
-            BackgroundManager backgroundManager
-    ) {
+    static void clearActionResults(List<TableVideo> videos, BackgroundManager backgroundManager) {
         backgroundManager.setIndeterminateProgress();
         backgroundManager.updateMessage("Clearing state...");
 
-        for (TableVideoInfo fileInfo : filesInfo) {
-            Platform.runLater(() -> tableWithFiles.clearActionResult(fileInfo));
+        for (TableVideo video : videos) {
+            Platform.runLater(video::clearActionResult);
         }
     }
 
-    public static List<TableVideoInfo> getSelectedFilesInfo(
-            List<TableVideoInfo> filesInfo,
-            BackgroundManager backgroundManager
-    ) {
+    static List<TableVideo> getSelectedVideos(List<TableVideo> allVideos, BackgroundManager backgroundManager) {
         backgroundManager.setIndeterminateProgress();
-        backgroundManager.updateMessage("Getting list of files to work with...");
+        backgroundManager.updateMessage("Getting list of videos to work with...");
 
-        return filesInfo.stream().filter(TableVideoInfo::isSelected).collect(Collectors.toList());
+        return allVideos.stream().filter(TableVideo::isSelected).collect(Collectors.toList());
     }
 
-    public static ActionResult getSubtitleLoadingActionResult(
+    static ActionResult getSubtitleLoadingActionResult(
             int subtitlesToLoadCount,
             int processedCount,
             int loadedSuccessfullyCount,
@@ -430,20 +416,20 @@ public class VideoBackgroundUtils {
         return new ActionResult(success, warn, error);
     }
 
-    public static String failedToLoadReasonFrom(FfmpegException.Code code) {
+    static String failedToLoadReasonFrom(FfmpegException.Code code) {
         if (code == FfmpegException.Code.GENERAL_ERROR) {
             return "Fmpeg returned an error";
         } else {
-            log.error("unexpected code: " + code);
+            log.error("unexpected ffmpeg code when loading subtitles: " + code + ", most likely a bug");
             throw new IllegalStateException();
         }
     }
 
-    public static String getProcessFileProgressMessage(int processedCount, int allFileCount, TableVideoInfo fileInfo) {
+    static String getProcessFileProgressMessage(int processedCount, int allFileCount, TableVideo video) {
         String progressPrefix = allFileCount > 1
                 ? String.format("%d/%d ", processedCount + 1, allFileCount) + " processing file "
                 : "Processing file ";
 
-        return progressPrefix + fileInfo.getFilePath() + "...";
+        return progressPrefix + video.getFilePath() + "...";
     }
 }

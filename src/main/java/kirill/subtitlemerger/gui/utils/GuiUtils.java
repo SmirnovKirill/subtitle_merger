@@ -3,7 +3,6 @@ package kirill.subtitlemerger.gui.utils;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.IntegerExpression;
 import javafx.beans.binding.StringBinding;
-import javafx.beans.property.StringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -160,13 +159,26 @@ public class GuiUtils {
     /**
      * Generates the tooltip that is shown indefinitely and without delays.
      */
-    public static Tooltip getTooltip(StringProperty text) {
+    public static Tooltip getTooltip(ObservableValue<? extends String> text) {
         Tooltip result = new Tooltip();
 
         result.textProperty().bind(text);
         setTooltipProperties(result);
 
         return result;
+    }
+
+    public static Region getFixedWidthSpacer(int width) {
+        Region result = new Region();
+
+        setFixedWidth(result, width);
+
+        return result;
+    }
+
+    public static void setFixedWidth(Region region, int width) {
+        region.setMinWidth(width);
+        region.setMaxWidth(width);
     }
 
     public static Region getFixedHeightSpacer(int height) {
@@ -176,11 +188,6 @@ public class GuiUtils {
         result.setMaxHeight(height);
 
         return result;
-    }
-
-    public static void setFixedWidth(Region region, int width) {
-        region.setMinWidth(width);
-        region.setMaxWidth(width);
     }
 
     /**

@@ -32,7 +32,7 @@ public class GuiLauncher extends Application {
         stage.setTitle("Subtitle Merger");
         stage.setResizable(true);
         Scene scene = new Scene(mainFormInfo.getRootNode());
-        scene.getStylesheets().add("/gui/javafx/style.css");
+        scene.getStylesheets().add("/gui/javafx/main.css");
         stage.setScene(scene);
 
         stage.show();

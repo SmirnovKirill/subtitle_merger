@@ -31,20 +31,12 @@ public class BuiltInSubtitleOption extends SubtitleOption {
             int ffmpegIndex,
             SubtitlesAndInput subtitlesAndInput,
             SubtitleOptionNotValidReason notValidReason,
-            boolean selectedAsUpper,
-            boolean selectedAsLower,
             String format,
             LanguageAlpha3Code language,
             String title,
             boolean defaultDisposition
     ) {
-        super(
-                "ffmpeg-" + ffmpegIndex,
-                subtitlesAndInput,
-                notValidReason,
-                selectedAsUpper,
-                selectedAsLower
-        );
+        super("ffmpeg-" + ffmpegIndex, subtitlesAndInput, notValidReason);
 
         this.ffmpegIndex = ffmpegIndex;
         this.format = format;
@@ -59,5 +51,49 @@ public class BuiltInSubtitleOption extends SubtitleOption {
         if (defaultDisposition) {
             defaultDisposition = false;
         }
+    }
+
+    /**
+     * @return the three-letter code of the upper language used for the merge if it was known, "unknown" if the
+     * language was unknown and "external" if an external file was used (thus no language code).
+     */
+    public String getMergedUpperCode() {
+        if (!merged) {
+            log.error("subtitle option " + getId() + " isn't merged, can't extract the language, most likely a bug");
+            throw new IllegalStateException();
+        }
+
+        return getValidatedMergedCode(title.split("-")[1]);
+    }
+
+    private static String getValidatedMergedCode(String code) {
+        switch (code) {
+            case "external":
+            case "unknown":
+                return code;
+            case "undefined":
+                return "unknown";
+            default:
+                LanguageAlpha3Code languageCode = LanguageAlpha3Code.getByCode(code);
+                if (languageCode == null) {
+                    log.warn(code + " is an incorrect language code, maybe user just messed up the title");
+                    return "unknown";
+                }
+
+                return code;
+        }
+    }
+
+    /**
+     * @return the three-letter code of the lower language used for the merge if it was known, "unknown" if the
+     * language was unknown and "external" if an external file was used (thus no language code).
+     */
+    public String getMergedLowerCode() {
+        if (!merged) {
+            log.error("subtitle option " + getId() + " isn't merged, can't extract the language, most likely a bug");
+            throw new IllegalStateException();
+        }
+
+        return getValidatedMergedCode(title.split("-")[2]);
     }
 }

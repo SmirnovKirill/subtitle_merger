@@ -9,19 +9,8 @@ import java.io.File;
 public class ExternalSubtitleOption extends SubtitleOption {
     private File file;
 
-    public ExternalSubtitleOption(
-            File file,
-            SubtitlesAndInput subtitlesAndInput,
-            boolean selectedAsUpper,
-            boolean selectedAsLower
-    ) {
-        super(
-                "file-" + file.getAbsolutePath(),
-                subtitlesAndInput,
-                null,
-                selectedAsUpper,
-                selectedAsLower
-        );
+    public ExternalSubtitleOption(File file, SubtitlesAndInput subtitlesAndInput) {
+        super("file-" + file.getAbsolutePath(), subtitlesAndInput, null);
 
         this.file = file;
     }

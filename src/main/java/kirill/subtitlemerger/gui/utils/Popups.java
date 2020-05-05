@@ -13,7 +13,7 @@ import kirill.subtitlemerger.gui.utils.entities.FormInfo;
 import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndInput;
 
 public class Popups {
-    public static void showErrorPopup(String message, Stage ownerStage) {
+    public static void showError(String message, Stage ownerStage) {
         FormInfo nodeInfo = GuiUtils.loadForm("/gui/javafx/forms/common/error_popup_form.fxml");
 
         Stage popupStage = getPopupStage("Error!", nodeInfo.getRootNode(), ownerStage);
@@ -33,13 +33,13 @@ public class Popups {
         result.setResizable(false);
 
         Scene scene = new Scene(rootNode);
-        scene.getStylesheets().add("/gui/javafx/style.css");
+        scene.getStylesheets().add("/gui/javafx/main.css");
         result.setScene(scene);
 
         return result;
     }
 
-    public static AgreementResult showAgreementPopup(
+    public static AgreementResult askAgreement(
             String message,
             String applyToAllText,
             String yesText,
@@ -61,8 +61,8 @@ public class Popups {
     /**
      * A brief version of the agreement popup without an "apply to all" option.
      */
-    public static boolean showAgreementPopup(String message, String yesText, String noText, Stage ownerStage) {
-        AgreementResult result = showAgreementPopup(message, null, yesText, noText, ownerStage);
+    public static boolean askAgreement(String message, String yesText, String noText, Stage ownerStage) {
+        AgreementResult result = askAgreement(message, null, yesText, noText, ownerStage);
         return result == AgreementResult.YES;
     }
 

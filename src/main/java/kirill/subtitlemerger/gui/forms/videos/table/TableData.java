@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.gui.forms.videos.table_with_files;
+package kirill.subtitlemerger.gui.forms.videos.table;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -8,11 +8,11 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 public class TableData {
-    private TableWithVideos.Mode mode;
+    private TableMode mode;
 
-    private List<TableVideoInfo> videosInfo;
+    private List<TableVideo> videos;
 
-    private int allSelectableCount;
+    private int selectableCount;
 
     private int selectedAvailableCount;
 

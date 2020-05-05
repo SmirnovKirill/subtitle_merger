@@ -12,7 +12,7 @@ import kirill.subtitlemerger.logic.utils.file_validation.InputFileNotValidReason
 import kirill.subtitlemerger.logic.utils.file_validation.InputFileValidationOptions;
 import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
 import kirill.subtitlemerger.logic.videos.entities.SubtitleOptionNotValidReason;
-import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
+import kirill.subtitlemerger.logic.videos.entities.Video;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -30,19 +30,19 @@ public class Videos {
      * Returns the information on the given file. Not that it doesn't load the subtitles because it's a pretty
      * time-consuming operation.
      */
-    public static VideoInfo getVideoInfo(File file, List<String> allowedExtensions, Ffprobe ffprobe) {
+    public static Video getVideo(File file, List<String> allowedExtensions, Ffprobe ffprobe) {
         InputFileValidationOptions validationOptions = InputFileValidationOptions.builder()
                 .allowedExtensions(allowedExtensions)
                 .allowEmpty(true)
                 .build();
-        InputFileInfo inputFileInfo = FileValidator.getInputFileInfo(file.getAbsolutePath(), validationOptions);
-        if (inputFileInfo.getNotValidReason() == InputFileNotValidReason.NO_EXTENSION) {
-            return new VideoInfo(file, null, NO_EXTENSION, null, null);
-        } else if (inputFileInfo.getNotValidReason() == InputFileNotValidReason.NOT_ALLOWED_EXTENSION) {
-            return new VideoInfo(file, null, NOT_ALLOWED_EXTENSION, null, null);
+        InputFileInfo fileInfo = FileValidator.getInputFileInfo(file.getAbsolutePath(), validationOptions);
+        if (fileInfo.getNotValidReason() == InputFileNotValidReason.NO_EXTENSION) {
+            return new Video(file, NO_EXTENSION, null, null, null);
+        } else if (fileInfo.getNotValidReason() == InputFileNotValidReason.NOT_ALLOWED_EXTENSION) {
+            return new Video(file, NOT_ALLOWED_EXTENSION, null, null, null);
         }
         /*
-         * There can be other errors if the file is removed or turned into a directory between the selection and the
+         * There can be other errors if the file was removed or turned into a directory between the selection and the
          * validation but we'll just let them be and let ffprobe return an error. Because these errors can happen only
          * if the user causes them on purpose, so I think it's not worthy to handle these situations in any special way.
          */
@@ -52,7 +52,7 @@ public class Videos {
             ffprobeInfo = ffprobe.getVideoInfo(file);
         } catch (FfmpegException e) {
             log.warn("failed to get ffprobe info: " + e.getCode() + ", console output " + e.getConsoleOutput());
-            return new VideoInfo(file, null, FFPROBE_FAILED, null, null);
+            return new Video(file, FFPROBE_FAILED, null, null, null);
         } catch (InterruptedException e) {
             log.error("the process can't be interrupted, most likely a bug");
             throw new IllegalStateException();
@@ -60,13 +60,13 @@ public class Videos {
 
         String format = ffprobeInfo.getFormat().getFormatName();
         if (!LogicConstants.ALLOWED_VIDEO_FORMATS.contains(format)) {
-            return new VideoInfo(file, format, NOT_ALLOWED_FORMAT, null, null);
+            return new Video(file, NOT_ALLOWED_FORMAT, format, null, null);
         }
 
-        return new VideoInfo(
+        return new Video(
                 file,
-                format,
                 null,
+                format,
                 new ArrayList<>(getSubtitleOptions(ffprobeInfo)),
                 null
         );
@@ -91,8 +91,6 @@ public class Videos {
                             stream.getIndex(),
                             null,
                             notValidReason,
-                            false,
-                            false,
                             format,
                             getLanguage(stream),
                             getTitle(stream),

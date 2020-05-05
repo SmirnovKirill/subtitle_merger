@@ -30,10 +30,6 @@ public abstract class SubtitleOption {
      */
     private SubtitleOptionNotValidReason notValidReason;
 
-    private boolean selectedAsUpper;
-
-    private boolean selectedAsLower;
-
     @Nullable
     public Subtitles getSubtitles() {
         return subtitlesAndInput != null && subtitlesAndInput.isCorrectFormat()
@@ -44,21 +40,6 @@ public abstract class SubtitleOption {
     @Nullable
     public Integer getSize() {
         return subtitlesAndInput != null ? subtitlesAndInput.getSize() : null;
-    }
-
-    public void selectAsUpper() {
-        selectedAsUpper = true;
-        selectedAsLower = false;
-    }
-
-    public void selectAsLower() {
-        selectedAsUpper = false;
-        selectedAsLower = true;
-    }
-
-    public void unselect() {
-        selectedAsUpper = false;
-        selectedAsLower = false;
     }
 
     public static <T extends SubtitleOption> T getById(String id, List<T> subtitleOptions) {

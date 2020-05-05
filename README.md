@@ -112,8 +112,8 @@ the subtitles in a several gigabyte video) and because of that loading the subti
 <a name="encoding"></a>
 #### What about the encoding?
 By default all input files are considered to be UTF8-encoded. If that's not the case you can change the encoding to the
-one you like in the preview window by pressing the eye icon. Feel free to do it because that's safe and does not modify 
-files. Application encodes resulting files with UTF8, it's not configurable. Also note that you can't change the 
+one you like in the preview window after pressing the eye icon. Feel free to do it because that's safe and does not
+modify files. Application encodes resulting files with UTF8, it's not configurable. Also note that you can't change the 
 encoding of the subtitles that are already in the video, they are always UTF8-encoded.
 ![Encoding](/readme_images/preview_encoding.png)
 

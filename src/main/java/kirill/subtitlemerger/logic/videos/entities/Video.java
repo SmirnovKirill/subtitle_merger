@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
  */
 @CommonsLog
 @Getter
-public class VideoInfo {
+public class Video {
     private String id;
 
     private File file;
@@ -26,31 +26,31 @@ public class VideoInfo {
 
     private long size;
 
-    private String format;
-
     /**
      * We will keep track of all the selected videos even if they can't be used for subtitle merging (for better
      * diagnostics). The enum contains the reason why this video can't be used for the subtitle merging.
      */
     private VideoNotValidReason notValidReason;
 
+    private String format;
+
     private List<SubtitleOption> subtitleOptions;
 
     @Setter
     private MergedSubtitleInfo mergedSubtitleInfo;
 
-    public VideoInfo(
+    public Video(
             File file,
-            String format,
             VideoNotValidReason notValidReason,
+            String format,
             List<SubtitleOption> subtitleOptions,
             MergedSubtitleInfo mergedSubtitleInfo
     ) {
         id = file.getAbsolutePath();
         this.file = file;
         setCurrentSizeAndLastModified();
-        this.format = format;
         this.notValidReason = notValidReason;
+        this.format = format;
         this.subtitleOptions = subtitleOptions;
         this.mergedSubtitleInfo = mergedSubtitleInfo;
     }
@@ -60,12 +60,10 @@ public class VideoInfo {
         size = file.length();
     }
 
-    public static VideoInfo getById(String id, List<VideoInfo> videosInfo) {
-        VideoInfo result = videosInfo.stream()
-                .filter(videoInfo -> Objects.equals(videoInfo.getId(), id))
-                .findFirst().orElse(null);
+    public static Video getById(String id, List<Video> videos) {
+        Video result = videos.stream().filter(video -> Objects.equals(video.getId(), id)).findFirst().orElse(null);
         if (result == null) {
-            log.error("no video info for id " + id + ", most likely a bug");
+            log.error("no video for id " + id + ", most likely a bug");
             throw new IllegalStateException();
         }
 
@@ -83,7 +81,7 @@ public class VideoInfo {
                 .collect(Collectors.toList());
     }
 
-    public List<ExternalSubtitleOption> getExternalSubtitles() {
+    public List<ExternalSubtitleOption> getExternalSubtitleOptions() {
         if (subtitleOptions == null) {
             return null;
         }

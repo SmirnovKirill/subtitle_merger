@@ -2,9 +2,8 @@ package kirill.subtitlemerger.gui.forms.videos.background;
 
 import javafx.application.Platform;
 import kirill.subtitlemerger.gui.GuiContext;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableSubtitleOption;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableVideoInfo;
-import kirill.subtitlemerger.gui.forms.videos.table_with_files.TableWithVideos;
+import kirill.subtitlemerger.gui.forms.videos.table.TableSubtitleOption;
+import kirill.subtitlemerger.gui.forms.videos.table.TableVideo;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
@@ -16,7 +15,7 @@ import kirill.subtitlemerger.logic.utils.Utils;
 import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
 import kirill.subtitlemerger.logic.videos.entities.MergedSubtitleInfo;
 import kirill.subtitlemerger.logic.videos.entities.SubtitleOption;
-import kirill.subtitlemerger.logic.videos.entities.VideoInfo;
+import kirill.subtitlemerger.logic.videos.entities.Video;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
@@ -28,6 +27,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackgroundUtils.FAILED_TO_LOAD_INCORRECT_FORMAT;
+import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackgroundUtils.failedToLoadReasonFrom;
+
 @CommonsLog
 @AllArgsConstructor
 public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner.Result> {
@@ -35,11 +37,9 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
 
     private SubtitleOption lowerOption;
 
-    private VideoInfo fileInfo;
+    private Video fileInfo;
 
-    private TableVideoInfo tableFileInfo;
-
-    private TableWithVideos tableWithFiles;
+    private TableVideo tableFileInfo;
 
     private GuiContext context;
 
@@ -133,30 +133,13 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
 
                 if (subtitlesAndInput.isCorrectFormat()) {
                     ffmpegStream.setSubtitlesAndInput(subtitlesAndInput);
-
-                    Platform.runLater(
-                            () -> tableWithFiles.subtitlesLoadedSuccessfully(
-                                    subtitlesAndInput.getSize(),
-                                    tableSubtitleOption,
-                                    tableFileInfo
-                            )
-                    );
+                    Platform.runLater(() -> tableSubtitleOption.loadedSuccessfully(subtitlesAndInput.getSize()));
                 } else {
-                    Platform.runLater(
-                            () -> tableWithFiles.failedToLoadSubtitles(
-                                    VideoBackgroundUtils.FAILED_TO_LOAD_STREAM_INCORRECT_FORMAT,
-                                    tableSubtitleOption
-                            )
-                    );
+                    Platform.runLater(() -> tableSubtitleOption.failedToLoad(FAILED_TO_LOAD_INCORRECT_FORMAT));
                 }
             } catch (FfmpegException e) {
                 log.warn("failed to get subtitle text: " + e.getCode() + ", console output " + e.getConsoleOutput());
-                Platform.runLater(
-                        () -> tableWithFiles.failedToLoadSubtitles(
-                                VideoBackgroundUtils.failedToLoadReasonFrom(e.getCode()),
-                                tableSubtitleOption
-                        )
-                );
+                Platform.runLater(() -> tableSubtitleOption.failedToLoad(failedToLoadReasonFrom(e.getCode())));
             }
         }
     }
