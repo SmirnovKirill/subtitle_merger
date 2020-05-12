@@ -38,9 +38,9 @@ public class TableVideo {
     @Getter
     private String format;
 
-    private ObservableList<TableSubtitleOption> subtitleOptions;
+    private ObservableList<TableSubtitleOption> options;
 
-    private ObservableList<TableSubtitleOption> unmodifiableSubtitleOptions;
+    private ObservableList<TableSubtitleOption> unmodifiableOptions;
 
     private ReadOnlyIntegerWrapper externalOptionCount;
 
@@ -75,8 +75,8 @@ public class TableVideo {
         this.lastModified = new ReadOnlyObjectWrapper<>(lastModified);
         this.notValidReason = notValidReason;
         this.format = format;
-        subtitleOptions = FXCollections.observableArrayList();
-        unmodifiableSubtitleOptions = FXCollections.unmodifiableObservableList(subtitleOptions);
+        options = FXCollections.observableArrayList();
+        unmodifiableOptions = FXCollections.unmodifiableObservableList(options);
         externalOptionCount = new ReadOnlyIntegerWrapper();
         hideableOptionCount = new ReadOnlyIntegerWrapper();
         someOptionsHidden = new SimpleBooleanProperty();
@@ -100,48 +100,47 @@ public class TableVideo {
         table.handleVideoSelected(selected, StringUtils.isBlank(notValidReason));
     }
 
-    public void setSubtitleOptions(List<TableSubtitleOption> subtitleOptions) {
-        this.subtitleOptions.setAll(subtitleOptions);
-        externalOptionCount.set(getExternalOptionCount(subtitleOptions));
+    public void setOptions(List<TableSubtitleOption> options) {
+        this.options.setAll(options);
+        externalOptionCount.set(getExternalOptionCount(options));
         if (getExternalOptionCount() > 2) {
             log.error("there can't be more than 2 external subtitle options for a video, most likely a bug");
             throw new IllegalStateException();
         }
-        hideableOptionCount.set(getHideableOptionCount(subtitleOptions));
+        hideableOptionCount.set(getHideableOptionCount(options));
         /* Hide hideable options by default. */
-        setSomeOptionsHidden(subtitleOptions.stream().anyMatch(TableSubtitleOption::isHideable));
-        notLoadedOptionCount.set(getNotLoadedOptionCount(subtitleOptions));
-        upperOption.set(getUpperOption(subtitleOptions));
-        lowerOption.set(getLowerOption(subtitleOptions));
+        setSomeOptionsHidden(options.stream().anyMatch(TableSubtitleOption::isHideable));
+        notLoadedOptionCount.set(getNotLoadedOptionCount(options));
+        upperOption.set(getUpperOption(options));
+        lowerOption.set(getLowerOption(options));
     }
 
-    private static int getExternalOptionCount(List<TableSubtitleOption> subtitleOptions) {
-        return (int) subtitleOptions.stream()
-                .filter(option -> option.getType() == TableSubtitleOptionType.EXTERNAL)
-                .count();
+    private static int getExternalOptionCount(List<TableSubtitleOption> options) {
+        return (int) options.stream().filter(option -> option.getType() == TableSubtitleOptionType.EXTERNAL).count();
     }
 
-    private static int getHideableOptionCount(List<TableSubtitleOption> subtitleOptions) {
-        return (int) subtitleOptions.stream().filter(TableSubtitleOption::isHideable).count();
+    private static int getHideableOptionCount(List<TableSubtitleOption> options) {
+        return (int) options.stream().filter(TableSubtitleOption::isHideable).count();
     }
 
-    private static int getNotLoadedOptionCount(List<TableSubtitleOption> subtitleOptions) {
-        return (int) subtitleOptions.stream()
+    private static int getNotLoadedOptionCount(List<TableSubtitleOption> options) {
+        return (int) options.stream()
                 .filter(option -> option.getType() == TableSubtitleOptionType.BUILT_IN)
                 .filter(option -> option.getSize() == TableSubtitleOption.UNKNOWN_SIZE)
                 .count();
     }
 
     @Nullable
-    private static TableSubtitleOption getUpperOption(List<TableSubtitleOption> subtitleOptions) {
-        return subtitleOptions.stream().filter(TableSubtitleOption::isSelectedAsUpper).findFirst().orElse(null);
+    private static TableSubtitleOption getUpperOption(List<TableSubtitleOption> options) {
+        return options.stream().filter(TableSubtitleOption::isSelectedAsUpper).findFirst().orElse(null);
     }
 
     @Nullable
-    private static TableSubtitleOption getLowerOption(List<TableSubtitleOption> subtitleOptions) {
-        return subtitleOptions.stream().filter(TableSubtitleOption::isSelectedAsLower).findFirst().orElse(null);
+    private static TableSubtitleOption getLowerOption(List<TableSubtitleOption> options) {
+        return options.stream().filter(TableSubtitleOption::isSelectedAsLower).findFirst().orElse(null);
     }
 
+    //todo remove?
     public static TableVideo getById(String id, Collection<TableVideo> videos) {
         TableVideo result = videos.stream().filter(video -> Objects.equals(video.getId(), id)).findFirst().orElse(null);
 
@@ -153,8 +152,12 @@ public class TableVideo {
         return result;
     }
 
-    public void addOption(TableSubtitleOption option, ActionResult actionResult) {
-        subtitleOptions.add(option);
+    public TableSubtitleOption getOption(String id) {
+        return TableSubtitleOption.getById(id, options);
+    }
+
+    public void addOption(TableSubtitleOption option) {
+        options.add(option);
 
         if (option.getType() == TableSubtitleOptionType.EXTERNAL) {
             if (getExternalOptionCount() >= 2) {
@@ -184,8 +187,6 @@ public class TableVideo {
         if (option.isSelectedAsLower()) {
             lowerOption.set(option);
         }
-
-        setActionResult(actionResult);
     }
 
     public void removeOption(TableSubtitleOption option, ActionResult actionResult) {
@@ -194,9 +195,7 @@ public class TableVideo {
             throw new IllegalStateException();
         }
 
-        boolean removed = subtitleOptions.removeIf(
-                currentOption -> Objects.equals(currentOption.getId(), option.getId())
-        );
+        boolean removed = options.removeIf(currentOption -> Objects.equals(currentOption.getId(), option.getId()));
         if (!removed) {
             log.error("option with id " + option.getId() + " has not been removed, most likely a bug");
             throw new IllegalStateException();
@@ -248,8 +247,8 @@ public class TableVideo {
         setActionResult(ActionResult.onlyError(text));
     }
 
-    public ObservableList<TableSubtitleOption> getSubtitleOptions() {
-        return unmodifiableSubtitleOptions;
+    public ObservableList<TableSubtitleOption> getOptions() {
+        return unmodifiableOptions;
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})

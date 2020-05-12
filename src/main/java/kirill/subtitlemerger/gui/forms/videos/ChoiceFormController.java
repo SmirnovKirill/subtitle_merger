@@ -42,30 +42,25 @@ public class ChoiceFormController {
     }
 
     @FXML
-    private void separateFilesButtonClicked() {
-        List<File> files = getFiles(stage, context.getSettings());
-        if (CollectionUtils.isEmpty(files)) {
+    private void separateVideosButtonClicked() {
+        List<File> videoFiles = getVideoFiles(stage, context.getSettings());
+        if (CollectionUtils.isEmpty(videoFiles)) {
             return;
         }
 
-        if (files.size() > GuiConstants.TABLE_FILE_LIMIT) {
-            Popups.showError(
-                    String.format(
-                            "Unfortunately, it's impossible to add more than %d files",
-                            GuiConstants.TABLE_FILE_LIMIT
-                    ),
-                    stage
-            );
-
+        if (videoFiles.size() > GuiConstants.VIDEO_TABLE_LIMIT) {
+            String message = "Unfortunately, it's impossible to add more than " +  GuiConstants.VIDEO_TABLE_LIMIT
+                    + "videos";
+            Popups.showError(message, stage);
             return;
         }
 
         context.setVideosInProgress(true);
         videosFormController.setActivePane(ActivePane.MAIN);
-        videosFormController.processChosenFiles(files);
+        videosFormController.processChosenVideoFiles(videoFiles);
     }
 
-    private static List<File> getFiles(Stage stage, Settings settings) {
+    private static List<File> getVideoFiles(Stage stage, Settings settings) {
         FileChooser fileChooser = new FileChooser();
 
         fileChooser.setTitle("Please choose videos");

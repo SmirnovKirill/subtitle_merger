@@ -1,4 +1,4 @@
-package kirill.subtitlemerger.gui.forms.common.agreement_popup;
+package kirill.subtitlemerger.gui.forms.common.agreement;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -8,7 +8,7 @@ import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import org.apache.commons.lang3.StringUtils;
 
-public class AgreementPopupFormController {
+public class AgreementFormController {
     @FXML
     private Label messageLabel;
 

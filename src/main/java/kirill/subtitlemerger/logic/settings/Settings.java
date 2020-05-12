@@ -195,10 +195,16 @@ public class Settings {
         return (File) settings.get(VIDEO_SUBTITLE_DIRECTORY);
     }
 
+    public Sort getSort() {
+        return new Sort(getSortBy(), getSortDirection());
+    }
+
+    @SuppressWarnings("WeakerAccess")
     public SortBy getSortBy() {
         return (SortBy) settings.get(SORT_BY);
     }
 
+    @SuppressWarnings("WeakerAccess")
     public SortDirection getSortDirection() {
         return (SortDirection) settings.get(SORT_DIRECTION);
     }

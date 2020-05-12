@@ -21,7 +21,7 @@
             <Insets top="20" right="20" bottom="20" left="20"/>
         </padding>
         <Label>One or several videos</Label>
-        <Button onAction="#separateFilesButtonClicked" text="choose videos"/>
+        <Button onAction="#separateVideosButtonClicked" text="choose videos"/>
     </HBox>
     <HBox GridPane.rowIndex="1" GridPane.columnIndex="1" alignment="CENTER" spacing="10" styleClass="directory-pane">
         <padding>

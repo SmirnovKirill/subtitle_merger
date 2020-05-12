@@ -2,11 +2,11 @@ package kirill.subtitlemerger.gui.forms.videos.background;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.application.Platform;
-import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.forms.videos.table.TableSubtitleOption;
 import kirill.subtitlemerger.gui.forms.videos.table.TableVideo;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
+import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.settings.MergeMode;
 import kirill.subtitlemerger.logic.settings.Settings;
@@ -24,26 +24,29 @@ import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackgroundUtils.FAILED_TO_LOAD_INCORRECT_FORMAT;
+import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackgroundUtils.INCORRECT_FORMAT;
 import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackgroundUtils.failedToLoadReasonFrom;
 
 @CommonsLog
 @AllArgsConstructor
-public class MergePreparationRunner implements BackgroundRunner<MergePreparationRunner.Result> {
+public class MergePrepareRunner implements BackgroundRunner<MergePrepareRunner.Result> {
     private List<TableVideo> displayedTableFilesInfo;
 
     private List<Video> filesInfo;
 
-    private GuiContext context;
+    private Ffmpeg ffmpeg;
+
+    private Settings settings;
 
     @Override
-    public MergePreparationRunner.Result run(BackgroundManager backgroundManager) {
+    public MergePrepareRunner.Result run(BackgroundManager backgroundManager) {
         VideosBackgroundUtils.clearActionResults(displayedTableFilesInfo, backgroundManager);
 
         List<TableVideo> selectedTableFilesInfo = VideosBackgroundUtils.getSelectedVideos(
@@ -65,7 +68,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         }
 
         backgroundManager.setIndeterminateProgress();
-        backgroundManager.setCancellationPossible(true);
+        backgroundManager.setCancelPossible(true);
 
         List<FileMergeInfo> filesMergeInfo = new ArrayList<>();
 
@@ -92,9 +95,9 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         RequiredAndAvailableSpace requiredAndAvailableSpace = getRequiredAndAvailableTempSpace(
                 filesMergeInfo,
                 filesInfo,
-                context.getSettings(),
+                settings,
                 backgroundManager
-        ).orElse(null);
+        );
 
         return new Result(
                 false,
@@ -102,7 +105,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                 requiredAndAvailableSpace != null ? requiredAndAvailableSpace.getRequiredSpace() : null,
                 requiredAndAvailableSpace != null ? requiredAndAvailableSpace.getAvailableSpace() : null,
                 requiredAndAvailableSpace != null ? requiredAndAvailableSpace.getDirectoryForTempFile() : null,
-                getFilesToOverwrite(filesMergeInfo, context.getSettings(), backgroundManager),
+                getFilesToOverwrite(filesMergeInfo, settings, backgroundManager),
                 filesMergeInfo
         );
     }
@@ -128,31 +131,28 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         String progressMessagePrefix = getProgressMessagePrefix(processedCount, allCount, tableFileInfo);
         backgroundManager.updateMessage(progressMessagePrefix + "...");
 
-        Video fileInfo = Video.getById(tableFileInfo.getId(), filesInfo);
-
-        TableSubtitleOption tableUpperOption = tableFileInfo.getUpperOption();
-        TableSubtitleOption tableLowerOption = tableFileInfo.getLowerOption();
-        SubtitleOption upperSubtitles = SubtitleOption.getById(tableUpperOption.getId(), fileInfo.getSubtitleOptions());
-        SubtitleOption lowerSubtitles = SubtitleOption.getById(tableLowerOption.getId(), fileInfo.getSubtitleOptions());
+        Video video = Video.getById(tableFileInfo.getId(), filesInfo);
+        SubtitleOption upperSubtitles = video.getOption(tableFileInfo.getUpperOption().getId());
+        SubtitleOption lowerSubtitles = video.getOption(tableFileInfo.getLowerOption().getId());
 
         Set<LanguageAlpha3Code> languagesToCheck = getLanguagesToCheck(upperSubtitles, lowerSubtitles);
 
         int failedToLoadCount = loadStreams(
                 tableFileInfo,
-                fileInfo,
+                video,
                 languagesToCheck,
                 progressMessagePrefix,
                 backgroundManager
         );
         if (failedToLoadCount != 0) {
             return new FileMergeInfo(
-                    fileInfo.getId(),
+                    video.getId(),
                     FileMergeStatus.FAILED_TO_LOAD_SUBTITLES,
                     failedToLoadCount,
                     upperSubtitles,
                     lowerSubtitles,
                     null,
-                    getFileWithResult(fileInfo, upperSubtitles, lowerSubtitles, context.getSettings())
+                    getFileWithResult(video, upperSubtitles, lowerSubtitles, settings)
             );
         }
 
@@ -161,27 +161,27 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                 upperSubtitles.getSubtitles(),
                 lowerSubtitles.getSubtitles()
         );
-        String mergesSubtitleText = SubRipWriter.toText(mergedSubtitles, context.getSettings().isPlainTextSubtitles());
+        String mergesSubtitleText = SubRipWriter.toText(mergedSubtitles, settings.isPlainTextSubtitles());
 
-        if (isDuplicate(mergesSubtitleText, languagesToCheck, fileInfo, context.getSettings().isPlainTextSubtitles())) {
+        if (isDuplicate(mergesSubtitleText, languagesToCheck, video, settings.isPlainTextSubtitles())) {
             return new FileMergeInfo(
-                    fileInfo.getId(),
+                    video.getId(),
                     FileMergeStatus.DUPLICATE,
                     0,
                     upperSubtitles,
                     lowerSubtitles,
                     mergesSubtitleText,
-                    getFileWithResult(fileInfo, upperSubtitles, lowerSubtitles, context.getSettings())
+                    getFileWithResult(video, upperSubtitles, lowerSubtitles, settings)
             );
         } else {
             return new FileMergeInfo(
-                    fileInfo.getId(),
+                    video.getId(),
                     FileMergeStatus.OK,
                     0,
                     upperSubtitles,
                     lowerSubtitles,
                     mergesSubtitleText,
-                    getFileWithResult(fileInfo, upperSubtitles, lowerSubtitles, context.getSettings())
+                    getFileWithResult(video, upperSubtitles, lowerSubtitles, settings)
             );
         }
     }
@@ -227,7 +227,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
     ) throws InterruptedException {
         int failedToLoad = 0;
 
-        List<BuiltInSubtitleOption> streamsToLoad = fileInfo.getBuiltInSubtitleOptions().stream()
+        List<BuiltInSubtitleOption> streamsToLoad = fileInfo.getBuiltInOptions().stream()
                 .filter(stream -> stream.getLanguage() == null || languagesToCheck.contains(stream.getLanguage()))
                 .filter(stream -> stream.getSubtitles() == null)
                 .collect(Collectors.toList());
@@ -240,27 +240,23 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
                             + "..."
             );
 
-            TableSubtitleOption tableSubtitleOption = TableSubtitleOption.getById(
-                    ffmpegStream.getId(),
-                    tableFileInfo.getSubtitleOptions()
-            );
-
+            TableSubtitleOption tableSubtitleOption = tableFileInfo.getOption(ffmpegStream.getId());
             try {
-                String subtitleText = context.getFfmpeg().getSubtitleText(
+                String subtitleText = ffmpeg.getSubtitleText(
                         ffmpegStream.getFfmpegIndex(),
                         ffmpegStream.getFormat(),
                         fileInfo.getFile()
                 );
                 SubtitlesAndInput subtitlesAndInput = SubtitlesAndInput.from(
-                        subtitleText.getBytes(),
+                        subtitleText.getBytes(StandardCharsets.UTF_8),
                         StandardCharsets.UTF_8
                 );
 
                 if (subtitlesAndInput.isCorrectFormat()) {
                     ffmpegStream.setSubtitlesAndInput(subtitlesAndInput);
-                    Platform.runLater(() -> tableSubtitleOption.loadedSuccessfully(subtitlesAndInput.getSize()));
+                    Platform.runLater(() -> tableSubtitleOption.loadedSuccessfully(subtitlesAndInput.getSize(), null)); //todo temp
                 } else {
-                    Platform.runLater(() -> tableSubtitleOption.failedToLoad(FAILED_TO_LOAD_INCORRECT_FORMAT));
+                    Platform.runLater(() -> tableSubtitleOption.failedToLoad(INCORRECT_FORMAT));
                     failedToLoad++;
                 }
             } catch (FfmpegException e) {
@@ -279,7 +275,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
             Video fileInfo,
             boolean plainText
     ) {
-        for (BuiltInSubtitleOption subtitleStream : fileInfo.getBuiltInSubtitleOptions()) {
+        for (BuiltInSubtitleOption subtitleStream : fileInfo.getBuiltInOptions()) {
             if (subtitleStream.getLanguage() == null || languagesToCheck.contains(subtitleStream.getLanguage())) {
                 String subtitleText = SubRipWriter.toText(subtitleStream.getSubtitles(), plainText);
                 if (Objects.equals(mergedText, subtitleText)) {
@@ -321,18 +317,19 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         }
     }
 
-    private static Optional<RequiredAndAvailableSpace> getRequiredAndAvailableTempSpace(
+    @Nullable
+    private static RequiredAndAvailableSpace getRequiredAndAvailableTempSpace(
             List<FileMergeInfo> filesMergeInfo,
             List<Video> filesInfo,
             Settings settings,
             BackgroundManager backgroundManager
     ) {
         if (settings.getMergeMode() != MergeMode.ORIGINAL_VIDEOS) {
-            return Optional.empty();
+            return null;
         }
 
         backgroundManager.setIndeterminateProgress();
-        backgroundManager.setCancellationPossible(false);
+        backgroundManager.setCancelPossible(false);
         backgroundManager.updateMessage("Calculating required temporary space...");
 
         Long requiredSpace = null;
@@ -360,10 +357,10 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         }
 
         if (requiredSpace == null) {
-            return Optional.empty();
+            return null;
         }
 
-        return Optional.of(new RequiredAndAvailableSpace(requiredSpace, availableSpace, directoryForTempFile));
+        return new RequiredAndAvailableSpace(requiredSpace, availableSpace, directoryForTempFile);
     }
 
     private static List<File> getFilesToOverwrite(
@@ -376,7 +373,7 @@ public class MergePreparationRunner implements BackgroundRunner<MergePreparation
         }
 
         backgroundManager.setIndeterminateProgress();
-        backgroundManager.setCancellationPossible(false);
+        backgroundManager.setCancelPossible(false);
         backgroundManager.updateMessage("Getting files to overwrite...");
 
         List<File> result = new ArrayList<>();

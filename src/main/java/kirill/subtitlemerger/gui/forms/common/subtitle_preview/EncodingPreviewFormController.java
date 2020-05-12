@@ -53,7 +53,7 @@ public class EncodingPreviewFormController extends AbstractPreviewFormController
 
     private void displayText(Charset encoding, boolean firstRun) {
         BackgroundRunner<PreviewInfo> backgroundRunner = backgroundManager -> {
-            backgroundManager.setCancellationPossible(false);
+            backgroundManager.setCancelPossible(false);
             backgroundManager.setIndeterminateProgress();
             backgroundManager.updateMessage("Preparing the text...");
 

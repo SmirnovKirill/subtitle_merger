@@ -49,7 +49,7 @@ public class ReadOnlyPreviewFormController extends AbstractPreviewFormController
 
     private void displayText(String text) {
         BackgroundRunner<SplitText> backgroundRunner = backgroundManager -> {
-            backgroundManager.setCancellationPossible(false);
+            backgroundManager.setCancelPossible(false);
             backgroundManager.setIndeterminateProgress();
             backgroundManager.updateMessage("Preparing the text...");
             return getSplitText(text);

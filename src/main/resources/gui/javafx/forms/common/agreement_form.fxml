@@ -6,7 +6,7 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <VBox xmlns:fx="http://javafx.com/fxml"
-      fx:controller="kirill.subtitlemerger.gui.forms.common.agreement_popup.AgreementPopupFormController"
+      fx:controller="kirill.subtitlemerger.gui.forms.common.agreement.AgreementFormController"
       prefWidth="600" spacing="10">
     <padding>
         <Insets top="10" right="10" bottom="10" left="10"/>

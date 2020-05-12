@@ -8,9 +8,9 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 public class TableData {
-    private TableMode mode;
-
     private List<TableVideo> videos;
+
+    private TableMode mode;
 
     private int selectableCount;
 

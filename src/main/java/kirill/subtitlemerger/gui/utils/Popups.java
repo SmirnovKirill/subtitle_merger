@@ -4,9 +4,9 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import kirill.subtitlemerger.gui.forms.common.ErrorPopupFormController;
-import kirill.subtitlemerger.gui.forms.common.agreement_popup.AgreementPopupFormController;
-import kirill.subtitlemerger.gui.forms.common.agreement_popup.AgreementResult;
+import kirill.subtitlemerger.gui.forms.common.ErrorFormController;
+import kirill.subtitlemerger.gui.forms.common.agreement.AgreementFormController;
+import kirill.subtitlemerger.gui.forms.common.agreement.AgreementResult;
 import kirill.subtitlemerger.gui.forms.common.subtitle_preview.EncodingPreviewFormController;
 import kirill.subtitlemerger.gui.forms.common.subtitle_preview.ReadOnlyPreviewFormController;
 import kirill.subtitlemerger.gui.utils.entities.FormInfo;
@@ -14,11 +14,11 @@ import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndInput;
 
 public class Popups {
     public static void showError(String message, Stage ownerStage) {
-        FormInfo nodeInfo = GuiUtils.loadForm("/gui/javafx/forms/common/error_popup_form.fxml");
+        FormInfo nodeInfo = GuiUtils.loadForm("/gui/javafx/forms/common/error_form.fxml");
 
         Stage popupStage = getPopupStage("Error!", nodeInfo.getRootNode(), ownerStage);
 
-        ErrorPopupFormController controller = nodeInfo.getController();
+        ErrorFormController controller = nodeInfo.getController();
         controller.initialize(message, popupStage);
 
         popupStage.showAndWait();
@@ -46,11 +46,11 @@ public class Popups {
             String noText,
             Stage ownerStage
     ) {
-        FormInfo nodeInfo = GuiUtils.loadForm("/gui/javafx/forms/common/agreement_popup_form.fxml");
+        FormInfo nodeInfo = GuiUtils.loadForm("/gui/javafx/forms/common/agreement_form.fxml");
 
         Stage popupStage = getPopupStage("Please confirm", nodeInfo.getRootNode(), ownerStage);
 
-        AgreementPopupFormController controller = nodeInfo.getController();
+        AgreementFormController controller = nodeInfo.getController();
         controller.initialize(message, applyToAllText, yesText, noText, popupStage);
 
         popupStage.showAndWait();

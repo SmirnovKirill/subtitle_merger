@@ -127,7 +127,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
         }
 
         BackgroundRunner<InputSubtitleInfo> backgroundRunner = backgroundManager -> {
-            backgroundManager.setCancellationPossible(false);
+            backgroundManager.setCancelPossible(false);
             backgroundManager.setIndeterminateProgress();
             backgroundManager.updateMessage("Processing the file " + path + "...");
             return getInputSubtitleInfo(path, subtitleType, fileOrigin);
@@ -637,7 +637,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
                 return SubtitlesAndOutput.from(mergedSubtitles, settings.isPlainTextSubtitles());
             }
 
-            backgroundManager.setCancellationPossible(true);
+            backgroundManager.setCancelPossible(true);
             backgroundManager.setIndeterminateProgress();
             backgroundManager.updateMessage("Merging the subtitles...");
             try {
@@ -705,7 +705,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
 
         BackgroundRunner<ActionResult> backgroundRunner = backgroundManager -> {
             if (mergedSubtitles == null) {
-                backgroundManager.setCancellationPossible(true);
+                backgroundManager.setCancelPossible(true);
                 backgroundManager.setIndeterminateProgress();
                 backgroundManager.updateMessage("Merging the subtitles...");
                 try {
@@ -719,7 +719,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
             }
 
             try {
-                backgroundManager.setCancellationPossible(false);
+                backgroundManager.setCancelPossible(false);
                 backgroundManager.setIndeterminateProgress();
                 backgroundManager.updateMessage("Writing the result...");
 
@@ -738,7 +738,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
         };
 
         BackgroundCallback<ActionResult> callback = actionResult -> {
-            if (!StringUtils.isBlank(actionResult.getError())) {
+            if (actionResult.haveErrors()) {
                 displayFileElementsAsIncorrect(SubtitleType.MERGED);
             }
             totalResultPane.setActionResult(actionResult);

@@ -12,48 +12,48 @@ import javafx.scene.control.ProgressIndicator;
  * references.
  */
 public class BackgroundManager {
-    private ReadOnlyBooleanWrapper cancellationPossible;
+    private ReadOnlyBooleanWrapper cancelPossible;
 
-    private ReadOnlyStringWrapper cancellationDescription;
+    private ReadOnlyStringWrapper cancelDescription;
 
     private HelperTask<?> task;
 
     BackgroundManager(HelperTask task) {
-        cancellationPossible = new ReadOnlyBooleanWrapper(false);
-        cancellationDescription = new ReadOnlyStringWrapper();
+        cancelPossible = new ReadOnlyBooleanWrapper(false);
+        cancelDescription = new ReadOnlyStringWrapper();
         this.task = task;
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public boolean isCancellationPossible() {
-        return cancellationPossible.get();
+    public boolean getCancelPossible() {
+        return cancelPossible.get();
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public ReadOnlyBooleanProperty cancellationPossibleProperty() {
-        return cancellationPossible.getReadOnlyProperty();
+    public ReadOnlyBooleanProperty cancelPossibleProperty() {
+        return cancelPossible.getReadOnlyProperty();
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public void setCancellationPossible(boolean cancellationPossible) {
+    public void setCancelPossible(boolean cancelPossible) {
         /* The property is usually bound to some gui element so it should be updated in the javafx thread. */
-        Platform.runLater(() -> this.cancellationPossible.set(cancellationPossible));
+        Platform.runLater(() -> this.cancelPossible.set(cancelPossible));
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public String getCancellationDescription() {
-        return cancellationDescription.get();
+    public String getCancelDescription() {
+        return cancelDescription.get();
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public ReadOnlyStringProperty cancellationDescriptionProperty() {
-        return cancellationDescription.getReadOnlyProperty();
+    public ReadOnlyStringProperty cancelDescriptionProperty() {
+        return cancelDescription.getReadOnlyProperty();
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public void setCancellationDescription(String cancellationDescription) {
+    public void setCancelDescription(String cancelDescription) {
         /* The property is usually bound to some gui element so it should be updated in the javafx thread. */
-        Platform.runLater(() -> this.cancellationDescription.set(cancellationDescription));
+        Platform.runLater(() -> this.cancelDescription.set(cancelDescription));
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})

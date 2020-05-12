@@ -3,6 +3,7 @@ package kirill.subtitlemerger.logic.videos.entities;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
+import org.jetbrains.annotations.Nullable;
 import org.joda.time.LocalDateTime;
 
 import java.io.File;
@@ -34,24 +35,25 @@ public class Video {
 
     private String format;
 
-    private List<SubtitleOption> subtitleOptions;
+    private List<SubtitleOption> options;
 
     @Setter
+    @Nullable
     private MergedSubtitleInfo mergedSubtitleInfo;
 
     public Video(
             File file,
             VideoNotValidReason notValidReason,
             String format,
-            List<SubtitleOption> subtitleOptions,
-            MergedSubtitleInfo mergedSubtitleInfo
+            List<SubtitleOption> options,
+            @Nullable MergedSubtitleInfo mergedSubtitleInfo
     ) {
         id = file.getAbsolutePath();
         this.file = file;
         setCurrentSizeAndLastModified();
         this.notValidReason = notValidReason;
         this.format = format;
-        this.subtitleOptions = subtitleOptions;
+        this.options = options;
         this.mergedSubtitleInfo = mergedSubtitleInfo;
     }
 
@@ -70,25 +72,39 @@ public class Video {
         return result;
     }
 
-    public List<BuiltInSubtitleOption> getBuiltInSubtitleOptions() {
-        if (subtitleOptions == null) {
+    public SubtitleOption getOption(String id) {
+        return SubtitleOption.getById(id, options);
+    }
+
+    public BuiltInSubtitleOption getBuiltInOption(String id) {
+        return SubtitleOption.getById(id, getBuiltInOptions());
+    }
+
+    public List<BuiltInSubtitleOption> getBuiltInOptions() {
+        if (options == null) {
             return null;
         }
 
-        return subtitleOptions.stream()
+        return options.stream()
                 .filter(option -> option instanceof BuiltInSubtitleOption)
                 .map(BuiltInSubtitleOption.class::cast)
                 .collect(Collectors.toList());
     }
 
-    public List<ExternalSubtitleOption> getExternalSubtitleOptions() {
-        if (subtitleOptions == null) {
+    public List<ExternalSubtitleOption> getExternalOptions() {
+        if (options == null) {
             return null;
         }
 
-        return subtitleOptions.stream()
+        return options.stream()
                 .filter(option -> option instanceof ExternalSubtitleOption)
                 .map(ExternalSubtitleOption.class::cast)
+                .collect(Collectors.toList());
+    }
+
+    public List<BuiltInSubtitleOption> getOptionsToLoad() {
+        return getBuiltInOptions().stream()
+                .filter(option -> option.getNotValidReason() == null && option.getSubtitlesAndInput() == null)
                 .collect(Collectors.toList());
     }
 }

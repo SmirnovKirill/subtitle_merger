@@ -5,7 +5,7 @@ import javafx.stage.FileChooser;
 public class GuiConstants {
     public static final boolean GRID_LINES_VISIBLE = false;
 
-    public static final int TABLE_FILE_LIMIT = 10_000;
+    public static final int VIDEO_TABLE_LIMIT = 10_000;
 
     public static final FileChooser.ExtensionFilter VIDEO_EXTENSION_FILTER = new FileChooser.ExtensionFilter(
             "mkv files (*.mkv)", "*.mkv"

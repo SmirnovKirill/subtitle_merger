@@ -35,31 +35,31 @@ public class ProgressPane extends VBox {
     @FXML
     private Hyperlink cancelLink;
 
-    private BooleanProperty cancellationPossible;
+    private BooleanProperty cancelPossible;
 
-    private StringProperty cancellationDescription;
+    private StringProperty cancelDescription;
 
     public ProgressPane() {
         GuiUtils.initializeControl(this, "/gui/javafx/common_controls/progress_pane.fxml");
 
-        cancellationPossible = new SimpleBooleanProperty();
-        cancellationDescription = new SimpleStringProperty();
+        cancelPossible = new SimpleBooleanProperty();
+        cancelDescription = new SimpleStringProperty();
 
-        GuiUtils.bindVisibleAndManaged(cancelPane, cancellationPossible);
+        GuiUtils.bindVisibleAndManaged(cancelPane, cancelPossible);
 
         /*
          * Besides the cancellation description text that can be set through the property there is always a text after
          * this description offering to click the link to cancel the task. So if the description is set there should be
          * a space after that description so that the texts won't be too close.
          */
-        StringBinding cancellationDescriptionBinding = Bindings.createStringBinding(
+        StringBinding cancelDescriptionBinding = Bindings.createStringBinding(
                 () -> {
-                    String description = cancellationDescription.get();
+                    String description = cancelDescription.get();
                     return StringUtils.isBlank(description) ? "" : description + " ";
                 },
-                cancellationDescription
+                cancelDescription
         );
-        cancelDescriptionLabel.textProperty().bind(cancellationDescriptionBinding);
+        cancelDescriptionLabel.textProperty().bind(cancelDescriptionBinding);
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
@@ -93,33 +93,33 @@ public class ProgressPane extends VBox {
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public boolean isCancellationPossible() {
-        return cancellationPossible.get();
+    public boolean getCancelPossible() {
+        return cancelPossible.get();
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public BooleanProperty cancellationPossibleProperty() {
-        return cancellationPossible;
+    public BooleanProperty cancelPossibleProperty() {
+        return cancelPossible;
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public void setCancellationPossible(boolean cancellationPossible) {
-        this.cancellationPossible.set(cancellationPossible);
+    public void setCancelPossible(boolean cancelPossible) {
+        this.cancelPossible.set(cancelPossible);
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public String getCancellationDescription() {
-        return cancellationDescription.get();
+    public String getCancelDescription() {
+        return cancelDescription.get();
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public StringProperty cancellationDescriptionProperty() {
-        return cancellationDescription;
+    public StringProperty cancelDescriptionProperty() {
+        return cancelDescription;
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public void setCancellationDescription(String cancellationDescription) {
-        this.cancellationDescription.set(cancellationDescription);
+    public void setCancelDescription(String cancelDescription) {
+        this.cancelDescription.set(cancelDescription);
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})

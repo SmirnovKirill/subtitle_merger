@@ -2,10 +2,8 @@ package kirill.subtitlemerger.gui.forms.videos.background;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.application.Platform;
-import kirill.subtitlemerger.gui.forms.videos.table.TableData;
 import kirill.subtitlemerger.gui.forms.videos.table.TableSubtitleOption;
 import kirill.subtitlemerger.gui.forms.videos.table.TableVideo;
-import kirill.subtitlemerger.gui.forms.videos.table.TableWithVideos;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
@@ -37,18 +35,16 @@ import static java.util.stream.Collectors.toList;
 
 @CommonsLog
 @AllArgsConstructor
-public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
-    private List<MergePreparationRunner.FileMergeInfo> filesMergeInfo;
+public class MergeRunner implements BackgroundRunner<ActionResult> {
+    private List<MergePrepareRunner.FileMergeInfo> filesMergeInfo;
 
     private List<File> confirmedFilesToOverwrite;
 
     private File directoryForTempFile;
 
-    private List<TableVideo> displayedTableFilesInfo;
+    private List<TableVideo> displayedTableVideos;
 
     private List<Video> allFilesInfo;
-
-    private TableWithVideos tableWithFiles;
 
     private Ffprobe ffprobe;
 
@@ -57,7 +53,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
     private Settings settings;
 
     @Override
-    public Result run(BackgroundManager backgroundManager) {
+    public ActionResult run(BackgroundManager backgroundManager) {
         int allFileCount = filesMergeInfo.size();
         int processedCount = 0;
         int finishedSuccessfullyCount = 0;
@@ -65,15 +61,15 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
         int alreadyMergedCount = 0;
         int failedCount = 0;
 
-        for (MergePreparationRunner.FileMergeInfo fileMergeInfo : filesMergeInfo) {
-            TableVideo tableFileInfo = TableVideo.getById(fileMergeInfo.getId(), displayedTableFilesInfo);
+        for (MergePrepareRunner.FileMergeInfo fileMergeInfo : filesMergeInfo) {
+            TableVideo tableFileInfo = TableVideo.getById(fileMergeInfo.getId(), displayedTableVideos);
 
             String progressMessagePrefix = getProgressMessagePrefix(processedCount, allFileCount, tableFileInfo);
             backgroundManager.updateMessage(progressMessagePrefix + "...");
 
             Video fileInfo = Video.getById(fileMergeInfo.getId(), allFilesInfo);
 
-            if (fileMergeInfo.getStatus() == MergePreparationRunner.FileMergeStatus.FAILED_TO_LOAD_SUBTITLES) {
+            if (fileMergeInfo.getStatus() == MergePrepareRunner.FileMergeStatus.FAILED_TO_LOAD_SUBTITLES) {
                 String message = Utils.getTextDependingOnCount(
                         fileMergeInfo.getFailedToLoadSubtitlesCount(),
                         "Merge is unavailable because failed to load subtitles",
@@ -82,11 +78,11 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
 
                 Platform.runLater(() -> tableFileInfo.setOnlyError(message));
                 failedCount++;
-            } else if (fileMergeInfo.getStatus() == MergePreparationRunner.FileMergeStatus.DUPLICATE) {
+            } else if (fileMergeInfo.getStatus() == MergePrepareRunner.FileMergeStatus.DUPLICATE) {
                 String message = "Selected subtitles have already been merged";
                 Platform.runLater(() -> tableFileInfo.setOnlyWarn(message));
                 alreadyMergedCount++;
-            } else if (fileMergeInfo.getStatus() == MergePreparationRunner.FileMergeStatus.OK) {
+            } else if (fileMergeInfo.getStatus() == MergePrepareRunner.FileMergeStatus.OK) {
                 if (noPermission(fileMergeInfo, confirmedFilesToOverwrite, settings)) {
                     String message = "Merge is unavailable because you need to agree to the file overwriting";
                     Platform.runLater(() -> tableFileInfo.setOnlyWarn(message));
@@ -102,12 +98,12 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
                             } else {
                                 FfmpegInjectInfo injectInfo = new FfmpegInjectInfo(
                                         fileMergeInfo.getMergedSubtitleText(),
-                                        fileInfo.getBuiltInSubtitleOptions().size(),
+                                        fileInfo.getBuiltInOptions().size(),
                                         getMergedSubtitleLanguage(fileMergeInfo),
                                         "merged-" + getOptionTitleForFfmpeg(fileMergeInfo.getUpperSubtitles())
                                                 + "-" + getOptionTitleForFfmpeg(fileMergeInfo.getLowerSubtitles()),
                                         settings.isMakeMergedStreamsDefault(),
-                                        fileInfo.getBuiltInSubtitleOptions().stream()
+                                        fileInfo.getBuiltInOptions().stream()
                                                 .filter(BuiltInSubtitleOption::isDefaultDisposition)
                                                 .map(BuiltInSubtitleOption::getFfmpegIndex)
                                                 .collect(toList()),
@@ -163,29 +159,13 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
             processedCount++;
         }
 
-        List<TableVideo> filesToShowInfo = VideosBackgroundUtils.getSortedVideos(
-                displayedTableFilesInfo,
-                settings.getSortBy(),
-                settings.getSortDirection(),
-                backgroundManager
-        );
-
-        return new Result(
-                VideosBackgroundUtils.getTableData(
-                        tableWithFiles.getMode(),
-                        filesToShowInfo,
-                        settings.getSortBy(),
-                        settings.getSortDirection(),
-                        backgroundManager
-                ),
-                getActionResult(
-                        allFileCount,
-                        processedCount,
-                        finishedSuccessfullyCount,
-                        noAgreementCount,
-                        alreadyMergedCount,
-                        failedCount
-                )
+        return getActionResult(
+                allFileCount,
+                processedCount,
+                finishedSuccessfullyCount,
+                noAgreementCount,
+                alreadyMergedCount,
+                failedCount
         );
     }
 
@@ -198,7 +178,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
     }
 
     private static boolean noPermission(
-            MergePreparationRunner.FileMergeInfo fileMergeInfo,
+            MergePrepareRunner.FileMergeInfo fileMergeInfo,
             List<File> confirmedFilesToOverwrite,
             Settings settings
     ) {
@@ -211,7 +191,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
         return fileWithResult.exists() && !confirmedFilesToOverwrite.contains(fileWithResult);
     }
 
-    private static LanguageAlpha3Code getMergedSubtitleLanguage(MergePreparationRunner.FileMergeInfo mergeInfo) {
+    private static LanguageAlpha3Code getMergedSubtitleLanguage(MergePrepareRunner.FileMergeInfo mergeInfo) {
         LanguageAlpha3Code result = null;
         if (mergeInfo.getUpperSubtitles() instanceof BuiltInSubtitleOption) {
             result = ((BuiltInSubtitleOption) mergeInfo.getUpperSubtitles()).getLanguage();
@@ -255,7 +235,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
             }
         }
 
-        List<String> currentOptionsIds = fileInfo.getSubtitleOptions().stream()
+        List<String> currentOptionsIds = fileInfo.getOptions().stream()
                 .map(SubtitleOption::getId)
                 .collect(toList());
         List<BuiltInSubtitleOption> newSubtitleOptions = subtitleOptions.stream()
@@ -275,7 +255,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
                 fileInfo.getFile()
         );
         SubtitlesAndInput subtitlesAndInput = SubtitlesAndInput.from(
-                subtitleText.getBytes(),
+                subtitleText.getBytes(StandardCharsets.UTF_8),
                 StandardCharsets.UTF_8
         );
         if (!subtitlesAndInput.isCorrectFormat()) {
@@ -285,12 +265,12 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
 
         subtitleOption.setSubtitlesAndInput(subtitlesAndInput);
 
-        fileInfo.getSubtitleOptions().add(subtitleOption);
+        fileInfo.getOptions().add(subtitleOption);
         fileInfo.setCurrentSizeAndLastModified();
 
-        boolean haveHideableOptions = tableVideoInfo.getSubtitleOptions().stream()
+        boolean haveHideableOptions = tableVideoInfo.getOptions().stream()
                 .anyMatch(TableSubtitleOption::isHideable);
-        TableSubtitleOption newSubtitleOption = VideosBackgroundUtils.tableSubtitleOptionFrom(
+        TableSubtitleOption newSubtitleOption = VideosBackgroundUtils.tableOptionFrom(
                 subtitleOption,
                 haveHideableOptions,
                 tableVideoInfo,
@@ -299,7 +279,7 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
 
         Platform.runLater(() -> {
             tableVideoInfo.setSizeAndLastModified(fileInfo.getSize(), fileInfo.getLastModified());
-            tableVideoInfo.addOption(newSubtitleOption, tableVideoInfo.getActionResult());
+            tableVideoInfo.addOption(newSubtitleOption);
         });
     }
 
@@ -401,8 +381,6 @@ public class MergeRunner implements BackgroundRunner<MergeRunner.Result> {
     @AllArgsConstructor
     @Getter
     public static class Result {
-        private TableData tableData;
-
         private ActionResult actionResult;
     }
 }

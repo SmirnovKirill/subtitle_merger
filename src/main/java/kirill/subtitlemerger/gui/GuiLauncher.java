@@ -40,7 +40,7 @@ public class GuiLauncher extends Application {
 
         /*
          * I've encountered a very strange behaviour - at first the stage's width and height are set to their computed
-         * sizes but very soon after this method (start) is called during the startup window the sizes are changed for a
+         * sizes but very soon after this method (start) is called during the startup window sizes are changed for a
          * reason completely unknown to me. The sizes are changed because the com.sun.glass.ui.Window::notifyResize is
          * called. This method is called from a native method com.sun.glass.ui.gtk.GtkApplication::_runLoop so I can't
          * understand why that happens. Anyway, I've discovered that if I set the stage's width and height explicitly

@@ -43,7 +43,7 @@ public class TableWithVideos extends TableView<TableVideo> {
      */
     private static final int SIZE_AND_PREVIEW_PANE_WIDTH = SystemUtils.IS_OS_LINUX ? 90 : 82;
 
-    private static final int SELECT_OPTION_PANE_WIDTH = 110;
+    private static final int OPTION_SELECTION_PANE_WIDTH = 110;
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormat.forPattern("dd.MM.YYYY HH:mm");
 
@@ -166,8 +166,8 @@ public class TableWithVideos extends TableView<TableVideo> {
                             pane.getStyleClass().add("pane-unavailable");
                         }
                     } else {
-                        video.actionResultProperty().addListener(observable -> setPaneClass(video, pane));
-                        setPaneClass(video, pane);
+                        video.actionResultProperty().addListener(observable -> setPaneDynamicClass(video, pane));
+                        setPaneDynamicClass(video, pane);
                     }
 
                     cellCache.putIfAbsent(video.getId(), new HashMap<>());
@@ -177,7 +177,7 @@ public class TableWithVideos extends TableView<TableVideo> {
                 setGraphic(pane);
             }
 
-            private void setPaneClass(TableVideo video, Pane pane) {
+            private void setPaneDynamicClass(TableVideo video, Pane pane) {
                 String warnClass = "pane-warn";
                 String errorClass = "pane-error";
 
@@ -186,9 +186,9 @@ public class TableWithVideos extends TableView<TableVideo> {
 
                 ActionResult actionResult = video.getActionResult();
                 if (actionResult != null) {
-                    if (!StringUtils.isBlank(actionResult.getWarn()) && StringUtils.isBlank(actionResult.getError())) {
+                    if (actionResult.haveWarnings() && !actionResult.haveErrors()) {
                         pane.getStyleClass().add(warnClass);
-                    } else if (!StringUtils.isBlank(actionResult.getError())) {
+                    } else if (actionResult.haveErrors()) {
                         pane.getStyleClass().add(errorClass);
                     }
                 }
@@ -277,17 +277,17 @@ public class TableWithVideos extends TableView<TableVideo> {
 
         result.setMinWidth(
                 CELL_PADDING + 1 + TITLE_AND_REMOVE_PANE_MIN_WIDTH + 15 + SIZE_AND_PREVIEW_PANE_WIDTH + 15
-                        + SELECT_OPTION_PANE_WIDTH + CELL_PADDING
+                        + OPTION_SELECTION_PANE_WIDTH + CELL_PADDING
         );
         result.setReorderable(false);
         result.setSortable(false);
 
-        result.setCellFactory(getCellFactory(CellType.SUBTITLES, this::getSubtitlePane, cellCache));
+        result.setCellFactory(getCellFactory(CellType.SUBTITLES, this::getSubtitlesPane, cellCache));
 
         return result;
     }
 
-    private Pane getSubtitlePane(TableVideo video) {
+    private Pane getSubtitlesPane(TableVideo video) {
         if (!StringUtils.isBlank(video.getNotValidReason())) {
             return getNotValidVideoPane(video);
         }
@@ -297,7 +297,7 @@ public class TableWithVideos extends TableView<TableVideo> {
         result.setPadding(new Insets(CELL_PADDING, CELL_PADDING, CELL_PADDING, CELL_PADDING + 1));
 
         result.getChildren().addAll(
-                getSubtitleOptionPane(video),
+                getOptionsPane(video),
                 GuiUtils.getFixedHeightSpacer(5),
                 getRowWithActionsPane(video),
                 GuiUtils.getFixedHeightSpacer(10),
@@ -318,43 +318,43 @@ public class TableWithVideos extends TableView<TableVideo> {
         return result;
     }
 
-    private Pane getSubtitleOptionPane(TableVideo video) {
+    private Pane getOptionsPane(TableVideo video) {
         VBox result = new VBox();
 
         result.setSpacing(2);
 
-        video.getSubtitleOptions().addListener((InvalidationListener) observable -> {
+        video.getOptions().addListener((InvalidationListener) observable -> {
             result.getChildren().clear();
-            for (TableSubtitleOption option : video.getSubtitleOptions()) {
-                result.getChildren().add(getSingleSubtitleOptionPane(option));
+            for (TableSubtitleOption option : video.getOptions()) {
+                result.getChildren().add(getOptionPane(option));
             }
         });
-        for (TableSubtitleOption option : video.getSubtitleOptions()) {
-            result.getChildren().add(getSingleSubtitleOptionPane(option));
+        for (TableSubtitleOption option : video.getOptions()) {
+            result.getChildren().add(getOptionPane(option));
         }
 
         return result;
     }
 
-    private Pane getSingleSubtitleOptionPane(TableSubtitleOption subtitleOption) {
+    private Pane getOptionPane(TableSubtitleOption option) {
         HBox result = new HBox();
 
         result.setAlignment(Pos.CENTER_LEFT);
-        if (subtitleOption.isHideable()) {
-            GuiUtils.bindVisibleAndManaged(result, Bindings.not(subtitleOption.getVideo().someOptionsHiddenProperty()));
+        if (option.isHideable()) {
+            GuiUtils.bindVisibleAndManaged(result, Bindings.not(option.getVideo().someOptionsHiddenProperty()));
         }
         result.setSpacing(15);
 
         result.getChildren().addAll(
-                getTitleAndRemovePane(subtitleOption),
-                getSizeAndPreviewPane(subtitleOption),
-                getSelectOptionPane(subtitleOption)
+                getTitleAndRemovePane(option),
+                getSizeAndPreviewPane(option),
+                getOptionSelectionPane(option)
         );
 
         return result;
     }
 
-    private Pane getTitleAndRemovePane(TableSubtitleOption subtitleOption) {
+    private Pane getTitleAndRemovePane(TableSubtitleOption option) {
         HBox result = new HBox();
 
         result.setMinWidth(TITLE_AND_REMOVE_PANE_MIN_WIDTH);
@@ -362,62 +362,62 @@ public class TableWithVideos extends TableView<TableVideo> {
         result.setAlignment(Pos.CENTER_LEFT);
         result.setSpacing(10);
 
-        Label optionTitleLabel = new Label(subtitleOption.getTitle());
+        Label optionTitleLabel = new Label(option.getTitle());
         optionTitleLabel.setMaxWidth(Double.MAX_VALUE);
-        if (subtitleOption.isMerged()) {
+        if (option.isMerged()) {
             optionTitleLabel.getStyleClass().add("merged-title");
         }
         result.getChildren().add(optionTitleLabel);
 
-        if (subtitleOption.getType() == TableSubtitleOptionType.EXTERNAL) {
+        if (option.getType() == TableSubtitleOptionType.EXTERNAL) {
             Button removeButton = GuiUtils.getImageButton(
                     null,
                     "/gui/icons/remove.png",
                     8,
                     8
             );
-            removeButton.setOnAction(event -> removeSubtitleFileHandler.get().remove(subtitleOption));
+            removeButton.setOnAction(event -> removeSubtitleFileHandler.get().remove(option));
             result.getChildren().add(removeButton);
         }
 
         return result;
     }
 
-    private Pane getSizeAndPreviewPane(TableSubtitleOption subtitleOption) {
+    private Pane getSizeAndPreviewPane(TableSubtitleOption option) {
         StackPane result = new StackPane();
 
         GuiUtils.setFixedWidth(result, SIZE_AND_PREVIEW_PANE_WIDTH);
 
         result.getChildren().addAll(
-                getUnknownSizePane(subtitleOption),
-                getKnownSizeAndPreviewPane(subtitleOption)
+                getUnknownSizePane(option),
+                getKnownSizeAndPreviewPane(option)
         );
 
         return result;
     }
 
-    private Pane getUnknownSizePane(TableSubtitleOption subtitleOption) {
+    private Pane getUnknownSizePane(TableSubtitleOption option) {
         HBox result = new HBox();
 
         result.setAlignment(Pos.CENTER_LEFT);
-        result.visibleProperty().bind(subtitleOption.sizeProperty().isEqualTo(UNKNOWN_SIZE));
+        result.visibleProperty().bind(option.sizeProperty().isEqualTo(UNKNOWN_SIZE));
 
         Label sizeLabel = new Label("Size: ? KB");
 
         Label failedToLoadLabel = new Label();
         failedToLoadLabel.setGraphic(GuiUtils.getImageView("/gui/icons/error.png", 12, 12));
-        failedToLoadLabel.setTooltip(GuiUtils.getTooltip(subtitleOption.failedToLoadReasonProperty()));
-        GuiUtils.bindVisibleAndManaged(failedToLoadLabel, subtitleOption.failedToLoadReasonProperty().isNotEmpty());
+        failedToLoadLabel.setTooltip(GuiUtils.getTooltip(option.failedToLoadReasonProperty()));
+        GuiUtils.bindVisibleAndManaged(failedToLoadLabel, option.failedToLoadReasonProperty().isNotEmpty());
 
         result.getChildren().addAll(sizeLabel, GuiUtils.getFixedWidthSpacer(5), failedToLoadLabel);
 
-        if (StringUtils.isBlank(subtitleOption.getNotValidReason())) {
+        if (StringUtils.isBlank(option.getNotValidReason())) {
             Region spacer = new Region();
             HBox.setHgrow(spacer, Priority.ALWAYS);
 
             Hyperlink loadSubtitleLink = new Hyperlink("load");
-            loadSubtitleLink.setOnAction(event -> singleSubtitleLoader.get().load(subtitleOption));
-            loadSubtitleLink.visibleProperty().bind(subtitleOption.sizeProperty().isEqualTo(UNKNOWN_SIZE));
+            loadSubtitleLink.setOnAction(event -> singleSubtitleLoader.get().load(option));
+            loadSubtitleLink.visibleProperty().bind(option.sizeProperty().isEqualTo(UNKNOWN_SIZE));
 
             result.getChildren().addAll(spacer, loadSubtitleLink);
         }
@@ -425,17 +425,17 @@ public class TableWithVideos extends TableView<TableVideo> {
         return result;
     }
 
-    private Pane getKnownSizeAndPreviewPane(TableSubtitleOption subtitleOption) {
+    private Pane getKnownSizeAndPreviewPane(TableSubtitleOption option) {
         HBox result = new HBox();
 
         result.setAlignment(Pos.CENTER_LEFT);
-        result.visibleProperty().bind(subtitleOption.sizeProperty().isNotEqualTo(UNKNOWN_SIZE));
+        result.visibleProperty().bind(option.sizeProperty().isNotEqualTo(UNKNOWN_SIZE));
 
         Label sizeLabel = new Label();
         sizeLabel.textProperty().bind(
                 Bindings.createStringBinding(
-                        () -> "Size: " + Utils.getSizeTextual(subtitleOption.getSize(), true),
-                        subtitleOption.sizeProperty()
+                        () -> "Size: " + Utils.getSizeTextual(option.getSize(), true),
+                        option.sizeProperty()
                 )
         );
 
@@ -443,33 +443,31 @@ public class TableWithVideos extends TableView<TableVideo> {
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         Button previewButton = GuiUtils.getImageButton("", "/gui/icons/eye.png", 15, 10);
-        previewButton.setOnAction(event -> subtitleOptionPreviewHandler.get().showPreview(subtitleOption));
+        previewButton.setOnAction(event -> subtitleOptionPreviewHandler.get().showPreview(option));
 
         result.getChildren().addAll(sizeLabel, spacer, previewButton);
 
         return result;
     }
 
-    private Pane getSelectOptionPane(TableSubtitleOption subtitleOption) {
+    private Pane getOptionSelectionPane(TableSubtitleOption option) {
         HBox result = new HBox();
 
-        GuiUtils.setFixedWidth(result, SELECT_OPTION_PANE_WIDTH);
+        GuiUtils.setFixedWidth(result, OPTION_SELECTION_PANE_WIDTH);
         result.setAlignment(Pos.CENTER);
         result.setSpacing(5);
 
-        if (!subtitleOption.isMerged()) {
-            subtitleOption.notValidReasonProperty().addListener(
-                    observable -> setSelectOptionTooltip(subtitleOption, result)
-            );
-            setSelectOptionTooltip(subtitleOption, result);
+        if (!option.isMerged()) {
+            option.notValidReasonProperty().addListener(observable -> setOptionSelectionTooltip(option, result));
+            setOptionSelectionTooltip(option, result);
 
             RadioButton upperRadio = new RadioButton("upper");
-            upperRadio.disableProperty().bind(subtitleOption.notValidReasonProperty().isNotEmpty());
-            upperRadio.selectedProperty().bindBidirectional(subtitleOption.selectedAsUpperProperty());
+            upperRadio.disableProperty().bind(option.notValidReasonProperty().isNotEmpty());
+            upperRadio.selectedProperty().bindBidirectional(option.selectedAsUpperProperty());
 
             RadioButton lowerRadio = new RadioButton("lower");
-            lowerRadio.disableProperty().bind(subtitleOption.notValidReasonProperty().isNotEmpty());
-            lowerRadio.selectedProperty().bindBidirectional(subtitleOption.selectedAsLowerProperty());
+            lowerRadio.disableProperty().bind(option.notValidReasonProperty().isNotEmpty());
+            lowerRadio.selectedProperty().bindBidirectional(option.selectedAsLowerProperty());
 
             result.getChildren().addAll(upperRadio, lowerRadio);
         } else {
@@ -487,12 +485,12 @@ public class TableWithVideos extends TableView<TableVideo> {
         return result;
     }
 
-    private void setSelectOptionTooltip(TableSubtitleOption subtitleOption, Pane selectOptionPane) {
-        if (StringUtils.isBlank(subtitleOption.getNotValidReason())) {
-            Tooltip.install(selectOptionPane, null);
+    private void setOptionSelectionTooltip(TableSubtitleOption option, Pane optionSelectionPane) {
+        if (StringUtils.isBlank(option.getNotValidReason())) {
+            Tooltip.install(optionSelectionPane, null);
         } else {
-            Tooltip tooltip = GuiUtils.getTooltip(subtitleOption.getNotValidReason());
-            Tooltip.install(selectOptionPane, tooltip);
+            Tooltip tooltip = GuiUtils.getTooltip(option.getNotValidReason());
+            Tooltip.install(optionSelectionPane, tooltip);
         }
     }
 
@@ -567,9 +565,9 @@ public class TableWithVideos extends TableView<TableVideo> {
     private Pane getMergedPreviewPane(TableVideo video) {
         HBox result = new HBox();
 
-        GuiUtils.setFixedWidth(result, SELECT_OPTION_PANE_WIDTH);
+        GuiUtils.setFixedWidth(result, OPTION_SELECTION_PANE_WIDTH);
         result.setAlignment(Pos.CENTER);
-        result.visibleProperty().bind(Bindings.size(video.getSubtitleOptions()).greaterThanOrEqualTo(2));
+        result.visibleProperty().bind(Bindings.size(video.getOptions()).greaterThanOrEqualTo(2));
 
         Button previewButton = GuiUtils.getImageButton(
                 "result preview",
@@ -664,8 +662,8 @@ public class TableWithVideos extends TableView<TableVideo> {
             cellCache.clear();
         }
 
-        mode = data.getMode();
         setItems(FXCollections.observableArrayList(data.getVideos()));
+        mode = data.getMode();
 
         selectableCount = data.getSelectableCount();
         selectedAvailableCount = data.getSelectedAvailableCount();
@@ -879,12 +877,12 @@ public class TableWithVideos extends TableView<TableVideo> {
 
     @FunctionalInterface
     public interface RemoveSubtitleFileHandler {
-        void remove(TableSubtitleOption subtitleOption);
+        void remove(TableSubtitleOption option);
     }
 
     @FunctionalInterface
     public interface SingleSubtitleLoader {
-        void load(TableSubtitleOption subtitleOption);
+        void load(TableSubtitleOption option);
     }
 
     @FunctionalInterface
@@ -894,7 +892,7 @@ public class TableWithVideos extends TableView<TableVideo> {
 
     @FunctionalInterface
     public interface SubtitleOptionPreviewHandler {
-        void showPreview(TableSubtitleOption subtitleOption);
+        void showPreview(TableSubtitleOption option);
     }
 
     @FunctionalInterface

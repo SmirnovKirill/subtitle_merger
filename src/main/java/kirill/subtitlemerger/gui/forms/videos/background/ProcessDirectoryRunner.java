@@ -1,7 +1,6 @@
 package kirill.subtitlemerger.gui.forms.videos.background;
 
 import kirill.subtitlemerger.gui.GuiConstants;
-import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.forms.videos.table.TableData;
 import kirill.subtitlemerger.gui.forms.videos.table.TableMode;
 import kirill.subtitlemerger.gui.forms.videos.table.TableVideo;
@@ -10,8 +9,6 @@ import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
 import kirill.subtitlemerger.logic.settings.Settings;
-import kirill.subtitlemerger.logic.settings.SortBy;
-import kirill.subtitlemerger.logic.settings.SortDirection;
 import kirill.subtitlemerger.logic.utils.Utils;
 import kirill.subtitlemerger.logic.utils.file_validation.FileValidator;
 import kirill.subtitlemerger.logic.videos.entities.Video;
@@ -36,15 +33,12 @@ public class ProcessDirectoryRunner implements BackgroundRunner<ProcessDirectory
 
     private TableWithVideos table;
 
-    private GuiContext context;
+    private Ffprobe ffprobe;
+
+    private Settings settings;
 
     @Override
     public Result run(BackgroundManager backgroundManager) {
-        Settings settings = context.getSettings();
-        SortBy sortBy = settings.getSortBy();
-        SortDirection sortDirection = settings.getSortDirection();
-        Ffprobe ffprobe = context.getFfprobe();
-
         DirectoryInfo directoryInfo = getDirectoryInfo(directoryPath, backgroundManager);
         if (!StringUtils.isBlank(directoryInfo.getNotValidReason())) {
             return new Result(
@@ -66,15 +60,8 @@ public class ProcessDirectoryRunner implements BackgroundRunner<ProcessDirectory
                 settings,
                 backgroundManager
         );
-
+        allTableVideos = getSortedVideos(allTableVideos, settings.getSort(), backgroundManager);
         boolean hideUnavailable = shouldHideUnavailable(allVideos, backgroundManager);
-        List<TableVideo> tableVideosToShow;
-        if (hideUnavailable) {
-            tableVideosToShow = getOnlyValidVideos(allTableVideos, backgroundManager);
-        } else {
-            tableVideosToShow = allTableVideos;
-        }
-        tableVideosToShow = getSortedVideos(tableVideosToShow, sortBy, sortDirection, backgroundManager);
 
         return new Result(
                 null,
@@ -82,11 +69,11 @@ public class ProcessDirectoryRunner implements BackgroundRunner<ProcessDirectory
                 allVideos,
                 allTableVideos,
                 hideUnavailable,
-                VideosBackgroundUtils.getTableData(
+                getTableData(
+                        allTableVideos,
+                        hideUnavailable,
                         TableMode.WHOLE_DIRECTORY,
-                        tableVideosToShow,
-                        sortBy,
-                        sortDirection,
+                        settings.getSort(),
                         backgroundManager
                 )
         );
@@ -121,11 +108,8 @@ public class ProcessDirectoryRunner implements BackgroundRunner<ProcessDirectory
         }
 
         List<File> directoryFiles = getDirectoryFiles(directory, backgroundManager);
-        if (directoryFiles.size() > GuiConstants.TABLE_FILE_LIMIT) {
-            String notValidReason = String.format(
-                    "The directory has too many files (>%d)",
-                    GuiConstants.TABLE_FILE_LIMIT
-            );
+        if (directoryFiles.size() > GuiConstants.VIDEO_TABLE_LIMIT) {
+            String notValidReason = "The directory has too many videos (>" + GuiConstants.VIDEO_TABLE_LIMIT + ")";
             return new DirectoryInfo(notValidReason, true, null);
         }
 
@@ -133,7 +117,7 @@ public class ProcessDirectoryRunner implements BackgroundRunner<ProcessDirectory
     }
 
     private static List<File> getDirectoryFiles(File directory, BackgroundManager backgroundManager) {
-        backgroundManager.setCancellationPossible(false);
+        backgroundManager.setCancelPossible(false);
         backgroundManager.setIndeterminateProgress();
         backgroundManager.updateMessage("Getting the video list...");
 
@@ -152,7 +136,7 @@ public class ProcessDirectoryRunner implements BackgroundRunner<ProcessDirectory
      * should not be checked because the user will see just an empty video list which isn't very user friendly.
      */
     private static boolean shouldHideUnavailable(List<Video> videos, BackgroundManager backgroundManager) {
-        backgroundManager.setCancellationPossible(false);
+        backgroundManager.setCancelPossible(false);
         backgroundManager.setIndeterminateProgress();
         backgroundManager.updateMessage("Calculating whether to hide unavailable videos by default...");
 

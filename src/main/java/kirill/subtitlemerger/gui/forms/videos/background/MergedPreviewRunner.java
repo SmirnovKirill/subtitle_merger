@@ -1,17 +1,14 @@
 package kirill.subtitlemerger.gui.forms.videos.background;
 
-import javafx.application.Platform;
-import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.forms.videos.table.TableSubtitleOption;
 import kirill.subtitlemerger.gui.forms.videos.table.TableVideo;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
-import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
+import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
+import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.logic.subtitles.SubtitleMerger;
 import kirill.subtitlemerger.logic.subtitles.entities.Subtitles;
-import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndInput;
 import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndOutput;
-import kirill.subtitlemerger.logic.utils.Utils;
 import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
 import kirill.subtitlemerger.logic.videos.entities.MergedSubtitleInfo;
 import kirill.subtitlemerger.logic.videos.entities.SubtitleOption;
@@ -20,75 +17,73 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackgroundUtils.FAILED_TO_LOAD_INCORRECT_FORMAT;
-import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackgroundUtils.failedToLoadReasonFrom;
+import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackgroundUtils.getLoadSubtitlesError;
 
 @CommonsLog
 @AllArgsConstructor
 public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner.Result> {
-    private SubtitleOption upperOption;
+    private Video video;
 
-    private SubtitleOption lowerOption;
+    private TableVideo tableVideo;
 
-    private Video fileInfo;
+    private Ffmpeg ffmpeg;
 
-    private TableVideo tableFileInfo;
-
-    private GuiContext context;
+    private Settings settings;
 
     public Result run(BackgroundManager backgroundManager) {
-        if (fileInfo.getMergedSubtitleInfo() != null) {
-            if (mergedMatchesCurrentSelection(fileInfo.getMergedSubtitleInfo(), upperOption, lowerOption)) {
-                return new Result(false, fileInfo.getMergedSubtitleInfo());
+        SubtitleOption upperOption = video.getOption(tableVideo.getUpperOption().getId());
+        SubtitleOption lowerOption = video.getOption(tableVideo.getLowerOption().getId());
+
+        if (haveUpToDateMergedInfo(video.getMergedSubtitleInfo(), upperOption, lowerOption)) {
+            return new Result(null, video.getMergedSubtitleInfo());
+        }
+
+        try {
+            String loadError = loadSubtitles(video, tableVideo, ffmpeg, backgroundManager);
+            if (!StringUtils.isBlank(loadError)) {
+                return new Result(loadError, null);
             }
-        }
 
-        backgroundManager.setCancellationPossible(true);
+            backgroundManager.setCancelPossible(true);
+            backgroundManager.setIndeterminateProgress();
+            backgroundManager.updateMessage("Preview: merging the subtitles...");
+            Subtitles merged = SubtitleMerger.mergeSubtitles(upperOption.getSubtitles(), lowerOption.getSubtitles());
 
-        try {
-            loadStreams(backgroundManager);
+            return new Result(
+                    null,
+                    new MergedSubtitleInfo(
+                            SubtitlesAndOutput.from(merged, settings.isPlainTextSubtitles()),
+                            upperOption.getId(),
+                            upperOption.getEncoding(),
+                            lowerOption.getId(),
+                            lowerOption.getEncoding()
+                    )
+            );
         } catch (InterruptedException e) {
-            return new Result(true, null);
+            return null;
         }
-
-        backgroundManager.updateMessage("Merging subtitles...");
-
-        Subtitles merged;
-        try {
-            merged = SubtitleMerger.mergeSubtitles(upperOption.getSubtitles(), lowerOption.getSubtitles());
-        } catch (InterruptedException e) {
-            return new Result(true, null);
-        }
-
-        return new Result(
-                false,
-                new MergedSubtitleInfo(
-                        SubtitlesAndOutput.from(merged, context.getSettings().isPlainTextSubtitles()),
-                        upperOption.getId(),
-                        upperOption.getSubtitlesAndInput().getEncoding(),
-                        lowerOption.getId(),
-                        lowerOption.getSubtitlesAndInput().getEncoding()
-                )
-        );
     }
 
-    private static boolean mergedMatchesCurrentSelection(
+    private static boolean haveUpToDateMergedInfo(
             MergedSubtitleInfo mergedSubtitleInfo,
             SubtitleOption upperOption,
             SubtitleOption lowerOption
     ) {
+        if (mergedSubtitleInfo == null) {
+            return false;
+        }
+
         if (!Objects.equals(mergedSubtitleInfo.getUpperOptionId(), upperOption.getId())) {
             return false;
         }
 
-        if (!Objects.equals(mergedSubtitleInfo.getUpperEncoding(), upperOption.getSubtitlesAndInput().getEncoding())) {
+        if (!Objects.equals(mergedSubtitleInfo.getUpperEncoding(), upperOption.getEncoding())) {
             return false;
         }
 
@@ -96,66 +91,69 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
             return false;
         }
 
-        return Objects.equals(mergedSubtitleInfo.getLowerEncoding(), lowerOption.getSubtitlesAndInput().getEncoding());
+        return Objects.equals(mergedSubtitleInfo.getLowerEncoding(), lowerOption.getEncoding());
     }
 
-    private void loadStreams(BackgroundManager backgroundManager) throws InterruptedException {
-        List<BuiltInSubtitleOption> streamsToLoad = new ArrayList<>();
-        if (upperOption instanceof BuiltInSubtitleOption) {
-            streamsToLoad.add((BuiltInSubtitleOption) upperOption);
-        }
-        if (lowerOption instanceof BuiltInSubtitleOption) {
-            streamsToLoad.add((BuiltInSubtitleOption) lowerOption);
-        }
+    @Nullable
+    private static String loadSubtitles(
+            Video video,
+            TableVideo tableVideo,
+            Ffmpeg ffmpeg,
+            BackgroundManager backgroundManager
+    ) throws InterruptedException {
+        List<BuiltInSubtitleOption> optionsToLoad = getOptionsToLoad(video, tableVideo);
 
-        for (BuiltInSubtitleOption ffmpegStream : streamsToLoad) {
-            backgroundManager.updateMessage(getUpdateMessage(ffmpegStream, fileInfo.getFile()));
+        int toLoadCount = optionsToLoad.size();
+        int failedCount = 0;
+        int incorrectCount = 0;
 
-            if (ffmpegStream.getSubtitles() != null) {
-                continue;
+        backgroundManager.setCancelPossible(true);
+        backgroundManager.setIndeterminateProgress();
+        for (BuiltInSubtitleOption option : optionsToLoad) {
+            TableSubtitleOption tableOption = tableVideo.getOption(option.getId());
+
+            String action = "Preview: loading " + tableOption.getTitle() + " in " + video.getFile().getName() + "...";
+            backgroundManager.updateMessage(action);
+
+            LoadSubtitlesResult loadResult = VideosBackgroundUtils.loadSubtitles(option, video, tableOption, ffmpeg);
+            if (loadResult == LoadSubtitlesResult.FAILED) {
+                failedCount++;
+            } else if (loadResult == LoadSubtitlesResult.INCORRECT_FORMAT) {
+                incorrectCount++;
             }
+        }
 
-            TableSubtitleOption tableSubtitleOption = TableSubtitleOption.getById(
-                    ffmpegStream.getId(),
-                    tableFileInfo.getSubtitleOptions()
-            );
-
-            try {
-                String subtitleText = context.getFfmpeg().getSubtitleText(
-                        ffmpegStream.getFfmpegIndex(),
-                        ffmpegStream.getFormat(),
-                        fileInfo.getFile()
-                );
-                SubtitlesAndInput subtitlesAndInput = SubtitlesAndInput.from(
-                        subtitleText.getBytes(),
-                        StandardCharsets.UTF_8
-                );
-
-                if (subtitlesAndInput.isCorrectFormat()) {
-                    ffmpegStream.setSubtitlesAndInput(subtitlesAndInput);
-                    Platform.runLater(() -> tableSubtitleOption.loadedSuccessfully(subtitlesAndInput.getSize()));
-                } else {
-                    Platform.runLater(() -> tableSubtitleOption.failedToLoad(FAILED_TO_LOAD_INCORRECT_FORMAT));
-                }
-            } catch (FfmpegException e) {
-                log.warn("failed to get subtitle text: " + e.getCode() + ", console output " + e.getConsoleOutput());
-                Platform.runLater(() -> tableSubtitleOption.failedToLoad(failedToLoadReasonFrom(e.getCode())));
-            }
+        if (failedCount != 0 || incorrectCount != 0) {
+            String error = getLoadSubtitlesError(toLoadCount, failedCount, incorrectCount);
+            return "Preview is unavailable: " + StringUtils.uncapitalize(error);
+        } else {
+            return null;
         }
     }
 
-    private static String getUpdateMessage(BuiltInSubtitleOption subtitleStream, File file) {
-        return "Getting subtitles "
-                + Utils.languageToString(subtitleStream.getLanguage()).toUpperCase()
-                + (StringUtils.isBlank(subtitleStream.getTitle()) ? "" : " " + subtitleStream.getTitle())
-                + " in " + file.getName();
+    private static List<BuiltInSubtitleOption> getOptionsToLoad(Video video, TableVideo tableVideo) {
+        List<BuiltInSubtitleOption> result = new ArrayList<>();
+
+        SubtitleOption upperOption = video.getOption(tableVideo.getUpperOption().getId());
+        if (upperOption instanceof BuiltInSubtitleOption && upperOption.getSubtitlesAndInput() == null) {
+            result.add((BuiltInSubtitleOption) upperOption);
+        }
+
+        SubtitleOption lowerOption = video.getOption(tableVideo.getLowerOption().getId());
+        if (lowerOption instanceof BuiltInSubtitleOption && lowerOption.getSubtitlesAndInput() == null) {
+            result.add((BuiltInSubtitleOption) lowerOption);
+        }
+
+        return result;
     }
 
     @AllArgsConstructor
     @Getter
     public static class Result {
-        private boolean canceled;
+        @Nullable
+        private String error;
 
+        @Nullable
         private MergedSubtitleInfo mergedSubtitleInfo;
     }
  }

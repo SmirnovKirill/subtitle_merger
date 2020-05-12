@@ -8,6 +8,7 @@ import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.jetbrains.annotations.Nullable;
 
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Objects;
 
@@ -22,6 +23,7 @@ public abstract class SubtitleOption {
     private String id;
 
     @Setter
+    @Nullable
     private SubtitlesAndInput subtitlesAndInput;
 
     /**
@@ -29,6 +31,11 @@ public abstract class SubtitleOption {
      * diagnostics). The enum contains the reason why this option can't be used for the subtitle merging.
      */
     private SubtitleOptionNotValidReason notValidReason;
+
+    @Nullable
+    public Charset getEncoding() {
+        return subtitlesAndInput != null ? subtitlesAndInput.getEncoding() : null;
+    }
 
     @Nullable
     public Subtitles getSubtitles() {
@@ -42,10 +49,8 @@ public abstract class SubtitleOption {
         return subtitlesAndInput != null ? subtitlesAndInput.getSize() : null;
     }
 
-    public static <T extends SubtitleOption> T getById(String id, List<T> subtitleOptions) {
-        T result = subtitleOptions.stream()
-                .filter(option -> Objects.equals(option.getId(), id))
-                .findFirst().orElse(null);
+    static <T extends SubtitleOption> T getById(String id, List<T> options) {
+        T result = options.stream().filter(option -> Objects.equals(option.getId(), id)).findFirst().orElse(null);
         if (result == null) {
             log.error("no subtitle option for id " + id + ", most likely a bug");
             throw new IllegalStateException();

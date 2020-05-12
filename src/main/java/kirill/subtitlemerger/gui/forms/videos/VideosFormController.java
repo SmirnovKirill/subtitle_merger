@@ -12,7 +12,7 @@ import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.common_controls.ActionResultPane;
 import kirill.subtitlemerger.gui.forms.MainFormController;
 import kirill.subtitlemerger.gui.forms.common.BackgroundTaskFormController;
-import kirill.subtitlemerger.gui.forms.common.agreement_popup.AgreementResult;
+import kirill.subtitlemerger.gui.forms.common.agreement.AgreementResult;
 import kirill.subtitlemerger.gui.forms.videos.background.*;
 import kirill.subtitlemerger.gui.forms.videos.table.*;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
@@ -20,12 +20,12 @@ import kirill.subtitlemerger.gui.utils.Popups;
 import kirill.subtitlemerger.gui.utils.background.BackgroundCallback;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.gui.utils.entities.FileOrigin;
+import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
+import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
 import kirill.subtitlemerger.logic.settings.SettingType;
 import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.logic.settings.SortBy;
 import kirill.subtitlemerger.logic.settings.SortDirection;
-import kirill.subtitlemerger.logic.subtitles.SubRipWriter;
-import kirill.subtitlemerger.logic.subtitles.entities.Subtitles;
 import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndInput;
 import kirill.subtitlemerger.logic.utils.Utils;
 import kirill.subtitlemerger.logic.utils.entities.ActionResult;
@@ -42,8 +42,8 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+
+import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackgroundUtils.*;
 
 @CommonsLog
 public class VideosFormController extends BackgroundTaskFormController {
@@ -107,6 +107,10 @@ public class VideosFormController extends BackgroundTaskFormController {
 
     private Stage stage;
 
+    private Ffprobe ffprobe;
+
+    private Ffmpeg ffmpeg;
+
     private Settings settings;
 
     private GuiContext context;
@@ -115,6 +119,11 @@ public class VideosFormController extends BackgroundTaskFormController {
 
     private List<Video> allVideos;
 
+    /*
+     * This variable stores all (meaning both available and unavailable) videos and the videos have to be sorted. This
+     * variable is necessary and the table's getRows() method isn't enough because if the user presses the "hide
+     * unavailable" button the information about the unavailable videos will be removed from the table.
+     */
     private List<TableVideo> allTableVideos;
 
     /*
@@ -128,6 +137,8 @@ public class VideosFormController extends BackgroundTaskFormController {
     public void initialize(MainFormController mainFormController, Stage stage, GuiContext context) {
         this.mainFormController = mainFormController;
         this.stage = stage;
+        this.ffprobe = context.getFfprobe();
+        this.ffmpeg = context.getFfmpeg();
         this.settings = context.getSettings();
         this.context = context;
 
@@ -193,12 +204,12 @@ public class VideosFormController extends BackgroundTaskFormController {
 
         table.setSelectAllHandler(this::selectAllVideos);
         table.setAddSubtitleFileHandler(this::addSubtitleFile);
-        table.setRemoveSubtitleFileHandler(this::handleRemoveOption);
-        setSingleSubtitleLoader(table);
-        setAllFileSubtitleLoader(table);
+        table.setRemoveSubtitleFileHandler(this::removeSubtitleFile);
+        table.setSingleSubtitleLoader(this::loadSingleSubtitles);
+        table.setAllVideoSubtitleLoader(this::loadAllVideoSubtitles);
         table.setSubtitleOptionPreviewHandler(this::handleSubtitleOptionPreview);
-        setMergedSubtitlePreviewHandler(table);
-        table.setChangeSortHandler(this::changeSort);
+        table.setMergedSubtitlePreviewHandler(this::handleMergedSubtitlePreview);
+        table.setChangeSortHandler(this::handleSortChange);
 
         removeVideosButton.disableProperty().bind(table.selectedCountProperty().isEqualTo(0));
     }
@@ -208,38 +219,38 @@ public class VideosFormController extends BackgroundTaskFormController {
             return;
         }
 
-        totalResult.clear();
         chosenDirectoryField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
         if (fileOrigin == FileOrigin.FILE_CHOOSER) {
             chosenDirectoryField.setText(path);
         }
         refreshButton.setDisable(false);
+        totalResult.clear();
         tableAndActionsPane.setDisable(false);
         table.clearTable();
-        lastProcessedVideo = null;
 
         directoryPath = path;
         if (fileOrigin == FileOrigin.FILE_CHOOSER) {
             settings.saveQuietly(new File(path), SettingType.VIDEO_DIRECTORY);
         }
+        lastProcessedVideo = null;
 
-        ProcessDirectoryRunner backgroundRunner = new ProcessDirectoryRunner(directoryPath, table, context);
+        ProcessDirectoryRunner backgroundRunner = new ProcessDirectoryRunner(directoryPath, table, ffprobe, settings);
 
         BackgroundCallback<ProcessDirectoryRunner.Result> callback = runnerResult -> {
             if (runnerResult.getNotValidReason() != null) {
-                allVideos = null;
-                allTableVideos = null;
-
-                totalResult.setOnlyError(runnerResult.getNotValidReason());
                 chosenDirectoryField.getStyleClass().add(GuiConstants.TEXT_FIELD_ERROR_CLASS);
                 refreshButton.setDisable(runnerResult.isDisableRefresh());
+                totalResult.setOnlyError(runnerResult.getNotValidReason());
                 tableAndActionsPane.setDisable(true);
-            } else {
-                allVideos = runnerResult.getAllVideos();
-                allTableVideos = runnerResult.getAllTableVideos();
 
+                allVideos = null;
+                allTableVideos = null;
+            } else {
                 hideUnavailableCheckbox.setSelected(runnerResult.isHideUnavailable());
                 table.setData(runnerResult.getTableData(), true);
+
+                allVideos = runnerResult.getAllVideos();
+                allTableVideos = runnerResult.getAllTableVideos();
             }
         };
 
@@ -269,7 +280,7 @@ public class VideosFormController extends BackgroundTaskFormController {
 
     private void selectAllVideos(boolean selectAll) {
         BackgroundRunner<Void> backgroundRunner = backgroundManager -> {
-            backgroundManager.setCancellationPossible(false);
+            backgroundManager.setCancelPossible(false);
             backgroundManager.setIndeterminateProgress();
             backgroundManager.updateMessage("Processing videos...");
 
@@ -287,14 +298,13 @@ public class VideosFormController extends BackgroundTaskFormController {
             return null;
         };
 
-        runInBackground(backgroundRunner, (result) -> {});
+        runInBackground(backgroundRunner, (runnerResult) -> {});
     }
 
     private void addSubtitleFile(TableVideo tableVideo) {
         totalResult.clear();
         clearLastProcessedResult();
         tableVideo.clearActionResult();
-        lastProcessedVideo = tableVideo;
 
         Video video = Video.getById(tableVideo.getId(), allVideos);
         File subtitleFile = getSubtitleFile(video, stage, settings);
@@ -303,44 +313,25 @@ public class VideosFormController extends BackgroundTaskFormController {
         }
         settings.saveQuietly(subtitleFile.getParentFile(), SettingType.VIDEO_SUBTITLE_DIRECTORY);
 
-        ProcessSubtitleFileRunner backgroundRunner = new ProcessSubtitleFileRunner(subtitleFile, video);
+        ProcessSubtitleFileRunner backgroundRunner = new ProcessSubtitleFileRunner(subtitleFile, video, tableVideo);
 
-        BackgroundCallback<ProcessSubtitleFileRunner.Result> callback = result -> {
-            if (result.getNotValidReason() != null) {
-                tableVideo.setOnlyError(result.getNotValidReason());
-            } else {
-                video.getSubtitleOptions().add(result.getSubtitleOption());
-
-                SubtitlesAndInput subtitlesAndInput = result.getSubtitleOption().getSubtitlesAndInput();
-
-                String notValidReason = null;
-                ActionResult actionResult;
-                if (!subtitlesAndInput.isCorrectFormat()) {
-                    notValidReason = "The subtitles have an incorrect format";
-                    actionResult = ActionResult.onlyWarn(
-                            "The file has been added but subtitles can't be parsed, it can happen if the file is not "
-                                    + "UTF-8-encoded, you can change the encoding after pressing the preview button"
-                    );
-                } else {
-                    actionResult = ActionResult.onlySuccess("The file with subtitles has been added successfully");
-                }
-
-                tableVideo.addOption(
-                        TableSubtitleOption.createExternal(
-                                result.getSubtitleOption().getId(),
-                                tableVideo,
-                                notValidReason,
-                                result.getSubtitleOption().getFile().getAbsolutePath(),
-                                subtitlesAndInput.getSize(),
-                                false,
-                                false
-                        ),
-                        actionResult
-                );
+        BackgroundCallback<ProcessSubtitleFileRunner.Result> callback = runnerResult -> {
+            tableVideo.setActionResult(runnerResult.getActionResult());
+            if (runnerResult.getOption() != null && runnerResult.getTableOption() != null) {
+                video.getOptions().add(runnerResult.getOption());
+                tableVideo.addOption(runnerResult.getTableOption());
             }
         };
 
         runInBackground(backgroundRunner, callback);
+
+        lastProcessedVideo = tableVideo;
+    }
+
+    private void clearLastProcessedResult() {
+        if (lastProcessedVideo != null) {
+            lastProcessedVideo.clearActionResult();
+        }
     }
 
     @Nullable
@@ -359,28 +350,203 @@ public class VideosFormController extends BackgroundTaskFormController {
         return fileChooser.showOpenDialog(stage);
     }
 
-    private void changeSort(TableSortBy tableSortBy, TableSortDirection tableSortDirection) {
-        SortBy sortBy = sortByFrom(tableSortBy);
-        SortDirection sortDirection = sortDirectionFrom(tableSortDirection);
-
-        settings.save(sortBy, SettingType.SORT_BY);
-        settings.save(sortDirection, SettingType.SORT_DIRECTION);
+    private void removeSubtitleFile(TableSubtitleOption tableOption) {
+        TableVideo tableVideo = tableOption.getVideo();
 
         totalResult.clear();
         clearLastProcessedResult();
+        tableVideo.clearActionResult();
+
+        Video video = Video.getById(tableVideo.getId(), allVideos);
+        SubtitleOption option = video.getOption(tableOption.getId());
+        video.getOptions().remove(option);
+
+        String successMessage = "The file file with subtitles has been removed successfully";
+        tableVideo.removeOption(tableOption, ActionResult.onlySuccess(successMessage));
+        lastProcessedVideo = tableVideo;
+    }
+
+    private void loadSingleSubtitles(TableSubtitleOption tableOption) {
+        TableVideo tableVideo = tableOption.getVideo();
+
+        totalResult.clear();
+        clearLastProcessedResult();
+        tableVideo.clearActionResult();
+
+        BackgroundRunner<ActionResult> backgroundRunner = backgroundManager -> {
+            backgroundManager.setCancelPossible(true);
+            backgroundManager.setCancelDescription("Please be patient, this may take a while depending on the video.");
+            backgroundManager.setIndeterminateProgress();
+
+            Video video = Video.getById(tableVideo.getId(), allVideos);
+            String action = "Loading " + tableOption.getTitle() + " in " + video.getFile().getName() + "...";
+            backgroundManager.updateMessage(action);
+            try {
+                BuiltInSubtitleOption option = video.getBuiltInOption(tableOption.getId());
+                LoadSubtitlesResult loadResult = loadSubtitles(option, video, tableOption, ffmpeg);
+                if (loadResult == LoadSubtitlesResult.SUCCESS) {
+                    return ActionResult.onlySuccess("The subtitles have been loaded successfully");
+                } else if (loadResult == LoadSubtitlesResult.FAILED) {
+                    return ActionResult.onlyError("Failed to load the subtitles");
+                } else if (loadResult == LoadSubtitlesResult.INCORRECT_FORMAT) {
+                    return ActionResult.onlyError("The subtitles have an incorrect format");
+                } else {
+                    log.error("unexpected load result: " + loadResult + ", most likely a bug");
+                    throw new IllegalStateException();
+                }
+            } catch (InterruptedException e) {
+                return ActionResult.onlyWarn("The task has been cancelled");
+            }
+        };
+
+        BackgroundCallback<ActionResult> callback = tableVideo::setActionResult;
+
+        runInBackground(backgroundRunner, callback);
+
+        lastProcessedVideo = tableVideo;
+    }
+
+    private void loadAllVideoSubtitles(TableVideo tableVideo) {
+        totalResult.clear();
+        clearLastProcessedResult();
+        tableVideo.clearActionResult();
+
+        BackgroundRunner<ActionResult> backgroundRunner = backgroundManager -> {
+            backgroundManager.setCancelPossible(false);
+            backgroundManager.setIndeterminateProgress();
+
+            Video video = Video.getById(tableVideo.getId(), allVideos);
+            backgroundManager.updateMessage("Calculating the number of subtitles to load...");
+            int toLoadCount = video.getOptionsToLoad().size();
+            int processedCount = 0;
+            int successfulCount = 0;
+            int failedCount = 0;
+            int incorrectCount = 0;
+
+            backgroundManager.setCancelPossible(true);
+            backgroundManager.setCancelDescription("Please be patient, this may take a while depending on the video.");
+            try {
+                for (BuiltInSubtitleOption option : video.getOptionsToLoad()) {
+                    TableSubtitleOption tableOption = tableVideo.getOption(option.getId());
+
+                    String action = "Loading " + tableOption.getTitle() + " in " + video.getFile().getName() + "...";
+                    backgroundManager.updateMessage(getProgressAction(processedCount, toLoadCount, action));
+
+                    LoadSubtitlesResult loadResult = loadSubtitles(option, video, tableOption, ffmpeg);
+                    if (loadResult == LoadSubtitlesResult.SUCCESS) {
+                        successfulCount++;
+                    } else if (loadResult == LoadSubtitlesResult.FAILED) {
+                        failedCount++;
+                    } else if (loadResult == LoadSubtitlesResult.INCORRECT_FORMAT) {
+                        incorrectCount++;
+                    } else {
+                        log.error("unexpected load result: " + loadResult + ", most likely a bug");
+                        throw new IllegalStateException();
+                    }
+
+                    processedCount++;
+                }
+            } catch (InterruptedException e) {
+                /* Do nothing here, will just return the result based on the work done. */
+            }
+
+            return getLoadSubtitlesResult(toLoadCount, processedCount, successfulCount, failedCount, incorrectCount);
+        };
+
+        BackgroundCallback<ActionResult> callback = tableVideo::setActionResult;
+
+        runInBackground(backgroundRunner, callback);
+
+        lastProcessedVideo = tableVideo;
+    }
+
+    private void handleSubtitleOptionPreview(TableSubtitleOption tableOption) {
+        TableVideo tableVideo = tableOption.getVideo();
+
+        totalResult.clear();
+        clearLastProcessedResult();
+        tableVideo.clearActionResult();
+
+        Video video = Video.getById(tableVideo.getId(), allVideos);
+        SubtitleOption option = video.getOption(tableOption.getId());
+        SubtitlesAndInput subtitlesAndInput = option.getSubtitlesAndInput();
+        if (subtitlesAndInput == null) {
+            log.error("subtitles are not loaded before the preview, most likely a bug");
+            throw new IllegalStateException();
+        }
+
+        if (option instanceof BuiltInSubtitleOption) {
+            String title = video.getFile().getName() + ", " + tableOption.getTitle();
+            String subtitleText = new String(subtitlesAndInput.getRawData(), subtitlesAndInput.getEncoding());
+            Popups.showSimpleSubtitlesPreview(title, subtitleText, stage);
+        } else if (option instanceof ExternalSubtitleOption) {
+            ExternalSubtitleOption externalOption = (ExternalSubtitleOption) option;
+
+            SubtitlesAndInput previewSelection = Popups.showEncodingPreview(
+                    video.getFile().getAbsolutePath(),
+                    subtitlesAndInput,
+                    stage
+            );
+            externalOption.setSubtitlesAndInput(previewSelection);
+
+            if (!StringUtils.isBlank(tableOption.getNotValidReason()) && previewSelection.isCorrectFormat()) {
+                tableOption.markAsValid();
+            }
+        } else {
+            log.error("unexpected subtitle option class " + option.getClass() + ", most likely a bug");
+            throw new IllegalStateException();
+        }
+    }
+
+    private void handleMergedSubtitlePreview(TableVideo tableVideo) {
+        totalResult.clear();
+        clearLastProcessedResult();
+        tableVideo.clearActionResult();
+
+        Video video = Video.getById(tableVideo.getId(), allVideos);
+
+        MergedPreviewRunner mergedPreviewRunner = new MergedPreviewRunner(video, tableVideo, ffmpeg, settings);
+
+        BackgroundCallback<MergedPreviewRunner.Result> callback = runnerResult -> {
+            if (runnerResult == null) {
+                totalResult.setOnlyWarn("The merge has been cancelled");
+            } else if (!StringUtils.isBlank(runnerResult.getError())) {
+                tableVideo.setActionResult(ActionResult.onlyError(runnerResult.getError()));
+                lastProcessedVideo = tableVideo;
+            } else {
+                if (runnerResult.getMergedSubtitleInfo() == null) {
+                    log.error("merged subtitle info can't be null, most likely a bug");
+                    throw new IllegalStateException();
+                }
+
+                video.setMergedSubtitleInfo(runnerResult.getMergedSubtitleInfo());
+                Popups.showMergedSubtitlesPreview(
+                        tableVideo.getUpperOption().getTitle(),
+                        tableVideo.getLowerOption().getTitle(),
+                        runnerResult.getMergedSubtitleInfo().getSubtitlesAndOutput().getText(),
+                        stage
+                );
+            }
+        };
+
+        runInBackground(mergedPreviewRunner, callback);
+    }
+
+    private void handleSortChange(TableSortBy tableSortBy, TableSortDirection tableSortDirection) {
+        totalResult.clear();
+        clearLastProcessedResult();
+
+        settings.save(sortByFrom(tableSortBy), SettingType.SORT_BY);
+        settings.save(sortDirectionFrom(tableSortDirection), SettingType.SORT_DIRECTION);
 
         BackgroundRunner<TableData> backgroundRunner = backgroundManager -> {
-            List<TableVideo> sortedVideosInfo = VideosBackgroundUtils.getSortedVideos(
-                    table.getItems(),
-                    sortBy,
-                    sortDirection,
-                    backgroundManager
-            );
-            return VideosBackgroundUtils.getTableData(
+            allTableVideos = getSortedVideos(allTableVideos, settings.getSort(), backgroundManager);
+
+            return getTableData(
+                    allTableVideos,
+                    hideUnavailableCheckbox.isSelected(),
                     table.getMode(),
-                    sortedVideosInfo,
-                    sortBy,
-                    sortDirection,
+                    settings.getSort(),
                     backgroundManager
             );
         };
@@ -399,7 +565,7 @@ public class VideosFormController extends BackgroundTaskFormController {
             case SIZE:
                 return SortBy.SIZE;
             default:
-                log.error("unexpected sort by: " + tableSortBy + ", most likely a bug");
+                log.error("unexpected table sort by: " + tableSortBy + ", most likely a bug");
                 throw new IllegalStateException();
         }
     }
@@ -411,199 +577,28 @@ public class VideosFormController extends BackgroundTaskFormController {
             case DESCENDING:
                 return SortDirection.DESCENDING;
             default:
-                log.error("unexpected sort direction: " + tableSortDirection + ", most likely a bug");
+                log.error("unexpected table sort direction: " + tableSortDirection + ", most likely a bug");
                 throw new IllegalStateException();
         }
     }
 
-    private void clearLastProcessedResult() {
-        if (lastProcessedVideo != null) {
-            lastProcessedVideo.clearActionResult();
-        }
+    void openSettingsForm() {
+        mainFormController.openSettingsForm();
     }
 
-    private void handleRemoveOption(TableSubtitleOption subtitleOption) {
-        TableVideo tableVideo = subtitleOption.getVideo();
-        totalResult.clear();
-        clearLastProcessedResult();
-        tableVideo.clearActionResult();
-        lastProcessedVideo = tableVideo;
+    void processChosenVideoFiles(List<File> videoFiles) {
+        settings.saveQuietly(videoFiles.get(0).getParentFile(), SettingType.VIDEO_DIRECTORY);
 
-        Video video = Video.getById(tableVideo.getId(), allVideos);
-        video.getSubtitleOptions().removeIf(option -> Objects.equals(option.getId(), subtitleOption.getId()));
-
-        tableVideo.removeOption(
-                subtitleOption,
-                ActionResult.onlySuccess("The subtitle file has been removed from the list successfully")
-        );
-    }
-
-    private void setSingleSubtitleLoader(TableWithVideos tableWithFiles) {
-        tableWithFiles.setSingleSubtitleLoader((tableSubtitleOption) -> {
-            TableVideo tableVideoInfo = tableSubtitleOption.getVideo();
-            totalResult.clear();
-            clearLastProcessedResult();
-            tableVideoInfo.clearActionResult();
-            lastProcessedVideo = tableVideoInfo;
-
-            Video fileInfo = Video.getById(tableVideoInfo.getId(), allVideos);
-            BuiltInSubtitleOption ffmpegStream = BuiltInSubtitleOption.getById(
-                    tableSubtitleOption.getId(),
-                    fileInfo.getBuiltInSubtitleOptions()
-            );
-
-            LoadSingleSubtitlesRunner backgroundRunner = new LoadSingleSubtitlesRunner(
-                    ffmpegStream,
-                    fileInfo,
-                    tableSubtitleOption,
-                    context.getFfmpeg()
-            );
-
-            BackgroundCallback<ActionResult> callback = tableVideoInfo::setActionResult;
-
-            runInBackground(backgroundRunner, callback);
-        });
-    }
-
-    private void handleSubtitleOptionPreview(TableSubtitleOption tableSubtitleOption) {
-        TableVideo tableVideo = tableSubtitleOption.getVideo();
-        totalResult.clear();
-        clearLastProcessedResult();
-        tableVideo.clearActionResult();
-
-        Video videoInfo = Video.getById(tableVideo.getId(), allVideos);
-        SubtitleOption subtitleOption = SubtitleOption.getById(
-                tableSubtitleOption.getId(),
-                videoInfo.getSubtitleOptions()
-        );
-
-        if (subtitleOption instanceof BuiltInSubtitleOption) {
-            BuiltInSubtitleOption builtInOption = (BuiltInSubtitleOption) subtitleOption;
-
-            Subtitles subtitles = builtInOption.getSubtitles();
-            if (subtitles == null) {
-                log.error("subtitles are null before the preview, most likely a bug");
-                throw new IllegalStateException();
-            }
-
-            String title = videoInfo.getFile().getName()
-                    + ", " + Utils.languageToString(builtInOption.getLanguage()).toUpperCase()
-                    + (!StringUtils.isBlank(builtInOption.getTitle()) ? " " + builtInOption.getTitle() : "");
-
-            Popups.showSimpleSubtitlesPreview(title, SubRipWriter.toText(subtitles, false), stage);
-        } else if (subtitleOption instanceof ExternalSubtitleOption) {
-            ExternalSubtitleOption externalOption = (ExternalSubtitleOption) subtitleOption;
-
-            SubtitlesAndInput previewSelection = Popups.showEncodingPreview(
-                    videoInfo.getFile().getAbsolutePath(),
-                    externalOption.getSubtitlesAndInput(),
-                    stage
-            );
-            externalOption.setSubtitlesAndInput(previewSelection);
-
-            if (!StringUtils.isBlank(tableSubtitleOption.getNotValidReason()) && previewSelection.isCorrectFormat()) {
-                tableSubtitleOption.markAsValid();
-            }
-        } else {
-            log.error("unexpected subtitle option class " + subtitleOption.getClass() + ", most likely a bug");
-            throw new IllegalStateException();
-        }
-    }
-
-    private void setAllFileSubtitleLoader(TableWithVideos tableWithFiles) {
-        tableWithFiles.setAllVideoSubtitleLoader(tableVideoInfo -> {
-            totalResult.clear();
-            clearLastProcessedResult();
-            tableVideoInfo.clearActionResult();
-            lastProcessedVideo = tableVideoInfo;
-
-            Video fileInfo = Video.getById(tableVideoInfo.getId(), allVideos);
-
-            SingleFileAllSubtitleLoader backgroundRunner = new SingleFileAllSubtitleLoader(
-                    fileInfo,
-                    tableVideoInfo,
-                    context.getFfmpeg()
-            );
-
-            BackgroundCallback<ActionResult> callback = tableVideoInfo::setActionResult;
-
-            runInBackground(backgroundRunner, callback);
-        });
-    }
-
-    private void setMergedSubtitlePreviewHandler(TableWithVideos tableWithFiles) {
-        tableWithFiles.setMergedSubtitlePreviewHandler(tableVideoInfo -> {
-            totalResult.clear();
-            clearLastProcessedResult();
-            tableVideoInfo.clearActionResult();
-
-            Video fileInfo = Video.getById(tableVideoInfo.getId(), allVideos);
-            SubtitleOption upperOption = SubtitleOption.getById(
-                    tableVideoInfo.getUpperOption().getId(),
-                    fileInfo.getSubtitleOptions()
-            );
-            SubtitleOption lowerOption = SubtitleOption.getById(
-                    tableVideoInfo.getLowerOption().getId(),
-                    fileInfo.getSubtitleOptions()
-            );
-
-            MergedPreviewRunner mergedPreviewRunner = new MergedPreviewRunner(
-                    upperOption,
-                    lowerOption,
-                    fileInfo,
-                    tableVideoInfo,
-                    context
-            );
-
-            BackgroundCallback<MergedPreviewRunner.Result> callback = result -> {
-                if (result.isCanceled()) {
-                    totalResult.setOnlyWarn("Merge has been cancelled");
-                    return;
-                }
-
-                fileInfo.setMergedSubtitleInfo(result.getMergedSubtitleInfo());
-
-                Popups.showMergedSubtitlesPreview(
-                        getOptionTitleForPreview(upperOption),
-                        getOptionTitleForPreview(lowerOption),
-                        fileInfo.getMergedSubtitleInfo().getSubtitlesAndOutput().getText(),
-                        stage
-                );
-            };
-
-            runInBackground(mergedPreviewRunner, callback);
-        });
-    }
-
-    private static String getOptionTitleForPreview(SubtitleOption option) {
-        if (option instanceof BuiltInSubtitleOption) {
-            BuiltInSubtitleOption ffmpegStream = (BuiltInSubtitleOption) option;
-
-            return Utils.languageToString(ffmpegStream.getLanguage()).toUpperCase()
-                    + (!StringUtils.isBlank(ffmpegStream.getTitle()) ? " " + ffmpegStream.getTitle() : "");
-        } else if (option instanceof ExternalSubtitleOption) {
-            ExternalSubtitleOption fileWithSubtitles = (ExternalSubtitleOption) option;
-
-            return fileWithSubtitles.getFile().getAbsolutePath();
-        } else {
-            throw new IllegalStateException();
-        }
-    }
-
-    void processChosenFiles(List<File> files) {
-        settings.saveQuietly(files.get(0).getParentFile(), SettingType.VIDEO_DIRECTORY);
-
-        GuiUtils.setVisibleAndManaged(addRemoveVideosPane, true);
         hideUnavailableCheckbox.setSelected(false);
-        directoryPath = null;
+        GuiUtils.setVisibleAndManaged(addRemoveVideosPane, true);
 
-        LoadSeparateFilesRunner backgroundRunner = new LoadSeparateFilesRunner(files, table, context);
+        ProcessVideoFilesRunner backgroundRunner = new ProcessVideoFilesRunner(videoFiles, table, ffprobe, settings);
 
-        BackgroundCallback<LoadSeparateFilesRunner.Result> callback = result -> {
-            allVideos = result.getFilesInfo();
-            allTableVideos = result.getAllTableFilesInfo();
+        BackgroundCallback<ProcessVideoFilesRunner.Result> callback = runnerResult -> {
+            table.setData(runnerResult.getTableData(), true);
 
-            table.setData(result.getTableData(), true);
+            allVideos = runnerResult.getAllVideos();
+            allTableVideos = runnerResult.getAllTableVideos();
         };
 
         runInBackground(backgroundRunner, callback);
@@ -619,11 +614,13 @@ public class VideosFormController extends BackgroundTaskFormController {
     private void backToSelectionClicked() {
         GuiUtils.setVisibleAndManaged(chosenDirectoryPane, false);
         chosenDirectoryField.setText(null);
-        GuiUtils.setVisibleAndManaged(addRemoveVideosPane, false);
-
+        refreshButton.setDisable(false);
         totalResult.clear();
         tableAndActionsPane.setDisable(false);
         table.clearTable();
+        GuiUtils.setVisibleAndManaged(addRemoveVideosPane, false);
+
+        directoryPath = null;
         lastProcessedVideo = null;
 
         setActivePane(ActivePane.CHOICE);
@@ -633,31 +630,32 @@ public class VideosFormController extends BackgroundTaskFormController {
     @FXML
     private void refreshClicked() {
         chosenDirectoryField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
-        refreshButton.setDisable(false);
         totalResult.clear();
         tableAndActionsPane.setDisable(false);
         table.clearTable();
+
         lastProcessedVideo = null;
 
-        ProcessDirectoryRunner backgroundRunner = new ProcessDirectoryRunner(directoryPath, table, context);
+        ProcessDirectoryRunner backgroundRunner = new ProcessDirectoryRunner(directoryPath, table, ffprobe, settings);
 
-        BackgroundCallback<ProcessDirectoryRunner.Result> callback = result -> {
-            if (result.getNotValidReason() != null) {
+        BackgroundCallback<ProcessDirectoryRunner.Result> callback = runnerResult -> {
+            if (runnerResult.getNotValidReason() != null) {
+                chosenDirectoryField.getStyleClass().add(GuiConstants.TEXT_FIELD_ERROR_CLASS);
+                refreshButton.setDisable(runnerResult.isDisableRefresh());
+                totalResult.setOnlyError(runnerResult.getNotValidReason());
+                tableAndActionsPane.setDisable(true);
+
                 allVideos = null;
                 allTableVideos = null;
-
-                chosenDirectoryField.getStyleClass().add(GuiConstants.TEXT_FIELD_ERROR_CLASS);
-                totalResult.setOnlyError(result.getNotValidReason());
-                tableAndActionsPane.setDisable(true);
             } else {
-                allVideos = result.getAllVideos();
-                allTableVideos = result.getAllTableVideos();
+                hideUnavailableCheckbox.setSelected(runnerResult.isHideUnavailable());
+                table.setData(runnerResult.getTableData(), true);
 
-                hideUnavailableCheckbox.setSelected(result.isHideUnavailable());
-                table.setData(result.getTableData(), true);
-
-                /* See the huge comment in the hideUnavailableClicked() method. */
+                /* See the huge comment in the allTableVideosnavailableClicked() method. */
                 table.scrollTo(0);
+
+                allVideos = runnerResult.getAllVideos();
+                allTableVideos = runnerResult.getAllTableVideos();
             }
         };
 
@@ -669,32 +667,24 @@ public class VideosFormController extends BackgroundTaskFormController {
         totalResult.clear();
         clearLastProcessedResult();
 
-        BackgroundRunner<TableData> backgroundRunner = backgroundManager -> {
-            List<TableVideo> videosInfo;
-            if (hideUnavailableCheckbox.isSelected()) {
-                videosInfo = VideosBackgroundUtils.getOnlyValidVideos(allTableVideos, backgroundManager);
-            } else {
-                videosInfo = allTableVideos;
-            }
-
-            return VideosBackgroundUtils.getTableData(
-                    table.getMode(),
-                    videosInfo,
-                    settings.getSortBy(),
-                    settings.getSortDirection(),
-                    backgroundManager
-            );
-        };
+        BackgroundRunner<TableData> backgroundRunner = backgroundManager ->
+                getTableData(
+                        allTableVideos,
+                        hideUnavailableCheckbox.isSelected(),
+                        table.getMode(),
+                        settings.getSort(),
+                        backgroundManager
+                );
 
         BackgroundCallback<TableData> callback = tableData -> {
             table.setData(tableData, false);
 
             /*
-             * There is a strange bug with TableView - when the list is shrunk in size (because for example
-             * "hide unavailable" checkbox is checked but it can also happen when refresh is clicked I suppose) and both
-             * big list and shrunk list have vertical scrollbars table isn't shrunk unless you move the scrollbar.
-             * I've tried many workarounds but this one seems the best so far - just show the beginning of the table.
-             * I couldn't find a bug with precise description but these ones fit quite well -
+             * There is a strange bug with the TableView - when the list is shrunk in size (because for example the
+             * "hide unavailable" checkbox is checked but it can also happen when the refresh is clicked I suppose) and
+             * both the big list and the shrunk list have vertical scrollbars the table isn't shrunk unless you move the
+             * scrollbar. I've tried many workarounds but this one seems the best so far - just show the beginning of
+             * the table. I couldn't find the bug with a precise description but these ones fit quite well -
              * https://bugs.openjdk.java.net/browse/JDK-8095384, https://bugs.openjdk.java.net/browse/JDK-8087833.
              */
             table.scrollTo(0);
@@ -708,15 +698,8 @@ public class VideosFormController extends BackgroundTaskFormController {
         totalResult.clear();
         lastProcessedVideo = null;
 
-        AutoSelectSubtitlesRunner backgroundRunner = new AutoSelectSubtitlesRunner(
-                table.getItems(),
-                allVideos,
-                context.getFfmpeg(),
-                settings
-        );
-
+        AutoSelectRunner backgroundRunner = new AutoSelectRunner(table.getItems(), allVideos, ffmpeg, settings);
         BackgroundCallback<ActionResult> callback = actionResult -> totalResult.setActionResult(actionResult);
-
         runInBackground(backgroundRunner, callback);
     }
 
@@ -725,14 +708,8 @@ public class VideosFormController extends BackgroundTaskFormController {
         totalResult.clear();
         lastProcessedVideo = null;
 
-        MultipleFilesAllSubtitleLoader backgroundRunner = new MultipleFilesAllSubtitleLoader(
-                table.getItems(),
-                allVideos,
-                context.getFfmpeg()
-        );
-
+        AllSubtitleLoader backgroundRunner = new AllSubtitleLoader(table.getItems(), allVideos, ffmpeg);
         BackgroundCallback<ActionResult> callback = actionResult -> totalResult.setActionResult(actionResult);
-
         runInBackground(backgroundRunner, callback);
     }
 
@@ -741,25 +718,25 @@ public class VideosFormController extends BackgroundTaskFormController {
         totalResult.clear();
         lastProcessedVideo = null;
 
-        MergePreparationRunner preparationRunner = new MergePreparationRunner(table.getItems(), allVideos, context);
+        MergePrepareRunner preparationRunner = new MergePrepareRunner(table.getItems(), allVideos, ffmpeg, settings);
 
-        BackgroundCallback<MergePreparationRunner.Result> callback = preparationResult -> {
-            if (preparationResult.isCanceled()) {
+        BackgroundCallback<MergePrepareRunner.Result> callback = runnerResult -> {
+            if (runnerResult.isCanceled()) {
                 totalResult.setOnlyWarn("Merge has been cancelled");
                 return;
             }
 
-            if (preparationResult.getFilesWithoutSelectionCount() != 0) {
+            if (runnerResult.getFilesWithoutSelectionCount() != 0) {
                 totalResult.setActionResult(
                         getFilesWithoutSelectionResult(
-                                preparationResult.getFilesWithoutSelectionCount(),
+                                runnerResult.getFilesWithoutSelectionCount(),
                                 table.getSelectedCount()
                         )
                 );
                 return;
             }
 
-            String agreementMessage = getFreeSpaceAgreementMessage(preparationResult).orElse(null);
+            String agreementMessage = getFreeSpaceAgreementMessage(runnerResult);
             if (agreementMessage != null) {
                 if (!Popups.askAgreement(agreementMessage, "yes", "no", stage)) {
                     totalResult.setOnlyWarn("Merge has been cancelled");
@@ -768,8 +745,8 @@ public class VideosFormController extends BackgroundTaskFormController {
             }
 
             List<File> confirmedFilesToOverwrite = new ArrayList<>();
-            if (!CollectionUtils.isEmpty(preparationResult.getFilesToOverwrite())) {
-                confirmedFilesToOverwrite = getConfirmedFilesToOverwrite(preparationResult, stage).orElse(null);
+            if (!CollectionUtils.isEmpty(runnerResult.getFilesToOverwrite())) {
+                confirmedFilesToOverwrite = getConfirmedFilesToOverwrite(runnerResult, stage);
                 if (confirmedFilesToOverwrite == null) {
                     totalResult.setOnlyWarn("Merge has been cancelled");
                     return;
@@ -777,22 +754,17 @@ public class VideosFormController extends BackgroundTaskFormController {
             }
 
             MergeRunner mergeRunner = new MergeRunner(
-                    preparationResult.getFilesMergeInfo(),
+                    runnerResult.getFilesMergeInfo(),
                     confirmedFilesToOverwrite,
-                    preparationResult.getDirectoryForTempFile(),
+                    runnerResult.getDirectoryForTempFile(),
                     table.getItems(),
                     allVideos,
-                    table,
                     context.getFfprobe(),
-                    context.getFfmpeg(),
+                    ffmpeg,
                     settings
             );
 
-            BackgroundCallback<MergeRunner.Result> mergeCallback = result -> {
-                totalResult.setActionResult(result.getActionResult());
-
-                table.setData(result.getTableData(), true);
-            };
+            BackgroundCallback<ActionResult> mergeCallback = actionResult -> totalResult.setActionResult(actionResult);
 
             runInBackground(mergeRunner, mergeCallback);
         };
@@ -815,30 +787,30 @@ public class VideosFormController extends BackgroundTaskFormController {
         return ActionResult.onlyError(String.format(message, filesWithoutSelectionCount));
     }
 
-    private static Optional<String> getFreeSpaceAgreementMessage(MergePreparationRunner.Result preparationResult) {
+    @Nullable
+    private static String getFreeSpaceAgreementMessage(MergePrepareRunner.Result preparationResult) {
         if (preparationResult.getRequiredTempSpace() != null) {
             if (preparationResult.getRequiredTempSpace() <= preparationResult.getAvailableTempSpace()) {
-                return Optional.empty();
+                return null;
             }
 
-            return Optional.of(
-                    "Merge requires approximately "
-                            + Utils.getSizeTextual(preparationResult.getRequiredTempSpace(), false)
-                            + " of free disk space during the process but only "
-                            + Utils.getSizeTextual(preparationResult.getAvailableTempSpace(), false)
-                            + " is available, proceed anyway?"
-            );
+            return "Merge requires approximately "
+                    + Utils.getSizeTextual(preparationResult.getRequiredTempSpace(), false)
+                    + " of free disk space during the process but only "
+                    + Utils.getSizeTextual(preparationResult.getAvailableTempSpace(), false)
+                    + " is available, proceed anyway?";
         } else {
-            return Optional.empty();
+            return null;
         }
     }
 
-    private static Optional<List<File>> getConfirmedFilesToOverwrite(
-            MergePreparationRunner.Result mergePreparationResult,
+    @Nullable
+    private static List<File> getConfirmedFilesToOverwrite(
+            MergePrepareRunner.Result mergePreparationResult,
             Stage stage
     ) {
         if (CollectionUtils.isEmpty(mergePreparationResult.getFilesToOverwrite())) {
-            return Optional.of(new ArrayList<>());
+            return new ArrayList<>();
         }
 
         List<File> result = new ArrayList<>();
@@ -866,7 +838,7 @@ public class VideosFormController extends BackgroundTaskFormController {
                     stage
             );
             if (agreementResult == AgreementResult.CANCELED) {
-                return Optional.empty();
+                return null;
             } else if (agreementResult == AgreementResult.YES) {
                 result.add(fileToOverwrite);
             } else if (agreementResult == AgreementResult.YES_TO_ALL) {
@@ -875,15 +847,15 @@ public class VideosFormController extends BackgroundTaskFormController {
                         mergePreparationResult.getFilesToOverwrite().size()
                 );
                 result.addAll(filesLeft);
-                return Optional.of(result);
+                return result;
             } else if (agreementResult == AgreementResult.NO_TO_ALL) {
-                return Optional.of(result);
+                return result;
             }
 
             filesToOverwriteLeft--;
         }
 
-        return Optional.of(result);
+        return result;
     }
 
     @FXML
@@ -891,73 +863,82 @@ public class VideosFormController extends BackgroundTaskFormController {
         totalResult.clear();
         clearLastProcessedResult();
 
-        RemoveFilesRunner backgroundRunner = new RemoveFilesRunner(
-                allVideos,
-                table.getMode(),
-                allTableVideos,
-                table.getItems(),
-                settings
-        );
+        int originalVideoCount = allTableVideos.size();
 
-        BackgroundCallback<RemoveFilesRunner.Result> callback = result -> {
-            allVideos = result.getFilesInfo();
-            allTableVideos = result.getAllTableFilesInfo();
+        BackgroundRunner<TableData> backgroundRunner = backgroundManager -> {
+            backgroundManager.setCancelPossible(false);
+            backgroundManager.setIndeterminateProgress();
+            backgroundManager.updateMessage("Removing videos from the list...");
 
-            table.setData(result.getTableData(), false);
-
-            if (result.getRemovedCount() == 0) {
-                log.error("nothing has been removed, most likely a bug");
-                throw new IllegalStateException();
-            } else if (result.getRemovedCount() == 1) {
-                totalResult.setOnlySuccess("File has been removed from the list successfully");
-            } else {
-                totalResult.setOnlySuccess(
-                        result.getRemovedCount() + " files have been removed from the list successfully"
-                );
+            for (TableVideo tableVideo : table.getItems()) {
+                if (tableVideo.isSelected()) {
+                    allTableVideos.remove(tableVideo);
+                    allVideos.remove(Video.getById(tableVideo.getId(), allVideos));
+                }
             }
+
+            return getTableData(
+                    allTableVideos,
+                    hideUnavailableCheckbox.isSelected(),
+                    table.getMode(),
+                    settings.getSort(),
+                    backgroundManager
+            );
+        };
+
+        BackgroundCallback<TableData> callback = tableData -> {
+            int removedCount = originalVideoCount - allVideos.size();
+
+            if (removedCount == 0) {
+                log.error("no videos have been removed, most likely a bug");
+                throw new IllegalStateException();
+            } else if (removedCount == 1) {
+                totalResult.setOnlySuccess("The video has been removed from the list successfully");
+            } else {
+                totalResult.setOnlySuccess(removedCount + " videos have been removed from the list successfully");
+            }
+
+            table.setData(tableData, false);
         };
 
         runInBackground(backgroundRunner, callback);
     }
 
     @FXML
-    private void addVideoClicked() {
+    private void addVideosClicked() {
         totalResult.clear();
         clearLastProcessedResult();
 
-        List<File> filesToAdd = getFiles(stage, settings);
-        if (CollectionUtils.isEmpty(filesToAdd)) {
+        List<File> videoFilesToAdd = getVideoFiles(stage, settings);
+        if (CollectionUtils.isEmpty(videoFilesToAdd)) {
             return;
         }
+        settings.saveQuietly(videoFilesToAdd.get(0).getParentFile(), SettingType.VIDEO_DIRECTORY);
 
-        settings.saveQuietly(filesToAdd.get(0).getParentFile(), SettingType.VIDEO_DIRECTORY);
-
-        AddFilesRunner backgroundRunner = new AddFilesRunner(
+        ProcessExtraVideoFilesRunner backgroundRunner = new ProcessExtraVideoFilesRunner(
+                videoFilesToAdd,
                 allVideos,
-                filesToAdd,
                 allTableVideos,
                 hideUnavailableCheckbox.isSelected(),
                 table,
                 context
         );
 
-        BackgroundCallback<AddFilesRunner.Result> callback = result -> {
-            if (!StringUtils.isBlank(result.getAddFailedReason())) {
-                totalResult.setActionResult(ActionResult.onlyError(result.getAddFailedReason()));
-            } else {
-                allVideos = result.getFilesInfo();
-                allTableVideos = result.getAllTableFilesInfo();
+        BackgroundCallback<ProcessExtraVideoFilesRunner.Result> callback = runnerResult -> {
+            totalResult.setActionResult(runnerResult.getActionResult());
 
-                table.setData(result.getTableData(), false);
+            if (!runnerResult.getActionResult().haveErrors()) {
+                table.setData(runnerResult.getTableData(), true);
 
-                totalResult.setActionResult(AddFilesRunner.getActionResult(result));
+                allVideos = runnerResult.getAllVideos();
+                allTableVideos = runnerResult.getAllTableVideos();
             }
         };
 
         runInBackground(backgroundRunner, callback);
     }
 
-    private static List<File> getFiles(Stage stage, Settings settings) {
+    private static List<File> getVideoFiles(Stage stage, Settings settings) {
         FileChooser fileChooser = new FileChooser();
 
         fileChooser.setTitle("Please choose videos");
@@ -965,9 +946,5 @@ public class VideosFormController extends BackgroundTaskFormController {
         fileChooser.getExtensionFilters().add(GuiConstants.VIDEO_EXTENSION_FILTER);
 
         return fileChooser.showOpenMultipleDialog(stage);
-    }
-
-    void openSettingsForm() {
-        mainFormController.openSettingsForm();
     }
 }

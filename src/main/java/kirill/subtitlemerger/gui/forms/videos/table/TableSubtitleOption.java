@@ -4,6 +4,7 @@ import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -134,7 +135,7 @@ public class TableSubtitleOption {
         }
 
         if (selected) {
-            for (TableSubtitleOption option : video.getSubtitleOptions()) {
+            for (TableSubtitleOption option : video.getOptions()) {
                 if (Objects.equals(option.getId(), getId())) {
                     video.setUpperOption(option);
                     option.setSelectedAsLower(false);
@@ -156,7 +157,7 @@ public class TableSubtitleOption {
         }
 
         if (selected) {
-            for (TableSubtitleOption option : video.getSubtitleOptions()) {
+            for (TableSubtitleOption option : video.getOptions()) {
                 if (Objects.equals(option.getId(), getId())) {
                     video.setLowerOption(option);
                     option.setSelectedAsUpper(false);
@@ -172,8 +173,8 @@ public class TableSubtitleOption {
         }
     }
 
-    public static TableSubtitleOption getById(String id, Collection<TableSubtitleOption> subtitleOptions) {
-        TableSubtitleOption result = subtitleOptions.stream()
+    static TableSubtitleOption getById(String id, Collection<TableSubtitleOption> options) {
+        TableSubtitleOption result = options.stream()
                 .filter(option -> Objects.equals(option.getId(), id))
                 .findFirst().orElse(null);
         if (result == null) {
@@ -185,10 +186,10 @@ public class TableSubtitleOption {
     }
 
     public void markAsValid() {
-        notValidReason.set(null);
+        this.notValidReason.set(null);
     }
 
-    public void loadedSuccessfully(int size) {
+    public void loadedSuccessfully(int size, String notValidReason) {
         if (type != TableSubtitleOptionType.BUILT_IN) {
             log.error("not a built-in subtitle option can't be loaded, most likely a bug");
             throw new IllegalStateException();
@@ -198,6 +199,16 @@ public class TableSubtitleOption {
         failedToLoadReason.set(null);
 
         video.optionLoadedSuccessfully();
+
+        if (!StringUtils.isBlank(notValidReason)) {
+            this.notValidReason.set(notValidReason);
+            if (isSelectedAsUpper()) {
+                setSelectedAsUpper(false);
+            }
+            if (isSelectedAsLower()) {
+                setSelectedAsLower(false);
+            }
+        }
     }
 
     public void failedToLoad(String failedToLoadReason) {

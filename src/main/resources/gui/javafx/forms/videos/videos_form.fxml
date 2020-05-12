@@ -32,7 +32,7 @@
                 </Button>
             </HBox>
             <ActionResultPane fx:id="totalResult" minHeight="40" alignment="CENTER" alwaysManaged="true"/>
-            <VBox fx:id="tableAndActionsPane" spacing="10">
+            <VBox fx:id="tableAndActionsPane" VBox.vgrow="ALWAYS" spacing="10">
                 <Label fx:id="selectedCountLabel"/>
                 <HBox alignment="CENTER_LEFT" spacing="10">
                     <CheckBox fx:id="hideUnavailableCheckbox" onAction="#hideUnavailableClicked"
@@ -72,7 +72,7 @@
                 <HBox fx:id="addRemoveVideosPane" alignment="CENTER_RIGHT" visible="false" managed="false"
                       spacing="10">
                     <Button fx:id="removeVideosButton" onAction="#removeVideosClicked" text="Remove selected"/>
-                    <Button onAction="#addVideoClicked" text="Add videos"/>
+                    <Button onAction="#addVideosClicked" text="Add videos"/>
                 </HBox>
             </VBox>
         </VBox>

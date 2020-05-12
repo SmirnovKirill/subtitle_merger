@@ -27,13 +27,6 @@ import static kirill.subtitlemerger.logic.settings.SettingType.*;
 @CommonsLog
 @Getter
 public class GuiContext {
-    private Settings settings;
-
-    /**
-     * Settings required for merging in videos.
-     */
-    private ObservableSet<SettingType> missingSettings;
-
     @Setter
     private Ffprobe ffprobe;
 
@@ -43,31 +36,20 @@ public class GuiContext {
     @Getter(value = AccessLevel.NONE)
     private BooleanProperty videosInProgress;
 
-    public GuiContext() {
-        settings = new Settings();
-        missingSettings = getMissingSettings(settings);
+    private Settings settings;
 
+    /**
+     * Settings required for merging in videos.
+     */
+    private ObservableSet<SettingType> missingSettings;
+
+    public GuiContext() {
         ffprobe = getPackedFfprobe();
         ffmpeg = getPackedFfmpegFile();
         videosInProgress = new SimpleBooleanProperty(false);
-    }
 
-    private static ObservableSet<SettingType> getMissingSettings(Settings settings) {
-        Set<SettingType> result = EnumSet.noneOf(SettingType.class);
-
-        if (settings.getUpperLanguage() == null) {
-            result.add(UPPER_LANGUAGE);
-        }
-
-        if (settings.getLowerLanguage() == null) {
-            result.add(LOWER_LANGUAGE);
-        }
-
-        if (settings.getMergeMode() == null) {
-            result.add(MERGE_MODE);
-        }
-
-        return FXCollections.observableSet(result);
+        settings = new Settings();
+        missingSettings = getMissingSettings(settings);
     }
 
     private static Ffprobe getPackedFfprobe() {
@@ -184,6 +166,24 @@ public class GuiContext {
             log.error("the process can't be interrupted, most likely a bug");
             throw new IllegalStateException();
         }
+    }
+
+    private static ObservableSet<SettingType> getMissingSettings(Settings settings) {
+        Set<SettingType> result = EnumSet.noneOf(SettingType.class);
+
+        if (settings.getUpperLanguage() == null) {
+            result.add(UPPER_LANGUAGE);
+        }
+
+        if (settings.getLowerLanguage() == null) {
+            result.add(LOWER_LANGUAGE);
+        }
+
+        if (settings.getMergeMode() == null) {
+            result.add(MERGE_MODE);
+        }
+
+        return FXCollections.observableSet(result);
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})

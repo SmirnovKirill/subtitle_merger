@@ -11,7 +11,7 @@ import lombok.extern.apachecommons.CommonsLog;
 
 /**
  * A parent class for controllers of the forms that can run background tasks. It has a helper method runInBackground
- * that takes care of the pane management (manages the main and the progress panes), task cancellation and so forth.
+ * that takes care of the pane management (manages the main and the progress panes), task cancelling and so forth.
  */
 @CommonsLog
 public abstract class BackgroundTaskFormController {
@@ -38,8 +38,8 @@ public abstract class BackgroundTaskFormController {
 
         progressPane.progressProperty().bind(backgroundManager.progressProperty());
         progressPane.messageProperty().bind(backgroundManager.messageProperty());
-        progressPane.cancellationPossibleProperty().bind(backgroundManager.cancellationPossibleProperty());
-        progressPane.cancellationDescriptionProperty().bind(backgroundManager.cancellationDescriptionProperty());
+        progressPane.cancelPossibleProperty().bind(backgroundManager.cancelPossibleProperty());
+        progressPane.cancelDescriptionProperty().bind(backgroundManager.cancelDescriptionProperty());
         progressPane.setOnCancelAction(event -> cancelTaskClicked());
     }
 
