@@ -721,7 +721,7 @@ public class VideosFormController extends BackgroundTaskFormController {
         MergePrepareRunner preparationRunner = new MergePrepareRunner(table.getItems(), allVideos, ffmpeg, settings);
 
         BackgroundCallback<MergePrepareRunner.Result> callback = runnerResult -> {
-            if (runnerResult.isCanceled()) {
+            if (runnerResult == null) {
                 totalResult.setOnlyWarn("Merge has been cancelled");
                 return;
             }

@@ -95,8 +95,7 @@ public class Ffmpeg {
     ) throws FfmpegException, InterruptedException {
         /*
          * Ffmpeg can't add subtitles on the fly. So we need to add subtitles to some temporary file
-         * and then rename it. Later we'll also check that the size of the new file is bigger than the size of the
-         * original one because it's important not to spoil the original file with the video.
+         * and then rename it.
          */
         File tempVideoFile = new File(
                 injectInfo.getTempVideoDirectory(),
@@ -117,11 +116,6 @@ public class Ffmpeg {
                 consoleOutput = ProcessRunner.run(arguments);
             } catch (ProcessException e) {
                 throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, e.getConsoleOutput());
-            }
-
-            if (tempVideoFile.length() <= injectInfo.getOriginalVideoFile().length()) {
-                log.error("the resulting file size is less than the original one");
-                throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, consoleOutput);
             }
 
             overwriteOriginalVideo(tempVideoFile, injectInfo.getOriginalVideoFile(), consoleOutput);

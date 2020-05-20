@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class LogicConstants {
-    public static final List<String> ALLOWED_VIDEO_EXTENSIONS = Collections.singletonList("mkv");
+    public static final List<String> ALLOWED_VIDEO_EXTENSIONS = Arrays.asList("mkv", "m4v");
 
     public static final List<LanguageAlpha3Code> ALLOWED_LANGUAGES = getAllowedLanguages();
 

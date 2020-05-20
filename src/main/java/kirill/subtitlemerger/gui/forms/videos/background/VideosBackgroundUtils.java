@@ -174,22 +174,22 @@ public class VideosBackgroundUtils {
         }
     }
 
-    private static String getOptionTitle(BuiltInSubtitleOption stream) {
-        if (stream.isMerged()) {
-            String upperCode = stream.getMergedUpperCode().toUpperCase();
+    private static String getOptionTitle(BuiltInSubtitleOption option) {
+        if (option.isMerged()) {
+            String upperCode = option.getMergedUpperCode().toUpperCase();
             if ("EXTERNAL".equals(upperCode)) {
                 upperCode = "FILE";
             }
-            String lowerCode = stream.getMergedLowerCode().toUpperCase();
+            String lowerCode = option.getMergedLowerCode().toUpperCase();
             if ("EXTERNAL".equals(lowerCode)) {
                 lowerCode = "FILE";
             }
             return upperCode + "+" + lowerCode + " merged subtitles";
         } else {
-            String result = Utils.languageToString(stream.getLanguage()).toUpperCase();
+            String result = Utils.languageToString(option.getLanguage()).toUpperCase();
 
-            if (!StringUtils.isBlank(stream.getTitle())) {
-                result += " (" + stream.getTitle() + ")";
+            if (!StringUtils.isBlank(option.getTitle())) {
+                result += " (" + option.getTitle() + ")";
             }
 
             return result;

@@ -15,6 +15,7 @@ import kirill.subtitlemerger.logic.subtitles.SubtitleMerger;
 import kirill.subtitlemerger.logic.subtitles.entities.Subtitles;
 import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndInput;
 import kirill.subtitlemerger.logic.utils.Utils;
+import kirill.subtitlemerger.logic.utils.entities.ActionResult;
 import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
 import kirill.subtitlemerger.logic.videos.entities.ExternalSubtitleOption;
 import kirill.subtitlemerger.logic.videos.entities.SubtitleOption;
@@ -31,15 +32,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackgroundUtils.INCORRECT_FORMAT;
-import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackgroundUtils.failedToLoadReasonFrom;
+import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackgroundUtils.*;
 
 @CommonsLog
 @AllArgsConstructor
 public class MergePrepareRunner implements BackgroundRunner<MergePrepareRunner.Result> {
-    private List<TableVideo> displayedTableFilesInfo;
+    private List<TableVideo> tableVideos;
 
-    private List<Video> filesInfo;
+    private List<Video> videos;
 
     private Ffmpeg ffmpeg;
 
@@ -47,14 +47,11 @@ public class MergePrepareRunner implements BackgroundRunner<MergePrepareRunner.R
 
     @Override
     public MergePrepareRunner.Result run(BackgroundManager backgroundManager) {
-        VideosBackgroundUtils.clearActionResults(displayedTableFilesInfo, backgroundManager);
+        clearActionResults(tableVideos, backgroundManager);
 
-        List<TableVideo> selectedTableFilesInfo = VideosBackgroundUtils.getSelectedVideos(
-                displayedTableFilesInfo,
-                backgroundManager
-        );
+        List<TableVideo> selectedVideos = getSelectedVideos(tableVideos, backgroundManager);
 
-        int filesWithoutSelectionCount = getFilesWithoutSelectionCount(selectedTableFilesInfo, backgroundManager);
+        int filesWithoutSelectionCount = getFilesWithoutSelectionCount(selectedVideos, backgroundManager);
         if (filesWithoutSelectionCount != 0) {
             return new Result(
                     false,
@@ -73,10 +70,10 @@ public class MergePrepareRunner implements BackgroundRunner<MergePrepareRunner.R
         List<FileMergeInfo> filesMergeInfo = new ArrayList<>();
 
         int processedCount = 0;
-        for (TableVideo tableFileInfo : selectedTableFilesInfo) {
+        for (TableVideo tableFileInfo : selectedVideos) {
             try {
                 filesMergeInfo.add(
-                        getFileMergeInfo(tableFileInfo, processedCount, selectedTableFilesInfo.size(), backgroundManager)
+                        getFileMergeInfo(tableFileInfo, processedCount, selectedVideos.size(), backgroundManager)
                 );
                 processedCount++;
             } catch (InterruptedException e) {
@@ -94,7 +91,7 @@ public class MergePrepareRunner implements BackgroundRunner<MergePrepareRunner.R
 
         RequiredAndAvailableSpace requiredAndAvailableSpace = getRequiredAndAvailableTempSpace(
                 filesMergeInfo,
-                filesInfo,
+                videos,
                 settings,
                 backgroundManager
         );
@@ -131,7 +128,7 @@ public class MergePrepareRunner implements BackgroundRunner<MergePrepareRunner.R
         String progressMessagePrefix = getProgressMessagePrefix(processedCount, allCount, tableFileInfo);
         backgroundManager.updateMessage(progressMessagePrefix + "...");
 
-        Video video = Video.getById(tableFileInfo.getId(), filesInfo);
+        Video video = Video.getById(tableFileInfo.getId(), videos);
         SubtitleOption upperSubtitles = video.getOption(tableFileInfo.getUpperOption().getId());
         SubtitleOption lowerSubtitles = video.getOption(tableFileInfo.getLowerOption().getId());
 

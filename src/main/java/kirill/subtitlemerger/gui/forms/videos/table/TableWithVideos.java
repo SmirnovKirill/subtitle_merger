@@ -713,7 +713,13 @@ public class TableWithVideos extends TableView<TableVideo> {
         sortByGroup.selectToggle(null);
         sortDirectionGroup.selectToggle(null);
 
-        System.gc();
+        /*
+         * I wanted to place System.gc() here but it causes the jvm to crash and I don't know why, there are so many
+         * jvm-crash related issues on the JavaFX's tracker that I couldn't find the matching one. So I guess I'll just
+         * won't call the garbage collector manually.
+         * By the way it crashes with the "C  [libc.so.6+0xa87b2]  __memcpy_sse2_unaligned_erms+0x62". It happens inside
+         * the native call com.sun.prism.es2.GLContext:nClearBuffers.
+         */
     }
 
     void handleVideoSelected(boolean selected, boolean videoAvailable) {
