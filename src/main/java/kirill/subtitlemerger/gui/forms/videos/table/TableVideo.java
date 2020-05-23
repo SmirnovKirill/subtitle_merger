@@ -10,7 +10,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.joda.time.LocalDateTime;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -140,18 +139,6 @@ public class TableVideo {
         return options.stream().filter(TableSubtitleOption::isSelectedAsLower).findFirst().orElse(null);
     }
 
-    //todo remove?
-    public static TableVideo getById(String id, Collection<TableVideo> videos) {
-        TableVideo result = videos.stream().filter(video -> Objects.equals(video.getId(), id)).findFirst().orElse(null);
-
-        if (result == null) {
-            log.error("no table video for id " + id + ", most likely a bug");
-            throw new IllegalStateException();
-        }
-
-        return result;
-    }
-
     public TableSubtitleOption getOption(String id) {
         return TableSubtitleOption.getById(id, options);
     }
@@ -177,7 +164,7 @@ public class TableVideo {
                 notLoadedOptionCount.set(getNotLoadedOptionCount() + 1);
             }
         } else {
-            log.error("unexpected subtitle option type " + option.getType() + ", most likely a bug");
+            log.error("unexpected subtitle option type: " + option.getType() + ", most likely a bug");
             throw new IllegalStateException();
         }
 

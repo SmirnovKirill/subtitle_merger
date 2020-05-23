@@ -290,10 +290,10 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
     }
 
     private void updatePathFields() {
-        upperPathField.setText(upperSubtitleInfo != null ? upperSubtitleInfo.getFile().getAbsolutePath() : null);
-        lowerPathField.setText(lowerSubtitleInfo != null ? lowerSubtitleInfo.getFile().getAbsolutePath() : null);
+        upperPathField.setText(upperSubtitleInfo != null ? upperSubtitleInfo.getFile().getAbsolutePath() : "");
+        lowerPathField.setText(lowerSubtitleInfo != null ? lowerSubtitleInfo.getFile().getAbsolutePath() : "");
         mergedPathField.setText(
-                mergedSubtitleFileInfo != null ? mergedSubtitleFileInfo.getFile().getAbsolutePath() : null
+                mergedSubtitleFileInfo != null ? mergedSubtitleFileInfo.getFile().getAbsolutePath() : ""
         );
     }
 
@@ -367,11 +367,6 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
             return "You have already selected this file for the other subtitles";
         }
 
-        if (!subtitleInfo.isCorrectFormat()) {
-            return "Subtitles in '" + subtitleInfo.getPath() + "'can't be parsed, it can happen if the file is not "
-                    + "UTF-8-encoded, you can change the encoding after pressing the preview button";
-        }
-
         if (subtitleInfo.getNotValidReason() != null) {
             String shortenedPath = getShortenedPath(subtitleInfo.getPath());
 
@@ -402,11 +397,16 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
             }
         }
 
+        if (!subtitleInfo.isCorrectFormat()) {
+            return "Subtitles in '" + subtitleInfo.getPath() + "'can't be parsed, it can happen if the file is not "
+                    + "UTF-8-encoded, you can change the encoding after pressing the preview button";
+        }
+
         return null;
     }
 
     private static String getShortenedPath(String path) {
-        return Utils.getShortenedString(path, 20, 40);
+        return Utils.getShortenedString(path, 0, 64);
     }
 
     @Nullable
@@ -515,7 +515,10 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
     }
 
     private static boolean fileExists(MergedSubtitleFileInfo subtitleFileInfo) {
-        return subtitleFileInfo != null && subtitleFileInfo.getFile().exists();
+        return subtitleFileInfo != null
+                /* This condition is important, there shouldn't be any popups for not valid files. */
+                && subtitleFileInfo.getNotValidReason() == null
+                && subtitleFileInfo.getFile().exists();
     }
 
     private boolean agreeToOverwrite(MergedSubtitleFileInfo subtitleFileInfo) {
@@ -524,7 +527,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
         String fileName = Utils.getShortenedString(
                 subtitleFileInfo.getFile().getName(),
                 0,
-                32
+                64
         );
 
         boolean result = Popups.askAgreement(

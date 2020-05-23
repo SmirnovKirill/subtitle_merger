@@ -350,11 +350,8 @@ public class VideosBackgroundUtils {
             Ffmpeg ffmpeg
     ) throws InterruptedException {
         try {
-            String subtitleText = ffmpeg.getSubtitleText(option.getFfmpegIndex(), option.getFormat(), video.getFile());
-            SubtitlesAndInput subtitlesAndInput = SubtitlesAndInput.from(
-                    subtitleText.getBytes(StandardCharsets.UTF_8),
-                    StandardCharsets.UTF_8
-            );
+            byte[] rawSubtitles = ffmpeg.getSubtitles(option.getFfmpegIndex(), option.getFormat(), video.getFile());
+            SubtitlesAndInput subtitlesAndInput = SubtitlesAndInput.from(rawSubtitles, StandardCharsets.UTF_8);
 
             option.setSubtitlesAndInput(subtitlesAndInput);
             if (subtitlesAndInput.isCorrectFormat()) {
@@ -366,17 +363,8 @@ public class VideosBackgroundUtils {
             }
         } catch (FfmpegException e) {
             log.warn("failed to get subtitle text: " + e.getCode() + ", console output " + e.getConsoleOutput());
-            Platform.runLater(() -> tableOption.failedToLoad(failedToLoadReasonFrom(e.getCode())));
+            Platform.runLater(() -> tableOption.failedToLoad("Fmpeg returned an error"));
             return LoadSubtitlesResult.FAILED;
-        }
-    }
-
-    static String failedToLoadReasonFrom(FfmpegException.Code code) {
-        if (code == FfmpegException.Code.GENERAL_ERROR) {
-            return "Fmpeg returned an error";
-        } else {
-            log.error("unexpected ffmpeg code when loading subtitles: " + code + ", most likely a bug");
-            throw new IllegalStateException();
         }
     }
 

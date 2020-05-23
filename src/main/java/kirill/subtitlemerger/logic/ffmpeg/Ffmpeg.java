@@ -52,7 +52,7 @@ public class Ffmpeg {
     /*
      * Synchronized because we use one temporary file with subtitles.
      */
-    public synchronized String getSubtitleText(
+    public synchronized byte[] getSubtitles(
             int ffmpegStreamIndex,
             String format,
             File videoFile
@@ -80,7 +80,7 @@ public class Ffmpeg {
         }
 
         try {
-            return FileUtils.readFileToString(TEMP_SUBTITLE_FILE, StandardCharsets.UTF_8);
+            return FileUtils.readFileToByteArray(TEMP_SUBTITLE_FILE);
         } catch (IOException e) {
             log.warn("failed to read subtitles from video: " + ExceptionUtils.getStackTrace(e));
             throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, consoleOutput);
@@ -149,22 +149,24 @@ public class Ffmpeg {
          */
         result.addAll(Arrays.asList("-max_interleave_delta", "0"));
 
+        int newStreamIndex = injectInfo.getCurrentSubtitleCount();
+
         if (injectInfo.getLanguage() != null) {
-            result.add("-metadata:s:s:" + injectInfo.getNewStreamIndex());
+            result.add("-metadata:s:s:" + newStreamIndex);
             result.add("language=" + injectInfo.getLanguage());
         }
 
-        result.add("-metadata:s:s:" + injectInfo.getNewStreamIndex());
+        result.add("-metadata:s:s:" + newStreamIndex);
         result.add("title=" + injectInfo.getTitle());
 
         if (injectInfo.isMakeDefault()) {
-            if (!CollectionUtils.isEmpty(injectInfo.getStreamToMakeNotDefaultIndices())) {
-                for (int index : injectInfo.getStreamToMakeNotDefaultIndices()) {
+            if (!CollectionUtils.isEmpty(injectInfo.getStreamsToMakeNotDefaultIndices())) {
+                for (int index : injectInfo.getStreamsToMakeNotDefaultIndices()) {
                     result.addAll(Arrays.asList("-disposition:" + index, "0"));
                 }
             }
 
-            result.addAll(Arrays.asList("-disposition:s:" + injectInfo.getNewStreamIndex(), "default"));
+            result.addAll(Arrays.asList("-disposition:s:" + newStreamIndex, "default"));
         }
 
         result.addAll(Arrays.asList("-map", "0"));

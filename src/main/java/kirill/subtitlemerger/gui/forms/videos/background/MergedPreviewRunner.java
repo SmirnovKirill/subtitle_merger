@@ -6,11 +6,10 @@ import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.settings.Settings;
+import kirill.subtitlemerger.logic.subtitles.SubRipWriter;
 import kirill.subtitlemerger.logic.subtitles.SubtitleMerger;
 import kirill.subtitlemerger.logic.subtitles.entities.Subtitles;
-import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndOutput;
 import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
-import kirill.subtitlemerger.logic.videos.entities.MergedSubtitleInfo;
 import kirill.subtitlemerger.logic.videos.entities.SubtitleOption;
 import kirill.subtitlemerger.logic.videos.entities.Video;
 import lombok.AllArgsConstructor;
@@ -21,7 +20,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackgroundUtils.getLoadSubtitlesError;
 
@@ -40,10 +38,6 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
         SubtitleOption upperOption = video.getOption(tableVideo.getUpperOption().getId());
         SubtitleOption lowerOption = video.getOption(tableVideo.getLowerOption().getId());
 
-        if (haveUpToDateMergedInfo(video.getMergedSubtitleInfo(), upperOption, lowerOption)) {
-            return new Result(null, video.getMergedSubtitleInfo());
-        }
-
         try {
             String loadError = loadSubtitles(video, tableVideo, ffmpeg, backgroundManager);
             if (!StringUtils.isBlank(loadError)) {
@@ -55,43 +49,10 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
             backgroundManager.updateMessage("Preview: merging the subtitles...");
             Subtitles merged = SubtitleMerger.mergeSubtitles(upperOption.getSubtitles(), lowerOption.getSubtitles());
 
-            return new Result(
-                    null,
-                    new MergedSubtitleInfo(
-                            SubtitlesAndOutput.from(merged, settings.isPlainTextSubtitles()),
-                            upperOption.getId(),
-                            upperOption.getEncoding(),
-                            lowerOption.getId(),
-                            lowerOption.getEncoding()
-                    )
-            );
+            return new Result(null, SubRipWriter.toText(merged, settings.isPlainTextSubtitles()));
         } catch (InterruptedException e) {
             return null;
         }
-    }
-
-    private static boolean haveUpToDateMergedInfo(
-            MergedSubtitleInfo mergedSubtitleInfo,
-            SubtitleOption upperOption,
-            SubtitleOption lowerOption
-    ) {
-        if (mergedSubtitleInfo == null) {
-            return false;
-        }
-
-        if (!Objects.equals(mergedSubtitleInfo.getUpperOptionId(), upperOption.getId())) {
-            return false;
-        }
-
-        if (!Objects.equals(mergedSubtitleInfo.getUpperEncoding(), upperOption.getEncoding())) {
-            return false;
-        }
-
-        if (!Objects.equals(mergedSubtitleInfo.getLowerOptionId(), lowerOption.getId())) {
-            return false;
-        }
-
-        return Objects.equals(mergedSubtitleInfo.getLowerEncoding(), lowerOption.getEncoding());
     }
 
     @Nullable
@@ -154,6 +115,6 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
         private String error;
 
         @Nullable
-        private MergedSubtitleInfo mergedSubtitleInfo;
+        private String subtitleText;
     }
  }

@@ -7,9 +7,13 @@ import lombok.Getter;
 
 import java.nio.charset.Charset;
 
+/**
+ * A helper class that stores subtitles and their raw data. It is helpful because if the user provides a file with
+ * subtitles it's impossible to guess the correct encoding so we should store the original raw data and give the ability
+ * to change the encoding.
+ */
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
-//todo comment
 public class SubtitlesAndInput {
     private byte[] rawData;
 

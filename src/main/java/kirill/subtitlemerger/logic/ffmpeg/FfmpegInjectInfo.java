@@ -12,7 +12,10 @@ import java.util.List;
 public class FfmpegInjectInfo {
     private String subtitles;
 
-    private int newStreamIndex;
+    /**
+     * This value will be used to get an index of a new stream.
+     */
+    private int currentSubtitleCount;
 
     private LanguageAlpha3Code language;
 
@@ -20,7 +23,7 @@ public class FfmpegInjectInfo {
 
     private boolean makeDefault;
 
-    private List<Integer> streamToMakeNotDefaultIndices;
+    private List<Integer> streamsToMakeNotDefaultIndices;
 
     private File originalVideoFile;
 

@@ -1,7 +1,12 @@
 package kirill.subtitlemerger.logic.utils;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
+import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
+import kirill.subtitlemerger.logic.videos.entities.ExternalSubtitleOption;
+import kirill.subtitlemerger.logic.videos.entities.SubtitleOption;
+import kirill.subtitlemerger.logic.videos.entities.Video;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.io.FilenameUtils;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -145,6 +150,27 @@ public class Utils {
             return preliminaryResult - 1;
         } else {
             return preliminaryResult;
+        }
+    }
+
+    public static String getMergedSubtitleFilePath(
+            Video video,
+            SubtitleOption upperOption,
+            SubtitleOption lowerOption
+    ) {
+        return FilenameUtils.removeExtension(video.getFile().getAbsolutePath()) + "_"
+                + getOptionTitleForFile(upperOption) + "-" + getOptionTitleForFile(lowerOption) + ".srt";
+    }
+
+    private static String getOptionTitleForFile(SubtitleOption option) {
+        if (option instanceof ExternalSubtitleOption) {
+            return "external";
+        } else if (option instanceof BuiltInSubtitleOption) {
+            LanguageAlpha3Code language = ((BuiltInSubtitleOption) option).getLanguage();
+            return language != null ? language.toString() : "unknown";
+        } else {
+            log.error("unexpected subtitle option type: " + option.getClass() + ", most likely a bug");
+            throw new IllegalStateException();
         }
     }
 }

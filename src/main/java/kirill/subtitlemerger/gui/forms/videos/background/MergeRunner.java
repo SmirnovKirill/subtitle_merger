@@ -2,6 +2,7 @@ package kirill.subtitlemerger.gui.forms.videos.background;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.application.Platform;
+import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.forms.videos.table.TableSubtitleOption;
 import kirill.subtitlemerger.gui.forms.videos.table.TableVideo;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
@@ -13,7 +14,10 @@ import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
 import kirill.subtitlemerger.logic.ffmpeg.json.JsonFfprobeVideoInfo;
 import kirill.subtitlemerger.logic.settings.MergeMode;
 import kirill.subtitlemerger.logic.settings.Settings;
+import kirill.subtitlemerger.logic.subtitles.SubtitleMerger;
+import kirill.subtitlemerger.logic.subtitles.entities.Subtitles;
 import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndInput;
+import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndOutput;
 import kirill.subtitlemerger.logic.utils.Utils;
 import kirill.subtitlemerger.logic.utils.entities.ActionResult;
 import kirill.subtitlemerger.logic.videos.Videos;
@@ -24,27 +28,33 @@ import kirill.subtitlemerger.logic.videos.entities.Video;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackgroundUtils.*;
 
 @CommonsLog
 @AllArgsConstructor
 public class MergeRunner implements BackgroundRunner<ActionResult> {
-    private List<MergePrepareRunner.FileMergeInfo> filesMergeInfo;
+    private List<TableVideo> tableVideos;
+
+    private List<Video> videos;
 
     private List<File> confirmedFilesToOverwrite;
 
-    private File directoryForTempFile;
-
-    private List<TableVideo> displayedTableVideos;
-
-    private List<Video> allFilesInfo;
+    private File largestFreeSpaceDirectory;
 
     private Ffprobe ffprobe;
 
@@ -52,133 +62,123 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
 
     private Settings settings;
 
+    public MergeRunner(
+            List<TableVideo> tableVideos,
+            List<Video> videos,
+            List<File> confirmedFilesToOverwrite,
+            File largestFreeSpaceDirectory,
+            GuiContext context
+    ) {
+        this.tableVideos = tableVideos;
+        this.videos = videos;
+        this.confirmedFilesToOverwrite = confirmedFilesToOverwrite;
+        this.largestFreeSpaceDirectory = largestFreeSpaceDirectory;
+        this.ffprobe = context.getFfprobe();
+        this.ffmpeg = context.getFfmpeg();
+        this.settings = context.getSettings();
+    }
+
     @Override
     public ActionResult run(BackgroundManager backgroundManager) {
-        int allFileCount = filesMergeInfo.size();
+        int toProcessCount = tableVideos.size();
         int processedCount = 0;
-        int finishedSuccessfullyCount = 0;
-        int noAgreementCount = 0;
+        int successfulCount = 0;
+        int noConfirmationCount = 0;
         int alreadyMergedCount = 0;
         int failedCount = 0;
 
-        for (MergePrepareRunner.FileMergeInfo fileMergeInfo : filesMergeInfo) {
-            TableVideo tableFileInfo = TableVideo.getById(fileMergeInfo.getId(), displayedTableVideos);
+        try {
+            for (TableVideo tableVideo : tableVideos) {
+                Video video = Video.getById(tableVideo.getId(), videos);
+                String actionPrefix = getProgressAction(processedCount, toProcessCount, "Merge: ");
 
-            String progressMessagePrefix = getProgressMessagePrefix(processedCount, allFileCount, tableFileInfo);
-            backgroundManager.updateMessage(progressMessagePrefix + "...");
-
-            Video fileInfo = Video.getById(fileMergeInfo.getId(), allFilesInfo);
-
-            if (fileMergeInfo.getStatus() == MergePrepareRunner.FileMergeStatus.FAILED_TO_LOAD_SUBTITLES) {
-                String message = Utils.getTextDependingOnCount(
-                        fileMergeInfo.getFailedToLoadSubtitlesCount(),
-                        "Merge is unavailable because failed to load subtitles",
-                        "Merge is unavailable because failed to load %d subtitles"
-                );
-
-                Platform.runLater(() -> tableFileInfo.setOnlyError(message));
-                failedCount++;
-            } else if (fileMergeInfo.getStatus() == MergePrepareRunner.FileMergeStatus.DUPLICATE) {
-                String message = "Selected subtitles have already been merged";
-                Platform.runLater(() -> tableFileInfo.setOnlyWarn(message));
-                alreadyMergedCount++;
-            } else if (fileMergeInfo.getStatus() == MergePrepareRunner.FileMergeStatus.OK) {
-                if (noPermission(fileMergeInfo, confirmedFilesToOverwrite, settings)) {
-                    String message = "Merge is unavailable because you need to agree to the file overwriting";
-                    Platform.runLater(() -> tableFileInfo.setOnlyWarn(message));
-                    noAgreementCount++;
+                IterationResult iterationResult = processVideo(tableVideo, video, actionPrefix, backgroundManager);
+                if (iterationResult == IterationResult.NO_CONFIRMATION) {
+                    noConfirmationCount++;
+                } else if (iterationResult == IterationResult.FAILED) {
+                    failedCount++;
+                } else if (iterationResult == IterationResult.ALREADY_MERGED) {
+                    alreadyMergedCount++;
+                } else if (iterationResult == IterationResult.SUCCESS) {
+                    successfulCount++;
                 } else {
-                    try {
-                        if (settings.getMergeMode() == MergeMode.ORIGINAL_VIDEOS) {
-                            if (directoryForTempFile == null) {
-                                String message = "Failed to get the directory for temp files";
-                                Platform.runLater(() -> tableFileInfo.setOnlyError(message));
-
-                                failedCount++;
-                            } else {
-                                FfmpegInjectInfo injectInfo = new FfmpegInjectInfo(
-                                        fileMergeInfo.getMergedSubtitleText(),
-                                        fileInfo.getBuiltInOptions().size(),
-                                        getMergedSubtitleLanguage(fileMergeInfo),
-                                        "merged-" + getOptionTitleForFfmpeg(fileMergeInfo.getUpperSubtitles())
-                                                + "-" + getOptionTitleForFfmpeg(fileMergeInfo.getLowerSubtitles()),
-                                        settings.isMakeMergedStreamsDefault(),
-                                        fileInfo.getBuiltInOptions().stream()
-                                                .filter(BuiltInSubtitleOption::isDefaultDisposition)
-                                                .map(BuiltInSubtitleOption::getFfmpegIndex)
-                                                .collect(toList()),
-                                        fileInfo.getFile(),
-                                        directoryForTempFile
-                                );
-
-                                ffmpeg.injectSubtitlesToFile(injectInfo);
-
-                                try {
-                                    updateFileInfo(
-                                            fileInfo,
-                                            tableFileInfo,
-                                            ffprobe,
-                                            ffmpeg,
-                                            settings
-                                    );
-                                } catch (FfmpegException | IllegalStateException e) {
-                                    String message = "The subtitles have been merged but failed to update stream list";
-                                    Platform.runLater(() -> tableFileInfo.setOnlyWarn(message));
-                                }
-
-                                finishedSuccessfullyCount++;
-                            }
-                        } else if (settings.getMergeMode() == MergeMode.SEPARATE_SUBTITLE_FILES) {
-                            FileUtils.writeStringToFile(
-                                    fileMergeInfo.getFileWithResult(),
-                                    fileMergeInfo.getMergedSubtitleText(),
-                                    StandardCharsets.UTF_8
-                            );
-
-                            finishedSuccessfullyCount++;
-                        } else {
-                            throw new IllegalStateException();
-                        }
-                    } catch (IOException e) {
-                        String message = "Failed to write the result, probably there is no access to the file";
-                        Platform.runLater(() -> tableFileInfo.setOnlyError(message));
-                        failedCount++;
-                    } catch (FfmpegException e) {
-                        log.warn("failed to merge: " + e.getCode() + ", console output " + e.getConsoleOutput());
-                        String message = "Ffmpeg returned an error";
-                        Platform.runLater(() -> tableFileInfo.setOnlyError(message));
-                        failedCount++;
-                    } catch (InterruptedException e) {
-                        break;
-                    }
+                    log.error("unexpected iteration result: " + iterationResult + ", most likely a bug");
+                    throw new IllegalStateException();
                 }
-            } else {
-                throw new IllegalStateException();
-            }
 
-            processedCount++;
+                processedCount++;
+            }
+        } catch (InterruptedException e) {
+            /* Do nothing here, will just return the result based on the work done. */
         }
 
         return getActionResult(
-                allFileCount,
+                toProcessCount,
                 processedCount,
-                finishedSuccessfullyCount,
-                noAgreementCount,
+                successfulCount,
+                noConfirmationCount,
                 alreadyMergedCount,
                 failedCount
         );
     }
 
-    private static String getProgressMessagePrefix(int processedCount, int allFileCount, TableVideo fileInfo) {
-        String progressPrefix = allFileCount > 1
-                ? String.format("%d/%d ", processedCount + 1, allFileCount) + "stage 2 of 2: processing file "
-                : "Stage 2 of 2: processing file ";
+    private IterationResult processVideo(
+            TableVideo tableVideo,
+            Video video,
+            String actionPrefix,
+            BackgroundManager backgroundManager
 
-        return progressPrefix + fileInfo.getFilePath();
+    ) throws InterruptedException {
+        backgroundManager.setCancelPossible(false);
+        backgroundManager.setIndeterminateProgress();
+        backgroundManager.updateMessage(actionPrefix + "processing " + video.getFile() + "...");
+
+        SubtitleOption upperOption = video.getOption(tableVideo.getUpperOption().getId());
+        SubtitleOption lowerOption = video.getOption(tableVideo.getLowerOption().getId());
+
+        if (noConfirmation(video, upperOption, lowerOption, confirmedFilesToOverwrite, settings)) {
+            String message = "Merging is unavailable because you need to confirm the file overwriting";
+            Platform.runLater(() -> tableVideo.setOnlyWarn(message));
+            return IterationResult.NO_CONFIRMATION;
+        }
+
+        List<BuiltInSubtitleOption> optionsToLoad = getOptionsToLoad(video, upperOption, lowerOption, settings);
+        boolean success = loadSubtitles(optionsToLoad, video, tableVideo, actionPrefix, ffmpeg, backgroundManager);
+        if (!success) {
+            return IterationResult.FAILED;
+        }
+
+        SubtitlesAndOutput merged = getMergedSubtitles(
+                upperOption,
+                lowerOption,
+                actionPrefix,
+                settings,
+                backgroundManager
+        );
+        if (isDuplicate(merged, video, settings)) {
+            String message = "Selected subtitles have already been merged";
+            Platform.runLater(() -> tableVideo.setOnlyWarn(message));
+            return IterationResult.ALREADY_MERGED;
+        }
+
+        backgroundManager.setCancelPossible(false);
+        backgroundManager.setIndeterminateProgress();
+        if (settings.getMergeMode() == MergeMode.ORIGINAL_VIDEOS) {
+            backgroundManager.updateMessage(actionPrefix + "injecting the result to the video...");
+            return injectToVideo(video, upperOption, lowerOption, merged, tableVideo);
+        } else if (settings.getMergeMode() == MergeMode.SEPARATE_SUBTITLE_FILES) {
+            backgroundManager.updateMessage(actionPrefix + "writing the result to the file...");
+            return saveToSubtitleFile(video, upperOption, lowerOption, merged, tableVideo);
+        } else {
+            log.error("unexpected merge mode: " + settings.getMergeMode() + ", most likely a bug");
+            throw new IllegalStateException();
+        }
     }
 
-    private static boolean noPermission(
-            MergePrepareRunner.FileMergeInfo fileMergeInfo,
+    private static boolean noConfirmation(
+            Video video,
+            SubtitleOption upperOption,
+            SubtitleOption lowerOption,
             List<File> confirmedFilesToOverwrite,
             Settings settings
     ) {
@@ -186,19 +186,210 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
             return false;
         }
 
-        File fileWithResult = fileMergeInfo.getFileWithResult();
-
-        return fileWithResult.exists() && !confirmedFilesToOverwrite.contains(fileWithResult);
+        File subtitleFile = new File(Utils.getMergedSubtitleFilePath(video, upperOption, lowerOption));
+        return subtitleFile.exists() && !confirmedFilesToOverwrite.contains(subtitleFile);
     }
 
-    private static LanguageAlpha3Code getMergedSubtitleLanguage(MergePrepareRunner.FileMergeInfo mergeInfo) {
-        LanguageAlpha3Code result = null;
-        if (mergeInfo.getUpperSubtitles() instanceof BuiltInSubtitleOption) {
-            result = ((BuiltInSubtitleOption) mergeInfo.getUpperSubtitles()).getLanguage();
+    private static List<BuiltInSubtitleOption> getOptionsToLoad(
+            Video video,
+            SubtitleOption upperOption,
+            SubtitleOption lowerOption,
+            Settings settings
+    ) {
+        List<SubtitleOption> notFilteredOptions = new ArrayList<>();
+
+        notFilteredOptions.add(upperOption);
+        notFilteredOptions.add(lowerOption);
+
+        /*
+         * When injecting into original videos we should load not only the selected options but also the merged ones in
+         * order to check for duplicates later.
+         */
+        if (settings.getMergeMode() == MergeMode.ORIGINAL_VIDEOS) {
+            notFilteredOptions.addAll(
+                    video.getBuiltInOptions().stream()
+                            .filter(BuiltInSubtitleOption::isMerged)
+                            .collect(toList())
+            );
         }
 
-        if (result == null && mergeInfo.getLowerSubtitles() instanceof BuiltInSubtitleOption) {
-            result = ((BuiltInSubtitleOption) mergeInfo.getUpperSubtitles()).getLanguage();
+        return notFilteredOptions.stream()
+                .filter(option -> option instanceof BuiltInSubtitleOption)
+                .map(BuiltInSubtitleOption.class::cast)
+                .filter(option -> option.getSubtitlesAndInput() == null)
+                .filter(option -> option.isMerged() || option.getNotValidReason() == null)
+                .collect(toList());
+    }
+
+    private static boolean loadSubtitles(
+            List<BuiltInSubtitleOption> optionsToLoad,
+            Video video,
+            TableVideo tableVideo,
+            String actionPrefix,
+            Ffmpeg ffmpeg,
+            BackgroundManager backgroundManager
+    ) throws InterruptedException {
+        if (CollectionUtils.isEmpty(optionsToLoad)) {
+            return true;
+        }
+
+        backgroundManager.setCancelPossible(true);
+        backgroundManager.setCancelDescription("Please be patient, this may take a while depending on the video.");
+        backgroundManager.setIndeterminateProgress();
+
+        int toLoadCount = optionsToLoad.size();
+        int failedCount = 0;
+        int incorrectCount = 0;
+
+        for (BuiltInSubtitleOption option : optionsToLoad) {
+            TableSubtitleOption tableOption = tableVideo.getOption(option.getId());
+
+            String action = actionPrefix + "loading " + tableOption.getTitle() + " in " + video.getFile().getName()
+                    + "...";
+            backgroundManager.updateMessage(action);
+
+            LoadSubtitlesResult loadResult = VideosBackgroundUtils.loadSubtitles(option, video, tableOption, ffmpeg);
+            if (loadResult == LoadSubtitlesResult.FAILED) {
+                failedCount++;
+            } else if (loadResult == LoadSubtitlesResult.INCORRECT_FORMAT) {
+                incorrectCount++;
+            }
+
+            if (failedCount != 0 || incorrectCount != 0) {
+                String error = "Merging is not possible: "
+                        + StringUtils.uncapitalize(getLoadSubtitlesError(toLoadCount, failedCount, incorrectCount));
+                Platform.runLater(() -> tableVideo.setOnlyError(error));
+            }
+        }
+
+        return failedCount == 0 && incorrectCount == 0;
+    }
+
+    private static SubtitlesAndOutput getMergedSubtitles(
+            SubtitleOption upperOption,
+            SubtitleOption lowerOption,
+            String actionPrefix,
+            Settings settings,
+            BackgroundManager backgroundManager
+    ) throws InterruptedException {
+        backgroundManager.setCancelPossible(true);
+        backgroundManager.setCancelDescription(null);
+        backgroundManager.setIndeterminateProgress();
+        backgroundManager.updateMessage(actionPrefix + "merging subtitles...");
+
+        Subtitles subtitles = SubtitleMerger.mergeSubtitles(upperOption.getSubtitles(), lowerOption.getSubtitles());
+        return SubtitlesAndOutput.from(subtitles, settings.isPlainTextSubtitles());
+    }
+
+    private static boolean isDuplicate(SubtitlesAndOutput merged, Video video, Settings settings) {
+        if (settings.getMergeMode() != MergeMode.ORIGINAL_VIDEOS) {
+            return false;
+        }
+
+        for (BuiltInSubtitleOption option : video.getBuiltInOptions()) {
+            if (!option.isMerged()) {
+                continue;
+            }
+
+            SubtitlesAndInput optionSubtitles = option.getSubtitlesAndInput();
+            if (optionSubtitles == null) {
+                log.error("option subtitles are null, shouldn't have gotten here, most likely a bug");
+                throw new IllegalStateException();
+            }
+
+            String optionSubtitleText = new String(optionSubtitles.getRawData(), optionSubtitles.getEncoding());
+            if (Objects.equals(merged.getText(), optionSubtitleText)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private IterationResult injectToVideo(
+            Video video,
+            SubtitleOption upperOption,
+            SubtitleOption lowerOption,
+            SubtitlesAndOutput merged,
+            TableVideo tableVideo
+    ) throws InterruptedException {
+        try {
+            ffmpeg.injectSubtitlesToFile(getFfmpegInjectInfo(video, upperOption, lowerOption, merged));
+        } catch (FfmpegException e) {
+            Platform.runLater(() -> tableVideo.setOnlyError(getInjectErrorText(e)));
+            return IterationResult.FAILED;
+        }
+
+        BuiltInSubtitleOption newOption;
+        try {
+            newOption = getNewOption(video, merged, ffprobe);
+        } catch (FfmpegException e) {
+            String message = "The merge has finished successfully but failed to update the video info";
+            Platform.runLater(() -> tableVideo.setOnlyError(message));
+            return IterationResult.FAILED;
+        }
+        if (newOption  == null) {
+            String message = "The merge has finished successfully but failed to find the new subtitle stream";
+            Platform.runLater(() -> tableVideo.setOnlyError(message));
+            return IterationResult.FAILED;
+        }
+        updateVideo(video, newOption);
+
+        boolean haveHideableOptions = tableVideo.getOptions().stream().anyMatch(TableSubtitleOption::isHideable);
+        TableSubtitleOption newTableOption = tableOptionFrom(newOption, haveHideableOptions, tableVideo, settings);
+
+        Platform.runLater(() -> {
+            tableVideo.setSizeAndLastModified(video.getSize(), video.getLastModified());
+            tableVideo.addOption(newTableOption);
+        });
+
+        return IterationResult.SUCCESS;
+    }
+
+    private FfmpegInjectInfo getFfmpegInjectInfo(
+            Video video,
+            SubtitleOption upperOption,
+            SubtitleOption lowerOption,
+            SubtitlesAndOutput merged
+    ) {
+        String title = "merged-" + getMergedTitlePart(upperOption) + "-" + getMergedTitlePart(lowerOption);
+        List<Integer> streamsToMakeNotDefaultIndices = video.getBuiltInOptions().stream()
+                .filter(BuiltInSubtitleOption::isDefaultDisposition)
+                .map(BuiltInSubtitleOption::getFfmpegIndex)
+                .collect(toList());
+
+        return new FfmpegInjectInfo(
+                merged.getText(),
+                video.getBuiltInOptions().size(),
+                getMergedLanguage(upperOption, lowerOption),
+                title,
+                settings.isMakeMergedStreamsDefault(),
+                streamsToMakeNotDefaultIndices,
+                video.getFile(),
+                largestFreeSpaceDirectory
+        );
+    }
+
+    private static String getMergedTitlePart(SubtitleOption option) {
+        if (option instanceof ExternalSubtitleOption) {
+            return "external";
+        } else if (option instanceof BuiltInSubtitleOption) {
+            LanguageAlpha3Code language = ((BuiltInSubtitleOption) option).getLanguage();
+            return language != null ? language.toString() : "unknown";
+        } else {
+            log.error("unexpected subtitle option class " + option.getClass() + ", most likely a bug");
+            throw new IllegalStateException();
+        }
+    }
+
+    private static LanguageAlpha3Code getMergedLanguage(SubtitleOption upperOption, SubtitleOption lowerOption) {
+        LanguageAlpha3Code result = null;
+        if (upperOption instanceof BuiltInSubtitleOption) {
+            result = ((BuiltInSubtitleOption) upperOption).getLanguage();
+        }
+
+        if (result == null && lowerOption instanceof BuiltInSubtitleOption) {
+            result = ((BuiltInSubtitleOption) lowerOption).getLanguage();
         }
 
         if (result == null) {
@@ -208,170 +399,183 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
         return result;
     }
 
-    private static String getOptionTitleForFfmpeg(SubtitleOption subtitleOption) {
-        if (subtitleOption instanceof ExternalSubtitleOption) {
-            return "external";
-        } else if (subtitleOption instanceof BuiltInSubtitleOption) {
-            LanguageAlpha3Code language = ((BuiltInSubtitleOption) subtitleOption).getLanguage();
-            return language != null ? language.toString() : "unknown";
+    private static String getInjectErrorText(FfmpegException exception) {
+        String result = "Merging has failed: ";
+
+        if (exception.getCode() == FfmpegException.Code.FAILED_TO_MOVE_TEMP_VIDEO) {
+            return result + "couldn't move the temporary video file";
+        } else if (exception.getCode() == FfmpegException.Code.GENERAL_ERROR) {
+            return result + "Ffmpeg returned an error";
         } else {
+            log.error("unexpected inject exception code: " + exception.getCode() + ", most likely a bug");
             throw new IllegalStateException();
         }
     }
 
-    private static void updateFileInfo(
-            Video fileInfo,
-            TableVideo tableVideoInfo,
-            Ffprobe ffprobe,
-            Ffmpeg ffmpeg,
-            Settings settings
+    /*
+     * I've decided that it's better to just add the new merged option instead of updating the whole option list because
+     * you can't quickly recreate options - you either have to load subtitles with Ffmpeg which takes time or take them
+     * from the old option list, and that is not a very "pure" approach in my opinion.
+     */
+    @Nullable
+    private static BuiltInSubtitleOption getNewOption(
+            Video video,
+            SubtitlesAndOutput merged,
+            Ffprobe ffprobe
     ) throws FfmpegException, InterruptedException {
-        //todo diagnostics
-        JsonFfprobeVideoInfo ffprobeInfo = ffprobe.getVideoInfo(fileInfo.getFile());
-        List<BuiltInSubtitleOption> subtitleOptions = Videos.getSubtitleOptions(ffprobeInfo);
-        if (settings.isMakeMergedStreamsDefault()) {
-            for (BuiltInSubtitleOption stream : subtitleOptions) {
-                stream.disableDefaultDisposition();
+        Set<Integer> originalOptionIndices = video.getBuiltInOptions().stream()
+                .map(BuiltInSubtitleOption::getFfmpegIndex)
+                .collect(toSet());
+
+        JsonFfprobeVideoInfo ffprobeInfo = ffprobe.getVideoInfo(video.getFile());
+        List<BuiltInSubtitleOption> updatedOptions = Videos.getSubtitleOptions(ffprobeInfo);
+
+        List<BuiltInSubtitleOption> newOptions = updatedOptions.stream()
+                .filter(option -> !originalOptionIndices.contains(option.getFfmpegIndex()))
+                .collect(toList());
+        if (newOptions.size() != 1) {
+            log.warn(
+                    "there should be exactly one new option but there are " + newOptions.size() + ", it can be a bug "
+                            + "or the user working with the video manually"
+            );
+            return null;
+        }
+
+        BuiltInSubtitleOption result = newOptions.get(0);
+        result.setSubtitlesAndInput(
+                SubtitlesAndInput.from(merged.getText().getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8)
+        );
+
+        return result;
+    }
+
+    private static void updateVideo(Video video, BuiltInSubtitleOption newOption) {
+        if (newOption.isDefaultDisposition()) {
+            for (BuiltInSubtitleOption option : video.getBuiltInOptions()) {
+                option.disableDefaultDisposition();
             }
         }
 
-        List<String> currentOptionsIds = fileInfo.getOptions().stream()
-                .map(SubtitleOption::getId)
-                .collect(toList());
-        List<BuiltInSubtitleOption> newSubtitleOptions = subtitleOptions.stream()
-                .filter(option -> !currentOptionsIds.contains(option.getId()))
-                .collect(toList());
-        if (newSubtitleOptions.size() != 1) {
-            //todo just mark as incorrect or something
-            throw new IllegalStateException();
+        video.getOptions().add(newOption);
+        video.setCurrentSizeAndLastModified();
+    }
+
+    private static IterationResult saveToSubtitleFile(
+            Video video,
+            SubtitleOption upperOption,
+            SubtitleOption lowerOption,
+            SubtitlesAndOutput merged,
+            TableVideo tableVideo
+    ) {
+        try {
+            File subtitleFile = new File(Utils.getMergedSubtitleFilePath(video, upperOption, lowerOption));
+
+            FileUtils.writeStringToFile(
+                    subtitleFile,
+                    merged.getText(),
+                    StandardCharsets.UTF_8
+            );
+
+            return IterationResult.SUCCESS;
+        } catch (IOException e) {
+            String message = "Failed to write the result, probably there is no access to the file";
+            Platform.runLater(() -> tableVideo.setOnlyError(message));
+            return IterationResult.FAILED;
         }
-
-        BuiltInSubtitleOption subtitleOption = newSubtitleOptions.get(0);
-
-        //todo background message
-        String subtitleText = ffmpeg.getSubtitleText(
-                subtitleOption.getFfmpegIndex(),
-                subtitleOption.getFormat(),
-                fileInfo.getFile()
-        );
-        SubtitlesAndInput subtitlesAndInput = SubtitlesAndInput.from(
-                subtitleText.getBytes(StandardCharsets.UTF_8),
-                StandardCharsets.UTF_8
-        );
-        if (!subtitlesAndInput.isCorrectFormat()) {
-            //todo separate message
-            throw new IllegalStateException();
-        }
-
-        subtitleOption.setSubtitlesAndInput(subtitlesAndInput);
-
-        fileInfo.getOptions().add(subtitleOption);
-        fileInfo.setCurrentSizeAndLastModified();
-
-        boolean haveHideableOptions = tableVideoInfo.getOptions().stream()
-                .anyMatch(TableSubtitleOption::isHideable);
-        TableSubtitleOption newSubtitleOption = VideosBackgroundUtils.tableOptionFrom(
-                subtitleOption,
-                haveHideableOptions,
-                tableVideoInfo,
-                settings
-        );
-
-        Platform.runLater(() -> {
-            tableVideoInfo.setSizeAndLastModified(fileInfo.getSize(), fileInfo.getLastModified());
-            tableVideoInfo.addOption(newSubtitleOption);
-        });
     }
 
     private static ActionResult getActionResult(
-            int allFileCount,
+            int toProcessCount,
             int processedCount,
-            int finishedSuccessfullyCount,
-            int noAgreementCount,
+            int successfulCount,
+            int noConfirmationCount,
             int alreadyMergedCount,
             int failedCount
     ) {
-        String success = null;
-        String warn = null;
-        String error = null;
+        String success = "";
+        String warn = "";
+        String error = "";
 
         if (processedCount == 0) {
-            warn = "Task has been cancelled, nothing was done";
-        } else if (finishedSuccessfullyCount == allFileCount) {
+            warn = "The task has been cancelled, nothing was done";
+        } else if (successfulCount == toProcessCount) {
             success = Utils.getTextDependingOnCount(
-                    finishedSuccessfullyCount,
-                    "Merge has finished successfully for the file",
-                    "Merge has finished successfully for all %d files"
+                    successfulCount,
+                    "The merge has finished successfully for the video",
+                    "The merge has finished successfully for all %d videos"
             );
-        } else if (noAgreementCount == allFileCount) {
+        } else if (noConfirmationCount == toProcessCount) {
             warn = Utils.getTextDependingOnCount(
-                    noAgreementCount,
-                    "Merge is not possible because you didn't agree to overwrite the file",
-                    "Merge is not possible because you didn't agree to overwrite all %d files"
+                    noConfirmationCount,
+                    "Merging is not possible because you didn't confirm the file overwriting",
+                    "Merging is not possible because you didn't confirm the file overwriting for "
+                            + "all %d videos"
             );
-        } else if (alreadyMergedCount == allFileCount) {
+        } else if (alreadyMergedCount == toProcessCount) {
             warn = Utils.getTextDependingOnCount(
                     alreadyMergedCount,
                     "Selected subtitles have already been merged",
-                    "Selected subtitles have already been merged for all %d files"
+                    "Selected subtitles have already been merged for all %d videos"
             );
-        } else if (failedCount == allFileCount) {
+        } else if (failedCount == toProcessCount) {
             error = Utils.getTextDependingOnCount(
                     failedCount,
-                    "Failed to merge subtitles for the file",
-                    "Failed to merge subtitles for all %d files"
+                    "Failed to merge subtitles for the video",
+                    "Failed to merge subtitles for all %d videos"
             );
         } else {
-            if (finishedSuccessfullyCount != 0) {
+            if (successfulCount != 0) {
                 success = String.format(
-                        "Merge has finished for %d/%d files successfully",
-                        finishedSuccessfullyCount,
-                        allFileCount
+                        "The merge has finished for %d/%d videos successfully",
+                        successfulCount,
+                        toProcessCount
                 );
             }
 
-            if (processedCount != allFileCount) {
-                if (finishedSuccessfullyCount == 0) {
+            if (processedCount != toProcessCount) {
+                if (StringUtils.isBlank(success)) {
                     warn = String.format(
-                            "Merge has been cancelled for %d/%d files",
-                            allFileCount - processedCount,
-                            allFileCount
+                            "The merge has been cancelled for %d/%d videos",
+                            toProcessCount - processedCount,
+                            toProcessCount
                     );
                 } else {
-                    warn = String.format("cancelled for %d/%d", allFileCount - processedCount, allFileCount);
+                    warn = String.format("cancelled for %d/%d", toProcessCount - processedCount, toProcessCount);
                 }
             }
 
-            if (noAgreementCount != 0) {
-                if (processedCount != allFileCount) {
-                    warn += String.format(", no agreement for %d/%d", noAgreementCount, allFileCount);
-                } else if (finishedSuccessfullyCount != 0) {
-                    warn = String.format("no agreement for %d/%d", noAgreementCount, allFileCount);
-                } else {
+            if (noConfirmationCount != 0) {
+                if (StringUtils.isBlank(success) && StringUtils.isBlank(warn)) {
                     warn = String.format(
-                            "No agreement for %d/%d files",
-                            noAgreementCount,
-                            allFileCount
+                            "No file overwriting confirmation for %d/%d videos",
+                            noConfirmationCount,
+                            toProcessCount
                     );
+                } else {
+                    if (!StringUtils.isBlank(warn)) {
+                        warn += ", ";
+                    }
+                    warn += String.format("no confirmation for %d/%d", noConfirmationCount, toProcessCount);
                 }
             }
 
             if (alreadyMergedCount != 0) {
-                if (processedCount != allFileCount || noAgreementCount != 0) {
-                    warn += String.format(", already merged for %d/%d", alreadyMergedCount, allFileCount);
-                } else if (finishedSuccessfullyCount != 0) {
-                    warn = String.format("already merged for %d/%d", alreadyMergedCount, allFileCount);
-                } else {
+                if (StringUtils.isBlank(success) && StringUtils.isBlank(warn)) {
                     warn = String.format(
-                            "Subtitles have already been merged for %d/%d files",
+                            "Subtitles have already been merged for %d/%d videos",
                             alreadyMergedCount,
-                            allFileCount
+                            toProcessCount
                     );
+                } else {
+                    if (!StringUtils.isBlank(warn)) {
+                        warn += ", ";
+                    }
+                    warn += String.format("already merged for %d/%d", alreadyMergedCount, toProcessCount);
                 }
             }
 
             if (failedCount != 0) {
-                error = String.format("failed for %d/%d", failedCount, allFileCount);
+                error = String.format("failed for %d/%d", failedCount, toProcessCount);
             }
         }
 
@@ -382,5 +586,12 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
     @Getter
     public static class Result {
         private ActionResult actionResult;
+    }
+
+    private enum IterationResult {
+        NO_CONFIRMATION,
+        FAILED,
+        ALREADY_MERGED,
+        SUCCESS
     }
 }

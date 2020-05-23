@@ -5,9 +5,13 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+/**
+ * A helper class that stores both subtitles and their textual representation. It is helpful because it usually makes
+ * sense to generate a textual representation right after generating merged subtitles so the methods that do this should
+ * be able to return a wrapper object containing both these values.
+ */
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
-//todo comment
 public class SubtitlesAndOutput {
     private Subtitles subtitles;
 

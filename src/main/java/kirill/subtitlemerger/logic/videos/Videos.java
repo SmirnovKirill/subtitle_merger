@@ -37,9 +37,9 @@ public class Videos {
                 .build();
         InputFileInfo fileInfo = FileValidator.getInputFileInfo(file.getAbsolutePath(), validationOptions);
         if (fileInfo.getNotValidReason() == InputFileNotValidReason.NO_EXTENSION) {
-            return new Video(file, NO_EXTENSION, null, null, null);
+            return new Video(file, NO_EXTENSION, null, null);
         } else if (fileInfo.getNotValidReason() == InputFileNotValidReason.NOT_ALLOWED_EXTENSION) {
-            return new Video(file, NOT_ALLOWED_EXTENSION, null, null, null);
+            return new Video(file, NOT_ALLOWED_EXTENSION, null, null);
         }
         /*
          * There can be other errors if the file was removed or turned into a directory between the selection and the
@@ -52,7 +52,7 @@ public class Videos {
             ffprobeInfo = ffprobe.getVideoInfo(file);
         } catch (FfmpegException e) {
             log.warn("failed to get ffprobe info: " + e.getCode() + ", console output " + e.getConsoleOutput());
-            return new Video(file, FFPROBE_FAILED, null, null, null);
+            return new Video(file, FFPROBE_FAILED, null, null);
         } catch (InterruptedException e) {
             log.error("the process can't be interrupted, most likely a bug");
             throw new IllegalStateException();
@@ -60,16 +60,10 @@ public class Videos {
 
         String format = ffprobeInfo.getFormat().getFormatName();
         if (!LogicConstants.ALLOWED_VIDEO_FORMATS.contains(format)) {
-            return new Video(file, NOT_ALLOWED_FORMAT, format, null, null);
+            return new Video(file, NOT_ALLOWED_FORMAT, format, null);
         }
 
-        return new Video(
-                file,
-                null,
-                format,
-                new ArrayList<>(getSubtitleOptions(ffprobeInfo)),
-                null
-        );
+        return new Video(file, null, format, new ArrayList<>(getSubtitleOptions(ffprobeInfo)));
     }
 
     public static List<BuiltInSubtitleOption> getSubtitleOptions(JsonFfprobeVideoInfo ffprobeInfo) {

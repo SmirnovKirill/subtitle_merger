@@ -6,7 +6,7 @@
 
     <groupId>kirill</groupId>
     <artifactId>subtitle-merger</artifactId>
-    <version>0.1</version>
+    <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>

@@ -80,7 +80,7 @@ public class ProcessDirectoryRunner implements BackgroundRunner<ProcessDirectory
     }
 
     private static DirectoryInfo getDirectoryInfo(String path, BackgroundManager backgroundManager) {
-        String shortenedPath = Utils.getShortenedString(path, 20, 40);
+        String shortenedPath = Utils.getShortenedString(path, 0, 64);
 
         if (StringUtils.isBlank(path)) {
             return new DirectoryInfo("A directory is not selected!", false, null);

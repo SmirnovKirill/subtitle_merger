@@ -335,10 +335,10 @@ public class VideosFormController extends BackgroundTaskFormController {
     }
 
     @Nullable
-    private static File getSubtitleFile(Video fileInfo, Stage stage, Settings settings) {
+    private static File getSubtitleFile(Video video, Stage stage, Settings settings) {
         File initialDirectory = settings.getVideoSubtitleDirectory();
         if (initialDirectory == null) {
-            initialDirectory = fileInfo.getFile().getParentFile();
+            initialDirectory = video.getFile().getParentFile();
         }
 
         FileChooser fileChooser = new FileChooser();
@@ -493,7 +493,7 @@ public class VideosFormController extends BackgroundTaskFormController {
                 tableOption.markAsValid();
             }
         } else {
-            log.error("unexpected subtitle option class " + option.getClass() + ", most likely a bug");
+            log.error("unexpected subtitle option class: " + option.getClass() + ", most likely a bug");
             throw new IllegalStateException();
         }
     }
@@ -514,16 +514,15 @@ public class VideosFormController extends BackgroundTaskFormController {
                 tableVideo.setActionResult(ActionResult.onlyError(runnerResult.getError()));
                 lastProcessedVideo = tableVideo;
             } else {
-                if (runnerResult.getMergedSubtitleInfo() == null) {
-                    log.error("merged subtitle info can't be null, most likely a bug");
+                if (runnerResult.getSubtitleText() == null) {
+                    log.error("subtitle text can't be null, most likely a bug");
                     throw new IllegalStateException();
                 }
 
-                video.setMergedSubtitleInfo(runnerResult.getMergedSubtitleInfo());
                 Popups.showMergedSubtitlesPreview(
                         tableVideo.getUpperOption().getTitle(),
                         tableVideo.getLowerOption().getTitle(),
-                        runnerResult.getMergedSubtitleInfo().getSubtitlesAndOutput().getText(),
+                        runnerResult.getSubtitleText(),
                         stage
                 );
             }
@@ -718,110 +717,51 @@ public class VideosFormController extends BackgroundTaskFormController {
         totalResult.clear();
         lastProcessedVideo = null;
 
-        MergePrepareRunner preparationRunner = new MergePrepareRunner(table.getItems(), allVideos, ffmpeg, settings);
+        MergeCheckRunner checkRunner = new MergeCheckRunner(table.getItems(), allVideos, settings);
 
-        BackgroundCallback<MergePrepareRunner.Result> callback = runnerResult -> {
-            if (runnerResult == null) {
-                totalResult.setOnlyWarn("Merge has been cancelled");
+        BackgroundCallback<MergeCheckRunner.Result> callback = runnerResult -> {
+            if (!StringUtils.isBlank(runnerResult.getError())) {
+                totalResult.setOnlyError(runnerResult.getError());
                 return;
             }
 
-            if (runnerResult.getFilesWithoutSelectionCount() != 0) {
-                totalResult.setActionResult(
-                        getFilesWithoutSelectionResult(
-                                runnerResult.getFilesWithoutSelectionCount(),
-                                table.getSelectedCount()
-                        )
-                );
-                return;
-            }
-
-            String agreementMessage = getFreeSpaceAgreementMessage(runnerResult);
-            if (agreementMessage != null) {
-                if (!Popups.askAgreement(agreementMessage, "yes", "no", stage)) {
-                    totalResult.setOnlyWarn("Merge has been cancelled");
+            if (!StringUtils.isBlank(runnerResult.getFreeSpaceMessage())) {
+                if (!Popups.askAgreement(runnerResult.getFreeSpaceMessage(), "yes", "no", stage)) {
+                    totalResult.setOnlyWarn("The merge has been cancelled");
                     return;
                 }
             }
 
             List<File> confirmedFilesToOverwrite = new ArrayList<>();
             if (!CollectionUtils.isEmpty(runnerResult.getFilesToOverwrite())) {
-                confirmedFilesToOverwrite = getConfirmedFilesToOverwrite(runnerResult, stage);
+                confirmedFilesToOverwrite = getConfirmedFilesToOverwrite(runnerResult.getFilesToOverwrite(), stage);
                 if (confirmedFilesToOverwrite == null) {
-                    totalResult.setOnlyWarn("Merge has been cancelled");
+                    totalResult.setOnlyWarn("The merge has been cancelled");
                     return;
                 }
             }
 
             MergeRunner mergeRunner = new MergeRunner(
-                    runnerResult.getFilesMergeInfo(),
-                    confirmedFilesToOverwrite,
-                    runnerResult.getDirectoryForTempFile(),
-                    table.getItems(),
+                    runnerResult.getSelectedTableVideos(),
                     allVideos,
-                    context.getFfprobe(),
-                    ffmpeg,
-                    settings
+                    confirmedFilesToOverwrite,
+                    runnerResult.getLargestFreeSpaceDirectory(),
+                    context
             );
-
             BackgroundCallback<ActionResult> mergeCallback = actionResult -> totalResult.setActionResult(actionResult);
-
             runInBackground(mergeRunner, mergeCallback);
         };
 
-        runInBackground(preparationRunner, callback);
-    }
-
-    private static ActionResult getFilesWithoutSelectionResult(
-            int filesWithoutSelectionCount,
-            int selectedFileCount
-    ) {
-        String message;
-        if (selectedFileCount == 1) {
-            message = "Merge for the file is unavailable because you have to select upper and lower subtitles first";
-        } else {
-            message = "Merge is unavailable because you have to select upper and lower subtitles for all the selected "
-                    + "files (%d left)";
-        }
-
-        return ActionResult.onlyError(String.format(message, filesWithoutSelectionCount));
+        runInBackground(checkRunner, callback);
     }
 
     @Nullable
-    private static String getFreeSpaceAgreementMessage(MergePrepareRunner.Result preparationResult) {
-        if (preparationResult.getRequiredTempSpace() != null) {
-            if (preparationResult.getRequiredTempSpace() <= preparationResult.getAvailableTempSpace()) {
-                return null;
-            }
-
-            return "Merge requires approximately "
-                    + Utils.getSizeTextual(preparationResult.getRequiredTempSpace(), false)
-                    + " of free disk space during the process but only "
-                    + Utils.getSizeTextual(preparationResult.getAvailableTempSpace(), false)
-                    + " is available, proceed anyway?";
-        } else {
-            return null;
-        }
-    }
-
-    @Nullable
-    private static List<File> getConfirmedFilesToOverwrite(
-            MergePrepareRunner.Result mergePreparationResult,
-            Stage stage
-    ) {
-        if (CollectionUtils.isEmpty(mergePreparationResult.getFilesToOverwrite())) {
-            return new ArrayList<>();
-        }
-
+    private static List<File> getConfirmedFilesToOverwrite(List<File> filesToOverwrite, Stage stage) {
         List<File> result = new ArrayList<>();
 
-        int filesToOverwriteLeft = mergePreparationResult.getFilesToOverwrite().size();
-        for (File fileToOverwrite : mergePreparationResult.getFilesToOverwrite()) {
-            String fileName = Utils.getShortenedString(
-                    fileToOverwrite.getName(),
-                    0,
-                    32
-            );
+        int filesToOverwriteLeft = filesToOverwrite.size();
+        for (File file : filesToOverwrite) {
+            String fileName = Utils.getShortenedString(file.getName(), 0, 64);
 
             String applyToAllText;
             if (filesToOverwriteLeft == 1) {
@@ -831,7 +771,7 @@ public class VideosFormController extends BackgroundTaskFormController {
             }
 
             AgreementResult agreementResult = Popups.askAgreement(
-                    "File '" + fileName + "' already exists. Do you want to overwrite it?",
+                    "The file '" + fileName + "' already exists. Do you want to overwrite it?",
                     applyToAllText,
                     "Yes",
                     "No",
@@ -840,11 +780,11 @@ public class VideosFormController extends BackgroundTaskFormController {
             if (agreementResult == AgreementResult.CANCELED) {
                 return null;
             } else if (agreementResult == AgreementResult.YES) {
-                result.add(fileToOverwrite);
+                result.add(file);
             } else if (agreementResult == AgreementResult.YES_TO_ALL) {
-                List<File> filesLeft = mergePreparationResult.getFilesToOverwrite().subList(
-                        mergePreparationResult.getFilesToOverwrite().size() - filesToOverwriteLeft,
-                        mergePreparationResult.getFilesToOverwrite().size()
+                List<File> filesLeft = filesToOverwrite.subList(
+                        filesToOverwrite.size() - filesToOverwriteLeft,
+                        filesToOverwrite.size()
                 );
                 result.addAll(filesLeft);
                 return result;

@@ -1,9 +1,7 @@
 package kirill.subtitlemerger.logic.videos.entities;
 
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
-import org.jetbrains.annotations.Nullable;
 import org.joda.time.LocalDateTime;
 
 import java.io.File;
@@ -37,16 +35,11 @@ public class Video {
 
     private List<SubtitleOption> options;
 
-    @Setter
-    @Nullable
-    private MergedSubtitleInfo mergedSubtitleInfo;
-
     public Video(
             File file,
             VideoNotValidReason notValidReason,
             String format,
-            List<SubtitleOption> options,
-            @Nullable MergedSubtitleInfo mergedSubtitleInfo
+            List<SubtitleOption> options
     ) {
         id = file.getAbsolutePath();
         this.file = file;
@@ -54,7 +47,6 @@ public class Video {
         this.notValidReason = notValidReason;
         this.format = format;
         this.options = options;
-        this.mergedSubtitleInfo = mergedSubtitleInfo;
     }
 
     public void setCurrentSizeAndLastModified() {

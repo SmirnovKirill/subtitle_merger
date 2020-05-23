@@ -47,13 +47,12 @@ public class AutoSelectRunner implements BackgroundRunner<ActionResult> {
         int notPossibleCount = 0;
         int failedCount = 0;
 
-        backgroundManager.setCancelPossible(true);
-        backgroundManager.setCancelDescription("Please be patient, this may take a while depending on the video.");
-        backgroundManager.setIndeterminateProgress();
         try {
             for (TableVideo tableVideo : selectedVideos) {
                 Video video = Video.getById(tableVideo.getId(), videos);
 
+                backgroundManager.setCancelPossible(false);
+                backgroundManager.setIndeterminateProgress();
                 String actionPrefix = getProgressAction(processedCount, toProcessCount, "Auto-selection: ");
                 backgroundManager.updateMessage(actionPrefix + "processing " + video.getFile() + "...");
 
@@ -139,6 +138,14 @@ public class AutoSelectRunner implements BackgroundRunner<ActionResult> {
             Ffmpeg ffmpeg,
             BackgroundManager backgroundManager
     ) throws InterruptedException {
+        if (CollectionUtils.isEmpty(optionsToLoad)) {
+            return true;
+        }
+
+        backgroundManager.setCancelPossible(true);
+        backgroundManager.setCancelDescription("Please be patient, this may take a while depending on the video.");
+        backgroundManager.setIndeterminateProgress();
+
         int toLoadCount = optionsToLoad.size();
         int failedCount = 0;
         int incorrectCount = 0;

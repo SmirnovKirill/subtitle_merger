@@ -49,7 +49,7 @@ public class ChoiceFormController {
         }
 
         if (videoFiles.size() > GuiConstants.VIDEO_TABLE_LIMIT) {
-            String message = "Unfortunately, it's impossible to add more than " +  GuiConstants.VIDEO_TABLE_LIMIT
+            String message = "Unfortunately, it's impossible to add more than " +  GuiConstants.VIDEO_TABLE_LIMIT + " "
                     + "videos";
             Popups.showError(message, stage);
             return;
