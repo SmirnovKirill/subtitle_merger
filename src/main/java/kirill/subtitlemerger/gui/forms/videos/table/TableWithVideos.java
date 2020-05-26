@@ -2,10 +2,7 @@ package kirill.subtitlemerger.gui.forms.videos.table;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyIntegerProperty;
-import javafx.beans.property.ReadOnlyIntegerWrapper;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -13,10 +10,10 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.util.Callback;
 import kirill.subtitlemerger.gui.GuiConstants;
-import kirill.subtitlemerger.gui.common_controls.ActionResultPane;
+import kirill.subtitlemerger.gui.common_controls.MultiPartActionResultPane;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.logic.utils.Utils;
-import kirill.subtitlemerger.logic.utils.entities.ActionResult;
+import kirill.subtitlemerger.logic.utils.entities.MultiPartActionResult;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
@@ -178,16 +175,16 @@ public class TableWithVideos extends TableView<TableVideo> {
             }
 
             private void setPaneDynamicClass(TableVideo video, Pane pane) {
-                String warnClass = "pane-warn";
+                String warningClass = "pane-warning";
                 String errorClass = "pane-error";
 
-                pane.getStyleClass().remove(warnClass);
+                pane.getStyleClass().remove(warningClass);
                 pane.getStyleClass().remove(errorClass);
 
-                ActionResult actionResult = video.getActionResult();
+                MultiPartActionResult actionResult = video.getActionResult();
                 if (actionResult != null) {
                     if (actionResult.haveWarnings() && !actionResult.haveErrors()) {
-                        pane.getStyleClass().add(warnClass);
+                        pane.getStyleClass().add(warningClass);
                     } else if (actionResult.haveErrors()) {
                         pane.getStyleClass().add(errorClass);
                     }
@@ -301,7 +298,7 @@ public class TableWithVideos extends TableView<TableVideo> {
                 GuiUtils.getFixedHeightSpacer(5),
                 getRowWithActionsPane(video),
                 GuiUtils.getFixedHeightSpacer(10),
-                getActionResultPane(video)
+                getActionResultPane(video, result.widthProperty())
         );
 
         return result;
@@ -601,11 +598,15 @@ public class TableWithVideos extends TableView<TableVideo> {
         }
     }
 
-    private ActionResultPane getActionResultPane(TableVideo video) {
-        ActionResultPane result = new ActionResultPane();
+    /*
+     * The parent's width is required because all the panes up the stack aren't actually restricted since they are
+     * inside a column that can grow indefinitely. Without the restriction the pane will not be displayed correctly
+     * (the lines will be wrapped but the column's height will not grow so part of the result will be clipped).
+     */
+    private MultiPartActionResultPane getActionResultPane(TableVideo video, ReadOnlyDoubleProperty parentWidth) {
+        MultiPartActionResultPane result = new MultiPartActionResultPane();
 
-        result.setAlignment(Pos.CENTER_LEFT);
-        result.setWrapText(true);
+        result.prefWidthProperty().bind(parentWidth);
         result.actionResultProperty().bind(video.actionResultProperty());
 
         return result;

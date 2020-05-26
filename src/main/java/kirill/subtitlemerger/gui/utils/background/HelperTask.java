@@ -29,22 +29,12 @@ class HelperTask<T> extends Task<Void> {
             log.error("task has failed, most likely a bug: " + ExceptionUtils.getStackTrace(e));
             throw new IllegalStateException();
         });
-
-        setOnCancelled(e -> {
-            manager.setCancelPossible(false);
-            manager.setIndeterminateProgress();
-            manager.updateMessage("Waiting for the task to cancel...");
-        });
     }
 
     @Override
     protected Void call() {
         T result = runner.run(manager);
-
-        manager.setCancelPossible(false);
-        Platform.runLater(() -> {
-            callback.run(result);
-        });
+        Platform.runLater(() -> callback.run(result));
 
         return null;
     }

@@ -41,7 +41,7 @@ public class Settings {
                 Object convertedObject = stringToObject(rawValue, settingType);
                 validateObject(convertedObject, settingType);
                 result.put(settingType, convertedObject);
-            } catch (SettingException e) {
+            } catch (SettingsException e) {
                 log.warn("incorrect " + settingType + " value in saved settings: " + e.getMessage());
                 result.put(settingType, null);
             }
@@ -50,29 +50,29 @@ public class Settings {
         return result;
     }
 
-    private static Object stringToObject(String string, SettingType settingType) {
+    private static Object stringToObject(String string, SettingType settingType) throws SettingsException {
         if (StringUtils.isEmpty(string)) {
             return null;
         }
 
         switch (settingType) {
-            case UPPER_DIRECTORY:
-            case LOWER_DIRECTORY:
-            case MERGED_DIRECTORY:
-            case VIDEO_DIRECTORY:
-            case VIDEO_SUBTITLE_DIRECTORY:
+            case LAST_DIRECTORY_WITH_UPPER_SUBTITLES:
+            case LAST_DIRECTORY_WITH_LOWER_SUBTITLES:
+            case LAST_DIRECTORY_WITH_MERGED_SUBTITLES:
+            case LAST_DIRECTORY_WITH_VIDEOS:
+            case LAST_DIRECTORY_WITH_VIDEO_SUBTITLES:
                 return new File(string);
             case UPPER_LANGUAGE:
             case LOWER_LANGUAGE:
                 LanguageAlpha3Code languageCode = LanguageAlpha3Code.getByCodeIgnoreCase(string);
                 if (languageCode == null) {
-                    throw new SettingException("incorrect language code: " + string);
+                    throw new SettingsException("incorrect language code: " + string);
                 }
                 return languageCode;
             case MERGE_MODE:
                 MergeMode mergeMode = EnumUtils.getEnum(MergeMode.class, string);
                 if (mergeMode == null) {
-                    throw new SettingException("incorrect merge code: " + string);
+                    throw new SettingsException("incorrect merge code: " + string);
                 }
                 return mergeMode;
             case MAKE_MERGED_STREAMS_DEFAULT:
@@ -82,18 +82,18 @@ public class Settings {
                 } else if ("false".equals(string)) {
                     return false;
                 } else {
-                    throw new SettingException("incorrect boolean value: " + string);
+                    throw new SettingsException("incorrect boolean value: " + string);
                 }
             case SORT_BY:
                 SortBy sortBy = EnumUtils.getEnum(SortBy.class, string);
                 if (sortBy == null) {
-                    throw new SettingException("incorrect sort by: " + string);
+                    throw new SettingsException("incorrect sort by: " + string);
                 }
                 return sortBy;
             case SORT_DIRECTION:
                 SortDirection sortDirection = EnumUtils.getEnum(SortDirection.class, string);
                 if (sortDirection == null) {
-                    throw new SettingException("incorrect sort direction: " + string);
+                    throw new SettingsException("incorrect sort direction: " + string);
                 }
                 return sortDirection;
             default:
@@ -103,18 +103,18 @@ public class Settings {
     }
 
     @SuppressWarnings("WeakerAccess")
-    public static void validateObject(Object object, SettingType settingType) throws SettingException {
+    public static void validateObject(Object object, SettingType settingType) throws SettingsException {
         if (!settingType.getObjectClass().isInstance(object)) {
             log.error("incorrect class for object of " + settingType + ", most likely a bug");
             throw new IllegalStateException();
         }
 
         switch (settingType) {
-            case UPPER_DIRECTORY:
-            case LOWER_DIRECTORY:
-            case MERGED_DIRECTORY:
-            case VIDEO_DIRECTORY:
-            case VIDEO_SUBTITLE_DIRECTORY:
+            case LAST_DIRECTORY_WITH_UPPER_SUBTITLES:
+            case LAST_DIRECTORY_WITH_LOWER_SUBTITLES:
+            case LAST_DIRECTORY_WITH_MERGED_SUBTITLES:
+            case LAST_DIRECTORY_WITH_VIDEOS:
+            case LAST_DIRECTORY_WITH_VIDEO_SUBTITLES:
                 validateDirectory((File) object);
                 return;
             case UPPER_LANGUAGE:
@@ -136,15 +136,15 @@ public class Settings {
         }
     }
 
-    private static void validateDirectory(File directory) {
+    private static void validateDirectory(File directory) throws SettingsException {
         if (!directory.isDirectory()) {
-            throw new SettingException(directory.getAbsolutePath() + " does not exist or is not a directory");
+            throw new SettingsException(directory.getAbsolutePath() + " does not exist or is not a directory");
         }
     }
 
-    private static void validateLanguage(LanguageAlpha3Code language) {
+    private static void validateLanguage(LanguageAlpha3Code language) throws SettingsException {
         if (!LogicConstants.ALLOWED_LANGUAGES.contains(language)) {
-            throw new SettingException("language " + language.getName() + " is not allowed");
+            throw new SettingsException("language " + language.getName() + " is not allowed");
         }
     }
 
@@ -155,16 +155,16 @@ public class Settings {
         savedSettings.putIfAbsent(PLAIN_TEXT_SUBTITLES, false);
     }
 
-    public File getUpperDirectory() {
-        return (File) settings.get(UPPER_DIRECTORY);
+    public File getLastDirectoryWithUpperSubtitles() {
+        return (File) settings.get(LAST_DIRECTORY_WITH_UPPER_SUBTITLES);
     }
 
-    public File getLowerDirectory() {
-        return (File) settings.get(LOWER_DIRECTORY);
+    public File getLastDirectoryWithLowerSubtitles() {
+        return (File) settings.get(LAST_DIRECTORY_WITH_LOWER_SUBTITLES);
     }
 
-    public File getMergedDirectory() {
-        return (File) settings.get(MERGED_DIRECTORY);
+    public File getLastDirectoryWithMergedSubtitles() {
+        return (File) settings.get(LAST_DIRECTORY_WITH_MERGED_SUBTITLES);
     }
 
     public LanguageAlpha3Code getUpperLanguage() {
@@ -187,12 +187,12 @@ public class Settings {
         return Boolean.TRUE.equals(settings.get(PLAIN_TEXT_SUBTITLES));
     }
 
-    public File getVideoDirectory() {
-        return (File) settings.get(VIDEO_DIRECTORY);
+    public File getLastDirectoryWithVideos() {
+        return (File) settings.get(LAST_DIRECTORY_WITH_VIDEOS);
     }
 
-    public File getVideoSubtitleDirectory() {
-        return (File) settings.get(VIDEO_SUBTITLE_DIRECTORY);
+    public File getLastDirectoryWithVideoSubtitles() {
+        return (File) settings.get(LAST_DIRECTORY_WITH_VIDEO_SUBTITLES);
     }
 
     public Sort getSort() {
@@ -210,24 +210,35 @@ public class Settings {
     }
 
     /**
-     * Saves the given setting value without throwing any exceptions. If the value is incorrect then there will be a log
-     * warning record.
-     * It was designed mostly for saving directories because it's never enough just to check the directory before
-     * saving, it can always be removed during the saving process and thus become invalid.
+     * Saves the given setting value in a quiet way without having to deal with a checked exception. If the value is
+     * incorrect there will be an error log record and an IllegalStateException will be thrown.
+     * It was designed for saving values that you are absolutely sure of like enums or booleans.
      */
-    public void saveQuietly(Object object, SettingType settingType) {
+    public void saveCorrect(Object object, SettingType settingType) {
         try {
             save(object, settingType);
-        } catch (SettingException e) {
-            log.warn("failed to save " + settingType + ": " + e.getMessage());
+        } catch (SettingsException e) {
+            log.error("failed to save " + settingType + ": " + e.getMessage() + ", most likely a bug");
+            throw new IllegalStateException();
         }
     }
 
     /**
-     * Saves the given setting value if it is valid and throws an exception otherwise.
-     * @throws SettingException if the value is incorrect
+     * Saves the given setting value in a quiet way without having to deal with a checked exception. If the value is
+     * incorrect then there will be a warning log record.
+     * It was designed mostly for saving directories because it's never enough just to check a directory before saving,
+     * it can always be removed during the saving process and thus become invalid.
      */
-    public void save(Object object, SettingType settingType) {
+    public void saveQuietly(Object object, SettingType settingType) {
+        try {
+            save(object, settingType);
+        } catch (SettingsException e) {
+            log.warn("failed to save " + settingType + ": " + e.getMessage());
+        }
+    }
+
+    @SuppressWarnings("WeakerAccess")
+    public void save(Object object, SettingType settingType) throws SettingsException {
         validateObject(object, settingType);
         preferences.put(settingType.getCode(), objectToString(object, settingType));
         settings.put(settingType, object);
@@ -239,11 +250,11 @@ public class Settings {
         }
 
         switch (settingType) {
-            case UPPER_DIRECTORY:
-            case LOWER_DIRECTORY:
-            case MERGED_DIRECTORY:
-            case VIDEO_DIRECTORY:
-            case VIDEO_SUBTITLE_DIRECTORY:
+            case LAST_DIRECTORY_WITH_UPPER_SUBTITLES:
+            case LAST_DIRECTORY_WITH_LOWER_SUBTITLES:
+            case LAST_DIRECTORY_WITH_MERGED_SUBTITLES:
+            case LAST_DIRECTORY_WITH_VIDEOS:
+            case LAST_DIRECTORY_WITH_VIDEO_SUBTITLES:
                 return ((File) object).getAbsolutePath();
             case UPPER_LANGUAGE:
             case LOWER_LANGUAGE:

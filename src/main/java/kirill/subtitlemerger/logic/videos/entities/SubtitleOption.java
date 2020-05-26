@@ -13,8 +13,8 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * This class represents the subtitles to choose from for the video. There are two kinds of subtitles - external
- * subtitles (an arbitrary file with subtitles) and subtitles that are already built-in.
+ * This class represents the subtitles to choose from for a video. There are two kinds of subtitles - external subtitles
+ * (an arbitrary file with subtitles) and subtitles that are already built-in.
  */
 @CommonsLog
 @AllArgsConstructor
@@ -28,7 +28,7 @@ public abstract class SubtitleOption {
 
     /**
      * We will keep track of all options for the video even if they can't be used for subtitle merging (for better
-     * diagnostics). The enum contains the reason why this option can't be used for the subtitle merging.
+     * diagnostics). The enum contains the reason why this option can't be used for subtitle merging.
      */
     private SubtitleOptionNotValidReason notValidReason;
 
@@ -52,7 +52,7 @@ public abstract class SubtitleOption {
     static <T extends SubtitleOption> T getById(String id, List<T> options) {
         T result = options.stream().filter(option -> Objects.equals(option.getId(), id)).findFirst().orElse(null);
         if (result == null) {
-            log.error("no subtitle option for id " + id + ", most likely a bug");
+            log.error("no subtitle options with id " + id + ", most likely a bug");
             throw new IllegalStateException();
         }
 

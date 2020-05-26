@@ -3,7 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import kirill.subtitlemerger.gui.common_controls.ActionResultPane?>
+<?import kirill.subtitlemerger.gui.common_controls.ActionResultLabel?>
 <?import kirill.subtitlemerger.gui.common_controls.ProgressPane?>
 <?import kirill.subtitlemerger.gui.GuiConstants?>
 <StackPane xmlns:fx="http://javafx.com/fxml"
@@ -14,7 +14,9 @@
     </padding>
 
     <VBox fx:id="mainPane" spacing="10">
-        <Label fx:id="title" maxWidth="Infinity" alignment="CENTER" wrapText="true"/>
+        <Label fx:id="title" maxWidth="Infinity" alignment="CENTER" textAlignment="CENTER" wrapText="true">
+            <minHeight><Region fx:constant="USE_PREF_SIZE"/></minHeight>
+        </Label>
         <HBox alignment="CENTER_LEFT">
             <Label text="Current encoding (changing the encoding "/>
             <Label styleClass="underline" text="will not"/>
@@ -22,10 +24,12 @@
             <Region HBox.hgrow="ALWAYS"/>
             <ComboBox fx:id="encodingComboBox" onAction="#encodingChanged"/>
         </HBox>
-        <ActionResultPane fx:id="actionResultPane"/>
+        <ActionResultLabel fx:id="actionResultLabel" wrapText="true">
+            <minHeight><Region fx:constant="USE_PREF_SIZE"/></minHeight>
+        </ActionResultLabel>
         <Label visible="${controller.linesTruncated}" managed="${controller.linesTruncated}"
-               text="Lines that are longer than 1000 symbols were truncated">
-            <styleClass><GuiConstants fx:constant="LABEL_WARN_CLASS"/></styleClass>
+               text="Lines that are longer than 1000 symbols are truncated">
+            <styleClass><GuiConstants fx:constant="LABEL_WARNING_CLASS"/></styleClass>
         </Label>
         <ListView fx:id="listView" VBox.vgrow="ALWAYS" focusTraversable="false"/>
         <HBox alignment="CENTER" spacing="10">

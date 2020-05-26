@@ -7,7 +7,7 @@ import kirill.subtitlemerger.gui.forms.videos.table.TableVideo;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
-import kirill.subtitlemerger.logic.utils.entities.ActionResult;
+import kirill.subtitlemerger.logic.utils.entities.MultiPartActionResult;
 import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
 import kirill.subtitlemerger.logic.videos.entities.Video;
 import lombok.AllArgsConstructor;
@@ -20,7 +20,7 @@ import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackground
 
 @CommonsLog
 @AllArgsConstructor
-public class AllSubtitleLoader implements BackgroundRunner<ActionResult> {
+public class AllSubtitleLoader implements BackgroundRunner<MultiPartActionResult> {
     private List<TableVideo> tableVideos;
 
     private List<Video> videos;
@@ -28,7 +28,10 @@ public class AllSubtitleLoader implements BackgroundRunner<ActionResult> {
     private Ffmpeg ffmpeg;
 
     @Override
-    public ActionResult run(BackgroundManager backgroundManager) {
+    public MultiPartActionResult run(BackgroundManager backgroundManager) {
+        backgroundManager.setCancelPossible(false);
+        backgroundManager.setIndeterminateProgress();
+
         clearActionResults(tableVideos, backgroundManager);
 
         List<TableVideo> selectedVideos = getSelectedVideos(tableVideos, backgroundManager);
@@ -39,16 +42,27 @@ public class AllSubtitleLoader implements BackgroundRunner<ActionResult> {
         int incorrectCount = 0;
 
         backgroundManager.setCancelPossible(true);
-        backgroundManager.setCancelDescription("Please be patient, this may take a while depending on the video.");
-        backgroundManager.setIndeterminateProgress();
         try {
             for (TableVideo tableVideo : selectedVideos) {
-                Video video = Video.getById(tableVideo.getId(), videos);
+                if (Thread.interrupted()) {
+                    throw new InterruptedException();
+                }
 
+                Video video = Video.getById(tableVideo.getId(), videos);
                 int videoToLoadCount = video.getOptionsToLoad().size();
                 int videoFailedCount = 0;
                 int videoIncorrectCount = 0;
+                if (videoToLoadCount == 0) {
+                    backgroundManager.setCancelDescription(null);
+                } else {
+                    backgroundManager.setCancelDescription(getLoadCancelDescription(video));
+                }
+
                 for (BuiltInSubtitleOption option : video.getOptionsToLoad()) {
+                    if (Thread.interrupted()) {
+                        throw new InterruptedException();
+                    }
+
                     TableSubtitleOption tableOption = tableVideo.getOption(option.getId());
 
                     String action = "Loading " + tableOption.getTitle() + " in " + video.getFile().getName() + "...";
@@ -88,9 +102,7 @@ public class AllSubtitleLoader implements BackgroundRunner<ActionResult> {
             List<Video> videos,
             BackgroundManager backgroundManager
     ) {
-        backgroundManager.setCancelPossible(false);
-        backgroundManager.setIndeterminateProgress();
-        backgroundManager.updateMessage("Calculating the number of subtitles to load...");
+        backgroundManager.updateMessage("Calculating a number of subtitles to load...");
 
         int result = 0;
 

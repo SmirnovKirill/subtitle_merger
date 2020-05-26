@@ -39,6 +39,10 @@ public class ProcessDirectoryRunner implements BackgroundRunner<ProcessDirectory
 
     @Override
     public Result run(BackgroundManager backgroundManager) {
+        backgroundManager.setCancelPossible(false);
+        backgroundManager.setIndeterminateProgress();
+        backgroundManager.updateMessage("Getting directory info...");
+
         DirectoryInfo directoryInfo = getDirectoryInfo(directoryPath, backgroundManager);
         if (!StringUtils.isBlank(directoryInfo.getNotValidReason())) {
             return new Result(
@@ -117,9 +121,7 @@ public class ProcessDirectoryRunner implements BackgroundRunner<ProcessDirectory
     }
 
     private static List<File> getDirectoryFiles(File directory, BackgroundManager backgroundManager) {
-        backgroundManager.setCancelPossible(false);
-        backgroundManager.setIndeterminateProgress();
-        backgroundManager.updateMessage("Getting the video list...");
+        backgroundManager.updateMessage("Getting a video list...");
 
         File[] directoryFiles = directory.listFiles();
 
@@ -136,8 +138,6 @@ public class ProcessDirectoryRunner implements BackgroundRunner<ProcessDirectory
      * should not be checked because the user will see just an empty video list which isn't very user friendly.
      */
     private static boolean shouldHideUnavailable(List<Video> videos, BackgroundManager backgroundManager) {
-        backgroundManager.setCancelPossible(false);
-        backgroundManager.setIndeterminateProgress();
         backgroundManager.updateMessage("Calculating whether to hide unavailable videos by default...");
 
         return videos.stream().anyMatch(video -> video.getNotValidReason() == null);

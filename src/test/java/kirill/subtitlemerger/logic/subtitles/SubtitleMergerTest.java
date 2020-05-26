@@ -15,24 +15,24 @@ public class SubtitleMergerTest {
     public void testBasic() throws IOException, SubtitleFormatException, InterruptedException {
         Subtitles upperSubtitles = SubRipParser.from(
                 IOUtils.toString(
-                        getClass().getResourceAsStream("/logic/subtitles/subtitle_merger/upper.srt"),
+                        getClass().getResourceAsStream("/logic/subtitles/subtitle_merger/basic/upper.srt"),
                         StandardCharsets.UTF_8
                 )
         );
         Subtitles lowerSubtitles = SubRipParser.from(
                 IOUtils.toString(
-                        getClass().getResourceAsStream("/logic/subtitles/subtitle_merger/lower.srt"),
+                        getClass().getResourceAsStream("/logic/subtitles/subtitle_merger/basic/lower.srt"),
                         StandardCharsets.UTF_8
                 )
         );
 
         Subtitles merged = SubtitleMerger.mergeSubtitles(upperSubtitles, lowerSubtitles);
         String expected = IOUtils.toString(
-                getClass().getResourceAsStream("/logic/subtitles/subtitle_merger/result.srt"),
+                getClass().getResourceAsStream("/logic/subtitles/subtitle_merger/basic/result.srt"),
                 StandardCharsets.UTF_8
         );
 
-        assertThat(SubRipWriter.toText(merged, true)).isEqualTo(expected);
+        assertThat(SubRipWriter.toText(merged, false)).isEqualTo(expected);
     }
 
     @Test
@@ -43,14 +43,14 @@ public class SubtitleMergerTest {
         Subtitles merged = SubtitleMerger.mergeSubtitles(upperSubtitles, lowerSubtitles);
         String expected = "";
 
-        assertThat(SubRipWriter.toText(merged, true)).isEqualTo(expected);
+        assertThat(SubRipWriter.toText(merged, false)).isEqualTo(expected);
     }
 
     @Test
     public void testOneEmpty() throws SubtitleFormatException, InterruptedException, IOException {
         Subtitles upperSubtitles = SubRipParser.from(
                 IOUtils.toString(
-                        getClass().getResourceAsStream("/logic/subtitles/subtitle_merger/upper.srt"),
+                        getClass().getResourceAsStream("/logic/subtitles/subtitle_merger/basic/upper.srt"),
                         StandardCharsets.UTF_8
                 )
         );
@@ -59,10 +59,42 @@ public class SubtitleMergerTest {
 
         Subtitles merged = SubtitleMerger.mergeSubtitles(upperSubtitles, lowerSubtitles);
         String expected = IOUtils.toString(
-                getClass().getResourceAsStream("/logic/subtitles/subtitle_merger/upper.srt"),
+                getClass().getResourceAsStream("/logic/subtitles/subtitle_merger/basic/upper.srt"),
                 StandardCharsets.UTF_8
         );
 
-        assertThat(SubRipWriter.toText(merged, true)).isEqualTo(expected);
+        assertThat(SubRipWriter.toText(merged, false)).isEqualTo(expected);
+    }
+
+    /*
+     * The second and the third subtitles end at the same time in upper.srt. While this is not a correct subtitle
+     * format, the application should produce a sensible result anyway.
+     */
+    @Test
+    public void testTimeOverlaps() throws SubtitleFormatException, InterruptedException, IOException {
+        Subtitles upperSubtitles = SubRipParser.from(
+                IOUtils.toString(
+                        getClass().getResourceAsStream(
+                                "/logic/subtitles/subtitle_merger/time_overlaps/upper.srt"
+                        ),
+                        StandardCharsets.UTF_8
+                )
+        );
+        Subtitles lowerSubtitles = SubRipParser.from(
+                IOUtils.toString(
+                        getClass().getResourceAsStream(
+                                "/logic/subtitles/subtitle_merger/time_overlaps/lower.srt"
+                        ),
+                        StandardCharsets.UTF_8
+                )
+        );
+
+        Subtitles merged = SubtitleMerger.mergeSubtitles(upperSubtitles, lowerSubtitles);
+        String expected = IOUtils.toString(
+                getClass().getResourceAsStream("/logic/subtitles/subtitle_merger/time_overlaps/result.srt"),
+                StandardCharsets.UTF_8
+        );
+
+        assertThat(SubRipWriter.toText(merged, false)).isEqualTo(expected);
     }
 }

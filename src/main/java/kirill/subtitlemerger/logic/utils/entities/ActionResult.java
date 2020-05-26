@@ -1,45 +1,32 @@
 package kirill.subtitlemerger.logic.utils.entities;
 
 import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
-import org.apache.commons.lang3.StringUtils;
 
 /**
- * This class helps to represent the results of complex actions that may for example finish successfully partly and
- * partly fail. This class is a POJO and isn't bound to any gui library and so can be easily tested.
+ * This class helps to represent results of simple actions that don't consist of parts unlike with the
+ * MultiPartActionResult. This class is a POJO and isn't bound to any gui library and so can easily be tested.
+ *
+ * @see MultiPartActionResult
  */
 @AllArgsConstructor
 @Getter
-@EqualsAndHashCode /* For tests only. */
-@ToString /* For tests only. */
 public class ActionResult {
-    public static final ActionResult NO_RESULT = new ActionResult(null, null, null);
+    public static final ActionResult EMPTY = new ActionResult(ActionResultType.SUCCESS, null);
 
-    private String success;
+    private ActionResultType type;
 
-    private String warn;
+    private String text;
 
-    private String error;
-
-    public static ActionResult onlySuccess(String text) {
-        return new ActionResult(text, null, null);
+    public static ActionResult success(String text) {
+        return new ActionResult(ActionResultType.SUCCESS, text);
     }
 
-    public static ActionResult onlyWarn(String text) {
-        return new ActionResult(null, text, null);
+    public static ActionResult warning(String text) {
+        return new ActionResult(ActionResultType.WARNING, text);
     }
 
-    public static ActionResult onlyError(String text) {
-        return new ActionResult(null, null, text);
-    }
-
-    public boolean haveWarnings() {
-        return !StringUtils.isBlank(warn);
-    }
-
-    public boolean haveErrors() {
-        return !StringUtils.isBlank(error);
+    public static ActionResult error(String text) {
+        return new ActionResult(ActionResultType.ERROR, text);
     }
 }

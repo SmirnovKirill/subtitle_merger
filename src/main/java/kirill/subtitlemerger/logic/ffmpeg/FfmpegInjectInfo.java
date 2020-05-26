@@ -13,7 +13,7 @@ public class FfmpegInjectInfo {
     private String subtitles;
 
     /**
-     * This value will be used to get an index of a new stream.
+     * This value will be used to get the index of a new stream.
      */
     private int currentSubtitleCount;
 

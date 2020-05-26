@@ -2,6 +2,7 @@ package kirill.subtitlemerger.gui.forms.videos.background;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.application.Platform;
+import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.forms.videos.table.*;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.logic.LogicConstants;
@@ -14,7 +15,7 @@ import kirill.subtitlemerger.logic.settings.SortBy;
 import kirill.subtitlemerger.logic.settings.SortDirection;
 import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndInput;
 import kirill.subtitlemerger.logic.utils.Utils;
-import kirill.subtitlemerger.logic.utils.entities.ActionResult;
+import kirill.subtitlemerger.logic.utils.entities.MultiPartActionResult;
 import kirill.subtitlemerger.logic.videos.Videos;
 import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
 import kirill.subtitlemerger.logic.videos.entities.SubtitleOptionNotValidReason;
@@ -37,6 +38,8 @@ public class VideosBackgroundUtils {
     static final String INCORRECT_FORMAT = "The subtitles have an incorrect format";
 
     static List<Video> getVideos(List<File> files, Ffprobe ffprobe, BackgroundManager backgroundManager) {
+        backgroundManager.saveCurrentTaskState();
+
         backgroundManager.setCancelPossible(false);
         backgroundManager.updateProgress(0, files.size());
 
@@ -44,7 +47,7 @@ public class VideosBackgroundUtils {
 
         int i = 0;
         for (File file : files) {
-            backgroundManager.updateMessage("Getting the video info " + file.getName() + "...");
+            backgroundManager.updateMessage("Getting video info for " + file.getName() + "...");
 
             if (file.isFile() && file.exists()) {
                 result.add(Videos.getVideo(file, LogicConstants.ALLOWED_VIDEO_EXTENSIONS, ffprobe));
@@ -54,6 +57,8 @@ public class VideosBackgroundUtils {
 
             i++;
         }
+
+        backgroundManager.restoreSavedTaskState();
 
         return result;
     }
@@ -66,6 +71,8 @@ public class VideosBackgroundUtils {
             Settings settings,
             BackgroundManager backgroundManager
     ) {
+        backgroundManager.saveCurrentTaskState();
+
         backgroundManager.setCancelPossible(false);
         backgroundManager.setIndeterminateProgress();
 
@@ -76,6 +83,8 @@ public class VideosBackgroundUtils {
 
             result.add(tableVideoFrom(video, showFullPath, selectByDefault, table, settings));
         }
+
+        backgroundManager.restoreSavedTaskState();
 
         return result;
     }
@@ -98,7 +107,7 @@ public class VideosBackgroundUtils {
                 video.getLastModified(),
                 getTextualReason(video.getNotValidReason(), video.getFormat()),
                 video.getFormat(),
-                null
+                MultiPartActionResult.EMPTY
         );
 
         List<TableSubtitleOption> options = new ArrayList<>();
@@ -149,7 +158,7 @@ public class VideosBackgroundUtils {
         return TableSubtitleOption.createBuiltIn(
                 option.getId(),
                 video,
-                getTextualReason(option.getNotValidReason(), option.getFormat()),
+                getTextualReason(option.getNotValidReason(), option.getCodec()),
                 getOptionTitle(option),
                 canHideOptions && isOptionHideable(option, settings),
                 option.isMerged(),
@@ -161,13 +170,13 @@ public class VideosBackgroundUtils {
     }
 
     @Nullable
-    private static String getTextualReason(SubtitleOptionNotValidReason reason, String format) {
+    private static String getTextualReason(SubtitleOptionNotValidReason reason, String codec) {
         if (reason == null) {
             return null;
         }
 
-        if (reason == SubtitleOptionNotValidReason.NOT_ALLOWED_FORMAT) {
-            return "The subtitles have a not allowed format (" + format + ")";
+        if (reason == SubtitleOptionNotValidReason.NOT_ALLOWED_CODEC) {
+            return "The subtitles have a not allowed codec (" + codec + ")";
         } else {
             log.error("unexpected subtitle option unavailability reason: " + reason + ", most likely a bug");
             throw new IllegalStateException();
@@ -184,7 +193,13 @@ public class VideosBackgroundUtils {
             if ("EXTERNAL".equals(lowerCode)) {
                 lowerCode = "FILE";
             }
-            return upperCode + "+" + lowerCode + " merged subtitles";
+
+            String result = upperCode + "+" + lowerCode + " merged subtitles";
+            if (option.isMergedInPlainText()) {
+                result += " (plain text)";
+            }
+
+            return result;
         } else {
             String result = Utils.languageToString(option.getLanguage()).toUpperCase();
 
@@ -197,6 +212,10 @@ public class VideosBackgroundUtils {
     }
 
     private static boolean isOptionHideable(BuiltInSubtitleOption option, Settings settings) {
+        if (option.isMerged()) {
+            return false;
+        }
+
         LanguageAlpha3Code optionLanguage = option.getLanguage();
 
         return !Utils.languagesEqual(optionLanguage, settings.getUpperLanguage())
@@ -208,6 +227,8 @@ public class VideosBackgroundUtils {
             Sort sort,
             BackgroundManager backgroundManager
     ) {
+        backgroundManager.saveCurrentTaskState();
+
         backgroundManager.setCancelPossible(false);
         backgroundManager.setIndeterminateProgress();
         backgroundManager.updateMessage("Sorting the videos...");
@@ -232,7 +253,11 @@ public class VideosBackgroundUtils {
             comparator = comparator.reversed();
         }
 
-        return unsortedVideos.stream().sorted(comparator).collect(Collectors.toList());
+        List<TableVideo> result =  unsortedVideos.stream().sorted(comparator).collect(Collectors.toList());
+
+        backgroundManager.restoreSavedTaskState();
+
+        return result;
     }
 
     public static TableData getTableData(
@@ -242,16 +267,17 @@ public class VideosBackgroundUtils {
             Sort sort,
             BackgroundManager backgroundManager
     ) {
-        List<TableVideo> videosToShow = getVideosToShow(allVideos, hideUnavailable, backgroundManager);
+        backgroundManager.saveCurrentTaskState();
 
         backgroundManager.setCancelPossible(false);
         backgroundManager.setIndeterminateProgress();
+        backgroundManager.updateMessage("Calculating the number of videos...");
 
+        List<TableVideo> videosToShow = getVideosToShow(allVideos, hideUnavailable, backgroundManager);
         int selectableCount = 0;
         int selectedAvailableCount = 0;
         int selectedUnavailableCount = 0;
 
-        backgroundManager.updateMessage("Calculating the number of videos...");
         for (TableVideo video : videosToShow) {
             if (video.isSelected()) {
                 if (StringUtils.isBlank(video.getNotValidReason())) {
@@ -268,12 +294,12 @@ public class VideosBackgroundUtils {
                     selectableCount++;
                 }
             } else {
-                log.error("unexpected mode " + mode + ", most likely a bug");
+                log.error("unexpected mode: " + mode + ", most likely a bug");
                 throw new IllegalStateException();
             }
         }
 
-        return new TableData(
+        TableData result = new TableData(
                 videosToShow,
                 mode,
                 selectableCount,
@@ -282,6 +308,10 @@ public class VideosBackgroundUtils {
                 getTableSortBy(sort.getSortBy()),
                 getTableSortDirection(sort.getSortDirection())
         );
+
+        backgroundManager.restoreSavedTaskState();
+
+        return result;
     }
 
     private static List<TableVideo> getVideosToShow(
@@ -289,17 +319,24 @@ public class VideosBackgroundUtils {
             boolean hideUnavailable,
             BackgroundManager backgroundManager
     ) {
+        backgroundManager.saveCurrentTaskState();
+
         backgroundManager.setCancelPossible(false);
         backgroundManager.setIndeterminateProgress();
         backgroundManager.updateMessage("Getting videos to show...");
 
+        List<TableVideo> result;
         if (!hideUnavailable) {
-            return allVideos;
+            result = allVideos;
         } else {
-            return allVideos.stream()
+            result = allVideos.stream()
                     .filter(video -> StringUtils.isBlank(video.getNotValidReason()))
                     .collect(Collectors.toList());
         }
+
+        backgroundManager.restoreSavedTaskState();
+
+        return result;
     }
 
     private static TableSortBy getTableSortBy(SortBy sortBy) {
@@ -343,6 +380,15 @@ public class VideosBackgroundUtils {
         }
     }
 
+    @Nullable
+    public static String getLoadCancelDescription(Video video) {
+        if (video.getFile().length() >= GuiConstants.LOAD_CANCEL_DESCRIPTION_THRESHOLD) {
+            return "Please be patient, loading may take a while for this video.";
+        } else {
+            return null;
+        }
+    }
+
     public static LoadSubtitlesResult loadSubtitles(
             BuiltInSubtitleOption option,
             Video video,
@@ -350,7 +396,7 @@ public class VideosBackgroundUtils {
             Ffmpeg ffmpeg
     ) throws InterruptedException {
         try {
-            byte[] rawSubtitles = ffmpeg.getSubtitles(option.getFfmpegIndex(), option.getFormat(), video.getFile());
+            byte[] rawSubtitles = ffmpeg.getSubtitles(option.getFfmpegIndex(), video.getFile());
             SubtitlesAndInput subtitlesAndInput = SubtitlesAndInput.from(rawSubtitles, StandardCharsets.UTF_8);
 
             option.setSubtitlesAndInput(subtitlesAndInput);
@@ -362,31 +408,41 @@ public class VideosBackgroundUtils {
                 return LoadSubtitlesResult.INCORRECT_FORMAT;
             }
         } catch (FfmpegException e) {
-            log.warn("failed to get subtitle text: " + e.getCode() + ", console output " + e.getConsoleOutput());
+            log.warn("failed to get subtitles: " + e.getCode() + ", console output " + e.getConsoleOutput());
             Platform.runLater(() -> tableOption.failedToLoad("Fmpeg returned an error"));
             return LoadSubtitlesResult.FAILED;
         }
     }
 
     static void clearActionResults(List<TableVideo> videos, BackgroundManager backgroundManager) {
+        backgroundManager.saveCurrentTaskState();
+
         backgroundManager.setCancelPossible(false);
         backgroundManager.setIndeterminateProgress();
-        backgroundManager.updateMessage("Clearing state...");
+        backgroundManager.updateMessage("Clearing the state...");
 
         for (TableVideo video : videos) {
             Platform.runLater(video::clearActionResult);
         }
+
+        backgroundManager.restoreSavedTaskState();
     }
 
     static List<TableVideo> getSelectedVideos(List<TableVideo> videos, BackgroundManager backgroundManager) {
+        backgroundManager.saveCurrentTaskState();
+
         backgroundManager.setCancelPossible(false);
         backgroundManager.setIndeterminateProgress();
-        backgroundManager.updateMessage("Getting the list of videos to work with...");
+        backgroundManager.updateMessage("Getting a list of videos to work with...");
 
-        return videos.stream().filter(TableVideo::isSelected).collect(Collectors.toList());
+        List<TableVideo> result = videos.stream().filter(TableVideo::isSelected).collect(Collectors.toList());
+
+        backgroundManager.restoreSavedTaskState();
+
+        return result;
     }
 
-    public static ActionResult getLoadSubtitlesResult(
+    public static MultiPartActionResult getLoadSubtitlesResult(
             int toLoadCount,
             int processedCount,
             int successfulCount,
@@ -394,13 +450,13 @@ public class VideosBackgroundUtils {
             int incorrectCount
     ) {
         String success = "";
-        String warn = "";
+        String warning = "";
         String error = "";
 
         if (toLoadCount == 0) {
-            warn = "There are no subtitles to load";
+            warning = "There are no subtitles to load";
         } else if (processedCount == 0) {
-            warn = "The task has been cancelled, nothing was loaded";
+            warning = "The task has been cancelled, nothing was loaded";
         } else if (successfulCount == toLoadCount) {
             success = Utils.getTextDependingOnCount(
                     successfulCount,
@@ -426,18 +482,18 @@ public class VideosBackgroundUtils {
 
             if (processedCount != toLoadCount) {
                 if (StringUtils.isBlank(success)) {
-                    warn = Utils.getTextDependingOnCount(
+                    warning = Utils.getTextDependingOnCount(
                             toLoadCount - processedCount,
                             String.format("1/%d subtitle loadings has been cancelled", toLoadCount),
                             String.format("%%d/%d subtitle loadings have been cancelled", toLoadCount)
                     );
                 } else {
-                    warn = String.format("%d/%d cancelled", toLoadCount - processedCount, toLoadCount);
+                    warning = String.format("%d/%d cancelled", toLoadCount - processedCount, toLoadCount);
                 }
             }
 
             if (failedCount != 0) {
-                if (StringUtils.isBlank(success) && StringUtils.isBlank(warn)) {
+                if (StringUtils.isBlank(success) && StringUtils.isBlank(warning)) {
                     error = String.format ("Failed to load %d/%d subtitles", failedCount, toLoadCount);
                 } else {
                     error = String.format("failed to load %d/%d", failedCount, toLoadCount);
@@ -452,7 +508,7 @@ public class VideosBackgroundUtils {
             }
         }
 
-        return new ActionResult(success, warn, error);
+        return new MultiPartActionResult(success, warning, error);
     }
 
     static String getLoadSubtitlesError(int toLoadCount, int failedCount, int incorrectCount) {

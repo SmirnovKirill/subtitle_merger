@@ -23,7 +23,7 @@ public class ReadOnlyPreviewFormController extends AbstractPreviewFormController
     private Label lowerSubtitlesTitle;
 
     public void initializeSimple(String title, String text, Stage dialogStage) {
-        this.title.setText(getShortenedTitle(title));
+        this.title.setText(title);
         GuiUtils.setVisibleAndManaged(upperSubtitlesPane, false);
         GuiUtils.setVisibleAndManaged(lowerSubtitlesPane, false);
         listView.setSelectionModel(new NoSelectionModel<>());

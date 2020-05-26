@@ -1,6 +1,6 @@
 package kirill.subtitlemerger.gui.forms.videos.background;
 
-import kirill.subtitlemerger.logic.utils.entities.ActionResult;
+import kirill.subtitlemerger.logic.utils.entities.MultiPartActionResult;
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -17,7 +17,13 @@ public class TestActionResults {
                         0,
                         0
                 )
-        ).isEqualTo(new ActionResult("", "The task has been cancelled, nothing was done", ""));
+        ).isEqualTo(
+                new MultiPartActionResult(
+                        "",
+                        "The task has been cancelled, nothing was done",
+                        ""
+                )
+        );
 
         assertThat(
                 AutoSelectRunner.getActionResult(
@@ -28,7 +34,11 @@ public class TestActionResults {
                         0
                 )
         ).isEqualTo(
-                new ActionResult("Auto-selection has finished successfully for the video", "", "")
+                new MultiPartActionResult(
+                        "Auto-selection has finished successfully for the video",
+                        "",
+                        ""
+                )
         );
 
         assertThat(
@@ -40,7 +50,7 @@ public class TestActionResults {
                         0
                 )
         ).isEqualTo(
-                new ActionResult(
+                new MultiPartActionResult(
                         "Auto-selection has finished successfully for all 2 videos",
                         "",
                         ""
@@ -55,7 +65,9 @@ public class TestActionResults {
                         1,
                         0
                 )
-        ).isEqualTo(new ActionResult("", "Auto-selection is not possible for the video", ""));
+        ).isEqualTo(
+                new MultiPartActionResult("", "Auto-selection is not possible for the video", "")
+        );
 
         assertThat(
                 AutoSelectRunner.getActionResult(
@@ -65,7 +77,9 @@ public class TestActionResults {
                         2,
                         0
                 )
-        ).isEqualTo(new ActionResult("", "Auto-selection is not possible for all 2 videos", ""));
+        ).isEqualTo(
+                new MultiPartActionResult("", "Auto-selection is not possible for all 2 videos", "")
+        );
 
         assertThat(
                 AutoSelectRunner.getActionResult(
@@ -75,7 +89,7 @@ public class TestActionResults {
                         0,
                         1
                 )
-        ).isEqualTo(new ActionResult("", "", "Auto-selection has failed for the video"));
+        ).isEqualTo(new MultiPartActionResult("", "", "Auto-selection has failed for the video"));
 
         assertThat(
                 AutoSelectRunner.getActionResult(
@@ -85,7 +99,9 @@ public class TestActionResults {
                         0,
                         2
                 )
-        ).isEqualTo(new ActionResult("", "", "Auto-selection has failed for all 2 videos"));
+        ).isEqualTo(
+                new MultiPartActionResult("", "", "Auto-selection has failed for all 2 videos")
+        );
 
         assertThat(
                 AutoSelectRunner.getActionResult(
@@ -96,7 +112,7 @@ public class TestActionResults {
                         1
                 )
         ).isEqualTo(
-                new ActionResult(
+                new MultiPartActionResult(
                         "Auto-selection has finished for 1/4 videos successfully",
                         "cancelled for 1/4, not possible for 1/4",
                         "failed for 1/4"
@@ -112,7 +128,7 @@ public class TestActionResults {
                         1
                 )
         ).isEqualTo(
-                new ActionResult(
+                new MultiPartActionResult(
                         "",
                         "Auto-selection has been cancelled for 1/3 videos, not possible for 1/3",
                         "failed for 1/3"
@@ -128,7 +144,7 @@ public class TestActionResults {
                         1
                 )
         ).isEqualTo(
-                new ActionResult(
+                new MultiPartActionResult(
                         "",
                         "Auto-selection is not possible for 2/3 videos",
                         "failed for 1/3"
@@ -146,7 +162,7 @@ public class TestActionResults {
                         0,
                         0
                 )
-        ).isEqualTo(new ActionResult("", "There are no subtitles to load", ""));
+        ).isEqualTo(new MultiPartActionResult("", "There are no subtitles to load", ""));
 
         assertThat(
                 VideosBackgroundUtils.getLoadSubtitlesResult(
@@ -156,7 +172,9 @@ public class TestActionResults {
                         0,
                         0
                 )
-        ).isEqualTo(new ActionResult("", "The task has been cancelled, nothing was loaded", ""));
+        ).isEqualTo(
+                new MultiPartActionResult("", "The task has been cancelled, nothing was loaded", "")
+        );
 
         assertThat(
                 VideosBackgroundUtils.getLoadSubtitlesResult(
@@ -166,7 +184,9 @@ public class TestActionResults {
                         0,
                         0
                 )
-        ).isEqualTo(new ActionResult("The subtitles have been loaded successfully", "", ""));
+        ).isEqualTo(
+                new MultiPartActionResult("The subtitles have been loaded successfully", "", "")
+        );
 
         assertThat(
                 VideosBackgroundUtils.getLoadSubtitlesResult(
@@ -176,7 +196,9 @@ public class TestActionResults {
                         0,
                         0
                 )
-        ).isEqualTo(new ActionResult("All 2 subtitles have been loaded successfully", "", ""));
+        ).isEqualTo(
+                new MultiPartActionResult("All 2 subtitles have been loaded successfully", "", ""))
+        ;
 
         assertThat(
                 VideosBackgroundUtils.getLoadSubtitlesResult(
@@ -186,7 +208,7 @@ public class TestActionResults {
                         1,
                         0
                 )
-        ).isEqualTo(new ActionResult("", "", "Failed to load the subtitles"));
+        ).isEqualTo(new MultiPartActionResult("", "", "Failed to load the subtitles"));
 
         assertThat(
                 VideosBackgroundUtils.getLoadSubtitlesResult(
@@ -196,7 +218,7 @@ public class TestActionResults {
                         2,
                         0
                 )
-        ).isEqualTo(new ActionResult("", "", "Failed to load all 2 subtitles"));
+        ).isEqualTo(new MultiPartActionResult("", "", "Failed to load all 2 subtitles"));
 
         assertThat(
                 VideosBackgroundUtils.getLoadSubtitlesResult(
@@ -206,7 +228,7 @@ public class TestActionResults {
                         0,
                         1
                 )
-        ).isEqualTo(new ActionResult("", "", "The subtitles have an incorrect format"));
+        ).isEqualTo(new MultiPartActionResult("", "", "The subtitles have an incorrect format"));
 
         assertThat(
                 VideosBackgroundUtils.getLoadSubtitlesResult(
@@ -216,7 +238,7 @@ public class TestActionResults {
                         0,
                         2
                 )
-        ).isEqualTo(new ActionResult("", "", "All 2 subtitles have an incorrect format"));
+        ).isEqualTo(new MultiPartActionResult("", "", "All 2 subtitles have an incorrect format"));
 
         assertThat(
                 VideosBackgroundUtils.getLoadSubtitlesResult(
@@ -227,7 +249,7 @@ public class TestActionResults {
                         1
                 )
         ).isEqualTo(
-                new ActionResult(
+                new MultiPartActionResult(
                         "1/4 subtitles have been loaded successfully",
                         "1/4 cancelled",
                         "failed to load 1/4, 1/4 have an incorrect format"
@@ -243,7 +265,7 @@ public class TestActionResults {
                         1
                 )
         ).isEqualTo(
-                new ActionResult(
+                new MultiPartActionResult(
                         "",
                         "1/3 subtitle loadings has been cancelled",
                         "failed to load 1/3, 1/3 have an incorrect format"
@@ -259,7 +281,7 @@ public class TestActionResults {
                         1
                 )
         ).isEqualTo(
-                new ActionResult(
+                new MultiPartActionResult(
                         "",
                         "2/3 subtitle loadings have been cancelled",
                         "1/3 have an incorrect format"

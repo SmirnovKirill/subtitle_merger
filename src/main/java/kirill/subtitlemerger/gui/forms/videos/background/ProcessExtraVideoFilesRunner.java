@@ -9,7 +9,7 @@ import kirill.subtitlemerger.gui.forms.videos.table.TableWithVideos;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.logic.utils.Utils;
-import kirill.subtitlemerger.logic.utils.entities.ActionResult;
+import kirill.subtitlemerger.logic.utils.entities.MultiPartActionResult;
 import kirill.subtitlemerger.logic.videos.entities.Video;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -39,6 +39,10 @@ public class ProcessExtraVideoFilesRunner implements BackgroundRunner<ProcessExt
 
     @Override
     public Result run(BackgroundManager backgroundManager) {
+        backgroundManager.setCancelPossible(false);
+        backgroundManager.setIndeterminateProgress();
+        backgroundManager.updateMessage("Processing the videos...");
+
         List<Video> videosToAdd = VideosBackgroundUtils.getVideos(
                 videoFilesToAdd,
                 context.getFfprobe(),
@@ -47,8 +51,9 @@ public class ProcessExtraVideoFilesRunner implements BackgroundRunner<ProcessExt
         removeAlreadyAdded(videosToAdd, allVideosOriginal, backgroundManager);
 
         if (videosToAdd.size() + allVideosOriginal.size() > GuiConstants.VIDEO_TABLE_LIMIT) {
+            String error = "There will be too many videos (>" + GuiConstants.VIDEO_TABLE_LIMIT + ")";
             return new Result(
-                    ActionResult.onlyError("There will be too many videos (>" + GuiConstants.VIDEO_TABLE_LIMIT + ")"),
+                    MultiPartActionResult.onlyError(error),
                     null,
                     null,
                     null
@@ -87,9 +92,7 @@ public class ProcessExtraVideoFilesRunner implements BackgroundRunner<ProcessExt
             List<Video> allVideos,
             BackgroundManager backgroundManager
     ) {
-        backgroundManager.setCancelPossible(false);
-        backgroundManager.setIndeterminateProgress();
-        backgroundManager.updateMessage("Removing already added videos...");
+        backgroundManager.updateMessage("Removing the already added videos...");
 
         Iterator<Video> iterator = videosToAdd.iterator();
         while (iterator.hasNext()) {
@@ -103,7 +106,7 @@ public class ProcessExtraVideoFilesRunner implements BackgroundRunner<ProcessExt
         }
     }
 
-    private static ActionResult getActionResult(int videosToAddCount, int actuallyAddedCount) {
+    private static MultiPartActionResult getActionResult(int videosToAddCount, int actuallyAddedCount) {
         String message;
 
         if (actuallyAddedCount == 0) {
@@ -127,13 +130,13 @@ public class ProcessExtraVideoFilesRunner implements BackgroundRunner<ProcessExt
             message += (videosToAddCount - actuallyAddedCount) + "/" + videosToAddCount + " added before";
         }
 
-        return new ActionResult(message, null, null);
+        return new MultiPartActionResult(message, null, null);
     }
 
     @AllArgsConstructor
     @Getter
     public static class Result {
-        private ActionResult actionResult;
+        private MultiPartActionResult actionResult;
 
         private List<Video> allVideos;
 

@@ -68,7 +68,7 @@ public class Ffprobe {
 
             consoleOutput = ProcessRunner.run(arguments);
         } catch (ProcessException e) {
-            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, e.getConsoleOutput());
+            throw new FfmpegException(FfmpegException.Code.PROCESS_FAILED, e.getConsoleOutput());
         }
 
         try {
@@ -78,7 +78,7 @@ public class Ffprobe {
                     "failed to convert console output to json: " + ExceptionUtils.getStackTrace(e)
                             + ", console output " + consoleOutput
             );
-            throw new FfmpegException(FfmpegException.Code.GENERAL_ERROR, consoleOutput);
+            throw new FfmpegException(FfmpegException.Code.FAILED_TO_CONVERT_JSON, consoleOutput);
         }
     }
 }

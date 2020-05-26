@@ -10,9 +10,9 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * This class contains information about a chosen video. Note that it can be used for files that are not actual
- * videos as well. For example when the user chooses the directory with videos, each of the files from that directory
- * will be represented by this class with the appropriate notValidReason, it's done for better diagnostics.
+ * This class contains information about a chosen video. Note that it can be used for files that are not actual videos
+ * as well. For example when the user chooses a directory with videos, each of the files from that directory will be
+ * represented by this class with an appropriate notValidReason, it's done for better diagnostics.
  */
 @CommonsLog
 @Getter
@@ -21,13 +21,9 @@ public class Video {
 
     private File file;
 
-    private LocalDateTime lastModified;
-
-    private long size;
-
     /**
      * We will keep track of all the selected videos even if they can't be used for subtitle merging (for better
-     * diagnostics). The enum contains the reason why this video can't be used for the subtitle merging.
+     * diagnostics). The enum contains the reason why this video can't be used for subtitle merging.
      */
     private VideoNotValidReason notValidReason;
 
@@ -43,21 +39,23 @@ public class Video {
     ) {
         id = file.getAbsolutePath();
         this.file = file;
-        setCurrentSizeAndLastModified();
         this.notValidReason = notValidReason;
         this.format = format;
         this.options = options;
     }
 
-    public void setCurrentSizeAndLastModified() {
-        lastModified = new LocalDateTime(file.lastModified());
-        size = file.length();
+    public long getSize() {
+        return file.length();
+    }
+
+    public LocalDateTime getLastModified() {
+        return new LocalDateTime(file.lastModified());
     }
 
     public static Video getById(String id, List<Video> videos) {
         Video result = videos.stream().filter(video -> Objects.equals(video.getId(), id)).findFirst().orElse(null);
         if (result == null) {
-            log.error("no video for id " + id + ", most likely a bug");
+            log.error("no videos with id " + id + ", most likely a bug");
             throw new IllegalStateException();
         }
 

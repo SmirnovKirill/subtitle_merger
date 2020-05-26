@@ -20,7 +20,7 @@ import java.util.concurrent.TimeoutException;
 @CommonsLog
 public class ProcessRunner {
     /**
-     * This is a helper method to run native processes. The main feature of this class is the work with the console
+     * This is a helper method to run native processes. The main feature of this class is its working with a console
      * output. The output is handled in a separate thread so the process can be properly interrupted. Otherwise if the
      * output is being read in the main thread, an interruption will have no effect because the Reader::read method
      * ignores interruptions.
@@ -42,7 +42,7 @@ public class ProcessRunner {
         }
 
         if (consoleOutput == null) {
-            log.error("console output is null, that can't happen, most likely a bug");
+            log.error("console output is null, most likely a bug");
             throw new IllegalStateException();
         }
 
@@ -69,6 +69,7 @@ public class ProcessRunner {
 
         String result = null;
         try (
+                /* Streams are here just because I want them to be closed automatically. */
                 InputStream ignored1 = process.getInputStream();
                 InputStream ignored2 = process.getErrorStream();
                 OutputStream ignored3 = process.getOutputStream()
@@ -104,7 +105,7 @@ public class ProcessRunner {
             }
 
             log.error("the process has failed for an unexpected reason: " + ExceptionUtils.getStackTrace(cause));
-            throw new ProcessException(ProcessException.Code.FAILED_TO_READ_OUTPUT, null);
+            throw new IllegalStateException();
         } catch (IOException e) {
             log.warn("failed to close the streams: " + ExceptionUtils.getStackTrace(e));
             return result;
@@ -139,7 +140,7 @@ public class ProcessRunner {
         ReadAllConsoleOutputTask(Process process) {
             super(() -> {
                 /*
-                 * The code below is basically copied from the IOUtils::toString. I decided to make my own
+                 * The code below is basically copied from the IOUtils::toString. I've decided to make my own
                  * implementation instead of using the existing one because if some exception occurs I want to see what
                  * output was generated before that exception for better diagnostics.
                  */

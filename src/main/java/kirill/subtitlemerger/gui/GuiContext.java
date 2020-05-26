@@ -73,10 +73,10 @@ public class GuiContext {
         try {
             return new Ffprobe(ffprobeFile.getAbsoluteFile());
         } catch (FfmpegException e) {
-            log.warn("incorrect path to ffprobe: " + e.getCode() + ", console output " + e.getConsoleOutput());
+            log.error("incorrect path to ffprobe: " + e.getCode() + ", console output " + e.getConsoleOutput());
             throw new IllegalStateException();
         } catch (InterruptedException e) {
-            log.error("the process can't be interrupted, probably a bug");
+            log.error("the process can't be interrupted, most likely a bug");
             throw new IllegalStateException();
         }
     }
@@ -93,7 +93,7 @@ public class GuiContext {
         File directoryWithJar = jar.getParentFile();
         if (directoryWithJar == null) {
             log.error("directory with jar is null, that shouldn't happen");
-            throw new NullPointerException();
+            throw new IllegalStateException();
         }
 
         File result = new File(directoryWithJar, "ffmpeg");
@@ -160,7 +160,7 @@ public class GuiContext {
         try {
             return new Ffmpeg(ffmpegFile.getAbsoluteFile());
         } catch (FfmpegException e) {
-            log.warn("incorrect path to ffmpeg: " + e.getCode() + ", console output " + e.getConsoleOutput());
+            log.error("incorrect path to ffmpeg: " + e.getCode() + ", console output " + e.getConsoleOutput());
             throw new IllegalStateException();
         } catch (InterruptedException e) {
             log.error("the process can't be interrupted, most likely a bug");

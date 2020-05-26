@@ -10,11 +10,10 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.MultipleSelectionModel;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.forms.common.BackgroundTaskFormController;
-import kirill.subtitlemerger.logic.LogicConstants;
-import kirill.subtitlemerger.logic.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 class AbstractPreviewFormController extends BackgroundTaskFormController {
     private BooleanProperty linesTruncated;
@@ -46,15 +45,11 @@ class AbstractPreviewFormController extends BackgroundTaskFormController {
         this.linesTruncated.set(linesTruncated);
     }
 
-    static String getShortenedTitle(String title) {
-        return Utils.getShortenedString(title, 0, 128);
-    }
-
     static SplitText getSplitText(String text) {
         List<String> lines = new ArrayList<>();
 
         boolean linesTruncated = false;
-        for (String line : LogicConstants.LINE_SEPARATOR_PATTERN.split(text)) {
+        for (String line : text.lines().collect(Collectors.toList())) {
             if (line.length() > 1000) {
                 lines.add(line.substring(0, 1000));
                 linesTruncated = true;

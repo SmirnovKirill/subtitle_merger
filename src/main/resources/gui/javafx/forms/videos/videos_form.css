@@ -28,22 +28,22 @@
     -fx-opacity: 0.4;
 }
 
-.table-cell > .pane-warn,
+.table-cell > .pane-warning,
 .table-cell > .pane-error {
     -fx-background-color: -fx-table-cell-border-color, -fx-background;
     -fx-background-insets: 0, 0 1 1 0;
 }
 
-.table-cell:last-visible > .pane-warn,
+.table-cell:last-visible > .pane-warning,
 .table-cell:last-visible > .pane-error {
     -fx-background-insets: 0, 0 0 1 0;
 }
 
-.table-cell > .pane-warn {
+.table-cell > .pane-warning {
     -fx-background: #fee8cc;
 }
 
-.table-cell:odd > .pane-warn {
+.table-cell:odd > .pane-warning {
     -fx-background: derive(#fee8cc, -2%);
 }
 
@@ -58,6 +58,7 @@
 .table-cell .button,
 .table-cell .hyperlink,
 .table-cell .label,
+.table-cell Text,
 .table-cell .radio-button {
     -fx-font-size: 0.75em;
 }

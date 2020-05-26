@@ -9,7 +9,7 @@ import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.logic.ffmpeg.Ffmpeg;
 import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.logic.utils.Utils;
-import kirill.subtitlemerger.logic.utils.entities.ActionResult;
+import kirill.subtitlemerger.logic.utils.entities.MultiPartActionResult;
 import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
 import kirill.subtitlemerger.logic.videos.entities.Video;
 import lombok.AllArgsConstructor;
@@ -27,7 +27,7 @@ import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackground
 
 @CommonsLog
 @AllArgsConstructor
-public class AutoSelectRunner implements BackgroundRunner<ActionResult> {
+public class AutoSelectRunner implements BackgroundRunner<MultiPartActionResult> {
     private List<TableVideo> tableVideos;
 
     private List<Video> videos;
@@ -37,7 +37,10 @@ public class AutoSelectRunner implements BackgroundRunner<ActionResult> {
     private Settings settings;
 
     @Override
-    public ActionResult run(BackgroundManager backgroundManager) {
+    public MultiPartActionResult run(BackgroundManager backgroundManager) {
+        backgroundManager.setCancelPossible(false);
+        backgroundManager.setIndeterminateProgress();
+
         clearActionResults(tableVideos, backgroundManager);
 
         List<TableVideo> selectedVideos = getSelectedVideos(tableVideos, backgroundManager);
@@ -47,22 +50,25 @@ public class AutoSelectRunner implements BackgroundRunner<ActionResult> {
         int notPossibleCount = 0;
         int failedCount = 0;
 
+        backgroundManager.setCancelPossible(true);
         try {
             for (TableVideo tableVideo : selectedVideos) {
+                if (Thread.interrupted()) {
+                    throw new InterruptedException();
+                }
+
                 Video video = Video.getById(tableVideo.getId(), videos);
 
-                backgroundManager.setCancelPossible(false);
-                backgroundManager.setIndeterminateProgress();
-                String actionPrefix = getProgressAction(processedCount, toProcessCount, "Auto-selection: ");
-                backgroundManager.updateMessage(actionPrefix + "processing " + video.getFile() + "...");
+                backgroundManager.setCancelDescription(null);
+                String actionPrefix = getProgressAction(processedCount, toProcessCount, "Auto-selecting: ");
+                backgroundManager.updateMessage(actionPrefix + "processing " + video.getFile().getName() + "...");
 
-                List<BuiltInSubtitleOption> optionsToLoad = getOptionsToLoad(video, settings);
                 boolean success = loadSubtitles(
-                        optionsToLoad,
                         video,
                         tableVideo,
                         actionPrefix,
                         ffmpeg,
+                        settings,
                         backgroundManager
                 );
                 if (!success) {
@@ -73,7 +79,7 @@ public class AutoSelectRunner implements BackgroundRunner<ActionResult> {
 
                 String notPossibleMessage = autoSelectOptions(video, tableVideo, settings);
                 if (!StringUtils.isBlank(notPossibleMessage)) {
-                    Platform.runLater(() -> tableVideo.setOnlyWarn(notPossibleMessage));
+                    Platform.runLater(() -> tableVideo.setOnlyWarning(notPossibleMessage));
                     notPossibleCount++;
                 } else {
                     successfulCount++;
@@ -86,6 +92,55 @@ public class AutoSelectRunner implements BackgroundRunner<ActionResult> {
         }
 
         return getActionResult(toProcessCount, processedCount, successfulCount, notPossibleCount, failedCount);
+    }
+
+    private static boolean loadSubtitles(
+            Video video,
+            TableVideo tableVideo,
+            String actionPrefix,
+            Ffmpeg ffmpeg,
+            Settings settings,
+            BackgroundManager backgroundManager
+    ) throws InterruptedException {
+        List<BuiltInSubtitleOption> optionsToLoad = getOptionsToLoad(video, settings);
+        if (CollectionUtils.isEmpty(optionsToLoad)) {
+            return true;
+        }
+
+        backgroundManager.setCancelDescription(getLoadCancelDescription(video));
+
+        int toLoadCount = optionsToLoad.size();
+        int failedCount = 0;
+        int incorrectCount = 0;
+
+        for (BuiltInSubtitleOption option : optionsToLoad) {
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+
+            TableSubtitleOption tableOption = tableVideo.getOption(option.getId());
+
+            String action = actionPrefix + "loading " + tableOption.getTitle() + " in " + video.getFile().getName()
+                    + "...";
+            backgroundManager.updateMessage(action);
+
+            LoadSubtitlesResult loadResult = VideosBackgroundUtils.loadSubtitles(option, video, tableOption, ffmpeg);
+            if (loadResult == LoadSubtitlesResult.FAILED) {
+                failedCount++;
+            } else if (loadResult == LoadSubtitlesResult.INCORRECT_FORMAT) {
+                incorrectCount++;
+            }
+
+            if (failedCount != 0 || incorrectCount != 0) {
+                String error = "Auto-selecting is not possible: "
+                        + StringUtils.uncapitalize(getLoadSubtitlesError(toLoadCount, failedCount, incorrectCount));
+                Platform.runLater(() -> tableVideo.setOnlyError(error));
+            }
+        }
+
+        backgroundManager.setCancelDescription(null);
+
+        return failedCount == 0 && incorrectCount == 0;
     }
 
     private static List<BuiltInSubtitleOption> getOptionsToLoad(Video video, Settings settings) {
@@ -130,54 +185,10 @@ public class AutoSelectRunner implements BackgroundRunner<ActionResult> {
                 .collect(Collectors.toList());
     }
 
-    private static boolean loadSubtitles(
-            List<BuiltInSubtitleOption> optionsToLoad,
-            Video video,
-            TableVideo tableVideo,
-            String actionPrefix,
-            Ffmpeg ffmpeg,
-            BackgroundManager backgroundManager
-    ) throws InterruptedException {
-        if (CollectionUtils.isEmpty(optionsToLoad)) {
-            return true;
-        }
-
-        backgroundManager.setCancelPossible(true);
-        backgroundManager.setCancelDescription("Please be patient, this may take a while depending on the video.");
-        backgroundManager.setIndeterminateProgress();
-
-        int toLoadCount = optionsToLoad.size();
-        int failedCount = 0;
-        int incorrectCount = 0;
-
-        for (BuiltInSubtitleOption option : optionsToLoad) {
-            TableSubtitleOption tableOption = tableVideo.getOption(option.getId());
-
-            String action = actionPrefix + "loading " + tableOption.getTitle() + " in " + video.getFile().getName()
-                    + "...";
-            backgroundManager.updateMessage(action);
-
-            LoadSubtitlesResult loadResult = VideosBackgroundUtils.loadSubtitles(option, video, tableOption, ffmpeg);
-            if (loadResult == LoadSubtitlesResult.FAILED) {
-                failedCount++;
-            } else if (loadResult == LoadSubtitlesResult.INCORRECT_FORMAT) {
-                incorrectCount++;
-            }
-
-            if (failedCount != 0 || incorrectCount != 0) {
-                String error = "Auto-selection is not possible: "
-                        + StringUtils.uncapitalize(getLoadSubtitlesError(toLoadCount, failedCount, incorrectCount));
-                Platform.runLater(() -> tableVideo.setOnlyError(error));
-            }
-        }
-
-        return failedCount == 0 && incorrectCount == 0;
-    }
-
     @Nullable
     private static String autoSelectOptions(Video video, TableVideo tableVideo, Settings settings) {
         if (CollectionUtils.isEmpty(video.getOptions())) {
-            return "Auto-selection is not possible because there are no subtitles";
+            return "Auto-selecting is not possible because there are no subtitles";
         }
 
         List<BuiltInSubtitleOption> selectableUpperOptions = getSelectableOptions(video, settings.getUpperLanguage());
@@ -185,7 +196,7 @@ public class AutoSelectRunner implements BackgroundRunner<ActionResult> {
 
         String missingLanguages = getMissingLanguages(selectableUpperOptions, selectableLowerOptions, settings);
         if (!StringUtils.isBlank(missingLanguages)) {
-            return "Auto-selection is not possible because there are no " + missingLanguages + " subtitles";
+            return "Auto-selecting is not possible because there are no " + missingLanguages + " subtitles";
         }
 
         BuiltInSubtitleOption upperOption = getMatchingOption(selectableUpperOptions);
@@ -242,7 +253,7 @@ public class AutoSelectRunner implements BackgroundRunner<ActionResult> {
         }
     }
 
-    static ActionResult getActionResult(
+    static MultiPartActionResult getActionResult(
             int toProcessCount,
             int processedCount,
             int successfulCount,
@@ -250,11 +261,11 @@ public class AutoSelectRunner implements BackgroundRunner<ActionResult> {
             int failedCount
     ) {
         String success = "";
-        String warn = "";
+        String warning = "";
         String error = "";
 
         if (processedCount == 0) {
-            warn = "The task has been cancelled, nothing was done";
+            warning = "The task has been cancelled, nothing was done";
         } else if (successfulCount == toProcessCount) {
             success = Utils.getTextDependingOnCount(
                     successfulCount,
@@ -262,7 +273,7 @@ public class AutoSelectRunner implements BackgroundRunner<ActionResult> {
                     "Auto-selection has finished successfully for all %d videos"
             );
         } else if (notPossibleCount == toProcessCount) {
-            warn = Utils.getTextDependingOnCount(
+            warning = Utils.getTextDependingOnCount(
                     notPossibleCount,
                     "Auto-selection is not possible for the video",
                     "Auto-selection is not possible for all %d videos"
@@ -284,28 +295,28 @@ public class AutoSelectRunner implements BackgroundRunner<ActionResult> {
 
             if (processedCount != toProcessCount) {
                 if (StringUtils.isBlank(success)) {
-                    warn = String.format(
+                    warning = String.format(
                             "Auto-selection has been cancelled for %d/%d videos",
                             toProcessCount - processedCount,
                             toProcessCount
                     );
                 } else {
-                    warn = String.format("cancelled for %d/%d", toProcessCount - processedCount, toProcessCount);
+                    warning = String.format("cancelled for %d/%d", toProcessCount - processedCount, toProcessCount);
                 }
             }
 
             if (notPossibleCount != 0) {
-                if (StringUtils.isBlank(success) && StringUtils.isBlank(warn)) {
-                    warn = String.format(
+                if (StringUtils.isBlank(success) && StringUtils.isBlank(warning)) {
+                    warning = String.format(
                             "Auto-selection is not possible for %d/%d videos",
                             notPossibleCount,
                             toProcessCount
                     );
                 } else {
-                    if (!StringUtils.isBlank(warn)) {
-                        warn += ", ";
+                    if (!StringUtils.isBlank(warning)) {
+                        warning += ", ";
                     }
-                    warn += String.format("not possible for %d/%d", notPossibleCount, toProcessCount);
+                    warning += String.format("not possible for %d/%d", notPossibleCount, toProcessCount);
 
                 }
             }
@@ -315,6 +326,6 @@ public class AutoSelectRunner implements BackgroundRunner<ActionResult> {
             }
         }
 
-        return new ActionResult(success, warn, error);
+        return new MultiPartActionResult(success, warning, error);
     }
 }

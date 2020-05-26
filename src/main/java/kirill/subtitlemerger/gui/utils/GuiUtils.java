@@ -41,10 +41,10 @@ public class GuiUtils {
         try {
             node = fxmlLoader.load();
         } catch (IOException e) {
-            log.error("failed to load fxml " + path + ": " + ExceptionUtils.getStackTrace(e));
+            log.error("failed to load fxml " + path + ": " + ExceptionUtils.getStackTrace(e) + ", most likely a bug");
             throw new IllegalStateException();
         } catch (ClassCastException e) {
-            log.error("root object is not a node (not a parent to be more precise)");
+            log.error("root object is not a node (not a parent to be more precise), most likely a bug");
             throw new IllegalStateException();
         }
 
@@ -52,10 +52,10 @@ public class GuiUtils {
         try {
             controller = Objects.requireNonNull(fxmlLoader.getController());
         } catch (NullPointerException e) {
-            log.error("controller is not set");
+            log.error("controller is not set, most likely a bug");
             throw new IllegalStateException();
         } catch (ClassCastException e) {
-            log.error("controller has an incorrect class");
+            log.error("controller has an incorrect class, most likely a bug");
             throw new IllegalStateException();
         }
 
@@ -79,10 +79,10 @@ public class GuiUtils {
         try {
             fxmlLoader.load();
         } catch (IOException e) {
-            log.error("failed to load fxml " + path + ": " + ExceptionUtils.getStackTrace(e));
+            log.error("failed to load fxml " + path + ": " + ExceptionUtils.getStackTrace(e) + ", most likely a bug");
             throw new IllegalStateException();
         } catch (ClassCastException e) {
-            log.error("controller has an incorrect class");
+            log.error("controller has an incorrect class, most likely a bug");
             throw new IllegalStateException();
         }
     }

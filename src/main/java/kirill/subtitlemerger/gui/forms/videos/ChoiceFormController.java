@@ -64,7 +64,7 @@ public class ChoiceFormController {
         FileChooser fileChooser = new FileChooser();
 
         fileChooser.setTitle("Please choose videos");
-        fileChooser.setInitialDirectory(settings.getVideoDirectory());
+        fileChooser.setInitialDirectory(settings.getLastDirectoryWithVideos());
         fileChooser.getExtensionFilters().add(GuiConstants.VIDEO_EXTENSION_FILTER);
 
         return fileChooser.showOpenMultipleDialog(stage);
@@ -87,7 +87,7 @@ public class ChoiceFormController {
         DirectoryChooser directoryChooser = new DirectoryChooser();
 
         directoryChooser.setTitle("Choose a directory with videos");
-        directoryChooser.setInitialDirectory(settings.getVideoDirectory());
+        directoryChooser.setInitialDirectory(settings.getLastDirectoryWithVideos());
 
         return directoryChooser.showDialog(stage);
     }

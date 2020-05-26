@@ -7,10 +7,14 @@ import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.forms.MainFormController;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.entities.FormInfo;
+import lombok.extern.apachecommons.CommonsLog;
 
 import java.awt.*;
 
+@CommonsLog
 public class GuiLauncher extends Application {
+    private GuiContext context;
+
     static {
         System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
     }
@@ -23,10 +27,12 @@ public class GuiLauncher extends Application {
     public void start(Stage stage) {
         Application.setUserAgentStylesheet(STYLESHEET_MODENA);
 
+        context = new GuiContext();
+
         FormInfo mainFormInfo = GuiUtils.loadForm("/gui/javafx/forms/main_form.fxml");
 
         MainFormController controller = mainFormInfo.getController();
-        controller.initialize(stage, new GuiContext());
+        controller.initialize(stage, context);
 
         stage.getIcons().add(new Image(GuiLauncher.class.getResourceAsStream("/gui/icons/icon.png")));
         stage.setTitle("Subtitle Merger");
@@ -59,5 +65,10 @@ public class GuiLauncher extends Application {
         if (splash != null && splash.isVisible()) {
             splash.close();
         }
+    }
+
+    @Override
+    public void stop() {
+        context.getFfmpeg().close();
     }
 }

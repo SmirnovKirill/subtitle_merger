@@ -1,6 +1,7 @@
 package kirill.subtitlemerger.logic.videos.entities;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
+import kirill.subtitlemerger.logic.subtitles.entities.SubtitleFormat;
 import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndInput;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
@@ -9,7 +10,7 @@ import lombok.extern.apachecommons.CommonsLog;
 @Getter
 public class BuiltInSubtitleOption extends SubtitleOption {
     private static final String MERGED_SUBTITLE_REGEXP = "^merged-"
-            + "(external|unknown|undefined|[a-z]{3})-(external|unknown|undefined|[a-z]{3})$";
+            + "(external|unknown|undefined|[a-z]{3})-(external|unknown|undefined|[a-z]{3})(-plain_text)?$";
     /*
      * The word "ffmpeg" here emphasizes the fact that it's not a regular index, but an index got from ffmpeg. For
      * example the first subtitle stream may have an index 2 because the first two indices are assigned to the video and
@@ -17,7 +18,9 @@ public class BuiltInSubtitleOption extends SubtitleOption {
      */
     private int ffmpegIndex;
 
-    private String format;
+    private SubtitleFormat format;
+
+    private String codec;
 
     private LanguageAlpha3Code language;
 
@@ -31,7 +34,8 @@ public class BuiltInSubtitleOption extends SubtitleOption {
             int ffmpegIndex,
             SubtitlesAndInput subtitlesAndInput,
             SubtitleOptionNotValidReason notValidReason,
-            String format,
+            SubtitleFormat format,
+            String codec,
             LanguageAlpha3Code language,
             String title,
             boolean defaultDisposition
@@ -40,6 +44,7 @@ public class BuiltInSubtitleOption extends SubtitleOption {
 
         this.ffmpegIndex = ffmpegIndex;
         this.format = format;
+        this.codec = codec;
         this.language = language;
         this.title = title;
         this.defaultDisposition = defaultDisposition;
@@ -54,8 +59,8 @@ public class BuiltInSubtitleOption extends SubtitleOption {
     }
 
     /**
-     * @return the three-letter code of the upper language used for the merge if it was known, "unknown" if the
-     * language was unknown and "external" if an external file was used (thus no language code).
+     * @return a three-letter code of the upper language used for the merge if it was known, "unknown" if the language
+     * was unknown and "external" if an external file was used (thus no language code).
      */
     public String getMergedUpperCode() {
         if (!merged) {
@@ -85,8 +90,8 @@ public class BuiltInSubtitleOption extends SubtitleOption {
     }
 
     /**
-     * @return the three-letter code of the lower language used for the merge if it was known, "unknown" if the
-     * language was unknown and "external" if an external file was used (thus no language code).
+     * @return a three-letter code of the lower language used for the merge if it was known, "unknown" if the language
+     * was unknown and "external" if an external file was used (thus no language code).
      */
     public String getMergedLowerCode() {
         if (!merged) {
@@ -95,5 +100,9 @@ public class BuiltInSubtitleOption extends SubtitleOption {
         }
 
         return getValidatedMergedCode(title.split("-")[2]);
+    }
+
+    public boolean isMergedInPlainText() {
+        return isMerged() && title.endsWith("-plain_text");
     }
 }

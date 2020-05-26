@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.VBox?>
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:id="missingSettingsPane"
       fx:controller="kirill.subtitlemerger.gui.forms.videos.MissingSettingsFormController" spacing="20">
-    <Label text="Before you start merging subtitles in videos you have to set the following settings:"/>
+    <Label text="Before you start working with videos you have to set the following settings:"/>
     <VBox fx:id="labelsPane" spacing="10"/>
     <Hyperlink onAction="#goToSettingsClicked" text="Open settings tab"/>
 </VBox>

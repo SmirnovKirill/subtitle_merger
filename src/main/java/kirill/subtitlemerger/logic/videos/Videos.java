@@ -6,6 +6,7 @@ import kirill.subtitlemerger.logic.ffmpeg.FfmpegException;
 import kirill.subtitlemerger.logic.ffmpeg.Ffprobe;
 import kirill.subtitlemerger.logic.ffmpeg.json.JsonFfprobeVideoInfo;
 import kirill.subtitlemerger.logic.ffmpeg.json.JsonStream;
+import kirill.subtitlemerger.logic.subtitles.entities.SubtitleFormat;
 import kirill.subtitlemerger.logic.utils.file_validation.FileValidator;
 import kirill.subtitlemerger.logic.utils.file_validation.InputFileInfo;
 import kirill.subtitlemerger.logic.utils.file_validation.InputFileNotValidReason;
@@ -27,8 +28,8 @@ import static kirill.subtitlemerger.logic.videos.entities.VideoNotValidReason.*;
 @CommonsLog
 public class Videos {
     /**
-     * Returns the information on the given file. Not that it doesn't load the subtitles because it's a pretty
-     * time-consuming operation.
+     * Returns information on the given file. Not that it doesn't load subtitles because it's a pretty time-consuming
+     * operation.
      */
     public static Video getVideo(File file, List<String> allowedExtensions, Ffprobe ffprobe) {
         InputFileValidationOptions validationOptions = InputFileValidationOptions.builder()
@@ -74,10 +75,11 @@ public class Videos {
                 continue;
             }
 
-            String format = stream.getCodecName();
+            String codec = stream.getCodecName();
+            SubtitleFormat subtitleFormat = getSubtitleFormat(codec);
             SubtitleOptionNotValidReason notValidReason = null;
-            if (!LogicConstants.ALLOWED_SUBTITLE_FORMATS.contains(format)) {
-                notValidReason = SubtitleOptionNotValidReason.NOT_ALLOWED_FORMAT;
+            if (subtitleFormat == null) {
+                notValidReason = SubtitleOptionNotValidReason.NOT_ALLOWED_CODEC;
             }
 
             result.add(
@@ -85,7 +87,8 @@ public class Videos {
                             stream.getIndex(),
                             null,
                             notValidReason,
-                            format,
+                            subtitleFormat,
+                            codec,
                             getLanguage(stream),
                             getTitle(stream),
                             isDefaultDisposition(stream)
@@ -94,6 +97,17 @@ public class Videos {
         }
 
         return result;
+    }
+
+    @Nullable
+    private static SubtitleFormat getSubtitleFormat(String codec) {
+        for (SubtitleFormat subtitleFormat : SubtitleFormat.values()) {
+            if (subtitleFormat.getFfmpegCodecs().contains(codec)) {
+                return subtitleFormat;
+            }
+        }
+
+        return null;
     }
 
     @Nullable
@@ -109,9 +123,9 @@ public class Videos {
 
         /*
          * https://www.ffmpeg.org/ffmpeg-formats.html#matroska says:
-         * The language can be either the 3 letters bibliographic ISO-639-2 (ISO 639-2/B) form (like "fre" for French),
+         * The language can be either a three-letter bibliographic ISO-639-2 (ISO 639-2/B) code (like "fre" for French),
          * or a language code mixed with a country code for specialities in languages (like "fre-ca" for Canadian
-         * French). So we can split by the hyphen and use the first part as an ISO-639 code.
+         * French). So we can split it by the hyphen and use the first part as an ISO-639 code.
          */
         languageRaw = languageRaw.split("-")[0];
 

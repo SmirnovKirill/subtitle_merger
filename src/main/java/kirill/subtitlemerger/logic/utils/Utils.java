@@ -1,6 +1,7 @@
 package kirill.subtitlemerger.logic.utils;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
+import kirill.subtitlemerger.logic.subtitles.entities.SubtitleFormat;
 import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
 import kirill.subtitlemerger.logic.videos.entities.ExternalSubtitleOption;
 import kirill.subtitlemerger.logic.videos.entities.SubtitleOption;
@@ -20,7 +21,7 @@ import java.util.List;
 @CommonsLog
 public class Utils {
     /**
-     * Returns the language code if the language is not empty or the string "unknown language" otherwise.
+     * Returns a language code if the language is not null or the "unknown language" otherwise.
      */
     public static String languageToString(LanguageAlpha3Code language) {
         return language != null ? language.toString() : "unknown language";
@@ -45,7 +46,7 @@ public class Utils {
     }
 
     /**
-     * Returns the shortened version of the string if necessary. The string will be shortened only if its size is larger
+     * Returns a shortened version of the string if necessary. The string will be shortened only if its size is larger
      * than or equal to charsBeforeEllipsis + charsAfterEllipsis + 3. These 3 extra characters are needed because if
      * less than 3 characters are shortened it would look weird.
      *
@@ -83,7 +84,7 @@ public class Utils {
     }
 
     /**
-     * Returns the textual representation of the size.
+     * Returns a textual representation of the size.
      *
      * @param size the size to represent.
      * @param keepShort if set to true the result will be for example "100 KB" instead of "100.00 KB", "99.9 KB" instead
@@ -122,7 +123,7 @@ public class Utils {
         if (wholePart.compareTo(BigInteger.valueOf(9999)) >= 0) {
             /*
              * If we got here it means that the size is more than 9999 terabytes because otherwise as soon as the size
-             * is equal to or more than 1024 it's automatically divided by 1024.
+             * is greater than or equal to 1024 it's automatically divided by 1024.
              */
             log.error("it's impossible to keep short the size that big: " + size);
             throw new IllegalArgumentException();
@@ -159,7 +160,8 @@ public class Utils {
             SubtitleOption lowerOption
     ) {
         return FilenameUtils.removeExtension(video.getFile().getAbsolutePath()) + "_"
-                + getOptionTitleForFile(upperOption) + "-" + getOptionTitleForFile(lowerOption) + ".srt";
+                + getOptionTitleForFile(upperOption) + "-" + getOptionTitleForFile(lowerOption) + "."
+                + SubtitleFormat.SUB_RIP.getExtensions().get(0);
     }
 
     private static String getOptionTitleForFile(SubtitleOption option) {

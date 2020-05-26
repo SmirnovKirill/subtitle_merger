@@ -26,7 +26,7 @@ external files nearby.
 <a name="formats"></a>
 ## What formats are supported?
 Currently the application supports SubRip subtitles (**.srt**) and Matroska videos (**.mkv**). It also supports
-SubStation Alpha subtitles if they are already in videos and will convert them with Ffmpeg to SubRip internally.
+SubStation Alpha subtitles if they are already in videos and will convert them with ffmpeg to SubRip internally.
 
 
 <a name="size"></a>
@@ -36,11 +36,11 @@ application itself is relatively simple.<br/>
 There are two main reasons for it:
 1. 40 megabytes are taken by the custom Java Runtime Environment (JRE) which is included because starting from version 9
 Java no longer has JREs, only development kits.
-2. 35-45 megabytes are taken by Ffmpeg. It is a very useful open source utility that the application uses internally to
+2. 35-45 megabytes are taken by ffmpeg. It is a very useful open source utility that the application uses internally to
 work with videos. 
 
 The "pure" jar with the application takes approximately 350 KB. After adding required libraries and making a "fat" jar, 
-the size rises up to 5.5 MB. All other space is taken by the JRE and Ffmpeg.
+the size rises up to 5.5 MB. All other space is taken by the JRE and ffmpeg.
 
 
 <a name="how_to_use"></a>
@@ -91,13 +91,13 @@ There are two merge options:
 1. Modify original videos. With this option the application will inject merged subtitles into original video files. It
 is the most convenient option since everything will look as before except for the new merged subtitles in the subtitle 
 list. This approach requires extra disk space during the merge process (equal to the size of the largest video to
-process) because the application will create a temporary file first and then will overwrite the original video with this 
-temporary one. Note that the original files will be overwritten! And if something goes wrong during the merge you may 
-lose your video files.
+process) because the application will create a temporary video first and then will overwrite the original video with 
+this temporary one. Note that the original files will be overwritten! And if something goes wrong during the merge you 
+may lose your video files.
 2. Create separate subtitle files. With this option the application will create separate subtitle files next to the 
-videos. This option is not so convenient because after the merge you will have to add the subtitle files manually when 
-watching videos. But this option is safe because the original files won't be modified in any way. And it also doesn't
-require almost any extra disk space.
+videos. This option is not so convenient because after the merge you will have to select the subtitle files manually 
+when watching videos. But this option is safe because the original videos won't be modified in any way. And it 
+also doesn't require almost any extra disk space.
 
 
 <a name="why_question_marks"></a>

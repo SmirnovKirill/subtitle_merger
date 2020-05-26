@@ -6,8 +6,10 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.logic.settings.SettingType;
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 
+@CommonsLog
 public class MissingSettingsFormController {
     @FXML
     private Pane missingSettingsPane;
@@ -48,6 +50,7 @@ public class MissingSettingsFormController {
             case MERGE_MODE:
                 return "the video merge mode";
             default:
+                log.error("unexpected missing setting type: " + settingType + ", most likely a bug");
                 throw new IllegalStateException();
         }
     }

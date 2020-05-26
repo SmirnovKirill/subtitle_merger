@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import kirill.subtitlemerger.gui.common_controls.ActionResultPane?>
+<?import kirill.subtitlemerger.gui.common_controls.MultiPartActionResultPane?>
 <?import kirill.subtitlemerger.gui.common_controls.ProgressPane?>
 <?import kirill.subtitlemerger.gui.forms.videos.table.TableWithVideos?>
 <Tab xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
@@ -30,8 +30,11 @@
                         </ImageView>
                     </graphic>
                 </Button>
+                <Button onAction="#chooseAnotherClicked" text="Choose another"/>
             </HBox>
-            <ActionResultPane fx:id="totalResult" minHeight="40" alignment="CENTER" alwaysManaged="true"/>
+            <Region minHeight="15" maxHeight="15"/>
+            <MultiPartActionResultPane fx:id="totalResultPane" alwaysManaged="true" textAlignment="CENTER"/>
+            <Region minHeight="5" maxHeight="5"/>
             <VBox fx:id="tableAndActionsPane" VBox.vgrow="ALWAYS" spacing="10">
                 <Label fx:id="selectedCountLabel"/>
                 <HBox alignment="CENTER_LEFT" spacing="10">

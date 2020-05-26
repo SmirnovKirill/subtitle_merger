@@ -5,9 +5,10 @@ import kirill.subtitlemerger.gui.forms.videos.table.TableVideo;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.logic.LogicConstants;
+import kirill.subtitlemerger.logic.subtitles.entities.SubtitleFormat;
 import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndInput;
 import kirill.subtitlemerger.logic.utils.Utils;
-import kirill.subtitlemerger.logic.utils.entities.ActionResult;
+import kirill.subtitlemerger.logic.utils.entities.MultiPartActionResult;
 import kirill.subtitlemerger.logic.utils.file_validation.FileValidator;
 import kirill.subtitlemerger.logic.utils.file_validation.InputFileInfo;
 import kirill.subtitlemerger.logic.utils.file_validation.InputFileNotValidReason;
@@ -21,7 +22,6 @@ import org.apache.commons.collections4.CollectionUtils;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -40,10 +40,10 @@ public class ProcessSubtitleFileRunner implements BackgroundRunner<ProcessSubtit
     public Result run(BackgroundManager backgroundManager) {
         backgroundManager.setCancelPossible(false);
         backgroundManager.setIndeterminateProgress();
-        backgroundManager.updateMessage("Processing the file " + subtitleFile.getName() + "...");
+        backgroundManager.updateMessage("Processing " + subtitleFile.getName() + "...");
 
         InputFileValidationOptions validationOptions = InputFileValidationOptions.builder()
-                .allowedExtensions( Collections.singletonList("srt"))
+                .allowedExtensions(SubtitleFormat.SUB_RIP.getExtensions())
                 .allowEmpty(false)
                 .maxAllowedSize(LogicConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES * 1024 * 1024L)
                 .loadContent(true)
@@ -55,8 +55,8 @@ public class ProcessSubtitleFileRunner implements BackgroundRunner<ProcessSubtit
         }
 
         if (isDuplicate(subtitleFile, video)) {
-            ActionResult actionResult = ActionResult.onlyError("This file has already been added");
-            return new Result(actionResult, null, null);
+            String error = "This file has already been added";
+            return new Result(MultiPartActionResult.onlyError(error), null, null);
         }
 
         SubtitlesAndInput subtitlesAndInput = SubtitlesAndInput.from(fileInfo.getContent(), StandardCharsets.UTF_8);
@@ -71,14 +71,14 @@ public class ProcessSubtitleFileRunner implements BackgroundRunner<ProcessSubtit
                 false
         );
 
-        ActionResult actionResult;
+        MultiPartActionResult actionResult;
         if (!subtitlesAndInput.isCorrectFormat()) {
-            actionResult = ActionResult.onlyWarn(
-                    "The file has been added but subtitles can't be parsed, it can happen if the file is not "
-                            + "UTF-8-encoded, you can change the encoding after pressing the preview button"
+            actionResult = MultiPartActionResult.onlyWarning(
+                    "The file has been added but subtitles can't be parsed, it can happen if a file is not "
+                            + "UTF-8-encoded; you can change the encoding after pressing the preview button"
             );
         } else {
-            actionResult = ActionResult.onlySuccess("The file with subtitles has been added successfully");
+            actionResult = MultiPartActionResult.onlySuccess("The file with subtitles has been added successfully");
         }
 
         return new Result(actionResult, option, tableOption);
@@ -122,7 +122,7 @@ public class ProcessSubtitleFileRunner implements BackgroundRunner<ProcessSubtit
                 throw new IllegalStateException();
         }
 
-        return new Result(ActionResult.onlyError(notValidReasonText), null, null);
+        return new Result(MultiPartActionResult.onlyError(notValidReasonText), null, null);
     }
 
     private static boolean isDuplicate(File subtitleFile, Video video) {
@@ -140,7 +140,7 @@ public class ProcessSubtitleFileRunner implements BackgroundRunner<ProcessSubtit
     @AllArgsConstructor
     @Getter
     public static class Result {
-        private ActionResult actionResult;
+        private MultiPartActionResult actionResult;
 
         private ExternalSubtitleOption option;
 

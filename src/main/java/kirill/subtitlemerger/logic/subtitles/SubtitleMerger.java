@@ -116,7 +116,9 @@ public class SubtitleMerger {
     }
 
     /*
-     * We should check only the current index and the next one (if there is one) because subtitles go consequentially.
+     * For correctly formatted subtitles we should check only the current index and the next one (if there is one)
+     * because subtitles should go consequentially. But unfortunately subtitles sometimes have errors in them and can be
+     * overlapped in time. To deal with it it's better to check all further indices.
      */
     @Nullable
     private static Integer getIndexMatchingTime(
@@ -125,24 +127,13 @@ public class SubtitleMerger {
             LocalTime from,
             LocalTime to
     ) {
-        if (currentIndex == subtitles.getSubtitles().size()) {
-            return null;
-        }
-
-        if (subtitleMatchesTime(subtitles.getSubtitles().get(currentIndex), from, to)) {
-            return currentIndex;
-        } else {
-            /* Means that it's the last subtitle and we can't check the next one. */
-            if (currentIndex == subtitles.getSubtitles().size() - 1) {
-                return null;
-            }
-
-            if (subtitleMatchesTime(subtitles.getSubtitles().get(currentIndex + 1), from, to)) {
-                return currentIndex + 1;
-            } else {
-                return null;
+        for (int i = currentIndex; i < subtitles.getSubtitles().size(); i++) {
+            if (subtitleMatchesTime(subtitles.getSubtitles().get(i), from, to)) {
+                return i;
             }
         }
+
+        return null;
     }
 
     private static boolean subtitleMatchesTime(Subtitle subtitle, LocalTime from, LocalTime to) {
@@ -158,8 +149,8 @@ public class SubtitleMerger {
      * are added it looks like the jump of the lines from the upper source because for some period of time they go alone
      * and later when the lines from the other source are added they are not alone anymore and are moved to the top.
      * This method kind of "expands" subtitles so they start and end together at the same time if they
-     * appear together somewhere. If some lines are taken from the only one source no expanding happens - this is the
-     * common case for english subtitles where there are descriptions of sounds that are usually not present for other
+     * appear together somewhere. If the lines go alone at all segments then no expanding happens - this is a common
+     * case for english subtitles where there are descriptions of sounds that are usually not present for other
      * languages, so no expanding happens there.
      */
     private static List<MergerSubtitle> getExpandedSubtitles(
@@ -167,22 +158,16 @@ public class SubtitleMerger {
     ) throws InterruptedException {
         List<MergerSubtitle> result = new ArrayList<>();
 
-        int i = 0;
-        for (MergerSubtitle subtitle : subtitles) {
+        for (int i = 0; i < subtitles.size(); i++) {
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
 
+            MergerSubtitle subtitle = subtitles.get(i);
+
             Set<Source> sources = subtitle.getLines().stream().map(MergerSubtitleLine::getSource).collect(toSet());
-
-            if (sources.size() != 1 && sources.size() != 2) {
-                log.error("unexpected amount of sources: " + sources.size() + ", most likely a bug");
-                throw new IllegalStateException();
-            }
-
-            if (sources.size() == 2 || subtitleAlwaysHasOneSource(subtitle, i, subtitles)) {
+            if (sources.size() != 1 || subtitleAlwaysHasOneSource(subtitle, i, subtitles)) {
                 result.add(subtitle);
-                i++;
                 continue;
             }
 
@@ -194,16 +179,14 @@ public class SubtitleMerger {
             subtitleLines.addAll(getClosestLinesFromOtherSource(i, otherSource, subtitles));
 
             result.add(new MergerSubtitle(subtitle.getFrom(), subtitle.getTo(), subtitleLines));
-
-            i++;
         }
 
         return result;
     }
 
     /**
-     * Checks whether the subtitle with the given index always has one source, without lines from the other source. To
-     * do this we have to check subtitles to the left and to the right of the given one.
+     * Checks whether the subtitle with a given index always has one source, without lines from the other source. To do
+     * this we have to check subtitles both to the left and to the right from the given one.
      */
     private static boolean subtitleAlwaysHasOneSource(
             MergerSubtitle subtitle,
@@ -220,7 +203,7 @@ public class SubtitleMerger {
             if (subtitlesEqualForSource(subtitles.get(i), subtitles.get(i + 1), source)) {
                 /*
                  * If we got here it means that subtitles have the same text for the source. Now if the lines are
-                 * equal no matter what the source is it means that it's just another segment of the subtitle and we
+                 * equal no matter what the source is it means that it's just another segment for the subtitle and we
                  * should keep going, but if the lines differ it means that there are lines from the other source
                  * and we should return false.
                  */
@@ -240,7 +223,7 @@ public class SubtitleMerger {
             if (subtitlesEqualForSource(subtitles.get(i - 1), subtitles.get(i), source)) {
                 /*
                  * If we got here it means that subtitles have the same text for the source. Now if the lines are
-                 * equal no matter what the source is it means that it's just another segment of the subtitle and we
+                 * equal no matter what the source is it means that it's just another segment of for subtitle and we
                  * should keep going, but if the lines differ it means that there are lines from the other source
                  * and we should return false.
                  */

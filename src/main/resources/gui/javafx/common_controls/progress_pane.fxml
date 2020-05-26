@@ -7,6 +7,7 @@
 <fx:root xmlns:fx="http://javafx.com/fxml" type="javafx.scene.layout.VBox" alignment="CENTER" spacing="10">
     <ProgressIndicator fx:id="progressIndicator"/>
     <Label fx:id="progressLabel"/>
+    <!-- The cancel description text has to be short enough so that all the content fits into a single line. -->
     <HBox fx:id="cancelPane" alignment="CENTER">
         <Label fx:id="cancelDescriptionLabel"/>
         <Label text="If you want to cancel the task click "/>

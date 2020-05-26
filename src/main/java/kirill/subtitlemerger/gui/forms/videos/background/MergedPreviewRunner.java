@@ -15,12 +15,14 @@ import kirill.subtitlemerger.logic.videos.entities.Video;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackgroundUtils.getLoadCancelDescription;
 import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackgroundUtils.getLoadSubtitlesError;
 
 @CommonsLog
@@ -35,6 +37,9 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
     private Settings settings;
 
     public Result run(BackgroundManager backgroundManager) {
+        backgroundManager.setCancelPossible(true);
+        backgroundManager.setIndeterminateProgress();
+
         SubtitleOption upperOption = video.getOption(tableVideo.getUpperOption().getId());
         SubtitleOption lowerOption = video.getOption(tableVideo.getLowerOption().getId());
 
@@ -44,8 +49,6 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
                 return new Result(loadError, null);
             }
 
-            backgroundManager.setCancelPossible(true);
-            backgroundManager.setIndeterminateProgress();
             backgroundManager.updateMessage("Preview: merging the subtitles...");
             Subtitles merged = SubtitleMerger.mergeSubtitles(upperOption.getSubtitles(), lowerOption.getSubtitles());
 
@@ -63,14 +66,21 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
             BackgroundManager backgroundManager
     ) throws InterruptedException {
         List<BuiltInSubtitleOption> optionsToLoad = getOptionsToLoad(video, tableVideo);
+        if (CollectionUtils.isEmpty(optionsToLoad)) {
+            return null;
+        }
+
+        backgroundManager.setCancelDescription(getLoadCancelDescription(video));
 
         int toLoadCount = optionsToLoad.size();
         int failedCount = 0;
         int incorrectCount = 0;
 
-        backgroundManager.setCancelPossible(true);
-        backgroundManager.setIndeterminateProgress();
         for (BuiltInSubtitleOption option : optionsToLoad) {
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+
             TableSubtitleOption tableOption = tableVideo.getOption(option.getId());
 
             String action = "Preview: loading " + tableOption.getTitle() + " in " + video.getFile().getName() + "...";
@@ -83,6 +93,8 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
                 incorrectCount++;
             }
         }
+
+        backgroundManager.setCancelDescription(null);
 
         if (failedCount != 0 || incorrectCount != 0) {
             String error = getLoadSubtitlesError(toLoadCount, failedCount, incorrectCount);

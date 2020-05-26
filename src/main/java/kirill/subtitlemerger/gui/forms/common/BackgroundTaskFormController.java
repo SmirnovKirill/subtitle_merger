@@ -24,15 +24,12 @@ public abstract class BackgroundTaskFormController {
     private BackgroundManager backgroundManager;
 
     protected <T> void runInBackground(BackgroundRunner<T> runner, BackgroundCallback<T> callback) {
-        mainPane.setDisable(true);
-        progressPane.setVisible(true);
-
         BackgroundCallback<T> extendedCallback = (result) -> {
             progressPane.setVisible(false);
             mainPane.setDisable(false);
+            backgroundManager = null;
 
             callback.run(result);
-            backgroundManager = null;
         };
         backgroundManager = Background.run(runner, extendedCallback);
 
@@ -41,13 +38,20 @@ public abstract class BackgroundTaskFormController {
         progressPane.cancelPossibleProperty().bind(backgroundManager.cancelPossibleProperty());
         progressPane.cancelDescriptionProperty().bind(backgroundManager.cancelDescriptionProperty());
         progressPane.setOnCancelAction(event -> cancelTaskClicked());
+
+        mainPane.setDisable(true);
+        progressPane.setVisible(true);
     }
 
     @FXML
     private void cancelTaskClicked() {
         if (backgroundManager == null) {
             log.error("background manager is null, most likely a bug");
-            return;
+            throw new IllegalStateException();
+        }
+        if (!backgroundManager.getCancelPossible()) {
+            log.error("cancellation is not allowed, most likely a bug");
+            throw new IllegalStateException();
         }
 
         backgroundManager.cancel();

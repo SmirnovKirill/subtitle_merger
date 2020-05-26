@@ -2,6 +2,7 @@ package kirill.subtitlemerger.gui.forms.videos.background;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.application.Platform;
+import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.forms.videos.table.TableSubtitleOption;
 import kirill.subtitlemerger.gui.forms.videos.table.TableVideo;
@@ -15,11 +16,13 @@ import kirill.subtitlemerger.logic.ffmpeg.json.JsonFfprobeVideoInfo;
 import kirill.subtitlemerger.logic.settings.MergeMode;
 import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.logic.subtitles.SubtitleMerger;
+import kirill.subtitlemerger.logic.subtitles.entities.SubtitleFormat;
 import kirill.subtitlemerger.logic.subtitles.entities.Subtitles;
 import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndInput;
 import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndOutput;
 import kirill.subtitlemerger.logic.utils.Utils;
 import kirill.subtitlemerger.logic.utils.entities.ActionResult;
+import kirill.subtitlemerger.logic.utils.entities.MultiPartActionResult;
 import kirill.subtitlemerger.logic.videos.Videos;
 import kirill.subtitlemerger.logic.videos.entities.BuiltInSubtitleOption;
 import kirill.subtitlemerger.logic.videos.entities.ExternalSubtitleOption;
@@ -31,6 +34,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -47,7 +51,7 @@ import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackground
 
 @CommonsLog
 @AllArgsConstructor
-public class MergeRunner implements BackgroundRunner<ActionResult> {
+public class MergeRunner implements BackgroundRunner<MultiPartActionResult> {
     private List<TableVideo> tableVideos;
 
     private List<Video> videos;
@@ -79,31 +83,40 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
     }
 
     @Override
-    public ActionResult run(BackgroundManager backgroundManager) {
+    public MultiPartActionResult run(BackgroundManager backgroundManager) {
+        backgroundManager.setCancelPossible(true);
+        backgroundManager.setIndeterminateProgress();
+
         int toProcessCount = tableVideos.size();
         int processedCount = 0;
         int successfulCount = 0;
-        int noConfirmationCount = 0;
+        int noOverwriteConfirmationCount = 0;
         int alreadyMergedCount = 0;
         int failedCount = 0;
 
         try {
             for (TableVideo tableVideo : tableVideos) {
-                Video video = Video.getById(tableVideo.getId(), videos);
-                String actionPrefix = getProgressAction(processedCount, toProcessCount, "Merge: ");
+                if (Thread.interrupted()) {
+                    throw new InterruptedException();
+                }
 
-                IterationResult iterationResult = processVideo(tableVideo, video, actionPrefix, backgroundManager);
-                if (iterationResult == IterationResult.NO_CONFIRMATION) {
-                    noConfirmationCount++;
-                } else if (iterationResult == IterationResult.FAILED) {
-                    failedCount++;
-                } else if (iterationResult == IterationResult.ALREADY_MERGED) {
-                    alreadyMergedCount++;
-                } else if (iterationResult == IterationResult.SUCCESS) {
+                Video video = Video.getById(tableVideo.getId(), videos);
+                String actionPrefix = getProgressAction(processedCount, toProcessCount, "Merging: ");
+
+                try {
+                    processVideo(tableVideo, video, actionPrefix, backgroundManager);
                     successfulCount++;
-                } else {
-                    log.error("unexpected iteration result: " + iterationResult + ", most likely a bug");
-                    throw new IllegalStateException();
+                } catch (BreakIterationException e) {
+                    if (e.getIterationError() == IterationError.NO_OVERWRITE_CONFIRMATION) {
+                        noOverwriteConfirmationCount++;
+                    } else if (e.getIterationError() == IterationError.ALREADY_MERGED) {
+                        alreadyMergedCount++;
+                    } else if (e.getIterationError() == IterationError.GENERAL_ERROR) {
+                        failedCount++;
+                    } else {
+                        log.error("unexpected iteration error: " + e.getIterationError() + ", most likely a bug");
+                        throw new IllegalStateException();
+                    }
                 }
 
                 processedCount++;
@@ -116,37 +129,30 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
                 toProcessCount,
                 processedCount,
                 successfulCount,
-                noConfirmationCount,
+                noOverwriteConfirmationCount,
                 alreadyMergedCount,
                 failedCount
         );
     }
 
-    private IterationResult processVideo(
+    private void processVideo(
             TableVideo tableVideo,
             Video video,
             String actionPrefix,
             BackgroundManager backgroundManager
-
-    ) throws InterruptedException {
-        backgroundManager.setCancelPossible(false);
-        backgroundManager.setIndeterminateProgress();
-        backgroundManager.updateMessage(actionPrefix + "processing " + video.getFile() + "...");
+    ) throws InterruptedException, BreakIterationException {
+        backgroundManager.setCancelDescription(null);
+        backgroundManager.updateMessage(actionPrefix + "processing " + video.getFile().getName()+ "...");
 
         SubtitleOption upperOption = video.getOption(tableVideo.getUpperOption().getId());
         SubtitleOption lowerOption = video.getOption(tableVideo.getLowerOption().getId());
 
-        if (noConfirmation(video, upperOption, lowerOption, confirmedFilesToOverwrite, settings)) {
-            String message = "Merging is unavailable because you need to confirm the file overwriting";
-            Platform.runLater(() -> tableVideo.setOnlyWarn(message));
-            return IterationResult.NO_CONFIRMATION;
+        if (settings.getMergeMode() == MergeMode.SEPARATE_SUBTITLE_FILES) {
+            checkOverwriteConfirmation(video, tableVideo, upperOption, lowerOption, confirmedFilesToOverwrite);
         }
 
         List<BuiltInSubtitleOption> optionsToLoad = getOptionsToLoad(video, upperOption, lowerOption, settings);
-        boolean success = loadSubtitles(optionsToLoad, video, tableVideo, actionPrefix, ffmpeg, backgroundManager);
-        if (!success) {
-            return IterationResult.FAILED;
-        }
+        loadSubtitles(optionsToLoad, video, tableVideo, actionPrefix, backgroundManager);
 
         SubtitlesAndOutput merged = getMergedSubtitles(
                 upperOption,
@@ -155,39 +161,47 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
                 settings,
                 backgroundManager
         );
-        if (isDuplicate(merged, video, settings)) {
-            String message = "Selected subtitles have already been merged";
-            Platform.runLater(() -> tableVideo.setOnlyWarn(message));
-            return IterationResult.ALREADY_MERGED;
-        }
 
-        backgroundManager.setCancelPossible(false);
-        backgroundManager.setIndeterminateProgress();
         if (settings.getMergeMode() == MergeMode.ORIGINAL_VIDEOS) {
-            backgroundManager.updateMessage(actionPrefix + "injecting the result to the video...");
-            return injectToVideo(video, upperOption, lowerOption, merged, tableVideo);
+            backgroundManager.setCancelDescription(getMergeCancelDescription(video));
+
+            backgroundManager.updateMessage(actionPrefix + "processing the text to inject...");
+            String textToInject = getTextToInject(merged, tableVideo, ffmpeg);
+            assertNotEmpty(textToInject, tableVideo);
+
+            backgroundManager.updateMessage(actionPrefix + "checking for duplicates...");
+            checkForDuplicates(textToInject, video, tableVideo);
+
+            boolean injectionFinished = false;
+            backgroundManager.updateMessage(actionPrefix + "injecting the result into the video...");
+            try {
+                injectToVideo(textToInject, video, tableVideo, upperOption, lowerOption);
+                injectionFinished = true;
+            } finally {
+                updateVideo(video, tableVideo, textToInject, injectionFinished);
+            }
         } else if (settings.getMergeMode() == MergeMode.SEPARATE_SUBTITLE_FILES) {
             backgroundManager.updateMessage(actionPrefix + "writing the result to the file...");
-            return saveToSubtitleFile(video, upperOption, lowerOption, merged, tableVideo);
+            saveToSubtitleFile(video, tableVideo, upperOption, lowerOption, merged);
         } else {
             log.error("unexpected merge mode: " + settings.getMergeMode() + ", most likely a bug");
             throw new IllegalStateException();
         }
     }
 
-    private static boolean noConfirmation(
+    private static void checkOverwriteConfirmation(
             Video video,
+            TableVideo tableVideo,
             SubtitleOption upperOption,
             SubtitleOption lowerOption,
-            List<File> confirmedFilesToOverwrite,
-            Settings settings
-    ) {
-        if (settings.getMergeMode() != MergeMode.SEPARATE_SUBTITLE_FILES) {
-            return false;
-        }
-
+            List<File> confirmedFilesToOverwrite
+    ) throws BreakIterationException {
         File subtitleFile = new File(Utils.getMergedSubtitleFilePath(video, upperOption, lowerOption));
-        return subtitleFile.exists() && !confirmedFilesToOverwrite.contains(subtitleFile);
+        if (subtitleFile.exists() && !confirmedFilesToOverwrite.contains(subtitleFile)) {
+            String warning = "Merging is unavailable because you need to confirm file overwriting";
+            Platform.runLater(() -> tableVideo.setOnlyWarning(warning));
+            throw new BreakIterationException(IterationError.NO_OVERWRITE_CONFIRMATION);
+        }
     }
 
     private static List<BuiltInSubtitleOption> getOptionsToLoad(
@@ -221,27 +235,28 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
                 .collect(toList());
     }
 
-    private static boolean loadSubtitles(
+    private void loadSubtitles(
             List<BuiltInSubtitleOption> optionsToLoad,
             Video video,
             TableVideo tableVideo,
             String actionPrefix,
-            Ffmpeg ffmpeg,
             BackgroundManager backgroundManager
-    ) throws InterruptedException {
+    ) throws InterruptedException, BreakIterationException {
         if (CollectionUtils.isEmpty(optionsToLoad)) {
-            return true;
+            return;
         }
 
-        backgroundManager.setCancelPossible(true);
-        backgroundManager.setCancelDescription("Please be patient, this may take a while depending on the video.");
-        backgroundManager.setIndeterminateProgress();
+        backgroundManager.setCancelDescription(getLoadCancelDescription(video));
 
         int toLoadCount = optionsToLoad.size();
         int failedCount = 0;
         int incorrectCount = 0;
 
         for (BuiltInSubtitleOption option : optionsToLoad) {
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+
             TableSubtitleOption tableOption = tableVideo.getOption(option.getId());
 
             String action = actionPrefix + "loading " + tableOption.getTitle() + " in " + video.getFile().getName()
@@ -262,7 +277,11 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
             }
         }
 
-        return failedCount == 0 && incorrectCount == 0;
+        backgroundManager.setCancelDescription(null);
+
+        if (failedCount != 0 || incorrectCount != 0) {
+            throw new BreakIterationException(IterationError.GENERAL_ERROR);
+        }
     }
 
     private static SubtitlesAndOutput getMergedSubtitles(
@@ -272,94 +291,90 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
             Settings settings,
             BackgroundManager backgroundManager
     ) throws InterruptedException {
-        backgroundManager.setCancelPossible(true);
-        backgroundManager.setCancelDescription(null);
-        backgroundManager.setIndeterminateProgress();
-        backgroundManager.updateMessage(actionPrefix + "merging subtitles...");
+        backgroundManager.updateMessage(actionPrefix + "merging the subtitles...");
 
-        Subtitles subtitles = SubtitleMerger.mergeSubtitles(upperOption.getSubtitles(), lowerOption.getSubtitles());
-        return SubtitlesAndOutput.from(subtitles, settings.isPlainTextSubtitles());
+        Subtitles merged = SubtitleMerger.mergeSubtitles(upperOption.getSubtitles(), lowerOption.getSubtitles());
+        return SubtitlesAndOutput.from(merged, settings.isPlainTextSubtitles());
     }
 
-    private static boolean isDuplicate(SubtitlesAndOutput merged, Video video, Settings settings) {
-        if (settings.getMergeMode() != MergeMode.ORIGINAL_VIDEOS) {
-            return false;
+    @Nullable
+    private static String getMergeCancelDescription(Video video) {
+        if (video.getFile().length() >= GuiConstants.MERGE_CANCEL_DESCRIPTION_THRESHOLD) {
+            return "Please be patient, merging may take a while for this video.";
+        } else {
+            return null;
         }
+    }
 
+    /*
+     * The text to inject may differ from the text we have because ffmpeg will make its own transformations with it. For
+     * more details please see the comment in the Ffmpeg::getProcessedSubtitles method.
+     */
+    private static String getTextToInject(
+            SubtitlesAndOutput merged,
+            TableVideo tableVideo,
+            Ffmpeg ffmpeg
+    ) throws InterruptedException, BreakIterationException {
+        try {
+            byte[] rawSubtitles = ffmpeg.getProcessedSubtitles(
+                    merged.getText(),
+                    SubtitleFormat.SUB_RIP.getFfmpegCodecs().get(0)
+            );
+            return new String(rawSubtitles, StandardCharsets.UTF_8);
+        } catch (FfmpegException e) {
+            log.warn("failed to get processed subtitles: " + e.getCode() + ", console output " + e.getConsoleOutput());
+            String error = "The merge has failed: failed to get the processed text to inject";
+            Platform.runLater(() -> tableVideo.setOnlyError(error));
+            throw new BreakIterationException(IterationError.GENERAL_ERROR);
+        }
+    }
+
+    private static void assertNotEmpty(String subtitleText, TableVideo tableVideo) throws BreakIterationException {
+        if (StringUtils.isBlank(subtitleText)) {
+            Platform.runLater(() -> tableVideo.setOnlyError("Merging is unavailable because the result is empty"));
+            throw new BreakIterationException(IterationError.GENERAL_ERROR);
+        }
+    }
+
+    private static void checkForDuplicates(
+            String textToInject,
+            Video video,
+            TableVideo tableVideo
+    ) throws BreakIterationException {
         for (BuiltInSubtitleOption option : video.getBuiltInOptions()) {
             if (!option.isMerged()) {
                 continue;
             }
 
-            SubtitlesAndInput optionSubtitles = option.getSubtitlesAndInput();
-            if (optionSubtitles == null) {
+            SubtitlesAndInput optionSubtitlesAndInput = option.getSubtitlesAndInput();
+            if (optionSubtitlesAndInput == null) {
                 log.error("option subtitles are null, shouldn't have gotten here, most likely a bug");
                 throw new IllegalStateException();
             }
 
-            String optionSubtitleText = new String(optionSubtitles.getRawData(), optionSubtitles.getEncoding());
-            if (Objects.equals(merged.getText(), optionSubtitleText)) {
-                return true;
+            String optionText = new String(optionSubtitlesAndInput.getRawData(), optionSubtitlesAndInput.getEncoding());
+            if (Objects.equals(textToInject, optionText)) {
+                Platform.runLater(() -> tableVideo.setOnlyWarning("Selected subtitles have already been merged"));
+                throw new BreakIterationException(IterationError.ALREADY_MERGED);
             }
         }
-
-        return false;
     }
 
-    private IterationResult injectToVideo(
+    private void injectToVideo(
+            String subtitleText,
             Video video,
+            TableVideo tableVideo,
             SubtitleOption upperOption,
-            SubtitleOption lowerOption,
-            SubtitlesAndOutput merged,
-            TableVideo tableVideo
-    ) throws InterruptedException {
-        try {
-            ffmpeg.injectSubtitlesToFile(getFfmpegInjectInfo(video, upperOption, lowerOption, merged));
-        } catch (FfmpegException e) {
-            Platform.runLater(() -> tableVideo.setOnlyError(getInjectErrorText(e)));
-            return IterationResult.FAILED;
-        }
-
-        BuiltInSubtitleOption newOption;
-        try {
-            newOption = getNewOption(video, merged, ffprobe);
-        } catch (FfmpegException e) {
-            String message = "The merge has finished successfully but failed to update the video info";
-            Platform.runLater(() -> tableVideo.setOnlyError(message));
-            return IterationResult.FAILED;
-        }
-        if (newOption  == null) {
-            String message = "The merge has finished successfully but failed to find the new subtitle stream";
-            Platform.runLater(() -> tableVideo.setOnlyError(message));
-            return IterationResult.FAILED;
-        }
-        updateVideo(video, newOption);
-
-        boolean haveHideableOptions = tableVideo.getOptions().stream().anyMatch(TableSubtitleOption::isHideable);
-        TableSubtitleOption newTableOption = tableOptionFrom(newOption, haveHideableOptions, tableVideo, settings);
-
-        Platform.runLater(() -> {
-            tableVideo.setSizeAndLastModified(video.getSize(), video.getLastModified());
-            tableVideo.addOption(newTableOption);
-        });
-
-        return IterationResult.SUCCESS;
-    }
-
-    private FfmpegInjectInfo getFfmpegInjectInfo(
-            Video video,
-            SubtitleOption upperOption,
-            SubtitleOption lowerOption,
-            SubtitlesAndOutput merged
-    ) {
-        String title = "merged-" + getMergedTitlePart(upperOption) + "-" + getMergedTitlePart(lowerOption);
+            SubtitleOption lowerOption
+    ) throws InterruptedException, BreakIterationException {
+        String title = getMergedTitle(upperOption, lowerOption, settings.isPlainTextSubtitles());
         List<Integer> streamsToMakeNotDefaultIndices = video.getBuiltInOptions().stream()
                 .filter(BuiltInSubtitleOption::isDefaultDisposition)
                 .map(BuiltInSubtitleOption::getFfmpegIndex)
                 .collect(toList());
 
-        return new FfmpegInjectInfo(
-                merged.getText(),
+        FfmpegInjectInfo injectInfo = new FfmpegInjectInfo(
+                subtitleText,
                 video.getBuiltInOptions().size(),
                 getMergedLanguage(upperOption, lowerOption),
                 title,
@@ -368,6 +383,23 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
                 video.getFile(),
                 largestFreeSpaceDirectory
         );
+
+        try {
+            ffmpeg.injectSubtitlesToFile(injectInfo);
+        } catch (FfmpegException e) {
+            log.warn("failed to inject subtitles: " + e.getCode() + ", console output " + e.getConsoleOutput());
+            Platform.runLater(() -> tableVideo.setOnlyError(getInjectErrorText(e)));
+            throw new BreakIterationException(IterationError.GENERAL_ERROR);
+        }
+    }
+
+    private static String getMergedTitle(SubtitleOption upperOption, SubtitleOption lowerOption, boolean plaintText) {
+        String result = "merged-" + getMergedTitlePart(upperOption) + "-" + getMergedTitlePart(lowerOption);
+        if (plaintText) {
+            result += "-plain_text";
+        }
+
+        return result;
     }
 
     private static String getMergedTitlePart(SubtitleOption option) {
@@ -377,7 +409,7 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
             LanguageAlpha3Code language = ((BuiltInSubtitleOption) option).getLanguage();
             return language != null ? language.toString() : "unknown";
         } else {
-            log.error("unexpected subtitle option class " + option.getClass() + ", most likely a bug");
+            log.error("unexpected subtitle option class: " + option.getClass() + ", most likely a bug");
             throw new IllegalStateException();
         }
     }
@@ -400,73 +432,132 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
     }
 
     private static String getInjectErrorText(FfmpegException exception) {
-        String result = "Merging has failed: ";
+        String result = "The merge has failed: ";
 
         if (exception.getCode() == FfmpegException.Code.FAILED_TO_MOVE_TEMP_VIDEO) {
             return result + "couldn't move the temporary video file";
-        } else if (exception.getCode() == FfmpegException.Code.GENERAL_ERROR) {
-            return result + "Ffmpeg returned an error";
+        } else if (exception.getCode() == FfmpegException.Code.PROCESS_FAILED) {
+            return result + "ffmpeg returned an error";
         } else {
-            log.error("unexpected inject exception code: " + exception.getCode() + ", most likely a bug");
-            throw new IllegalStateException();
+            return result + "unexpected error, please see the log";
+        }
+    }
+
+    /*
+     * This method should be called even if the merging process has been interrupted. And the method itself should
+     * update the video even in case of interruption.
+     */
+    private void updateVideo(
+            Video video,
+            TableVideo tableVideo,
+            String injectedText,
+            boolean injectionFinished
+    ) throws BreakIterationException, InterruptedException {
+        JsonFfprobeVideoInfo ffprobeInfo;
+        InterruptedException interruptedException = null;
+        try {
+            try {
+                ffprobeInfo = ffprobe.getVideoInfo(video.getFile());
+            } catch (InterruptedException e) {
+                /* We catch an exception here to finish the job and rethrow it at the of the method. */
+                interruptedException = e;
+                try {
+                    ffprobeInfo = ffprobe.getVideoInfo(video.getFile());
+                } catch (InterruptedException ex) {
+                    log.error("the process can't be interrupted twice, mostlikely a bug");
+                    throw new IllegalStateException();
+                }
+            }
+        } catch (FfmpegException e) {
+            log.warn("failed to get ffprobe info: " + e.getCode() + ", console output " + e.getConsoleOutput());
+            String warning = "The merge has finished successfully but failed to update the video info";
+            Platform.runLater(() -> tableVideo.setOnlyWarning(warning));
+            throw new BreakIterationException(IterationError.GENERAL_ERROR);
+        }
+
+        BuiltInSubtitleOption newOption = getNewOption(video, tableVideo, ffprobeInfo, injectedText, injectionFinished);
+        if (newOption == null) {
+            return;
+        }
+
+        modifyOldOptions(video.getBuiltInOptions(), newOption);
+        video.getOptions().add(newOption);
+
+        /* We pass canHideOptions=false because a merged option shouldn't be hidden anyway. */
+        TableSubtitleOption newTableOption = tableOptionFrom(newOption, false, tableVideo, settings);
+
+        Platform.runLater(() -> {
+            tableVideo.setSizeAndLastModified(video.getSize(), video.getLastModified());
+            tableVideo.addOption(newTableOption);
+        });
+
+        if (interruptedException != null) {
+            throw interruptedException;
         }
     }
 
     /*
      * I've decided that it's better to just add the new merged option instead of updating the whole option list because
-     * you can't quickly recreate options - you either have to load subtitles with Ffmpeg which takes time or take them
+     * you can't quickly recreate options - you either have to load subtitles with ffmpeg which takes time or take them
      * from the old option list, and that is not a very "pure" approach in my opinion.
      */
     @Nullable
-    private static BuiltInSubtitleOption getNewOption(
+    private BuiltInSubtitleOption getNewOption(
             Video video,
-            SubtitlesAndOutput merged,
-            Ffprobe ffprobe
-    ) throws FfmpegException, InterruptedException {
+            TableVideo tableVideo,
+            JsonFfprobeVideoInfo ffprobeInfo,
+            String injectedText,
+            boolean injectionFinished
+    ) throws BreakIterationException {
         Set<Integer> originalOptionIndices = video.getBuiltInOptions().stream()
                 .map(BuiltInSubtitleOption::getFfmpegIndex)
                 .collect(toSet());
 
-        JsonFfprobeVideoInfo ffprobeInfo = ffprobe.getVideoInfo(video.getFile());
         List<BuiltInSubtitleOption> updatedOptions = Videos.getSubtitleOptions(ffprobeInfo);
-
         List<BuiltInSubtitleOption> newOptions = updatedOptions.stream()
                 .filter(option -> !originalOptionIndices.contains(option.getFfmpegIndex()))
                 .collect(toList());
-        if (newOptions.size() != 1) {
-            log.warn(
-                    "there should be exactly one new option but there are " + newOptions.size() + ", it can be a bug "
-                            + "or the user working with the video manually"
+
+        if (newOptions.size() > 1) {
+            log.warn("there are " + newOptions.size() + " new options for video " + video.getFile().getAbsolutePath());
+            String error = "There are more than one new subtitles, please refresh the list with videos";
+            Platform.runLater(() -> tableVideo.setOnlyError(error));
+            throw new BreakIterationException(IterationError.GENERAL_ERROR);
+        } else if (newOptions.size() == 1) {
+            BuiltInSubtitleOption result = newOptions.get(0);
+
+            result.setSubtitlesAndInput(
+                    SubtitlesAndInput.from(injectedText.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8)
             );
-            return null;
-        }
 
-        BuiltInSubtitleOption result = newOptions.get(0);
-        result.setSubtitlesAndInput(
-                SubtitlesAndInput.from(merged.getText().getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8)
-        );
-
-        return result;
-    }
-
-    private static void updateVideo(Video video, BuiltInSubtitleOption newOption) {
-        if (newOption.isDefaultDisposition()) {
-            for (BuiltInSubtitleOption option : video.getBuiltInOptions()) {
-                option.disableDefaultDisposition();
+            return result;
+        } else {
+            if (injectionFinished) {
+                log.error("failed to find the new option for the video " + video.getFile().getAbsolutePath());
+                String error = "Failed to find the new subtitle streams, please check the video manually";
+                Platform.runLater(() -> tableVideo.setOnlyError(error));
+                throw new BreakIterationException(IterationError.GENERAL_ERROR);
+            } else {
+                return null;
             }
         }
-
-        video.getOptions().add(newOption);
-        video.setCurrentSizeAndLastModified();
     }
 
-    private static IterationResult saveToSubtitleFile(
+    private void modifyOldOptions(List<BuiltInSubtitleOption> oldOptions, BuiltInSubtitleOption newOption) {
+        if (newOption.isDefaultDisposition()) {
+            for (BuiltInSubtitleOption oldOption : oldOptions) {
+                oldOption.disableDefaultDisposition();
+            }
+        }
+    }
+
+    private static void saveToSubtitleFile(
             Video video,
+            TableVideo tableVideo,
             SubtitleOption upperOption,
             SubtitleOption lowerOption,
-            SubtitlesAndOutput merged,
-            TableVideo tableVideo
-    ) {
+            SubtitlesAndOutput merged
+    ) throws BreakIterationException {
         try {
             File subtitleFile = new File(Utils.getMergedSubtitleFilePath(video, upperOption, lowerOption));
 
@@ -475,44 +566,43 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
                     merged.getText(),
                     StandardCharsets.UTF_8
             );
-
-            return IterationResult.SUCCESS;
         } catch (IOException e) {
-            String message = "Failed to write the result, probably there is no access to the file";
-            Platform.runLater(() -> tableVideo.setOnlyError(message));
-            return IterationResult.FAILED;
+            log.warn("failed to save subtitles to file: " + ExceptionUtils.getStackTrace(e));
+            String error = "Failed to write the result, probably there is no access to the file";
+            Platform.runLater(() -> tableVideo.setOnlyError(error));
+            throw new BreakIterationException(IterationError.GENERAL_ERROR);
         }
     }
 
-    private static ActionResult getActionResult(
+    private static MultiPartActionResult getActionResult(
             int toProcessCount,
             int processedCount,
             int successfulCount,
-            int noConfirmationCount,
+            int noOverwriteConfirmationCount,
             int alreadyMergedCount,
             int failedCount
     ) {
         String success = "";
-        String warn = "";
+        String warning = "";
         String error = "";
 
         if (processedCount == 0) {
-            warn = "The task has been cancelled, nothing was done";
+            warning = "The task has been cancelled, nothing was done";
         } else if (successfulCount == toProcessCount) {
             success = Utils.getTextDependingOnCount(
                     successfulCount,
                     "The merge has finished successfully for the video",
                     "The merge has finished successfully for all %d videos"
             );
-        } else if (noConfirmationCount == toProcessCount) {
-            warn = Utils.getTextDependingOnCount(
-                    noConfirmationCount,
+        } else if (noOverwriteConfirmationCount == toProcessCount) {
+            warning = Utils.getTextDependingOnCount(
+                    noOverwriteConfirmationCount,
                     "Merging is not possible because you didn't confirm the file overwriting",
                     "Merging is not possible because you didn't confirm the file overwriting for "
                             + "all %d videos"
             );
         } else if (alreadyMergedCount == toProcessCount) {
-            warn = Utils.getTextDependingOnCount(
+            warning = Utils.getTextDependingOnCount(
                     alreadyMergedCount,
                     "Selected subtitles have already been merged",
                     "Selected subtitles have already been merged for all %d videos"
@@ -534,43 +624,43 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
 
             if (processedCount != toProcessCount) {
                 if (StringUtils.isBlank(success)) {
-                    warn = String.format(
+                    warning = String.format(
                             "The merge has been cancelled for %d/%d videos",
                             toProcessCount - processedCount,
                             toProcessCount
                     );
                 } else {
-                    warn = String.format("cancelled for %d/%d", toProcessCount - processedCount, toProcessCount);
+                    warning = String.format("cancelled for %d/%d", toProcessCount - processedCount, toProcessCount);
                 }
             }
 
-            if (noConfirmationCount != 0) {
-                if (StringUtils.isBlank(success) && StringUtils.isBlank(warn)) {
-                    warn = String.format(
+            if (noOverwriteConfirmationCount != 0) {
+                if (StringUtils.isBlank(success) && StringUtils.isBlank(warning)) {
+                    warning = String.format(
                             "No file overwriting confirmation for %d/%d videos",
-                            noConfirmationCount,
+                            noOverwriteConfirmationCount,
                             toProcessCount
                     );
                 } else {
-                    if (!StringUtils.isBlank(warn)) {
-                        warn += ", ";
+                    if (!StringUtils.isBlank(warning)) {
+                        warning += ", ";
                     }
-                    warn += String.format("no confirmation for %d/%d", noConfirmationCount, toProcessCount);
+                    warning += String.format("no confirmation for %d/%d", noOverwriteConfirmationCount, toProcessCount);
                 }
             }
 
             if (alreadyMergedCount != 0) {
-                if (StringUtils.isBlank(success) && StringUtils.isBlank(warn)) {
-                    warn = String.format(
+                if (StringUtils.isBlank(success) && StringUtils.isBlank(warning)) {
+                    warning = String.format(
                             "Subtitles have already been merged for %d/%d videos",
                             alreadyMergedCount,
                             toProcessCount
                     );
                 } else {
-                    if (!StringUtils.isBlank(warn)) {
-                        warn += ", ";
+                    if (!StringUtils.isBlank(warning)) {
+                        warning += ", ";
                     }
-                    warn += String.format("already merged for %d/%d", alreadyMergedCount, toProcessCount);
+                    warning += String.format("already merged for %d/%d", alreadyMergedCount, toProcessCount);
                 }
             }
 
@@ -579,7 +669,7 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
             }
         }
 
-        return new ActionResult(success, warn, error);
+        return new MultiPartActionResult(success, warning, error);
     }
 
     @AllArgsConstructor
@@ -588,10 +678,15 @@ public class MergeRunner implements BackgroundRunner<ActionResult> {
         private ActionResult actionResult;
     }
 
-    private enum IterationResult {
-        NO_CONFIRMATION,
-        FAILED,
+    @AllArgsConstructor
+    @Getter
+    private static class BreakIterationException extends Exception {
+        private IterationError iterationError;
+    }
+
+    private enum IterationError {
+        NO_OVERWRITE_CONFIRMATION,
         ALREADY_MERGED,
-        SUCCESS
+        GENERAL_ERROR,
     }
 }

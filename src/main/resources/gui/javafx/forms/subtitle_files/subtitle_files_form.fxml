@@ -3,7 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import kirill.subtitlemerger.gui.common_controls.ActionResultPane?>
+<?import kirill.subtitlemerger.gui.common_controls.ActionResultLabel?>
 <?import kirill.subtitlemerger.gui.common_controls.ProgressPane?>
 <?import kirill.subtitlemerger.gui.forms.subtitle_files.controls.PreviewButton?>
 <?import kirill.subtitlemerger.gui.GuiConstants?>
@@ -24,7 +24,7 @@
             </padding>
 
             <Label GridPane.rowIndex="0" GridPane.columnIndex="0"
-                   text="Please choose the file with the upper subtitles"/>
+                   text="Please choose a file with upper subtitles"/>
             <HBox GridPane.rowIndex="0" GridPane.columnIndex="1" alignment="CENTER_RIGHT">
                 <TextField fx:id="upperPathField" HBox.hgrow="ALWAYS" promptText="not selected"/>
                 <Region minWidth="10" maxWidth="10"/>
@@ -34,7 +34,7 @@
             </HBox>
 
             <Label GridPane.rowIndex="1" GridPane.columnIndex="0"
-                   text="Please choose the file with the lower subtitles"/>
+                   text="Please choose a file with lower subtitles"/>
             <HBox GridPane.rowIndex="1" GridPane.columnIndex="1" alignment="CENTER_RIGHT">
                 <TextField fx:id="lowerPathField" HBox.hgrow="ALWAYS" promptText="not selected"/>
                 <Region minWidth="10" maxWidth="10"/>
@@ -55,7 +55,7 @@
             <Button fx:id="mergeButton" GridPane.rowIndex="3" GridPane.columnIndex="0" GridPane.columnSpan="2"
                     onAction="#mergeButtonClicked" disable="true" text="Merge subtitles"/>
 
-            <ActionResultPane fx:id="totalResultPane" GridPane.rowIndex="4" GridPane.columnIndex="0"
+            <ActionResultLabel fx:id="totalResultLabel" GridPane.rowIndex="4" GridPane.columnIndex="0"
                               GridPane.columnSpan="2" wrapText="true"/>
         </GridPane>
         <ProgressPane fx:id="progressPane" visible="false"/>

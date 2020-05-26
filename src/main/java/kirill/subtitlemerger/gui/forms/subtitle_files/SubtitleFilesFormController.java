@@ -7,7 +7,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
-import kirill.subtitlemerger.gui.common_controls.ActionResultPane;
+import kirill.subtitlemerger.gui.common_controls.ActionResultLabel;
 import kirill.subtitlemerger.gui.forms.common.BackgroundTaskFormController;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.Popups;
@@ -19,11 +19,13 @@ import kirill.subtitlemerger.logic.settings.SettingType;
 import kirill.subtitlemerger.logic.settings.Settings;
 import kirill.subtitlemerger.logic.subtitles.SubRipWriter;
 import kirill.subtitlemerger.logic.subtitles.SubtitleMerger;
+import kirill.subtitlemerger.logic.subtitles.entities.SubtitleFormat;
 import kirill.subtitlemerger.logic.subtitles.entities.Subtitles;
 import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndInput;
 import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndOutput;
 import kirill.subtitlemerger.logic.utils.Utils;
 import kirill.subtitlemerger.logic.utils.entities.ActionResult;
+import kirill.subtitlemerger.logic.utils.entities.ActionResultType;
 import kirill.subtitlemerger.logic.utils.file_validation.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -40,7 +42,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -77,7 +78,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
     private Button mergeButton;
 
     @FXML
-    private ActionResultPane totalResultPane;
+    private ActionResultLabel totalResultLabel;
 
     private Stage stage;
 
@@ -129,7 +130,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
         BackgroundRunner<InputSubtitleInfo> backgroundRunner = backgroundManager -> {
             backgroundManager.setCancelPossible(false);
             backgroundManager.setIndeterminateProgress();
-            backgroundManager.updateMessage("Processing the file " + path + "...");
+            backgroundManager.updateMessage("Processing " + path + "...");
             return getInputSubtitleInfo(path, subtitleType, fileOrigin);
         };
 
@@ -156,7 +157,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
         } else if (subtitleType == SubtitleType.MERGED) {
             currentPath = mergedSubtitleFileInfo != null ? mergedSubtitleFileInfo.getPath() : "";
         } else {
-            log.error("unexpected subtitle type " + subtitleType + ", most likely a bug");
+            log.error("unexpected subtitle type: " + subtitleType + ", most likely a bug");
             throw new IllegalStateException();
         }
 
@@ -166,7 +167,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
     @Nullable
     private InputSubtitleInfo getInputSubtitleInfo(String path, InputSubtitleType subtitleType, FileOrigin fileOrigin) {
         InputFileValidationOptions validationOptions = InputFileValidationOptions.builder()
-                .allowedExtensions( Collections.singletonList("srt"))
+                .allowedExtensions(SubtitleFormat.SUB_RIP.getExtensions())
                 .allowEmpty(false)
                 .maxAllowedSize(LogicConstants.INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES * 1024 * 1024L)
                 .loadContent(true)
@@ -212,7 +213,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
 
             otherSubtitleInfo = upperSubtitleInfo;
         } else {
-            log.error("unexpected subtitle type " + subtitleType + ", most likely a bug");
+            log.error("unexpected subtitle type: " + subtitleType + ", most likely a bug");
             throw new IllegalStateException();
         }
 
@@ -225,7 +226,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
         } else if (subtitleType == InputSubtitleType.LOWER) {
             lowerSubtitleInfo = subtitleInfo;
         } else {
-            log.error("unexpected subtitle type " + subtitleType + ", most likely a bug");
+            log.error("unexpected subtitle type: " + subtitleType + ", most likely a bug");
             throw new IllegalStateException();
         }
     }
@@ -244,7 +245,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
                 upperSubtitleInfo.setDuplicate(false);
             }
         } else {
-            log.error("unexpected subtitle type " + subtitleType + ", most likely a bug");
+            log.error("unexpected subtitle type: " + subtitleType + ", most likely a bug");
             throw new IllegalStateException();
         }
     }
@@ -252,16 +253,16 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
     private static void saveDirectoryInSettings(File file, SubtitleType subtitleType, Settings settings) {
         switch (subtitleType) {
             case UPPER:
-                settings.saveQuietly(file.getParentFile(), SettingType.UPPER_DIRECTORY);
+                settings.saveQuietly(file.getParentFile(), SettingType.LAST_DIRECTORY_WITH_UPPER_SUBTITLES);
                 return;
             case LOWER:
-                settings.saveQuietly(file.getParentFile(), SettingType.LOWER_DIRECTORY);
+                settings.saveQuietly(file.getParentFile(), SettingType.LAST_DIRECTORY_WITH_LOWER_SUBTITLES);
                 return;
             case MERGED:
-                settings.saveQuietly(file.getParentFile(), SettingType.MERGED_DIRECTORY);
+                settings.saveQuietly(file.getParentFile(), SettingType.LAST_DIRECTORY_WITH_MERGED_SUBTITLES);
                 return;
             default:
-                log.error("unexpected subtitle type " + subtitleType + ", most likely a bug");
+                log.error("unexpected subtitle type: " + subtitleType + ", most likely a bug");
                 throw new IllegalStateException();
         }
     }
@@ -286,7 +287,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
         mergedPathField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
         mergedChooseButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
 
-        totalResultPane.clear();
+        totalResultLabel.clear();
     }
 
     private void updatePathFields() {
@@ -316,7 +317,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
      */
     private static boolean cantBeMerged(InputSubtitleInfo subtitleInfo) {
         return subtitleInfo == null || subtitleInfo.isDuplicate() || subtitleInfo.getNotValidReason() != null
-                || !subtitleInfo.isCorrectFormat();
+                || subtitleInfo.incorrectFormat();
     }
 
     private void setMergeButtonVisibility() {
@@ -354,7 +355,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
             errorParts.set(i, "\u2022 " + errorParts.get(i));
         }
 
-        totalResultPane.setOnlyError(StringUtils.join(errorParts, System.lineSeparator()));
+        totalResultLabel.setError(StringUtils.join(errorParts, System.lineSeparator()));
     }
 
     @Nullable
@@ -397,9 +398,9 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
             }
         }
 
-        if (!subtitleInfo.isCorrectFormat()) {
-            return "Subtitles in '" + subtitleInfo.getPath() + "'can't be parsed, it can happen if the file is not "
-                    + "UTF-8-encoded, you can change the encoding after pressing the preview button";
+        if (subtitleInfo.incorrectFormat()) {
+            return "Subtitles in '" + subtitleInfo.getPath() + "'can't be parsed, it can happen if a file is not "
+                    + "UTF-8-encoded; you can change the encoding after pressing the preview button";
         }
 
         return null;
@@ -465,7 +466,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
                 mergedChooseButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
             }
         } else {
-            log.error("unexpected subtitle type " + subtitleType + ", most likely a bug");
+            log.error("unexpected subtitle type: " + subtitleType + ", most likely a bug");
             throw new IllegalStateException();
         }
     }
@@ -498,7 +499,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
     @Nullable
     private static MergedSubtitleFileInfo getMergedSubtitleFileInfo(String path, FileOrigin fileOrigin) {
         OutputFileValidationOptions validationOptions = new OutputFileValidationOptions(
-                Collections.singletonList("srt"),
+                SubtitleFormat.SUB_RIP.getExtensions(),
                 true
         );
         OutputFileInfo validatorFileInfo = FileValidator.getOutputFileInfo(path, validationOptions);
@@ -546,7 +547,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
     private void upperPreviewClicked() {
         Charset previousEncoding = upperSubtitleInfo.getEncoding();
         SubtitlesAndInput previewSelection = Popups.showEncodingPreview(
-                upperSubtitleInfo.getPath(),
+                Utils.getShortenedString(upperSubtitleInfo.getPath(), 0, 64),
                 upperSubtitleInfo.getSubtitlesAndInput(),
                 stage
         );
@@ -575,21 +576,21 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
         String chooserTitle;
         File chooserInitialDirectory;
         if (subtitleType == InputSubtitleType.UPPER) {
-            chooserTitle = "Please choose a file with the upper subtitles";
+            chooserTitle = "Please choose a file with upper subtitles";
             chooserInitialDirectory = ObjectUtils.firstNonNull(
-                    settings.getUpperDirectory(),
-                    settings.getLowerDirectory(),
-                    settings.getMergedDirectory()
+                    settings.getLastDirectoryWithUpperSubtitles(),
+                    settings.getLastDirectoryWithLowerSubtitles(),
+                    settings.getLastDirectoryWithMergedSubtitles()
             );
         } else if (subtitleType == InputSubtitleType.LOWER) {
-            chooserTitle = "Please choose a file with the lower subtitles";
+            chooserTitle = "Please choose a file with lower subtitles";
             chooserInitialDirectory = ObjectUtils.firstNonNull(
-                    settings.getLowerDirectory(),
-                    settings.getUpperDirectory(),
-                    settings.getMergedDirectory()
+                    settings.getLastDirectoryWithLowerSubtitles(),
+                    settings.getLastDirectoryWithUpperSubtitles(),
+                    settings.getLastDirectoryWithMergedSubtitles()
             );
         } else {
-            log.error("unexpected subtitle type " + subtitleType + ", most likely a bug");
+            log.error("unexpected subtitle type: " + subtitleType + ", most likely a bug");
             throw new IllegalStateException();
         }
 
@@ -597,7 +598,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
 
         fileChooser.setTitle(chooserTitle);
         fileChooser.setInitialDirectory(chooserInitialDirectory);
-        fileChooser.getExtensionFilters().add(GuiConstants.SUB_RIP_EXTENSION_FILTER);
+        fileChooser.getExtensionFilters().add(GuiConstants.SUBTITLE_EXTENSION_FILTER);
 
         return fileChooser.showOpenDialog(stage);
     }
@@ -608,7 +609,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
         clearState();
 
         SubtitlesAndInput previewSelection = Popups.showEncodingPreview(
-                lowerSubtitleInfo.getPath(),
+                Utils.getShortenedString(lowerSubtitleInfo.getPath(), 0, 64),
                 lowerSubtitleInfo.getSubtitlesAndInput(),
                 stage
         );
@@ -658,7 +659,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
 
         BackgroundCallback<SubtitlesAndOutput> callback = subtitlesAndOutput -> {
             if (subtitlesAndOutput == null) {
-                totalResultPane.setOnlyWarn("The merge has been cancelled");
+                totalResultLabel.setWarning("The merge has been cancelled");
                 return;
             }
 
@@ -692,12 +693,12 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
         fileChooser.setTitle("Please choose where to save the result");
         fileChooser.setInitialDirectory(
                 ObjectUtils.firstNonNull(
-                        settings.getMergedDirectory(),
-                        settings.getUpperDirectory(),
-                        settings.getLowerDirectory()
+                        settings.getLastDirectoryWithMergedSubtitles(),
+                        settings.getLastDirectoryWithUpperSubtitles(),
+                        settings.getLastDirectoryWithLowerSubtitles()
                 )
         );
-        fileChooser.getExtensionFilters().add(GuiConstants.SUB_RIP_EXTENSION_FILTER);
+        fileChooser.getExtensionFilters().add(GuiConstants.SUBTITLE_EXTENSION_FILTER);
 
         return fileChooser.showSaveDialog(stage);
     }
@@ -717,7 +718,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
                             lowerSubtitleInfo.getSubtitles()
                     );
                 } catch (InterruptedException e) {
-                    return ActionResult.onlyWarn("The merge has been cancelled");
+                    return ActionResult.warning("The merge has been cancelled");
                 }
             }
 
@@ -732,19 +733,19 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
                         StandardCharsets.UTF_8
                 );
 
-                return ActionResult.onlySuccess("The subtitles have been merged successfully!");
+                return ActionResult.success("The subtitles have been merged successfully!");
             } catch (IOException e) {
-                return ActionResult.onlyError(
-                        "Can't write the merged subtitles to the file, please check access to the file"
+                return ActionResult.error(
+                        "Failed to write the merged subtitles to the file, please check access to the file"
                 );
             }
         };
 
         BackgroundCallback<ActionResult> callback = actionResult -> {
-            if (actionResult.haveErrors()) {
+            if (actionResult.getType() == ActionResultType.ERROR) {
                 displayFileElementsAsIncorrect(SubtitleType.MERGED);
             }
-            totalResultPane.setActionResult(actionResult);
+            totalResultLabel.setActionResult(actionResult);
         };
 
         runInBackground(backgroundRunner, callback);
@@ -793,8 +794,8 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
             return subtitlesAndInput != null ? subtitlesAndInput.getEncoding() : null;
         }
 
-        boolean isCorrectFormat() {
-            return subtitlesAndInput != null && subtitlesAndInput.isCorrectFormat();
+        boolean incorrectFormat() {
+            return subtitlesAndInput != null && !subtitlesAndInput.isCorrectFormat();
         }
     }
 

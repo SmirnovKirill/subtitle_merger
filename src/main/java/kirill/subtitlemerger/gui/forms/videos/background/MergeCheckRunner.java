@@ -1,5 +1,6 @@
 package kirill.subtitlemerger.gui.forms.videos.background;
 
+import javafx.application.Platform;
 import kirill.subtitlemerger.gui.forms.videos.table.TableVideo;
 import kirill.subtitlemerger.gui.utils.background.BackgroundManager;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
@@ -32,14 +33,16 @@ public class MergeCheckRunner implements BackgroundRunner<MergeCheckRunner.Resul
 
     @Override
     public Result run(BackgroundManager backgroundManager) {
+        backgroundManager.setCancelPossible(false);
+        backgroundManager.setIndeterminateProgress();
+
         clearActionResults(tableVideos, backgroundManager);
 
         List<TableVideo> selectedTableVideos = getSelectedVideos(tableVideos, backgroundManager);
-
-        String videosWithoutSelectionError = getVideosWithoutSelectionError(selectedTableVideos, backgroundManager);
-        if (!StringUtils.isBlank(videosWithoutSelectionError)) {
+        String videosWithoutSelectionWarning = processVideosWithoutSelection(selectedTableVideos, backgroundManager);
+        if (!StringUtils.isBlank(videosWithoutSelectionWarning)) {
             return new Result(
-                    videosWithoutSelectionError,
+                    videosWithoutSelectionWarning,
                     null,
                     null,
                     null,
@@ -48,7 +51,6 @@ public class MergeCheckRunner implements BackgroundRunner<MergeCheckRunner.Resul
         }
 
         FreeSpaceInfo freeSpaceInfo = getFreeSpaceInfo(selectedTableVideos, videos, settings, backgroundManager);
-
         return new Result(
                 null,
                 selectedTableVideos,
@@ -59,23 +61,28 @@ public class MergeCheckRunner implements BackgroundRunner<MergeCheckRunner.Resul
     }
 
     @Nullable
-    private static String getVideosWithoutSelectionError(List<TableVideo> videos, BackgroundManager backgroundManager) {
-        backgroundManager.setCancelPossible(false);
-        backgroundManager.setIndeterminateProgress();
+    private static String processVideosWithoutSelection(List<TableVideo> videos, BackgroundManager backgroundManager) {
         backgroundManager.updateMessage("Checking whether all the videos have subtitles to merge...");
 
-        int videosWithoutSelectionCount = (int) videos.stream()
-                .filter(video -> video.getUpperOption() == null || video.getLowerOption() == null)
-                .count();
+        int videosWithoutSelectionCount = 0;
+
+        for (TableVideo video : videos) {
+            if (video.getUpperOption() == null || video.getLowerOption() == null) {
+                String warning = "Merging is not possible because you have to select upper and lower subtitles";
+                Platform.runLater(() -> video.setOnlyWarning(warning));
+                videosWithoutSelectionCount++;
+            }
+        }
+
         if (videosWithoutSelectionCount == 0) {
             return null;
         } else {
             return Utils.getTextDependingOnCount(
                     videos.size(),
-                    "Merge for the video is unavailable because you have to select upper and lower "
+                    "Merging for the video is not possible because you have to select upper and lower "
                             + "subtitles",
-                    "Merge is unavailable because you have to select upper and lower subtitles for "
-                            + "all the selected videos (%d left)"
+                    "Merging is not possible because you have to select upper and lower subtitles "
+                            + "for all the selected videos (" + videosWithoutSelectionCount + " left)"
             );
         }
     }
@@ -90,9 +97,7 @@ public class MergeCheckRunner implements BackgroundRunner<MergeCheckRunner.Resul
             return null;
         }
 
-        backgroundManager.setCancelPossible(false);
-        backgroundManager.setIndeterminateProgress();
-        backgroundManager.updateMessage("Getting the files to overwrite list...");
+        backgroundManager.updateMessage("Getting a list of files to overwrite...");
 
         List<File> result = new ArrayList<>();
         for (TableVideo tableVideo : tableVideos) {
@@ -120,8 +125,6 @@ public class MergeCheckRunner implements BackgroundRunner<MergeCheckRunner.Resul
             return null;
         }
 
-        backgroundManager.setCancelPossible(false);
-        backgroundManager.setIndeterminateProgress();
         backgroundManager.updateMessage("Calculating required temporary space...");
 
         Long requiredSpace = null;
@@ -167,7 +170,7 @@ public class MergeCheckRunner implements BackgroundRunner<MergeCheckRunner.Resul
     @AllArgsConstructor
     @Getter
     public static class Result {
-        private String error;
+        private String videosWithoutSelectionWarning;
 
         private List<TableVideo> selectedTableVideos;
 

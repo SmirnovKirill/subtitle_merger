@@ -1,29 +1,24 @@
 package kirill.subtitlemerger.logic;
 
 import com.neovisionaries.i18n.LanguageAlpha3Code;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class LogicConstants {
-    public static final List<String> ALLOWED_VIDEO_EXTENSIONS = Arrays.asList("mkv", "m4v");
+    public static final List<String> ALLOWED_VIDEO_EXTENSIONS = Collections.singletonList("mkv");
 
-    public static final List<LanguageAlpha3Code> ALLOWED_LANGUAGES = getAllowedLanguages();
-
-    public static final DateTimeFormatter SUBRIP_TIME_FORMATTER = DateTimeFormat.forPattern("HH:mm:ss,SSS");
-
-    public static final Pattern LINE_SEPARATOR_PATTERN = Pattern.compile("\\r?\\n");
+    public static final List<String> ALLOWED_VIDEO_FORMATS = Collections.singletonList("matroska,webm");
 
     public static final int INPUT_SUBTITLE_FILE_LIMIT_MEGABYTES = 10;
 
-    public static final List<Charset> SUPPORTED_ENCODINGS = Arrays.asList(
+    public static final List<LanguageAlpha3Code> ALLOWED_LANGUAGES = getAllowedLanguages();
+
+    public static final List<Charset> ALLOWED_ENCODINGS = Arrays.asList(
             StandardCharsets.UTF_8,
             Charset.forName("IBM00858"),
             Charset.forName("IBM437"),
@@ -58,14 +53,6 @@ public class LogicConstants {
             Charset.forName("windows-1254"),
             Charset.forName("windows-1257")
     );
-
-    public static final List<String> ALLOWED_VIDEO_FORMATS = Collections.singletonList("matroska,webm");
-
-    public static final String SUB_RIP_FORMAT = "subrip";
-
-    public static final String SUB_STATION_ALPHA_FORMAT = "ass";
-
-    public static final List<String> ALLOWED_SUBTITLE_FORMATS = Arrays.asList(SUB_RIP_FORMAT, SUB_STATION_ALPHA_FORMAT);
 
     private static List<LanguageAlpha3Code> getAllowedLanguages() {
         return Arrays.stream(LanguageAlpha3Code.values())

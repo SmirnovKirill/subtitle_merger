@@ -13,7 +13,9 @@
     </padding>
 
     <VBox fx:id="mainPane" spacing="10">
-        <Label fx:id="title" maxWidth="Infinity" alignment="CENTER" wrapText="true"/>
+        <Label fx:id="title" maxWidth="Infinity" alignment="CENTER" textAlignment="CENTER" wrapText="true">
+            <minHeight><Region fx:constant="USE_PREF_SIZE"/></minHeight>
+        </Label>
         <HBox fx:id="upperSubtitlesPane" alignment="CENTER_LEFT">
             <Label text="&#8226; "/>
             <Label fx:id="upperSubtitlesTitle"/>
@@ -23,8 +25,8 @@
             <Label fx:id="lowerSubtitlesTitle"/>
         </HBox>
         <Label visible="${controller.linesTruncated}" managed="${controller.linesTruncated}"
-               text="Lines that are longer than 1000 symbols were truncated">
-            <styleClass><GuiConstants fx:constant="LABEL_WARN_CLASS"/></styleClass>
+               text="Lines that are longer than 1000 symbols are truncated">
+            <styleClass><GuiConstants fx:constant="LABEL_WARNING_CLASS"/></styleClass>
         </Label>
         <ListView fx:id="listView" VBox.vgrow="ALWAYS" focusTraversable="false"/>
         <HBox alignment="CENTER" spacing="10">

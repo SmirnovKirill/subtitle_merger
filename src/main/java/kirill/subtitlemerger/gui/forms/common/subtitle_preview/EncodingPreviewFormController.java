@@ -6,7 +6,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
-import kirill.subtitlemerger.gui.common_controls.ActionResultPane;
+import kirill.subtitlemerger.gui.common_controls.ActionResultLabel;
 import kirill.subtitlemerger.gui.utils.background.BackgroundCallback;
 import kirill.subtitlemerger.gui.utils.background.BackgroundRunner;
 import kirill.subtitlemerger.logic.LogicConstants;
@@ -24,7 +24,7 @@ public class EncodingPreviewFormController extends AbstractPreviewFormController
     private ComboBox<Charset> encodingComboBox;
 
     @FXML
-    private ActionResultPane actionResultPane;
+    private ActionResultLabel actionResultLabel;
 
     @FXML
     private Button saveButton;
@@ -38,9 +38,9 @@ public class EncodingPreviewFormController extends AbstractPreviewFormController
     private Stage dialogStage;
 
     public void initialize(String title, SubtitlesAndInput subtitlesAndInput, Stage dialogStage) {
-        this.title.setText(getShortenedTitle(title));
+        this.title.setText(title);
         encodingComboBox.setConverter(CHARSET_STRING_CONVERTER);
-        encodingComboBox.getItems().setAll(LogicConstants.SUPPORTED_ENCODINGS);
+        encodingComboBox.getItems().setAll(LogicConstants.ALLOWED_ENCODINGS);
         encodingComboBox.getSelectionModel().select(subtitlesAndInput.getEncoding());
         listView.setSelectionModel(new NoSelectionModel<>());
         this.dialogStage = dialogStage;
@@ -79,7 +79,7 @@ public class EncodingPreviewFormController extends AbstractPreviewFormController
             listView.setItems(FXCollections.observableArrayList(previewInfo.getSplitText().getLines()));
 
             if (!correctFormat) {
-                actionResultPane.setOnlyError(
+                actionResultLabel.setError(
                         String.format(
                                 "This encoding (%s) doesn't fit or the file has an incorrect format",
                                 encoding.name()
@@ -87,9 +87,9 @@ public class EncodingPreviewFormController extends AbstractPreviewFormController
                 );
             } else if (!firstRun) {
                 if (Objects.equals(encoding, originalSubtitlesAndInput.getEncoding())) {
-                    actionResultPane.setOnlySuccess("Encoding has been restored to the original value successfully");
+                    actionResultLabel.setSuccess("The encoding has been restored to the original value successfully");
                 } else {
-                    actionResultPane.setOnlySuccess("Encoding has been changed successfully");
+                    actionResultLabel.setSuccess("The encoding has been changed successfully");
                 }
             }
 

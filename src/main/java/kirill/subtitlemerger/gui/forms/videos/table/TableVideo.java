@@ -3,7 +3,7 @@ package kirill.subtitlemerger.gui.forms.videos.table;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import kirill.subtitlemerger.logic.utils.entities.ActionResult;
+import kirill.subtitlemerger.logic.utils.entities.MultiPartActionResult;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
@@ -12,6 +12,7 @@ import org.joda.time.LocalDateTime;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.IntStream;
 
 import static kirill.subtitlemerger.gui.forms.videos.table.TableSubtitleOption.UNKNOWN_SIZE;
 
@@ -53,7 +54,7 @@ public class TableVideo {
 
     private ReadOnlyObjectWrapper<TableSubtitleOption> lowerOption;
 
-    private ObjectProperty<ActionResult> actionResult;
+    private ObjectProperty<MultiPartActionResult> actionResult;
 
     public TableVideo(
             String id,
@@ -64,7 +65,7 @@ public class TableVideo {
             LocalDateTime lastModified,
             String notValidReason,
             String format,
-            ActionResult actionResult
+            MultiPartActionResult actionResult
     ) {
         this.id = id;
         this.table = table;
@@ -144,15 +145,22 @@ public class TableVideo {
     }
 
     public void addOption(TableSubtitleOption option) {
-        options.add(option);
-
         if (option.getType() == TableSubtitleOptionType.EXTERNAL) {
+            /* An external option can be just added to the end of the list. */
+            options.add(option);
+
             if (getExternalOptionCount() >= 2) {
                 log.error("there are already 2 external subtitle options for a video, most likely a bug");
                 throw new IllegalStateException();
             }
             externalOptionCount.set(getExternalOptionCount() + 1);
-        } else if (option.getType() == TableSubtitleOptionType.BUILT_IN){
+        } else if (option.getType() == TableSubtitleOptionType.BUILT_IN) {
+            /* A built-in option should go after the last built-in option, before the first external one. */
+            int newIndex = IntStream.range(0, options.size())
+                    .filter(i -> options.get(i).getType() == TableSubtitleOptionType.EXTERNAL)
+                    .findFirst().orElse(options.size());
+            options.add(newIndex, option);
+
             if (option.isHideable()) {
                 hideableOptionCount.set(getHideableOptionCount() + 1);
                 if (getHideableOptionCount() == 1) {
@@ -176,7 +184,7 @@ public class TableVideo {
         }
     }
 
-    public void removeOption(TableSubtitleOption option, ActionResult actionResult) {
+    public void removeOption(TableSubtitleOption option, MultiPartActionResult actionResult) {
         if (option.getType() != TableSubtitleOptionType.EXTERNAL) {
             log.error("can't remove a not external option, most likely a bug");
             throw new IllegalStateException();
@@ -218,20 +226,20 @@ public class TableVideo {
     }
 
     public void clearActionResult() {
-        setActionResult(ActionResult.NO_RESULT);
+        setActionResult(MultiPartActionResult.EMPTY);
     }
 
     @SuppressWarnings("unused")
     public void setOnlySuccess(String text) {
-        setActionResult(ActionResult.onlySuccess(text));
+        setActionResult(MultiPartActionResult.onlySuccess(text));
     }
 
-    public void setOnlyWarn(String text) {
-        setActionResult(ActionResult.onlyWarn(text));
+    public void setOnlyWarning(String text) {
+        setActionResult(MultiPartActionResult.onlyWarning(text));
     }
 
     public void setOnlyError(String text) {
-        setActionResult(ActionResult.onlyError(text));
+        setActionResult(MultiPartActionResult.onlyError(text));
     }
 
     public ObservableList<TableSubtitleOption> getOptions() {
@@ -339,17 +347,17 @@ public class TableVideo {
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public ActionResult getActionResult() {
+    public MultiPartActionResult getActionResult() {
         return actionResult.get();
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public ObjectProperty<ActionResult> actionResultProperty() {
+    public ObjectProperty<MultiPartActionResult> actionResultProperty() {
         return actionResult;
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public void setActionResult(ActionResult actionResult) {
+    public void setActionResult(MultiPartActionResult actionResult) {
         this.actionResult.set(actionResult);
     }
 }

@@ -1,0 +1,21 @@
+1
+00:02:56,380 --> 00:02:59,300
+<font face="Tahoma" size="70" color="#ebebeb">- Убирай шасси!
+- Посадка! Скорость 190!</font>
+
+2
+00:03:00,930 --> 00:03:13,270
+<font face="Tahoma" size="70" color="#ebebeb">Идем слишком курто!</font>
+
+3
+00:03:12,060 --> 00:03:13,270
+<font face="Tahoma" size="70" color="#ebebeb">Реверс двигателей!</font>
+
+4
+00:03:16,980 --> 00:03:18,480
+<font face="Tahoma" size="70" color="#ebebeb">Давай же!</font>
+
+5
+00:03:18,570 --> 00:03:19,940
+<font face="Tahoma" size="70" color="#ebebeb">Не получается!
+Не получается!</font>

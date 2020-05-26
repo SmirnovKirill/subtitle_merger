@@ -13,7 +13,10 @@ public class FfmpegException extends Exception {
     public enum Code {
         INCORRECT_FFPROBE_PATH,
         INCORRECT_FFMPEG_PATH,
-        FAILED_TO_MOVE_TEMP_VIDEO,
-        GENERAL_ERROR
+        PROCESS_FAILED,
+        FAILED_TO_CONVERT_JSON,
+        FAILED_TO_READ_TEMP_SUBTITLE_FILE,
+        FAILED_TO_CREATE_TEMP_SUBTITLE_FILE,
+        FAILED_TO_MOVE_TEMP_VIDEO
     }
 }
