@@ -15,8 +15,8 @@ import org.apache.commons.lang3.StringUtils;
  * for errors. Also this label is invisible and not managed (by default) if there is no text. Because this class extends
  * a regular label it has all the label's benefits - you can choose whether to wrap the text and the text can be clipped
  * with ellipsis at the end.
- * Note that there is also a similar class MultiPartActionResultPane for multi-color texts. It uses another approach -
- * texts instead of labels and thus is not so convenient because it can't be clipped with ellipsis.
+ * Note that there is also a similar class MultiPartActionResultPane for multi-color texts. It uses another approach and
+ * uses texts instead of labels and thus is not so convenient because texts can't be clipped with ellipsis.
  *
  * @see ActionResult
  * @see MultiPartActionResultPane

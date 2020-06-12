@@ -16,8 +16,8 @@ import java.util.Stack;
  * with the main thread the same way and have updateMessage and updateProgress methods. But the problem is that you are
  * able to use these methods only if you create child classes directly, they are unavailable when you use method
  * references.
- * The class also handles the task's cancellation - once the task is canceled an appropriate progress message is set and
- * all further modifying requests to the main thread are ignored.
+ * The class also handles task canceling - once the task is canceled an appropriate progress message is set and all
+ * further modifying requests to the main thread are ignored.
  */
 @CommonsLog
 public class BackgroundManager {
@@ -31,12 +31,13 @@ public class BackgroundManager {
 
     /*
      * We have to keep the current state and update it each time a modifying method is invoked because otherwise we
-     * won't be able to get the values when we'll need them since they are available only from the main JavaFX thread.
+     * won't be able to get the values back when we'll need them since they are available only from the main JavaFX
+     * thread.
      */
     private TaskState currentState;
 
     /*
-     * It should be a stack and not just one value because the save/restore calls can be nested.
+     * It should be a stack and not just one value because the save/restore calls can be nested for a single manager.
      */
     private Stack<TaskState> savedStates;
 
@@ -44,7 +45,6 @@ public class BackgroundManager {
         cancelPossible = new ReadOnlyBooleanWrapper(false);
         cancelDescription = new ReadOnlyStringWrapper();
         this.task = task;
-        savedStates = new Stack<>();
         currentState = new TaskState(
                 false,
                 null,
@@ -52,12 +52,13 @@ public class BackgroundManager {
                 ProgressIndicator.INDETERMINATE_PROGRESS,
                 ProgressIndicator.INDETERMINATE_PROGRESS
         );
+        savedStates = new Stack<>();
     }
 
     /**
      * This method is very helpful for writing background utility methods that are unaware of what's going on outside.
-     * They should save the initial state, change the state according to their needs and at the end return everything
-     * to the initial state
+     * They should save the initial state, change the state according to their needs and in the end return everything
+     * to the initial state.
      */
     public void saveCurrentTaskState() {
         savedStates.push(currentState);
@@ -65,8 +66,8 @@ public class BackgroundManager {
 
     /**
      * This method is very helpful for writing background utility methods that are unaware of what's going on outside.
-     * They should save the initial state, change the state according to their needs and at the end return everything
-     * to the initial state
+     * They should save the initial state, change the state according to their needs and in the end return everything
+     * to the initial state.
      */
     public void restoreSavedTaskState() {
         if (savedStates.empty()) {
@@ -163,7 +164,7 @@ public class BackgroundManager {
      */
     public void cancel() {
         if (!Platform.isFxApplicationThread()) {
-            log.error("task should be cancelled only from the main thread, most likely a bug");
+            log.error("task should be canceled from the main thread only, most likely a bug");
             throw new IllegalStateException();
         }
         if (canceled) {

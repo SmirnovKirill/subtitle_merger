@@ -11,7 +11,6 @@ import org.jetbrains.annotations.Nullable;
 import org.joda.time.LocalDateTime;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.IntStream;
 
 import static kirill.subtitlemerger.gui.forms.videos.table.TableSubtitleOption.UNKNOWN_SIZE;
@@ -146,13 +145,13 @@ public class TableVideo {
 
     public void addOption(TableSubtitleOption option) {
         if (option.getType() == TableSubtitleOptionType.EXTERNAL) {
-            /* An external option can be just added to the end of the list. */
-            options.add(option);
-
             if (getExternalOptionCount() >= 2) {
                 log.error("there are already 2 external subtitle options for a video, most likely a bug");
                 throw new IllegalStateException();
             }
+
+            /* An external option can be just added to the end of the list. */
+            options.add(option);
             externalOptionCount.set(getExternalOptionCount() + 1);
         } else if (option.getType() == TableSubtitleOptionType.BUILT_IN) {
             /* A built-in option should go after the last built-in option, before the first external one. */
@@ -190,7 +189,7 @@ public class TableVideo {
             throw new IllegalStateException();
         }
 
-        boolean removed = options.removeIf(currentOption -> Objects.equals(currentOption.getId(), option.getId()));
+        boolean removed = options.remove(option);
         if (!removed) {
             log.error("option with id " + option.getId() + " has not been removed, most likely a bug");
             throw new IllegalStateException();

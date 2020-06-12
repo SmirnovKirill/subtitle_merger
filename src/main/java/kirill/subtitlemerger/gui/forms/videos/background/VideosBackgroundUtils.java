@@ -140,11 +140,11 @@ public class VideosBackgroundUtils {
             case NOT_ALLOWED_EXTENSION:
                 return "The file has a not allowed extension";
             case FFPROBE_FAILED:
-                return "Failed to get the video information with ffprobe";
+                return "Failed to get information about the video with ffprobe";
             case NOT_ALLOWED_FORMAT:
                 return "The video has a format that is not allowed (" + format + ")";
             default:
-                log.error("unexpected video unavailability reason: " + reason + ", most likely a bug");
+                log.error("unexpected video not valid reason: " + reason + ", most likely a bug");
                 throw new IllegalStateException();
         }
     }
@@ -178,7 +178,7 @@ public class VideosBackgroundUtils {
         if (reason == SubtitleOptionNotValidReason.NOT_ALLOWED_CODEC) {
             return "The subtitles have a not allowed codec (" + codec + ")";
         } else {
-            log.error("unexpected subtitle option unavailability reason: " + reason + ", most likely a bug");
+            log.error("unexpected subtitle option not valid reason: " + reason + ", most likely a bug");
             throw new IllegalStateException();
         }
     }
@@ -366,8 +366,8 @@ public class VideosBackgroundUtils {
     }
 
     /**
-     * Returns the progress counters and the uncapitalized action title if the number of iterations is more than one or
-     * the original action title otherwise.
+     * Returns progress counters and an uncapitalized action title if the number of iterations is more than one or the
+     * original action title otherwise.
      *
      * getProgressTitle(0, 5, "Processing the video") = "1/5 processing the video"
      * getProgressTitle(0, 1, "Processing the video") = "Processing the video"
@@ -381,8 +381,8 @@ public class VideosBackgroundUtils {
     }
 
     @Nullable
-    public static String getLoadCancelDescription(Video video) {
-        if (video.getFile().length() >= GuiConstants.LOAD_CANCEL_DESCRIPTION_THRESHOLD) {
+    public static String getLoadingCancelDescription(Video video) {
+        if (video.getFile().length() >= GuiConstants.LOADING_CANCEL_DESCRIPTION_THRESHOLD) {
             return "Please be patient, loading may take a while for this video.";
         } else {
             return null;
@@ -409,7 +409,7 @@ public class VideosBackgroundUtils {
             }
         } catch (FfmpegException e) {
             log.warn("failed to get subtitles: " + e.getCode() + ", console output " + e.getConsoleOutput());
-            Platform.runLater(() -> tableOption.failedToLoad("Fmpeg returned an error"));
+            Platform.runLater(() -> tableOption.failedToLoad("Ffmpeg returned an error"));
             return LoadSubtitlesResult.FAILED;
         }
     }
@@ -419,7 +419,7 @@ public class VideosBackgroundUtils {
 
         backgroundManager.setCancelPossible(false);
         backgroundManager.setIndeterminateProgress();
-        backgroundManager.updateMessage("Clearing the state...");
+        backgroundManager.updateMessage("Clearing state...");
 
         for (TableVideo video : videos) {
             Platform.runLater(video::clearActionResult);
@@ -446,22 +446,29 @@ public class VideosBackgroundUtils {
             int toLoadCount,
             int processedCount,
             int successfulCount,
-            int failedCount,
-            int incorrectCount
+            int incorrectCount,
+            int failedCount
     ) {
-        String success = "";
-        String warning = "";
-        String error = "";
+        String success = null;
+        String warning = null;
+        String error = null;
 
+        int canceled = toLoadCount - processedCount;
         if (toLoadCount == 0) {
             warning = "There are no subtitles to load";
         } else if (processedCount == 0) {
-            warning = "The task has been cancelled, nothing was loaded";
+            warning = "The task has been canceled, nothing was loaded";
         } else if (successfulCount == toLoadCount) {
             success = Utils.getTextDependingOnCount(
                     successfulCount,
                     "The subtitles have been loaded successfully",
                     "All %d subtitles have been loaded successfully"
+            );
+        } else if (incorrectCount == toLoadCount) {
+            warning = Utils.getTextDependingOnCount(
+                    incorrectCount,
+                    "The subtitles have been loaded but have an incorrect format",
+                    "All %d subtitles have been loaded but have incorrect formats"
             );
         } else if (failedCount == toLoadCount) {
             error = Utils.getTextDependingOnCount(
@@ -469,48 +476,63 @@ public class VideosBackgroundUtils {
                     "Failed to load the subtitles",
                     "Failed to load all %d subtitles"
             );
-        } else if (incorrectCount == toLoadCount) {
-            error = Utils.getTextDependingOnCount(
-                    incorrectCount,
-                    "The subtitles have an incorrect format",
-                    "All %d subtitles have an incorrect format"
-            );
         } else {
             if (successfulCount != 0) {
-                success = String.format("%d/%d subtitles have been loaded successfully", successfulCount, toLoadCount);
+                success = String.format(
+                        "%d/%d subtitles have been loaded successfully",
+                        successfulCount,
+                        toLoadCount
+                );
             }
 
-            if (processedCount != toLoadCount) {
+            if (incorrectCount != 0) {
+                String formatSuffix = Utils.getTextDependingOnCount(
+                        incorrectCount,
+                        "an incorrect format",
+                        "incorrect formats"
+                );
+
                 if (StringUtils.isBlank(success)) {
-                    warning = Utils.getTextDependingOnCount(
-                            toLoadCount - processedCount,
-                            String.format("1/%d subtitle loadings has been cancelled", toLoadCount),
-                            String.format("%%d/%d subtitle loadings have been cancelled", toLoadCount)
+                    warning = String.format(
+                            "%d/%d subtitles have been loaded but have " + formatSuffix,
+                            incorrectCount,
+                            toLoadCount
                     );
                 } else {
-                    warning = String.format("%d/%d cancelled", toLoadCount - processedCount, toLoadCount);
+                    warning = String.format("%d/%d loaded but have " + formatSuffix, incorrectCount, toLoadCount);
+                }
+            }
+
+            if (canceled != 0) {
+                if (StringUtils.isBlank(success) && StringUtils.isBlank(warning)) {
+                    warning = String.format(
+                            "%d/%d subtitles have not been loaded because of the cancellation",
+                            canceled,
+                            toLoadCount
+                    );
+                } else {
+                    if (!StringUtils.isBlank(warning)) {
+                        warning += ", ";
+                    } else {
+                        warning = ""; // To prevent further concatenation with null.
+                    }
+                    warning += String.format("%d/%d not loaded because of the cancellation", canceled, toLoadCount);
                 }
             }
 
             if (failedCount != 0) {
-                if (StringUtils.isBlank(success) && StringUtils.isBlank(warning)) {
-                    error = String.format ("Failed to load %d/%d subtitles", failedCount, toLoadCount);
-                } else {
-                    error = String.format("failed to load %d/%d", failedCount, toLoadCount);
-                }
-            }
-
-            if (incorrectCount != 0) {
-                if (!StringUtils.isBlank(error)) {
-                    error += ", ";
-                }
-                error += String.format("%d/%d have an incorrect format", incorrectCount, toLoadCount);
+                error = String.format("failed to load %d/%d", failedCount, toLoadCount);
             }
         }
 
         return new MultiPartActionResult(success, warning, error);
     }
 
+    /**
+     * This method differs from AllSubtitlesLoader::getLoadSubtitlesActionResult because here an incorrect format is
+     * considered to be an error. If subtitles have an incorrect format it means that the operation can't be performed
+     * whereas for loading it doesn't mean that the loading itself has failed.
+     */
     static String getLoadSubtitlesError(int toLoadCount, int failedCount, int incorrectCount) {
         String result = "";
 
@@ -526,10 +548,15 @@ public class VideosBackgroundUtils {
             }
 
             if (incorrectCount != 0) {
+                String formatSuffix = Utils.getTextDependingOnCount(
+                        incorrectCount,
+                        "an incorrect format",
+                        "incorrect formats"
+                );
                 if (StringUtils.isBlank(result)) {
-                    result = String.format("%d/%d subtitles have an incorrect format", incorrectCount, toLoadCount);
+                    result = String.format("%d/%d subtitles have %s", incorrectCount, toLoadCount, formatSuffix);
                 } else {
-                    result += ", " + String.format("%d/%d have an incorrect format", incorrectCount, toLoadCount);
+                    result += ", " + String.format("%d/%d have %s", incorrectCount, toLoadCount, formatSuffix);
                 }
             }
         }

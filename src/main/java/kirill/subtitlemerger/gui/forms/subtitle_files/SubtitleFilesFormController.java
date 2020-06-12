@@ -51,7 +51,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
     private TextField upperPathField;
 
     @FXML
-    private Button upperPreview;
+    private Button upperPreviewButton;
 
     @FXML
     private Button upperChooseButton;
@@ -60,7 +60,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
     private TextField lowerPathField;
 
     @FXML
-    private Button lowerPreview;
+    private Button lowerPreviewButton;
 
     @FXML
     private Button lowerChooseButton;
@@ -69,7 +69,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
     private TextField mergedPathField;
 
     @FXML
-    private Button mergedPreview;
+    private Button mergedPreviewButton;
 
     @FXML
     private Button mergedChooseButton;
@@ -84,22 +84,22 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
 
     private Settings settings;
 
-    private InputSubtitleInfo upperSubtitleInfo;
+    private InputSubtitlesInfo upperSubtitlesInfo;
 
-    private InputSubtitleInfo lowerSubtitleInfo;
+    private InputSubtitlesInfo lowerSubtitlesInfo;
 
     /*
      * Unlike with input subtitles, information regarding merged subtitles should be split between two variables
      * because subtitles can be merged without selecting a file to write the result to (through the preview) and vice
      * verse - selecting a file doesn't affect the merged subtitles themselves.
      */
-    private MergedSubtitleFileInfo mergedSubtitleFileInfo;
+    private MergedSubtitlesFileInfo mergedSubtitlesFileInfo;
 
     private Subtitles mergedSubtitles;
 
     /*
      * We need this special flag because otherwise the popup window will be shown twice if we change the value and press
-     * enter. Because pressing the enter button will fire the event but after the popup window is opened another event
+     * enter. Because pressing the enter button will fire an event but after the popup window is opened another event
      * (losing the text field's focus) is fired.
      */
     private boolean overwritePopupDisplayed;
@@ -110,31 +110,31 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
 
         GuiUtils.setTextEnteredHandler(
                 upperPathField,
-                (path) -> processInputSubtitlePath(path, InputSubtitleType.UPPER, FileOrigin.TEXT_FIELD)
+                (path) -> processInputSubtitlesPath(path, InputSubtitlesType.UPPER, FileOrigin.TEXT_FIELD)
         );
         GuiUtils.setTextEnteredHandler(
                 lowerPathField,
-                (path) -> processInputSubtitlePath(path, InputSubtitleType.LOWER, FileOrigin.TEXT_FIELD)
+                (path) -> processInputSubtitlesPath(path, InputSubtitlesType.LOWER, FileOrigin.TEXT_FIELD)
         );
         GuiUtils.setTextEnteredHandler(
                 mergedPathField,
-                (path) -> processMergedSubtitlePath(path, FileOrigin.TEXT_FIELD)
+                (path) -> processMergedSubtitlesPath(path, FileOrigin.TEXT_FIELD)
         );
     }
 
-    private void processInputSubtitlePath(String path, InputSubtitleType subtitleType, FileOrigin fileOrigin) {
+    private void processInputSubtitlesPath(String path, InputSubtitlesType subtitleType, FileOrigin fileOrigin) {
         if (fileOrigin == FileOrigin.TEXT_FIELD && pathNotChanged(path, subtitleType.getBroaderType())) {
             return;
         }
 
-        BackgroundRunner<InputSubtitleInfo> backgroundRunner = backgroundManager -> {
+        BackgroundRunner<InputSubtitlesInfo> backgroundRunner = backgroundManager -> {
             backgroundManager.setCancelPossible(false);
             backgroundManager.setIndeterminateProgress();
             backgroundManager.updateMessage("Processing " + path + "...");
-            return getInputSubtitleInfo(path, subtitleType, fileOrigin);
+            return getInputSubtitlesInfo(path, subtitleType, fileOrigin);
         };
 
-        BackgroundCallback<InputSubtitleInfo> callback = subtitleInfo -> {
+        BackgroundCallback<InputSubtitlesInfo> callback = subtitleInfo -> {
             updateSubtitleInfoVariable(subtitleInfo, subtitleType);
             markOtherSubtitlesNotDuplicate(subtitleType);
             if (fileOrigin == FileOrigin.FILE_CHOOSER && subtitleInfo != null) {
@@ -151,11 +151,11 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
     private boolean pathNotChanged(String path, SubtitleType subtitleType) {
         String currentPath;
         if (subtitleType == SubtitleType.UPPER) {
-            currentPath = upperSubtitleInfo != null ? upperSubtitleInfo.getPath() : "";
+            currentPath = upperSubtitlesInfo != null ? upperSubtitlesInfo.getPath() : "";
         } else if (subtitleType == SubtitleType.LOWER) {
-            currentPath = lowerSubtitleInfo != null ? lowerSubtitleInfo.getPath() : "";
+            currentPath = lowerSubtitlesInfo != null ? lowerSubtitlesInfo.getPath() : "";
         } else if (subtitleType == SubtitleType.MERGED) {
-            currentPath = mergedSubtitleFileInfo != null ? mergedSubtitleFileInfo.getPath() : "";
+            currentPath = mergedSubtitlesFileInfo != null ? mergedSubtitlesFileInfo.getPath() : "";
         } else {
             log.error("unexpected subtitle type: " + subtitleType + ", most likely a bug");
             throw new IllegalStateException();
@@ -165,7 +165,11 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
     }
 
     @Nullable
-    private InputSubtitleInfo getInputSubtitleInfo(String path, InputSubtitleType subtitleType, FileOrigin fileOrigin) {
+    private InputSubtitlesInfo getInputSubtitlesInfo(
+            String path,
+            InputSubtitlesType subtitleType,
+            FileOrigin fileOrigin
+    ) {
         InputFileValidationOptions validationOptions = InputFileValidationOptions.builder()
                 .allowedExtensions(SubtitleFormat.SUB_RIP.getExtensions())
                 .allowEmpty(false)
@@ -178,7 +182,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
         }
 
         if (fileInfo.getNotValidReason() != null) {
-            return new InputSubtitleInfo(
+            return new InputSubtitlesInfo(
                     path,
                     fileInfo.getFile(),
                     fileOrigin,
@@ -188,7 +192,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
             );
         }
 
-        return new InputSubtitleInfo(
+        return new InputSubtitlesInfo(
                 path,
                 fileInfo.getFile(),
                 fileOrigin,
@@ -198,33 +202,33 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
         );
     }
 
-    private boolean isDuplicate(File file, InputSubtitleType subtitleType) {
-        InputSubtitleInfo otherSubtitleInfo;
-        if (subtitleType == InputSubtitleType.UPPER) {
-            if (lowerSubtitleInfo == null) {
+    private boolean isDuplicate(File file, InputSubtitlesType subtitleType) {
+        InputSubtitlesInfo otherSubtitlesInfo;
+        if (subtitleType == InputSubtitlesType.UPPER) {
+            if (lowerSubtitlesInfo == null) {
                 return false;
             }
 
-            otherSubtitleInfo = lowerSubtitleInfo;
-        } else if (subtitleType == InputSubtitleType.LOWER) {
-            if (upperSubtitleInfo == null) {
+            otherSubtitlesInfo = lowerSubtitlesInfo;
+        } else if (subtitleType == InputSubtitlesType.LOWER) {
+            if (upperSubtitlesInfo == null) {
                 return false;
             }
 
-            otherSubtitleInfo = upperSubtitleInfo;
+            otherSubtitlesInfo = upperSubtitlesInfo;
         } else {
             log.error("unexpected subtitle type: " + subtitleType + ", most likely a bug");
             throw new IllegalStateException();
         }
 
-        return Objects.equals(file, otherSubtitleInfo.getFile());
+        return Objects.equals(file, otherSubtitlesInfo.getFile());
     }
 
-    private void updateSubtitleInfoVariable(InputSubtitleInfo subtitleInfo, InputSubtitleType subtitleType) {
-        if (subtitleType == InputSubtitleType.UPPER) {
-            upperSubtitleInfo = subtitleInfo;
-        } else if (subtitleType == InputSubtitleType.LOWER) {
-            lowerSubtitleInfo = subtitleInfo;
+    private void updateSubtitleInfoVariable(InputSubtitlesInfo subtitleInfo, InputSubtitlesType subtitleType) {
+        if (subtitleType == InputSubtitlesType.UPPER) {
+            upperSubtitlesInfo = subtitleInfo;
+        } else if (subtitleType == InputSubtitlesType.LOWER) {
+            lowerSubtitlesInfo = subtitleInfo;
         } else {
             log.error("unexpected subtitle type: " + subtitleType + ", most likely a bug");
             throw new IllegalStateException();
@@ -235,14 +239,14 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
      * Only one of the two input subtitles should ever be marked as duplicate, so after we process the subtitles we
      * should always mark the other subtitles as non-duplicate.
      */
-    private void markOtherSubtitlesNotDuplicate(InputSubtitleType subtitleType) {
-        if (subtitleType == InputSubtitleType.UPPER) {
-            if (lowerSubtitleInfo != null) {
-                lowerSubtitleInfo.setDuplicate(false);
+    private void markOtherSubtitlesNotDuplicate(InputSubtitlesType subtitleType) {
+        if (subtitleType == InputSubtitlesType.UPPER) {
+            if (lowerSubtitlesInfo != null) {
+                lowerSubtitlesInfo.setDuplicate(false);
             }
-        } else if (subtitleType == InputSubtitleType.LOWER) {
-            if (upperSubtitleInfo != null) {
-                upperSubtitleInfo.setDuplicate(false);
+        } else if (subtitleType == InputSubtitlesType.LOWER) {
+            if (upperSubtitlesInfo != null) {
+                upperSubtitlesInfo.setDuplicate(false);
             }
         } else {
             log.error("unexpected subtitle type: " + subtitleType + ", most likely a bug");
@@ -291,60 +295,60 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
     }
 
     private void updatePathFields() {
-        upperPathField.setText(upperSubtitleInfo != null ? upperSubtitleInfo.getFile().getAbsolutePath() : "");
-        lowerPathField.setText(lowerSubtitleInfo != null ? lowerSubtitleInfo.getFile().getAbsolutePath() : "");
+        upperPathField.setText(upperSubtitlesInfo != null ? upperSubtitlesInfo.getFile().getAbsolutePath() : "");
+        lowerPathField.setText(lowerSubtitlesInfo != null ? lowerSubtitlesInfo.getFile().getAbsolutePath() : "");
         mergedPathField.setText(
-                mergedSubtitleFileInfo != null ? mergedSubtitleFileInfo.getFile().getAbsolutePath() : ""
+                mergedSubtitlesFileInfo != null ? mergedSubtitlesFileInfo.getFile().getAbsolutePath() : ""
         );
     }
 
     private void setPreviewButtonsVisibility() {
-        upperPreview.setDisable(inputPreviewNotAvailable(upperSubtitleInfo));
-        lowerPreview.setDisable(inputPreviewNotAvailable(lowerSubtitleInfo));
-        mergedPreview.setDisable(cantBeMerged(upperSubtitleInfo) || cantBeMerged(lowerSubtitleInfo));
+        upperPreviewButton.setDisable(inputPreviewNotAvailable(upperSubtitlesInfo));
+        lowerPreviewButton.setDisable(inputPreviewNotAvailable(lowerSubtitlesInfo));
+        mergedPreviewButton.setDisable(cantBeMerged(upperSubtitlesInfo) || cantBeMerged(lowerSubtitlesInfo));
     }
 
     /*
-     * Note that the preview is available if the format is incorrect because it should be possible to open the preview
-     * and change the encoding if that's what is causing the problem.
+     * Note that a preview is available if the format is incorrect because it should be possible to open the preview and
+     * change the encoding if that's what is causing the problem.
      */
-    private static boolean inputPreviewNotAvailable(InputSubtitleInfo subtitleInfo) {
+    private static boolean inputPreviewNotAvailable(InputSubtitlesInfo subtitleInfo) {
         return subtitleInfo == null || subtitleInfo.isDuplicate() || subtitleInfo.getNotValidReason() != null;
     }
 
     /*
      * Note that unlike with previews merging should not be available if the format is incorrect.
      */
-    private static boolean cantBeMerged(InputSubtitleInfo subtitleInfo) {
+    private static boolean cantBeMerged(InputSubtitlesInfo subtitleInfo) {
         return subtitleInfo == null || subtitleInfo.isDuplicate() || subtitleInfo.getNotValidReason() != null
                 || subtitleInfo.incorrectFormat();
     }
 
     private void setMergeButtonVisibility() {
-        boolean disable = cantBeMerged(upperSubtitleInfo) || cantBeMerged(lowerSubtitleInfo)
-                || mergedSubtitleFileInfo == null || mergedSubtitleFileInfo.getNotValidReason() != null;
+        boolean disable = cantBeMerged(upperSubtitlesInfo) || cantBeMerged(lowerSubtitlesInfo)
+                || mergedSubtitlesFileInfo == null || mergedSubtitlesFileInfo.getNotValidReason() != null;
         mergeButton.setDisable(disable);
     }
 
     private void showErrors() {
         List<String> errorParts = new ArrayList<>();
 
-        String upperSubtitleError = getInputSubtitleError(upperSubtitleInfo);
-        if (!StringUtils.isBlank(upperSubtitleError)) {
+        String upperSubtitlesError = getInputSubtitlesError(upperSubtitlesInfo);
+        if (!StringUtils.isBlank(upperSubtitlesError)) {
             displayFileElementsAsIncorrect(SubtitleType.UPPER);
-            errorParts.add(upperSubtitleError);
+            errorParts.add(upperSubtitlesError);
         }
 
-        String lowerSubtitleError = getInputSubtitleError(lowerSubtitleInfo);
-        if (!StringUtils.isBlank(lowerSubtitleError)) {
+        String lowerSubtitlesError = getInputSubtitlesError(lowerSubtitlesInfo);
+        if (!StringUtils.isBlank(lowerSubtitlesError)) {
             displayFileElementsAsIncorrect(SubtitleType.LOWER);
-            errorParts.add(lowerSubtitleError);
+            errorParts.add(lowerSubtitlesError);
         }
 
-        String mergedSubtitleError = getMergedSubtitleError(mergedSubtitleFileInfo);
-        if (!StringUtils.isBlank(mergedSubtitleError)) {
+        String mergedSubtitlesError = getMergedSubtitlesError(mergedSubtitlesFileInfo);
+        if (!StringUtils.isBlank(mergedSubtitlesError)) {
             displayFileElementsAsIncorrect(SubtitleType.MERGED);
-            errorParts.add(mergedSubtitleError);
+            errorParts.add(mergedSubtitlesError);
         }
 
         if (CollectionUtils.isEmpty(errorParts)) {
@@ -359,7 +363,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
     }
 
     @Nullable
-    private static String getInputSubtitleError(InputSubtitleInfo subtitleInfo) {
+    private static String getInputSubtitlesError(InputSubtitlesInfo subtitleInfo) {
         if (subtitleInfo == null) {
             return null;
         }
@@ -368,9 +372,9 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
             return "You have already selected this file for the other subtitles";
         }
 
-        if (subtitleInfo.getNotValidReason() != null) {
-            String shortenedPath = getShortenedPath(subtitleInfo.getPath());
+        String shortenedPath = getShortenedPath(subtitleInfo.getPath());
 
+        if (subtitleInfo.getNotValidReason() != null) {
             InputFileNotValidReason notValidReason = subtitleInfo.getNotValidReason();
             switch (notValidReason) {
                 case PATH_IS_TOO_LONG:
@@ -399,8 +403,8 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
         }
 
         if (subtitleInfo.incorrectFormat()) {
-            return "Subtitles in '" + subtitleInfo.getPath() + "'can't be parsed, it can happen if a file is not "
-                    + "UTF-8-encoded; you can change the encoding after pressing the preview button";
+            return "Subtitles in '" + shortenedPath + "'can't be parsed, it can happen if a file is not UTF-8-encoded; "
+                    + "you can change the encoding after pressing the preview button";
         }
 
         return null;
@@ -411,7 +415,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
     }
 
     @Nullable
-    private static String getMergedSubtitleError(MergedSubtitleFileInfo subtitleFileInfo) {
+    private static String getMergedSubtitlesError(MergedSubtitlesFileInfo subtitleFileInfo) {
         if (subtitleFileInfo == null) {
             return null;
         }
@@ -445,7 +449,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
             upperPathField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
             upperPathField.getStyleClass().add(GuiConstants.TEXT_FIELD_ERROR_CLASS);
 
-            if (upperSubtitleInfo.getFileOrigin() == FileOrigin.FILE_CHOOSER) {
+            if (upperSubtitlesInfo.getFileOrigin() == FileOrigin.FILE_CHOOSER) {
                 upperChooseButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
                 upperChooseButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
             }
@@ -453,7 +457,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
             lowerPathField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
             lowerPathField.getStyleClass().add(GuiConstants.TEXT_FIELD_ERROR_CLASS);
 
-            if (lowerSubtitleInfo.getFileOrigin() == FileOrigin.FILE_CHOOSER) {
+            if (lowerSubtitlesInfo.getFileOrigin() == FileOrigin.FILE_CHOOSER) {
                 lowerChooseButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
                 lowerChooseButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
             }
@@ -461,7 +465,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
             mergedPathField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
             mergedPathField.getStyleClass().add(GuiConstants.TEXT_FIELD_ERROR_CLASS);
 
-            if (mergedSubtitleFileInfo.getFileOrigin() == FileOrigin.FILE_CHOOSER) {
+            if (mergedSubtitlesFileInfo.getFileOrigin() == FileOrigin.FILE_CHOOSER) {
                 mergedChooseButton.getStyleClass().remove(GuiConstants.BUTTON_ERROR_CLASS);
                 mergedChooseButton.getStyleClass().add(GuiConstants.BUTTON_ERROR_CLASS);
             }
@@ -471,12 +475,12 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
         }
     }
 
-    private void processMergedSubtitlePath(String path, FileOrigin fileOrigin) {
+    private void processMergedSubtitlesPath(String path, FileOrigin fileOrigin) {
         if (fileOrigin == FileOrigin.TEXT_FIELD && pathNotChanged(path, SubtitleType.MERGED)) {
             return;
         }
 
-        MergedSubtitleFileInfo subtitleFileInfo = getMergedSubtitleFileInfo(path, fileOrigin);
+        MergedSubtitlesFileInfo subtitleFileInfo = getMergedSubtitlesFileInfo(path, fileOrigin);
         if (fileOrigin == FileOrigin.TEXT_FIELD && fileExists(subtitleFileInfo)) {
             if (overwritePopupDisplayed) {
                 return;
@@ -488,7 +492,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
             }
         }
 
-        mergedSubtitleFileInfo = subtitleFileInfo;
+        mergedSubtitlesFileInfo = subtitleFileInfo;
         if (fileOrigin == FileOrigin.FILE_CHOOSER && subtitleFileInfo != null) {
             saveDirectoryInSettings(subtitleFileInfo.getFile(), SubtitleType.MERGED, settings);
         }
@@ -497,7 +501,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
     }
 
     @Nullable
-    private static MergedSubtitleFileInfo getMergedSubtitleFileInfo(String path, FileOrigin fileOrigin) {
+    private static MergedSubtitlesFileInfo getMergedSubtitlesFileInfo(String path, FileOrigin fileOrigin) {
         OutputFileValidationOptions validationOptions = new OutputFileValidationOptions(
                 SubtitleFormat.SUB_RIP.getExtensions(),
                 true
@@ -507,7 +511,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
             return null;
         }
 
-        return new MergedSubtitleFileInfo(
+        return new MergedSubtitlesFileInfo(
                 path,
                 validatorFileInfo.getFile(),
                 fileOrigin,
@@ -515,14 +519,14 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
         );
     }
 
-    private static boolean fileExists(MergedSubtitleFileInfo subtitleFileInfo) {
+    private static boolean fileExists(MergedSubtitlesFileInfo subtitleFileInfo) {
         return subtitleFileInfo != null
                 /* This condition is important, there shouldn't be any popups for not valid files. */
                 && subtitleFileInfo.getNotValidReason() == null
                 && subtitleFileInfo.getFile().exists();
     }
 
-    private boolean agreeToOverwrite(MergedSubtitleFileInfo subtitleFileInfo) {
+    private boolean agreeToOverwrite(MergedSubtitlesFileInfo subtitleFileInfo) {
         overwritePopupDisplayed = true;
 
         String fileName = Utils.getShortenedString(
@@ -545,44 +549,44 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
 
     @FXML
     private void upperPreviewClicked() {
-        Charset previousEncoding = upperSubtitleInfo.getEncoding();
+        Charset previousEncoding = upperSubtitlesInfo.getEncoding();
         SubtitlesAndInput previewSelection = Popups.showEncodingPreview(
-                Utils.getShortenedString(upperSubtitleInfo.getPath(), 0, 64),
-                upperSubtitleInfo.getSubtitlesAndInput(),
+                Utils.getShortenedString(upperSubtitlesInfo.getPath(), 0, 64),
+                upperSubtitlesInfo.getSubtitlesAndInput(),
                 stage
         );
 
-        upperSubtitleInfo.setSubtitlesAndInput(previewSelection);
+        upperSubtitlesInfo.setSubtitlesAndInput(previewSelection);
         if (!Objects.equals(previousEncoding, previewSelection.getEncoding())) {
             mergedSubtitles = null;
         }
-        updateScene(upperSubtitleInfo.getFileOrigin());
+        updateScene(upperSubtitlesInfo.getFileOrigin());
     }
 
     @FXML
     private void upperChooserClicked() {
         clearState();
 
-        File file = getInputFile(InputSubtitleType.UPPER, stage, settings);
+        File file = getInputFile(InputSubtitlesType.UPPER, stage, settings);
         if (file == null) {
             clearState();
             return;
         }
 
-        processInputSubtitlePath(file.getAbsolutePath(), InputSubtitleType.UPPER, FileOrigin.FILE_CHOOSER);
+        processInputSubtitlesPath(file.getAbsolutePath(), InputSubtitlesType.UPPER, FileOrigin.FILE_CHOOSER);
     }
 
-    private static File getInputFile(InputSubtitleType subtitleType, Stage stage, Settings settings) {
+    private static File getInputFile(InputSubtitlesType subtitleType, Stage stage, Settings settings) {
         String chooserTitle;
         File chooserInitialDirectory;
-        if (subtitleType == InputSubtitleType.UPPER) {
+        if (subtitleType == InputSubtitlesType.UPPER) {
             chooserTitle = "Please choose a file with upper subtitles";
             chooserInitialDirectory = ObjectUtils.firstNonNull(
                     settings.getLastDirectoryWithUpperSubtitles(),
                     settings.getLastDirectoryWithLowerSubtitles(),
                     settings.getLastDirectoryWithMergedSubtitles()
             );
-        } else if (subtitleType == InputSubtitleType.LOWER) {
+        } else if (subtitleType == InputSubtitlesType.LOWER) {
             chooserTitle = "Please choose a file with lower subtitles";
             chooserInitialDirectory = ObjectUtils.firstNonNull(
                     settings.getLastDirectoryWithLowerSubtitles(),
@@ -605,31 +609,31 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
 
     @FXML
     private void lowerPreviewClicked() {
-        Charset previousEncoding = lowerSubtitleInfo.getEncoding();
+        Charset previousEncoding = lowerSubtitlesInfo.getEncoding();
         clearState();
 
         SubtitlesAndInput previewSelection = Popups.showEncodingPreview(
-                Utils.getShortenedString(lowerSubtitleInfo.getPath(), 0, 64),
-                lowerSubtitleInfo.getSubtitlesAndInput(),
+                Utils.getShortenedString(lowerSubtitlesInfo.getPath(), 0, 64),
+                lowerSubtitlesInfo.getSubtitlesAndInput(),
                 stage
         );
 
-        lowerSubtitleInfo.setSubtitlesAndInput(previewSelection);
+        lowerSubtitlesInfo.setSubtitlesAndInput(previewSelection);
         if (!Objects.equals(previousEncoding, previewSelection.getEncoding())) {
             mergedSubtitles = null;
         }
-        updateScene(lowerSubtitleInfo.getFileOrigin());
+        updateScene(lowerSubtitlesInfo.getFileOrigin());
     }
 
     @FXML
     private void lowerChooserClicked() {
-        File file = getInputFile(InputSubtitleType.LOWER, stage, settings);
+        File file = getInputFile(InputSubtitlesType.LOWER, stage, settings);
         if (file == null) {
             clearState();
             return;
         }
 
-        processInputSubtitlePath(file.getAbsolutePath(), InputSubtitleType.LOWER, FileOrigin.FILE_CHOOSER);
+        processInputSubtitlesPath(file.getAbsolutePath(), InputSubtitlesType.LOWER, FileOrigin.FILE_CHOOSER);
     }
 
     @FXML
@@ -647,8 +651,8 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
             try {
                 return SubtitlesAndOutput.from(
                         SubtitleMerger.mergeSubtitles(
-                                upperSubtitleInfo.getSubtitles(),
-                                lowerSubtitleInfo.getSubtitles()
+                                upperSubtitlesInfo.getSubtitles(),
+                                lowerSubtitlesInfo.getSubtitles()
                         ),
                         settings.isPlainTextSubtitles()
                 );
@@ -659,15 +663,15 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
 
         BackgroundCallback<SubtitlesAndOutput> callback = subtitlesAndOutput -> {
             if (subtitlesAndOutput == null) {
-                totalResultLabel.setWarning("The merge has been cancelled");
+                totalResultLabel.setWarning("Merging has been canceled");
                 return;
             }
 
             mergedSubtitles = subtitlesAndOutput.getSubtitles();
 
             Popups.showMergedSubtitlesPreview(
-                    upperSubtitleInfo.getPath(),
-                    lowerSubtitleInfo.getPath(),
+                    upperSubtitlesInfo.getPath(),
+                    lowerSubtitlesInfo.getPath(),
                     subtitlesAndOutput.getText(),
                     stage
             );
@@ -683,7 +687,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
             return;
         }
 
-        processMergedSubtitlePath(file.getAbsolutePath(), FileOrigin.FILE_CHOOSER);
+        processMergedSubtitlesPath(file.getAbsolutePath(), FileOrigin.FILE_CHOOSER);
     }
 
     @Nullable
@@ -704,7 +708,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
     }
 
     @FXML
-    private void mergeButtonClicked() {
+    private void mergeClicked() {
         clearState();
 
         BackgroundRunner<ActionResult> backgroundRunner = backgroundManager -> {
@@ -714,11 +718,11 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
                 backgroundManager.updateMessage("Merging the subtitles...");
                 try {
                     mergedSubtitles = SubtitleMerger.mergeSubtitles(
-                            upperSubtitleInfo.getSubtitles(),
-                            lowerSubtitleInfo.getSubtitles()
+                            upperSubtitlesInfo.getSubtitles(),
+                            lowerSubtitlesInfo.getSubtitles()
                     );
                 } catch (InterruptedException e) {
-                    return ActionResult.warning("The merge has been cancelled");
+                    return ActionResult.warning("Merging has been canceled");
                 }
             }
 
@@ -728,7 +732,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
                 backgroundManager.updateMessage("Writing the result...");
 
                 FileUtils.writeStringToFile(
-                        mergedSubtitleFileInfo.getFile(),
+                        mergedSubtitlesFileInfo.getFile(),
                         SubRipWriter.toText(mergedSubtitles, settings.isPlainTextSubtitles()),
                         StandardCharsets.UTF_8
                 );
@@ -753,7 +757,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
 
     @AllArgsConstructor
     @Getter
-    private enum InputSubtitleType {
+    private enum InputSubtitlesType {
         UPPER(SubtitleType.UPPER),
 
         LOWER(SubtitleType.LOWER);
@@ -769,7 +773,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
 
     @AllArgsConstructor
     @Getter
-    private static class InputSubtitleInfo {
+    private static class InputSubtitlesInfo {
         private String path;
 
         private File file;
@@ -801,7 +805,7 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
 
     @AllArgsConstructor
     @Getter
-    private static class MergedSubtitleFileInfo {
+    private static class MergedSubtitlesFileInfo {
         private String path;
 
         private File file;

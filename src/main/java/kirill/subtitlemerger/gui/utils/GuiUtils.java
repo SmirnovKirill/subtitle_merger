@@ -28,7 +28,7 @@ import java.util.function.Consumer;
 @CommonsLog
 public class GuiUtils {
     /**
-     * Uses the FXML loader to load the form based on the provided fxml file.
+     * Uses the FXML loader to load a form based on the provided fxml file.
      *
      * @param path the path to the fxml file.
      * @return a wrapper containing the root node and its controller.
@@ -63,7 +63,7 @@ public class GuiUtils {
     }
 
     /**
-     * Uses the FXML loader to initialize the given control based on the provided fxml file.
+     * Uses the FXML loader to initialize a given control based on the provided fxml file.
      *
      * @param control the control to initialize
      * @param path the path to the fxml file. Note that it shouldn't contain a fx:controller inside because the
@@ -107,8 +107,7 @@ public class GuiUtils {
                 return;
             }
 
-            String value = textField.getText();
-            valueProcessor.accept(value);
+            valueProcessor.accept(textField.getText());
         });
 
         textField.setOnKeyPressed(keyEvent -> {
@@ -116,8 +115,7 @@ public class GuiUtils {
                 return;
             }
 
-            String value = textField.getText();
-            valueProcessor.accept(value);
+            valueProcessor.accept(textField.getText());
         });
     }
 
@@ -141,7 +139,7 @@ public class GuiUtils {
     }
 
     /**
-     * Generates the tooltip that is shown indefinitely and without delays.
+     * Generates a tooltip that is shown indefinitely and without delays.
      */
     public static Tooltip getTooltip(String text) {
         Tooltip result = new Tooltip(text);
@@ -157,7 +155,7 @@ public class GuiUtils {
     }
 
     /**
-     * Generates the tooltip that is shown indefinitely and without delays.
+     * Generates a tooltip that is shown indefinitely and without delays.
      */
     public static Tooltip getTooltip(ObservableValue<? extends String> text) {
         Tooltip result = new Tooltip();
@@ -201,7 +199,7 @@ public class GuiUtils {
      * @return a binding that returns the text depending on the count.
      */
     /*
-     * This method is here and not in the regular Utils class because it uses observable values that are part of the
+     * This method is placed here and not in the regular Utils class because it uses observable values that are part of
      * JavaFX and thus gui-specific.
      */
     public static StringBinding getTextDependingOnCount(

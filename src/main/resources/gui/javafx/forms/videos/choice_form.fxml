@@ -14,8 +14,8 @@
         <ColumnConstraints percentWidth="50"/>
     </columnConstraints>
 
-    <Label GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.columnSpan="2"
-           maxWidth="Infinity" alignment="CENTER" styleClass="choose-title">Please choose</Label>
+    <Label GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.columnSpan="2" maxWidth="Infinity" alignment="CENTER"
+           styleClass="choose-title">Please choose</Label>
     <HBox GridPane.rowIndex="1" GridPane.columnIndex="0" alignment="CENTER" spacing="10" styleClass="files-pane">
         <padding>
             <Insets top="20" right="20" bottom="20" left="20"/>

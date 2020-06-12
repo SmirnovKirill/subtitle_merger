@@ -68,26 +68,6 @@ public class SettingsFormController {
 
     private GuiContext context;
 
-    @SuppressWarnings({"WeakerAccess", "RedundantSuppression"})
-    public SettingsFormController() {
-        makeDefaultVisible = new SimpleBooleanProperty(false);
-    }
-
-    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public boolean getMakeDefaultVisible() {
-        return makeDefaultVisible.get();
-    }
-
-    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public BooleanProperty makeDefaultVisibleProperty() {
-        return makeDefaultVisible;
-    }
-
-    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public void setMakeDefaultVisible(boolean makeDefaultVisible) {
-        this.makeDefaultVisible.set(makeDefaultVisible);
-    }
-
     public void initialize(GuiContext context) {
         settings = context.getSettings();
         this.context = context;
@@ -103,6 +83,20 @@ public class SettingsFormController {
         plainTextCheckBox.setSelected(settings.isPlainTextSubtitles());
 
         mergeModeToggleGroup.selectedToggleProperty().addListener(this::mergeModeChanged);
+    }
+
+    private void videosInProgressChanged(
+            ObservableValue<? extends Boolean> observable,
+            Boolean oldValue,
+            Boolean newValue
+    ) {
+        if (newValue) {
+            settingsPane.setDisable(true);
+            unavailablePane.setVisible(true);
+        } else {
+            settingsPane.setDisable(false);
+            unavailablePane.setVisible(false);
+        }
     }
 
     private void setUpperLanguage() {
@@ -158,7 +152,6 @@ public class SettingsFormController {
 
     private void mergeModeChanged(ObservableValue<? extends Toggle> observable, Toggle oldValue, Toggle newValue) {
         RadioButton radioButton = (RadioButton) newValue;
-
         MergeMode mergeMode;
         switch (radioButton.getText()) {
             case MERGE_MODE_ORIGINAL_VIDEOS:
@@ -177,20 +170,6 @@ public class SettingsFormController {
         setMakeDefaultVisible(settings.getMergeMode() == MergeMode.ORIGINAL_VIDEOS);
 
         actionResultLabel.setSuccess("The merge mode has been saved successfully");
-    }
-
-    private void videosInProgressChanged(
-            ObservableValue<? extends Boolean> observable,
-            Boolean oldValue,
-            Boolean newValue
-    ) {
-        if (newValue) {
-            settingsPane.setDisable(true);
-            unavailablePane.setVisible(true);
-        } else {
-            settingsPane.setDisable(false);
-            unavailablePane.setVisible(false);
-        }
     }
 
     @FXML
@@ -220,7 +199,7 @@ public class SettingsFormController {
     }
 
     @FXML
-    private void swapButtonClicked() {
+    private void swapClicked() {
         LanguageAlpha3Code oldUpperLanguage = settings.getUpperLanguage();
         LanguageAlpha3Code oldLowerLanguage = settings.getLowerLanguage();
 
@@ -262,7 +241,6 @@ public class SettingsFormController {
     @FXML
     private void makeDefaultClicked() {
         boolean makeDefault = makeDefaultCheckBox.isSelected();
-
         settings.saveCorrect(makeDefault, SettingType.MAKE_MERGED_STREAMS_DEFAULT);
 
         if (makeDefault) {
@@ -275,7 +253,6 @@ public class SettingsFormController {
     @FXML
     private void plainTextClicked() {
         boolean plainText = plainTextCheckBox.isSelected();
-
         settings.saveCorrect(plainText, SettingType.PLAIN_TEXT_SUBTITLES);
 
         if (plainText) {
@@ -285,8 +262,27 @@ public class SettingsFormController {
         }
     }
 
+    public SettingsFormController() {
+        makeDefaultVisible = new SimpleBooleanProperty(false);
+    }
+
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public boolean getMakeDefaultVisible() {
+        return makeDefaultVisible.get();
+    }
+
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public BooleanProperty makeDefaultVisibleProperty() {
+        return makeDefaultVisible;
+    }
+
+    @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
+    public void setMakeDefaultVisible(boolean makeDefaultVisible) {
+        this.makeDefaultVisible.set(makeDefaultVisible);
+    }
+
     private static class LanguageCodeStringConverter extends StringConverter<LanguageAlpha3Code> {
-        private static final String LANGUAGE_NOT_SET = "language code is not set";
+        private static final String LANGUAGE_NOT_SET = "The language code is not set";
 
         @Override
         public String toString(LanguageAlpha3Code languageCode) {

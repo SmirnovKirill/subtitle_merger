@@ -14,7 +14,7 @@
     </padding>
 
     <VBox fx:id="mainPane" spacing="10">
-        <Label fx:id="title" maxWidth="Infinity" alignment="CENTER" textAlignment="CENTER" wrapText="true">
+        <Label fx:id="titleLabel" maxWidth="Infinity" alignment="CENTER" textAlignment="CENTER" wrapText="true">
             <minHeight><Region fx:constant="USE_PREF_SIZE"/></minHeight>
         </Label>
         <HBox alignment="CENTER_LEFT">
@@ -33,8 +33,8 @@
         </Label>
         <ListView fx:id="listView" VBox.vgrow="ALWAYS" focusTraversable="false"/>
         <HBox alignment="CENTER" spacing="10">
-            <Button onAction="#cancelButtonClicked" text="Cancel"/>
-            <Button fx:id="saveButton" onAction="#saveButtonClicked" disable="true" text="Save changes"/>
+            <Button onAction="#cancelClicked" text="Cancel"/>
+            <Button fx:id="saveButton" onAction="#saveClicked" disable="true" text="Save changes"/>
         </HBox>
     </VBox>
     <ProgressPane fx:id="progressPane" visible="false"/>

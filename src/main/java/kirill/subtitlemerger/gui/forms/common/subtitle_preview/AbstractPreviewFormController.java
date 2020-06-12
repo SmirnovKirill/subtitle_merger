@@ -19,7 +19,7 @@ class AbstractPreviewFormController extends BackgroundTaskFormController {
     private BooleanProperty linesTruncated;
 
     @FXML
-    Label title;
+    Label titleLabel;
 
     @FXML
     ListView<String> listView;
@@ -28,6 +28,23 @@ class AbstractPreviewFormController extends BackgroundTaskFormController {
 
     AbstractPreviewFormController() {
         linesTruncated = new SimpleBooleanProperty(false);
+    }
+
+    /* Long lines have to be truncated because otherwise the list view will work very slowly. */
+    static SplitText getSplitText(String text) {
+        List<String> lines = new ArrayList<>();
+
+        boolean linesTruncated = false;
+        for (String line : text.lines().collect(Collectors.toList())) {
+            if (line.length() > 1000) {
+                lines.add(line.substring(0, 1000));
+                linesTruncated = true;
+            } else {
+                lines.add(line);
+            }
+        }
+
+        return new SplitText(lines, linesTruncated);
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
@@ -45,24 +62,8 @@ class AbstractPreviewFormController extends BackgroundTaskFormController {
         this.linesTruncated.set(linesTruncated);
     }
 
-    static SplitText getSplitText(String text) {
-        List<String> lines = new ArrayList<>();
-
-        boolean linesTruncated = false;
-        for (String line : text.lines().collect(Collectors.toList())) {
-            if (line.length() > 1000) {
-                lines.add(line.substring(0, 1000));
-                linesTruncated = true;
-            } else {
-                lines.add(line);
-            }
-        }
-
-        return new SplitText(lines, linesTruncated);
-    }
-
     /*
-     * A special class created so that when the user clicks on the list view there are no errors. It does nothing and
+     * A special class created so that when the user clicks on a list view there are no errors. It does nothing and
      * that's the whole point.
      */
     static class NoSelectionModel<T> extends MultipleSelectionModel<T> {

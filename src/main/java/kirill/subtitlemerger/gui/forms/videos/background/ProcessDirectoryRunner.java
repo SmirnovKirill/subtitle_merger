@@ -135,7 +135,7 @@ public class ProcessDirectoryRunner implements BackgroundRunner<ProcessDirectory
 
     /*
      * We should set the "hide unavailable" checkbox by default if there is at least one available video. Otherwise it
-     * should not be checked because the user will see just an empty video list which isn't very user friendly.
+     * should not be set because the user will see just an empty video list which isn't very user friendly.
      */
     private static boolean shouldHideUnavailable(List<Video> videos, BackgroundManager backgroundManager) {
         backgroundManager.updateMessage("Calculating whether to hide unavailable videos by default...");

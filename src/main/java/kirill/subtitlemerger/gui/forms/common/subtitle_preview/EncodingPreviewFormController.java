@@ -31,24 +31,24 @@ public class EncodingPreviewFormController extends AbstractPreviewFormController
 
     private boolean saveButtonPressed;
 
-    private SubtitlesAndInput originalSubtitlesAndInput;
+    private SubtitlesAndInput initialSubtitlesAndInput;
 
     private SubtitlesAndInput subtitlesAndInput;
 
     private Stage dialogStage;
 
     public void initialize(String title, SubtitlesAndInput subtitlesAndInput, Stage dialogStage) {
-        this.title.setText(title);
+        titleLabel.setText(title);
         encodingComboBox.setConverter(CHARSET_STRING_CONVERTER);
         encodingComboBox.getItems().setAll(LogicConstants.ALLOWED_ENCODINGS);
         encodingComboBox.getSelectionModel().select(subtitlesAndInput.getEncoding());
         listView.setSelectionModel(new NoSelectionModel<>());
         this.dialogStage = dialogStage;
 
-        originalSubtitlesAndInput = subtitlesAndInput;
+        initialSubtitlesAndInput = subtitlesAndInput;
         this.subtitlesAndInput = subtitlesAndInput;
 
-        displayText(originalSubtitlesAndInput.getEncoding(), true);
+        displayText(initialSubtitlesAndInput.getEncoding(), true);
     }
 
     private void displayText(Charset encoding, boolean firstRun) {
@@ -80,20 +80,17 @@ public class EncodingPreviewFormController extends AbstractPreviewFormController
 
             if (!correctFormat) {
                 actionResultLabel.setError(
-                        String.format(
-                                "This encoding (%s) doesn't fit or the file has an incorrect format",
-                                encoding.name()
-                        )
+                        "This encoding (" + encoding.name() + ") doesn't fit or the file has an incorrect format"
                 );
             } else if (!firstRun) {
-                if (Objects.equals(encoding, originalSubtitlesAndInput.getEncoding())) {
-                    actionResultLabel.setSuccess("The encoding has been restored to the original value successfully");
+                if (Objects.equals(encoding, initialSubtitlesAndInput.getEncoding())) {
+                    actionResultLabel.setSuccess("The encoding has been restored to the initial value successfully");
                 } else {
                     actionResultLabel.setSuccess("The encoding has been changed successfully");
                 }
             }
 
-            saveButton.setDisable(Objects.equals(encoding, originalSubtitlesAndInput.getEncoding()) || !correctFormat);
+            saveButton.setDisable(Objects.equals(encoding, initialSubtitlesAndInput.getEncoding()) || !correctFormat);
         };
 
         runInBackground(backgroundRunner, callback);
@@ -111,12 +108,12 @@ public class EncodingPreviewFormController extends AbstractPreviewFormController
     }
 
     @FXML
-    private void cancelButtonClicked() {
+    private void cancelClicked() {
         dialogStage.close();
     }
 
     @FXML
-    private void saveButtonClicked() {
+    private void saveClicked() {
         saveButtonPressed = true;
         dialogStage.close();
     }
@@ -125,7 +122,7 @@ public class EncodingPreviewFormController extends AbstractPreviewFormController
         if (saveButtonPressed) {
             return subtitlesAndInput;
         } else {
-            return originalSubtitlesAndInput;
+            return initialSubtitlesAndInput;
         }
     }
 

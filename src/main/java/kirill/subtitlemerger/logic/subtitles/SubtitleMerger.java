@@ -6,8 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.ListUtils;
 import org.jetbrains.annotations.Nullable;
 import org.joda.time.LocalTime;
 
@@ -16,15 +15,14 @@ import java.util.*;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
-@CommonsLog
 public class SubtitleMerger {
     public static Subtitles mergeSubtitles(
             Subtitles upperSubtitles,
             Subtitles lowerSubtitles
     ) throws InterruptedException {
         List<MergerSubtitle> result = makeInitialMerge(upperSubtitles, lowerSubtitles);
-        result = getExpandedSubtitles(result);
-        sortSubtitleLines(result);
+        fixJumps(result);
+        orderSubtitleLines(result);
         result = getCombinedSubtitles(result);
 
         return convert(result);
@@ -32,7 +30,7 @@ public class SubtitleMerger {
 
     /**
      * The first and the simplest stage of the merge - we make a list of all seen points of time and for each segment we
-     * see whether there are subtitles from any source and if there are we add this segment and its lines.
+     * see whether there are subtitles from any source and if there are we create a subtitle for this segment.
      */
     private static List<MergerSubtitle> makeInitialMerge(
             Subtitles upperSubtitles,
@@ -40,27 +38,29 @@ public class SubtitleMerger {
     ) throws InterruptedException {
         List<MergerSubtitle> result = new ArrayList<>();
 
-        List<LocalTime> uniqueSortedPointsOfTime = getUniqueSortedPointsOfTime(upperSubtitles, lowerSubtitles);
+        List<LocalTime> pointsOfTime = getUniqueSortedPointsOfTime(upperSubtitles, lowerSubtitles);
 
+        boolean upperConsequential = consequentialSubtitles(upperSubtitles);
+        boolean lowerConsequential = consequentialSubtitles(lowerSubtitles);
         int upperIndex = 0;
         int lowerIndex = 0;
-        for (int i = 0; i < uniqueSortedPointsOfTime.size() - 1; i++) {
+        for (int i = 0; i < pointsOfTime.size() - 1; i++) {
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
 
-            LocalTime from = uniqueSortedPointsOfTime.get(i);
-            LocalTime to = uniqueSortedPointsOfTime.get(i + 1);
+            LocalTime from = pointsOfTime.get(i);
+            LocalTime to = pointsOfTime.get(i + 1);
 
             Subtitle upperSubtitle = null;
-            Integer matchingUpperIndex = getIndexMatchingTime(upperIndex, upperSubtitles, from, to);
+            Integer matchingUpperIndex = getIndexMatchingTime(upperIndex, upperSubtitles, from, to, upperConsequential);
             if (matchingUpperIndex != null) {
                 upperIndex = matchingUpperIndex;
                 upperSubtitle = upperSubtitles.getSubtitles().get(upperIndex);
             }
 
             Subtitle lowerSubtitle = null;
-            Integer matchingLowerIndex = getIndexMatchingTime(lowerIndex, lowerSubtitles, from, to);
+            Integer matchingLowerIndex = getIndexMatchingTime(lowerIndex, lowerSubtitles, from, to, lowerConsequential);
             if (matchingLowerIndex != null) {
                 lowerIndex = matchingLowerIndex;
                 lowerSubtitle = lowerSubtitles.getSubtitles().get(lowerIndex);
@@ -98,11 +98,7 @@ public class SubtitleMerger {
     ) throws InterruptedException {
         Set<LocalTime> result = new TreeSet<>();
 
-        Collection<Subtitle> allSubtitles = CollectionUtils.union(
-                upperSubtitles.getSubtitles(),
-                lowerSubtitles.getSubtitles()
-        );
-
+        List<Subtitle> allSubtitles = ListUtils.union(upperSubtitles.getSubtitles(), lowerSubtitles.getSubtitles());
         for (Subtitle subtitle : allSubtitles) {
             if (Thread.interrupted()) {
                 throw new InterruptedException();
@@ -115,19 +111,51 @@ public class SubtitleMerger {
         return new ArrayList<>(result);
     }
 
+    /**
+     * Returns true if all the subtitles go consequentially meaning time points don't decrease. The result will be used
+     * to increase merging performance later.
+     */
+    private static boolean consequentialSubtitles(Subtitles subtitles) {
+        for (int i = 0; i < subtitles.getSubtitles().size(); i++) {
+            Subtitle subtitle = subtitles.getSubtitles().get(i);
+            if (subtitle.getTo().isBefore(subtitle.getFrom())) {
+                return false;
+            }
+
+            if (i != subtitles.getSubtitles().size() - 1) {
+                Subtitle nextSubtitle = subtitles.getSubtitles().get(i + 1);
+                if (nextSubtitle.getFrom().isBefore(subtitle.getTo())) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     /*
-     * For correctly formatted subtitles we should check only the current index and the next one (if there is one)
-     * because subtitles should go consequentially. But unfortunately subtitles sometimes have errors in them and can be
-     * overlapped in time. To deal with it it's better to check all further indices.
+     * For correctly formatted subtitles we can check only the current index and the next one (if there is one). But
+     * sometimes there can be subtitles that are overlapped in time and to deal with them we have to check all indices
+     * to the right. It's better to handle these situations differently because if we check only two indices instead of
+     * all indices to the right performance will be increased significantly (dozens of times, for example for 10 mb
+     * files initial merging would take around 100 ms instead of several seconds without this optimization).
      */
     @Nullable
     private static Integer getIndexMatchingTime(
             int currentIndex,
             Subtitles subtitles,
             LocalTime from,
-            LocalTime to
+            LocalTime to,
+            boolean consequentialSubtitles
     ) {
-        for (int i = currentIndex; i < subtitles.getSubtitles().size(); i++) {
+        int topIndexToCheck;
+        if (consequentialSubtitles) {
+            topIndexToCheck = Integer.min(currentIndex + 1, subtitles.getSubtitles().size() - 1);
+        } else {
+            topIndexToCheck = subtitles.getSubtitles().size() - 1;
+        }
+
+        for (int i = currentIndex; i <= topIndexToCheck; i++) {
             if (subtitleMatchesTime(subtitles.getSubtitles().get(i), from, to)) {
                 return i;
             }
@@ -144,55 +172,49 @@ public class SubtitleMerger {
     }
 
     /**
-     * This method fixes "jumps" that appear after splitting into smaller segments. If for example for some segment
-     * there are lines from only one source (upper) and on the next segment lines from the other source (lower)
-     * are added it looks like the jump of the lines from the upper source because for some period of time they go alone
-     * and later when the lines from the other source are added they are not alone anymore and are moved to the top.
-     * This method kind of "expands" subtitles so they start and end together at the same time if they
-     * appear together somewhere. If the lines go alone at all segments then no expanding happens - this is a common
-     * case for english subtitles where there are descriptions of sounds that are usually not present for other
-     * languages, so no expanding happens there.
+     * It may occur after the initial merge that several consecutive merged subtitles have the exact same lines from one
+     * of the sources. If there is at least one subtitle among them who has only these lines (and thus just one source)
+     * while there is also at least one subtitle that has these lines plus the lines from the other source, it may look
+     * like a "jump" of the lines from the first source. Imagine that a subtitle with only these lines is displayed and
+     * right after it goes another subtitle that has both these lines at the top and the other lines at the bottom.
+     * Because the lines go alone and later they are displayed on top of the other lines it looks like a jump.
+     * To fix this we should find all such subtitles with only one source and add appropriate lines from the other
+     * source for them.
      */
-    private static List<MergerSubtitle> getExpandedSubtitles(
-            List<MergerSubtitle> subtitles
-    ) throws InterruptedException {
-        List<MergerSubtitle> result = new ArrayList<>();
-
+    private static void fixJumps(List<MergerSubtitle> subtitles) throws InterruptedException {
         for (int i = 0; i < subtitles.size(); i++) {
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
 
             MergerSubtitle subtitle = subtitles.get(i);
-
             Set<Source> sources = subtitle.getLines().stream().map(MergerSubtitleLine::getSource).collect(toSet());
-            if (sources.size() != 1 || subtitleAlwaysHasOneSource(subtitle, i, subtitles)) {
-                result.add(subtitle);
-                continue;
+            if (sources.size() == 1) {
+                Source otherSource = Arrays.stream(Source.values())
+                        .filter(currentSource -> !sources.contains(currentSource))
+                        .findFirst().orElseThrow(IllegalStateException::new);
+
+                List<MergerSubtitleLine> linesToAdd = getLinesFromOtherSourceToAdd(i, otherSource, subtitles);
+                if (linesToAdd != null) {
+                    subtitle.getLines().addAll(linesToAdd);
+                }
             }
-
-            Source otherSource = Arrays.stream(Source.values())
-                    .filter(currentSource -> !sources.contains(currentSource))
-                    .findFirst().orElseThrow(IllegalStateException::new);
-
-            List<MergerSubtitleLine> subtitleLines = new ArrayList<>(subtitle.getLines());
-            subtitleLines.addAll(getClosestLinesFromOtherSource(i, otherSource, subtitles));
-
-            result.add(new MergerSubtitle(subtitle.getFrom(), subtitle.getTo(), subtitleLines));
         }
-
-        return result;
     }
 
     /**
-     * Checks whether the subtitle with a given index always has one source, without lines from the other source. To do
-     * this we have to check subtitles both to the left and to the right from the given one.
+     * Checks the subtitles around the subtitle with a given index which have the exact same lines for the source. If at
+     * least one of them has lines from the other source as well then the lines from the other source are returned. The
+     * method returns the closest lines and gives priority to subtitles to the left because it's better to show already
+     * displayed subtitles longer than to show not yet displayed subtitles sooner (because of spoilers).
      */
-    private static boolean subtitleAlwaysHasOneSource(
-            MergerSubtitle subtitle,
+    @Nullable
+    private static List<MergerSubtitleLine> getLinesFromOtherSourceToAdd(
             int subtitleIndex,
+            Source otherSource,
             List<MergerSubtitle> subtitles
     ) throws InterruptedException {
+        MergerSubtitle subtitle = subtitles.get(subtitleIndex);
         Source source = subtitle.getLines().get(0).getSource();
 
         for (int i = subtitleIndex - 1; i >= 0; i--) {
@@ -200,15 +222,12 @@ public class SubtitleMerger {
                 throw new InterruptedException();
             }
 
-            if (subtitlesEqualForSource(subtitles.get(i), subtitles.get(i + 1), source)) {
-                /*
-                 * If we got here it means that subtitles have the same text for the source. Now if the lines are
-                 * equal no matter what the source is it means that it's just another segment for the subtitle and we
-                 * should keep going, but if the lines differ it means that there are lines from the other source
-                 * and we should return false.
-                 */
+            if (areConsecutive(subtitles.get(i), subtitles.get(i + 1), source)) {
+                /* If the lines are different it means that this subtitle has lines from the other source. */
                 if (!Objects.equals(subtitles.get(i).getLines(), subtitles.get(i + 1).getLines())) {
-                    return false;
+                    return subtitles.get(i).getLines().stream()
+                            .filter(line -> line.getSource() == otherSource)
+                            .collect(toList());
                 }
             } else {
                 break;
@@ -220,29 +239,26 @@ public class SubtitleMerger {
                 throw new InterruptedException();
             }
 
-            if (subtitlesEqualForSource(subtitles.get(i - 1), subtitles.get(i), source)) {
-                /*
-                 * If we got here it means that subtitles have the same text for the source. Now if the lines are
-                 * equal no matter what the source is it means that it's just another segment of for subtitle and we
-                 * should keep going, but if the lines differ it means that there are lines from the other source
-                 * and we should return false.
-                 */
+            if (areConsecutive(subtitles.get(i - 1), subtitles.get(i), source)) {
+                /* If the lines are different it means that this subtitle has lines from the other source. */
                 if (!Objects.equals(subtitles.get(i - 1).getLines(), subtitles.get(i).getLines())) {
-                    return false;
+                    return subtitles.get(i).getLines().stream()
+                            .filter(line -> line.getSource() == otherSource)
+                            .collect(toList());
                 }
             } else {
                 break;
             }
         }
 
-        return true;
+        return null;
     }
 
     /**
-     * Subtitles are considered to be equal if they are strictly consequential (the next one starts right where the
-     * previous ends) and the lines for the given source are the same.
+     * Returns true if the subtitles are consecutive for the source meaning they go strictly one after the other and the
+     * lines for the source are equal.
      */
-    private static boolean subtitlesEqualForSource(MergerSubtitle previous, MergerSubtitle next, Source source) {
+    private static boolean areConsecutive(MergerSubtitle previous, MergerSubtitle next, Source source) {
         if (!Objects.equals(previous.getTo(), next.getFrom())) {
             return false;
         }
@@ -253,78 +269,24 @@ public class SubtitleMerger {
         );
     }
 
-    private static List<MergerSubtitleLine> getClosestLinesFromOtherSource(
-            int subtitleIndex,
-            Source otherSource,
-            List<MergerSubtitle> subtitles
-    ) throws InterruptedException {
-        List<MergerSubtitleLine> result;
-
-        MergerSubtitle firstMatchingSubtitleForward = null;
-        for (int i = subtitleIndex + 1; i < subtitles.size(); i++) {
-            if (Thread.interrupted()) {
-                throw new InterruptedException();
-            }
-
-            MergerSubtitle currentSubtitle = subtitles.get(i);
-            if (currentSubtitle.getLines().stream().anyMatch(line -> line.getSource() == otherSource)) {
-                firstMatchingSubtitleForward = currentSubtitle;
-                break;
-            }
-        }
-
-        MergerSubtitle firstMatchingSubtitleBackward = null;
-        for (int i = subtitleIndex - 1; i >= 0; i--) {
-            if (Thread.interrupted()) {
-                throw new InterruptedException();
-            }
-
-            MergerSubtitle currentSubtitle = subtitles.get(i);
-            if (currentSubtitle.getLines().stream().anyMatch(line -> line.getSource() == otherSource)) {
-                firstMatchingSubtitleBackward = currentSubtitle;
-                break;
-            }
-        }
-
-        if (firstMatchingSubtitleForward == null && firstMatchingSubtitleBackward == null) {
-            log.error("no matching subtitles, most likely a bug");
-            throw new IllegalStateException();
-        } else if (firstMatchingSubtitleForward != null && firstMatchingSubtitleBackward != null) {
-            MergerSubtitle mainSubtitle = subtitles.get(subtitleIndex);
-
-            int millisBeforeNext = firstMatchingSubtitleForward.getFrom().getMillisOfDay()
-                    - mainSubtitle.getTo().getMillisOfDay();
-            int millisAfterPrevious = mainSubtitle.getFrom().getMillisOfDay()
-                    - firstMatchingSubtitleBackward.getTo().getMillisOfDay();
-            if (millisBeforeNext < millisAfterPrevious) {
-                result = firstMatchingSubtitleForward.getLines();
-            } else {
-                result = firstMatchingSubtitleBackward.getLines();
-            }
-        } else if (firstMatchingSubtitleForward != null) {
-            result = firstMatchingSubtitleForward.getLines();
-        } else {
-            result = firstMatchingSubtitleBackward.getLines();
-        }
-
-        return result.stream()
-                .filter(line -> Objects.equals(line.getSource(), otherSource))
-                .collect(toList());
-    }
-
-    private static void sortSubtitleLines(List<MergerSubtitle> subtitles) throws InterruptedException {
+    /**
+     * After the previous steps subtitle lines may be mixed up a little bit meaning lines from lower subtitles may go
+     * higher than lines from upper subtitles. This method fixes that.
+     */
+    private static void orderSubtitleLines(List<MergerSubtitle> subtitles) throws InterruptedException {
         for (MergerSubtitle subtitle : subtitles) {
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
 
-            List<MergerSubtitleLine> orderedLines = new ArrayList<>();
-
-            for (Source source : Source.values()) {
-                orderedLines.addAll(
-                        subtitle.getLines().stream().filter(line -> line.getSource() == source).collect(toList())
-                );
-            }
+            List<MergerSubtitleLine> orderedLines = ListUtils.union(
+                    subtitle.getLines().stream()
+                            .filter(line -> line.getSource() == Source.UPPER_SUBTITLES)
+                            .collect(toList()),
+                    subtitle.getLines().stream()
+                            .filter(line -> line.getSource() == Source.LOWER_SUBTITLES)
+                            .collect(toList())
+            );
 
             subtitle.setLines(orderedLines);
         }
@@ -343,8 +305,7 @@ public class SubtitleMerger {
                 throw new InterruptedException();
             }
 
-            boolean shouldAddCurrentSubtitle = true;
-
+            boolean addCurrentSubtitle = true;
             if (result.size() > 0) {
                 MergerSubtitle lastAddedSubtitle = result.get(result.size() - 1);
 
@@ -352,11 +313,11 @@ public class SubtitleMerger {
                         && Objects.equals(lastAddedSubtitle.getTo(), currentSubtitle.getFrom());
                 if (canCombine) {
                     lastAddedSubtitle.setTo(currentSubtitle.getTo());
-                    shouldAddCurrentSubtitle = false;
+                    addCurrentSubtitle = false;
                 }
             }
 
-            if (shouldAddCurrentSubtitle) {
+            if (addCurrentSubtitle) {
                 result.add(currentSubtitle);
             }
         }

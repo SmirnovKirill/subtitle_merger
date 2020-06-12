@@ -63,7 +63,7 @@ public class SubRipWriter {
             result = new ArrayList<>();
             for (String unprocessedLine : unprocessedLines) {
                 /*
-                 * If a line was originally blank then it should be included, but if it was originally not blank but
+                 * If a line was initially blank then it should be included, but if it was originally not blank but
                  * became blank after removing tags it should not.
                  */
                 if (StringUtils.isBlank(unprocessedLine)) {

@@ -33,9 +33,9 @@ public class Ffmpeg {
     private File ffmpegFile;
 
     /*
-     * During the merge this class creates a temporary video file and it is usually removed in the finally block.
-     * However, when the main window is closed finally blocks aren't called so we have to remember this file and remove
-     * it in the close() method.
+     * During a merge this class creates a temporary video file and it is usually removed in the finally block. However,
+     * when the main window is closed finally blocks aren't called so we have to remember this file and remove it in the
+     * close() method.
      */
     private File currentTempVideoFile;
 

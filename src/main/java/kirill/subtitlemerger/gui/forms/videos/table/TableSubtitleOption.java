@@ -11,10 +11,7 @@ import java.util.Objects;
 
 @CommonsLog
 public class TableSubtitleOption {
-    /*
-     * I had to make this constant instead of just using null because the JavaFX's integer wrappers can hold only
-     * primitive integers.
-     */
+    /* I had to make this constant instead of just using null because JavaFX's wrappers can hold only primitives. */
     static final int UNKNOWN_SIZE = -1;
 
     @Getter
@@ -178,7 +175,7 @@ public class TableSubtitleOption {
                 .filter(option -> Objects.equals(option.getId(), id))
                 .findFirst().orElse(null);
         if (result == null) {
-            log.error("no table subtitle option for id " + id + ", most likely a bug");
+            log.error("no table subtitle options with id " + id + ", most likely a bug");
             throw new IllegalStateException();
         }
 
@@ -186,7 +183,7 @@ public class TableSubtitleOption {
     }
 
     public void markAsValid() {
-        this.notValidReason.set(null);
+        notValidReason.set(null);
     }
 
     public void loadedSuccessfully(int size, String notValidReason) {
@@ -197,9 +194,6 @@ public class TableSubtitleOption {
 
         this.size.set(size);
         failedToLoadReason.set(null);
-
-        video.optionLoadedSuccessfully();
-
         if (!StringUtils.isBlank(notValidReason)) {
             this.notValidReason.set(notValidReason);
             if (isSelectedAsUpper()) {
@@ -209,6 +203,8 @@ public class TableSubtitleOption {
                 setSelectedAsLower(false);
             }
         }
+
+        video.optionLoadedSuccessfully();
     }
 
     public void failedToLoad(String failedToLoadReason) {

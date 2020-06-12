@@ -14,16 +14,16 @@ public class ReadOnlyPreviewFormController extends AbstractPreviewFormController
     private Pane upperSubtitlesPane;
 
     @FXML
-    private Label upperSubtitlesTitle;
+    private Label upperSubtitlesTitleLabel;
 
     @FXML
     private Pane lowerSubtitlesPane;
 
     @FXML
-    private Label lowerSubtitlesTitle;
+    private Label lowerSubtitlesTitleLabel;
 
     public void initializeSimple(String title, String text, Stage dialogStage) {
-        this.title.setText(title);
+        titleLabel.setText(title);
         GuiUtils.setVisibleAndManaged(upperSubtitlesPane, false);
         GuiUtils.setVisibleAndManaged(lowerSubtitlesPane, false);
         listView.setSelectionModel(new NoSelectionModel<>());
@@ -38,9 +38,9 @@ public class ReadOnlyPreviewFormController extends AbstractPreviewFormController
             String text,
             Stage dialogStage
     ) {
-        this.title.setText("This is the result of merging");
-        this.upperSubtitlesTitle.setText(upperSubtitlesTitle);
-        this.lowerSubtitlesTitle.setText(lowerSubtitlesTitle);
+        titleLabel.setText("This is the result of merging");
+        upperSubtitlesTitleLabel.setText(upperSubtitlesTitle);
+        lowerSubtitlesTitleLabel.setText(lowerSubtitlesTitle);
         listView.setSelectionModel(new NoSelectionModel<>());
         this.dialogStage = dialogStage;
 
@@ -64,7 +64,7 @@ public class ReadOnlyPreviewFormController extends AbstractPreviewFormController
     }
 
     @FXML
-    private void okButtonClicked() {
+    private void okClicked() {
         dialogStage.close();
     }
 }

@@ -26,6 +26,7 @@
             <Insets top="20" right="20" bottom="20" left="20"/>
         </padding>
 
+        <!-- We can't set the vgap as well and we have to set margins directly because of the swap button. -->
         <GridPane fx:id="settingsPane" hgap="35">
             <gridLinesVisible><GuiConstants fx:constant="GRID_LINES_VISIBLE"/></gridLinesVisible>
 
@@ -44,7 +45,7 @@
                       onAction="#upperLanguageChanged" maxWidth="Infinity"/>
 
             <Region GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-            <Button fx:id="swapButton" GridPane.rowIndex="1" GridPane.columnIndex="1" onAction="#swapButtonClicked">
+            <Button fx:id="swapButton" GridPane.rowIndex="1" GridPane.columnIndex="1" onAction="#swapClicked">
                 <GridPane.margin>
                     <Insets top="8" bottom="8" left="10"/>
                 </GridPane.margin>
@@ -85,18 +86,18 @@
                     <tooltip>
                         With this option the application will inject merged subtitles into original video files. It is
                         the most convenient option since everything will look as before except for the new merged
-                        subtitles in the subtitle list. This approach requires extra disk space during the merge process
-                        (equal to the size of the largest video to process) because the application will create a
-                        temporary video first and then will overwrite the original video with this temporary one. Note
-                        that the original files will be overwritten! And if something goes wrong during the merge you
-                        may lose your video files.
+                        subtitles in the subtitle list. This approach requires extra disk space during the merging
+                        process (equal to the size of the largest video to process) because the application will create
+                        a temporary video first and then will overwrite the original video with this temporary one. Note
+                        that the original files will be overwritten! And if something goes wrong during a merge you may
+                        lose your video files.
                     </tooltip>
                 </MergeModeOption>
                 <MergeModeOption GridPane.rowIndex="0" GridPane.columnIndex="1" toggleGroup="$mergeModeToggleGroup">
                     <text><SettingsFormController fx:constant="MERGE_MODE_SEPARATE_SUBTITLE_FILES"/></text>
                     <tooltip>
                         With this option the application will create separate subtitle files next to the videos. This
-                        option is not so convenient because after the merge you will have to select the subtitle files
+                        option is not so convenient because after merging you will have to select the subtitle files
                         manually when watching videos. But this option is safe because the original videos won't be
                         modified in any way. And it also doesn't require almost any extra disk space.
                     </tooltip>

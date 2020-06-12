@@ -74,10 +74,7 @@ public class Ffprobe {
         try {
             return JSON_OBJECT_MAPPER.readValue(consoleOutput, JsonFfprobeVideoInfo.class);
         } catch (JsonProcessingException e) {
-            log.error(
-                    "failed to convert console output to json: " + ExceptionUtils.getStackTrace(e)
-                            + ", console output " + consoleOutput
-            );
+            log.error("failed to convert " + consoleOutput + " to ffprobe json: " + ExceptionUtils.getStackTrace(e));
             throw new FfmpegException(FfmpegException.Code.FAILED_TO_CONVERT_JSON, consoleOutput);
         }
     }

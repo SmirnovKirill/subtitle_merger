@@ -59,8 +59,8 @@ public class BuiltInSubtitleOption extends SubtitleOption {
     }
 
     /**
-     * @return a three-letter code of the upper language used for the merge if it was known, "unknown" if the language
-     * was unknown and "external" if an external file was used (thus no language code).
+     * @return a three-letter code of the upper language used for merging if it was known, "unknown" if the language was
+     * unknown and "external" if an external file was used (thus no language code).
      */
     public String getMergedUpperCode() {
         if (!merged) {
@@ -90,8 +90,8 @@ public class BuiltInSubtitleOption extends SubtitleOption {
     }
 
     /**
-     * @return a three-letter code of the lower language used for the merge if it was known, "unknown" if the language
-     * was unknown and "external" if an external file was used (thus no language code).
+     * @return a three-letter code of the lower language used for merging if it was known, "unknown" if the language was
+     * unknown and "external" if an external file was used (thus no language code).
      */
     public String getMergedLowerCode() {
         if (!merged) {

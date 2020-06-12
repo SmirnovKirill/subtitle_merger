@@ -28,7 +28,7 @@
             <HBox GridPane.rowIndex="0" GridPane.columnIndex="1" alignment="CENTER_RIGHT">
                 <TextField fx:id="upperPathField" HBox.hgrow="ALWAYS" promptText="not selected"/>
                 <Region minWidth="10" maxWidth="10"/>
-                <PreviewButton fx:id="upperPreview" onAction="#upperPreviewClicked" disable="true"/>
+                <PreviewButton fx:id="upperPreviewButton" onAction="#upperPreviewClicked" disable="true"/>
                 <Region minWidth="20" maxWidth="20"/>
                 <Button fx:id="upperChooseButton" onAction="#upperChooserClicked" text="Choose file"/>
             </HBox>
@@ -38,7 +38,7 @@
             <HBox GridPane.rowIndex="1" GridPane.columnIndex="1" alignment="CENTER_RIGHT">
                 <TextField fx:id="lowerPathField" HBox.hgrow="ALWAYS" promptText="not selected"/>
                 <Region minWidth="10" maxWidth="10"/>
-                <PreviewButton fx:id="lowerPreview" onAction="#lowerPreviewClicked" disable="true"/>
+                <PreviewButton fx:id="lowerPreviewButton" onAction="#lowerPreviewClicked" disable="true"/>
                 <Region minWidth="20" maxWidth="20"/>
                 <Button fx:id="lowerChooseButton" onAction="#lowerChooserClicked" text="Choose file"/>
             </HBox>
@@ -47,13 +47,13 @@
             <HBox GridPane.rowIndex="2" GridPane.columnIndex="1" alignment="CENTER_RIGHT">
                 <TextField fx:id="mergedPathField" HBox.hgrow="ALWAYS" promptText="not selected"/>
                 <Region minWidth="10" maxWidth="10"/>
-                <PreviewButton fx:id="mergedPreview" onAction="#mergedPreviewClicked" disable="true"/>
+                <PreviewButton fx:id="mergedPreviewButton" onAction="#mergedPreviewClicked" disable="true"/>
                 <Region minWidth="20" maxWidth="20"/>
                 <Button fx:id="mergedChooseButton" onAction="#mergedChooserClicked" text="Choose file"/>
             </HBox>
 
             <Button fx:id="mergeButton" GridPane.rowIndex="3" GridPane.columnIndex="0" GridPane.columnSpan="2"
-                    onAction="#mergeButtonClicked" disable="true" text="Merge subtitles"/>
+                    onAction="#mergeClicked" disable="true" text="Merge subtitles"/>
 
             <ActionResultLabel fx:id="totalResultLabel" GridPane.rowIndex="4" GridPane.columnIndex="0"
                               GridPane.columnSpan="2" wrapText="true"/>

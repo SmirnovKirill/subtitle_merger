@@ -15,9 +15,7 @@ import kirill.subtitlemerger.logic.subtitles.entities.SubtitlesAndInput;
 public class Popups {
     public static void showError(String message, Stage ownerStage) {
         FormInfo nodeInfo = GuiUtils.loadForm("/gui/javafx/forms/common/error_form.fxml");
-
         Stage popupStage = getPopupStage("Error!", nodeInfo.getRootNode(), ownerStage);
-
         ErrorFormController controller = nodeInfo.getController();
         controller.initialize(message, popupStage);
 
@@ -47,9 +45,7 @@ public class Popups {
             Stage ownerStage
     ) {
         FormInfo nodeInfo = GuiUtils.loadForm("/gui/javafx/forms/common/agreement_form.fxml");
-
         Stage popupStage = getPopupStage("Please confirm", nodeInfo.getRootNode(), ownerStage);
-
         AgreementFormController controller = nodeInfo.getController();
         controller.initialize(message, applyToAllText, yesText, noText, popupStage);
 
@@ -70,9 +66,7 @@ public class Popups {
         FormInfo formInfo = GuiUtils.loadForm(
                 "/gui/javafx/forms/common/subtitle_preview/read_only_preview_form.fxml"
         );
-
         Stage previewStage = Popups.getPopupStage("Subtitle preview", formInfo.getRootNode(), ownerStage);
-
         ReadOnlyPreviewFormController controller = formInfo.getController();
         controller.initializeSimple(title, text, previewStage);
 
@@ -88,9 +82,7 @@ public class Popups {
         FormInfo formInfo = GuiUtils.loadForm(
                 "/gui/javafx/forms/common/subtitle_preview/read_only_preview_form.fxml"
         );
-
         Stage previewStage = Popups.getPopupStage("Subtitle preview", formInfo.getRootNode(), ownerStage);
-
         ReadOnlyPreviewFormController controller = formInfo.getController();
         controller.initializeMerged(upperSubtitlesTitle, lowerSubtitlesTitle, text, previewStage);
 
@@ -105,9 +97,7 @@ public class Popups {
         FormInfo formInfo = GuiUtils.loadForm(
                 "/gui/javafx/forms/common/subtitle_preview/encoding_preview_form.fxml"
         );
-
         Stage previewStage = Popups.getPopupStage("Subtitle preview", formInfo.getRootNode(), ownerStage);
-
         EncodingPreviewFormController controller = formInfo.getController();
         controller.initialize(title, subtitlesAndInput, previewStage);
 

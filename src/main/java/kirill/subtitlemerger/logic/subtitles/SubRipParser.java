@@ -3,7 +3,6 @@ package kirill.subtitlemerger.logic.subtitles;
 import kirill.subtitlemerger.logic.subtitles.entities.Subtitle;
 import kirill.subtitlemerger.logic.subtitles.entities.SubtitleFormatException;
 import kirill.subtitlemerger.logic.subtitles.entities.Subtitles;
-import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.LocalTime;
@@ -17,7 +16,6 @@ import java.util.regex.Pattern;
 
 import static java.util.stream.Collectors.toList;
 
-@CommonsLog
 public class SubRipParser {
     private static final Pattern TIME_RANGE_PATTERN = Pattern.compile(
             "^(\\d{2}:\\d{2}:\\d{2},\\d{3}) --> (\\d{2}:\\d{2}:\\d{2},\\d{3})$"

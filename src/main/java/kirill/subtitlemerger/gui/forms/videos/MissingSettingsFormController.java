@@ -55,16 +55,16 @@ public class MissingSettingsFormController {
         }
     }
 
+    @FXML
+    private void goToSettingsClicked() {
+        videosFormController.openSettingsForm();
+    }
+
     void show() {
         missingSettingsPane.setVisible(true);
     }
 
     void hide() {
         missingSettingsPane.setVisible(false);
-    }
-
-    @FXML
-    private void goToSettingsClicked() {
-        videosFormController.openSettingsForm();
     }
 }

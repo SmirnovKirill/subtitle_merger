@@ -14,7 +14,6 @@ import kirill.subtitlemerger.logic.videos.entities.SubtitleOption;
 import kirill.subtitlemerger.logic.videos.entities.Video;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
@@ -22,10 +21,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackgroundUtils.getLoadCancelDescription;
 import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackgroundUtils.getLoadSubtitlesError;
+import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackgroundUtils.getLoadingCancelDescription;
 
-@CommonsLog
 @AllArgsConstructor
 public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner.Result> {
     private Video video;
@@ -70,12 +68,11 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
             return null;
         }
 
-        backgroundManager.setCancelDescription(getLoadCancelDescription(video));
+        backgroundManager.setCancelDescription(getLoadingCancelDescription(video));
 
         int toLoadCount = optionsToLoad.size();
-        int failedCount = 0;
         int incorrectCount = 0;
-
+        int failedCount = 0;
         for (BuiltInSubtitleOption option : optionsToLoad) {
             if (Thread.interrupted()) {
                 throw new InterruptedException();
@@ -87,10 +84,10 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
             backgroundManager.updateMessage(action);
 
             LoadSubtitlesResult loadResult = VideosBackgroundUtils.loadSubtitles(option, video, tableOption, ffmpeg);
-            if (loadResult == LoadSubtitlesResult.FAILED) {
-                failedCount++;
-            } else if (loadResult == LoadSubtitlesResult.INCORRECT_FORMAT) {
+            if (loadResult == LoadSubtitlesResult.INCORRECT_FORMAT) {
                 incorrectCount++;
+            } else if (loadResult == LoadSubtitlesResult.FAILED) {
+                failedCount++;
             }
         }
 
@@ -98,7 +95,7 @@ public class MergedPreviewRunner implements BackgroundRunner<MergedPreviewRunner
 
         if (failedCount != 0 || incorrectCount != 0) {
             String error = getLoadSubtitlesError(toLoadCount, failedCount, incorrectCount);
-            return "Preview is unavailable: " + StringUtils.uncapitalize(error);
+            return "Previewing is not possible: " + StringUtils.uncapitalize(error);
         } else {
             return null;
         }

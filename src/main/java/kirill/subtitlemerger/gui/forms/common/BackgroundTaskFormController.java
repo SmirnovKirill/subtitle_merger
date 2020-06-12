@@ -11,7 +11,7 @@ import lombok.extern.apachecommons.CommonsLog;
 
 /**
  * A parent class for controllers of the forms that can run background tasks. It has a helper method runInBackground
- * that takes care of the pane management (manages the main and the progress panes), task cancelling and so forth.
+ * that takes care of pane management (manages the main and the progress panes), task canceling and so forth.
  */
 @CommonsLog
 public abstract class BackgroundTaskFormController {
@@ -50,7 +50,7 @@ public abstract class BackgroundTaskFormController {
             throw new IllegalStateException();
         }
         if (!backgroundManager.getCancelPossible()) {
-            log.error("cancellation is not allowed, most likely a bug");
+            log.error("canceling is not allowed, most likely a bug");
             throw new IllegalStateException();
         }
 

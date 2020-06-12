@@ -12,15 +12,15 @@ import kirill.subtitlemerger.logic.utils.entities.MultiPartActionResult;
 import org.apache.commons.lang3.StringUtils;
 
 /**
- * A special pane to display data from the MultiPartActionResult class in three different colors - the error part in
- * red, the part with warnings in orange and the part with success in green. The pane is invisible and not managed (by
+ * A special pane to display data from the MultiPartActionResult class in three different colors - the part with success
+ * in green, the part with warnings in orange and the error part in red. The pane is invisible and not managed (by
  * default) if there are no texts to display.
- * Note that you have to be careful and use only data that can be displayed fully because JavaFX can't clip the Text
+ * Note that you have to be careful and use only texts that can be displayed fully because JavaFX can't clip the Text
  * classes with ellipsis like the Label classes, and this pane can't use labels because there is no way to ensure the
- * labels' priority (for example if there are three labels and there is not enough space all three will be displayed but
- * partly). And even if there was a way to ensure the priority, labels would have been treated like objects that can't
- * be cut in pieces so there could be line breaks between the labels. So in general it's better to use the
- * ActionResultLabel whenever possible.
+ * priority of the labels (for example if there are three labels and there is not enough space all three will be
+ * displayed but partly). And even if there was a way to ensure the priority, labels would have been treated like
+ * objects that can't be cut in pieces so there could be line breaks between the labels.
+ * So in general it's better to use the the ActionResultLabel whenever possible.
  *
  * @see MultiPartActionResult
  * @see ActionResultLabel

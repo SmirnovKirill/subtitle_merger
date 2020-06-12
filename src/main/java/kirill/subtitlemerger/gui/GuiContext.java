@@ -39,7 +39,7 @@ public class GuiContext {
     private Settings settings;
 
     /**
-     * Settings required for merging in videos.
+     * Settings required for working on the videos tab.
      */
     private ObservableSet<SettingType> missingSettings;
 
@@ -101,8 +101,8 @@ public class GuiContext {
             return result;
         } else {
             /*
-             * If we got here it means that either folder with the application is corrupted (folder with ffmpeg has been
-             * deleted) or the application is launched from IntelliJ IDEA.
+             * If we got here it means that either the folder with the application is corrupted (folder with ffmpeg has
+             * been deleted) or the application is launched from IntelliJ IDEA.
              */
             result = getDirectoryWithFfmpegIdea(directoryWithJar);
             if (result == null) {

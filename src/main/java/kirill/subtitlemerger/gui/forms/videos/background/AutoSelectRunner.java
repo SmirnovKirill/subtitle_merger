@@ -60,7 +60,7 @@ public class AutoSelectRunner implements BackgroundRunner<MultiPartActionResult>
                 Video video = Video.getById(tableVideo.getId(), videos);
 
                 backgroundManager.setCancelDescription(null);
-                String actionPrefix = getProgressAction(processedCount, toProcessCount, "Auto-selecting: ");
+                String actionPrefix = getProgressAction(processedCount, toProcessCount, "Auto-selection: ");
                 backgroundManager.updateMessage(actionPrefix + "processing " + video.getFile().getName() + "...");
 
                 boolean success = loadSubtitles(
@@ -88,7 +88,7 @@ public class AutoSelectRunner implements BackgroundRunner<MultiPartActionResult>
                 processedCount++;
             }
         } catch (InterruptedException e) {
-            /* Do nothing here, will just return the result based on the work done. */
+            /* Do nothing here, will just return a result based on the work done. */
         }
 
         return getActionResult(toProcessCount, processedCount, successfulCount, notPossibleCount, failedCount);
@@ -107,12 +107,11 @@ public class AutoSelectRunner implements BackgroundRunner<MultiPartActionResult>
             return true;
         }
 
-        backgroundManager.setCancelDescription(getLoadCancelDescription(video));
+        backgroundManager.setCancelDescription(getLoadingCancelDescription(video));
 
         int toLoadCount = optionsToLoad.size();
-        int failedCount = 0;
         int incorrectCount = 0;
-
+        int failedCount = 0;
         for (BuiltInSubtitleOption option : optionsToLoad) {
             if (Thread.interrupted()) {
                 throw new InterruptedException();
@@ -125,10 +124,10 @@ public class AutoSelectRunner implements BackgroundRunner<MultiPartActionResult>
             backgroundManager.updateMessage(action);
 
             LoadSubtitlesResult loadResult = VideosBackgroundUtils.loadSubtitles(option, video, tableOption, ffmpeg);
-            if (loadResult == LoadSubtitlesResult.FAILED) {
-                failedCount++;
-            } else if (loadResult == LoadSubtitlesResult.INCORRECT_FORMAT) {
+            if (loadResult == LoadSubtitlesResult.INCORRECT_FORMAT) {
                 incorrectCount++;
+            } else if (loadResult == LoadSubtitlesResult.FAILED) {
+                failedCount++;
             }
 
             if (failedCount != 0 || incorrectCount != 0) {
@@ -147,8 +146,8 @@ public class AutoSelectRunner implements BackgroundRunner<MultiPartActionResult>
         List<BuiltInSubtitleOption> selectableUpperOptions = getSelectableOptions(video, settings.getUpperLanguage());
         List<BuiltInSubtitleOption> selectableLowerOptions = getSelectableOptions(video, settings.getLowerLanguage());
         /*
-         * If there are no options for at least one language than the auto-selection won't work so there is no point
-         * in loading any subtitles.
+         * If there are no options for at least one language than auto-selecting won't work so there is no point in
+         * loading any subtitles.
          */
         if (CollectionUtils.isEmpty(selectableUpperOptions) || CollectionUtils.isEmpty(selectableLowerOptions)) {
             return new ArrayList<>();
@@ -229,7 +228,7 @@ public class AutoSelectRunner implements BackgroundRunner<MultiPartActionResult>
             return null;
         }
 
-        return StringUtils.join(missingLanguages, "and");
+        return StringUtils.join(missingLanguages, " and ");
     }
 
     private static BuiltInSubtitleOption getMatchingOption(List<BuiltInSubtitleOption> selectableOptions) {
@@ -260,69 +259,86 @@ public class AutoSelectRunner implements BackgroundRunner<MultiPartActionResult>
             int notPossibleCount,
             int failedCount
     ) {
-        String success = "";
-        String warning = "";
-        String error = "";
+        String success = null;
+        String warning = null;
+        String error = null;
 
+        int canceled = toProcessCount - processedCount;
         if (processedCount == 0) {
-            warning = "The task has been cancelled, nothing was done";
+            warning = "The task has been canceled, nothing was done";
         } else if (successfulCount == toProcessCount) {
             success = Utils.getTextDependingOnCount(
                     successfulCount,
-                    "Auto-selection has finished successfully for the video",
-                    "Auto-selection has finished successfully for all %d videos"
+                    "Auto-selecting has finished successfully for the video",
+                    "Auto-selecting has finished successfully for all %d videos"
             );
         } else if (notPossibleCount == toProcessCount) {
             warning = Utils.getTextDependingOnCount(
                     notPossibleCount,
-                    "Auto-selection is not possible for the video",
-                    "Auto-selection is not possible for all %d videos"
+                    "Auto-selecting is not possible for the video",
+                    "Auto-selecting is not possible for all %d videos"
             );
         } else if (failedCount == toProcessCount) {
             error = Utils.getTextDependingOnCount(
                     failedCount,
-                    "Auto-selection has failed for the video",
-                    "Auto-selection has failed for all %d videos"
+                    "Auto-selecting has failed for the video",
+                    "Auto-selecting has failed for all %d videos"
             );
         } else {
             if (successfulCount != 0) {
                 success = String.format(
-                        "Auto-selection has finished for %d/%d videos successfully",
+                        "Auto-selecting has finished for %d/%d videos successfully",
                         successfulCount,
                         toProcessCount
                 );
             }
 
-            if (processedCount != toProcessCount) {
+            /*
+             * If there is a phrase "is not possible" and no present perfect before, we should put a phrase with present
+             * perfect after that once.
+             */
+            boolean problemsWithPresentTense = false;
+            if (notPossibleCount != 0) {
                 if (StringUtils.isBlank(success)) {
                     warning = String.format(
-                            "Auto-selection has been cancelled for %d/%d videos",
-                            toProcessCount - processedCount,
+                            "Auto-selecting is not possible for %d/%d videos",
+                            notPossibleCount,
                             toProcessCount
                     );
+                    problemsWithPresentTense = true;
                 } else {
-                    warning = String.format("cancelled for %d/%d", toProcessCount - processedCount, toProcessCount);
+                    warning = String.format("is not possible for %d/%d", notPossibleCount, toProcessCount);
                 }
             }
 
-            if (notPossibleCount != 0) {
+            if (canceled != 0) {
                 if (StringUtils.isBlank(success) && StringUtils.isBlank(warning)) {
                     warning = String.format(
-                            "Auto-selection is not possible for %d/%d videos",
-                            notPossibleCount,
+                            "Auto-selecting has been canceled for %d/%d videos",
+                            canceled,
                             toProcessCount
                     );
                 } else {
                     if (!StringUtils.isBlank(warning)) {
                         warning += ", ";
+                    } else {
+                        warning = ""; // To prevent further concatenation with null.
                     }
-                    warning += String.format("not possible for %d/%d", notPossibleCount, toProcessCount);
-
+                    if (problemsWithPresentTense) {
+                        warning += String.format("has been canceled for %d/%d", canceled, toProcessCount);
+                        problemsWithPresentTense = false;
+                    } else {
+                        warning += String.format("canceled for %d/%d", canceled, toProcessCount);
+                    }
                 }
             }
 
             if (failedCount != 0) {
-                error = String.format("failed for %d/%d", failedCount, toProcessCount);
+                if (problemsWithPresentTense) {
+                    error = String.format("has failed for %d/%d", failedCount, toProcessCount);
+                } else {
+                    error = String.format("failed for %d/%d", failedCount, toProcessCount);
+                }
             }
         }
 

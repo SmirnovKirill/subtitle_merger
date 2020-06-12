@@ -13,9 +13,9 @@ import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.common_controls.MultiPartActionResultPane;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.logic.utils.Utils;
+import kirill.subtitlemerger.logic.utils.entities.CacheMap;
 import kirill.subtitlemerger.logic.utils.entities.MultiPartActionResult;
 import lombok.Getter;
-import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.joda.time.format.DateTimeFormat;
@@ -27,16 +27,15 @@ import java.util.Objects;
 
 import static kirill.subtitlemerger.gui.forms.videos.table.TableSubtitleOption.UNKNOWN_SIZE;
 
-@CommonsLog
 public class TableWithVideos extends TableView<TableVideo> {
     private static final int CELL_PADDING = 4;
 
     private static final int TITLE_AND_REMOVE_PANE_MIN_WIDTH = 190;
 
     /*
-     * On Windows the default font is more compact than the Linux's one. So it's better to set the width smaller because
-     * the gap between an unknown size label and a load link looks pretty big anyway but on Windows it looks even
-     * bigger.
+     * On Windows the default font is more compact than the Linux's one. So it's better to make the width smaller
+     * because the gap between an unknown size label and a load link looks pretty big anyway but on Windows it looks
+     * even bigger.
      */
     private static final int SIZE_AND_PREVIEW_PANE_WIDTH = SystemUtils.IS_OS_LINUX ? 90 : 82;
 
@@ -54,13 +53,13 @@ public class TableWithVideos extends TableView<TableVideo> {
 
     private ObjectProperty<RemoveSubtitleFileHandler> removeSubtitleFileHandler;
 
-    private ObjectProperty<SingleSubtitleLoader> singleSubtitleLoader;
+    private ObjectProperty<SingleSubtitlesLoader> singleSubtitlesLoader;
 
-    private ObjectProperty<AllVideoSubtitleLoader> allVideoSubtitleLoader;
+    private ObjectProperty<AllVideoSubtitlesLoader> allVideoSubtitlesLoader;
 
     private ObjectProperty<SubtitleOptionPreviewHandler> subtitleOptionPreviewHandler;
 
-    private ObjectProperty<MergedSubtitlePreviewHandler> mergedSubtitlePreviewHandler;
+    private ObjectProperty<MergedSubtitlesPreviewHandler> mergedSubtitlesPreviewHandler;
 
     private ToggleGroup sortByGroup;
 
@@ -83,17 +82,17 @@ public class TableWithVideos extends TableView<TableVideo> {
     private ReadOnlyIntegerWrapper selectedCount;
 
     public TableWithVideos() {
-        cellCache = new HashMap<>();
+        cellCache = new CacheMap<>(1000);
 
         selectAllHandler = new SimpleObjectProperty<>();
         selectAllCheckBox = getSelectAllCheckBox(selectAllHandler);
 
         addSubtitleFileHandler = new SimpleObjectProperty<>();
         removeSubtitleFileHandler = new SimpleObjectProperty<>();
-        singleSubtitleLoader = new SimpleObjectProperty<>();
-        allVideoSubtitleLoader = new SimpleObjectProperty<>();
+        singleSubtitlesLoader = new SimpleObjectProperty<>();
+        allVideoSubtitlesLoader = new SimpleObjectProperty<>();
         subtitleOptionPreviewHandler = new SimpleObjectProperty<>();
-        mergedSubtitlePreviewHandler = new SimpleObjectProperty<>();
+        mergedSubtitlesPreviewHandler = new SimpleObjectProperty<>();
 
         sortByGroup = new ToggleGroup();
         sortDirectionGroup = new ToggleGroup();
@@ -102,7 +101,7 @@ public class TableWithVideos extends TableView<TableVideo> {
         setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         getColumns().add(getSelectionColumn(selectAllCheckBox));
         getColumns().add(getVideoDescriptionColumn());
-        getColumns().add(getSubtitleColumn());
+        getColumns().add(getSubtitlesColumn());
 
         setSelectionModel(null);
         setPlaceholder(new Label("There are no videos to display"));
@@ -269,7 +268,7 @@ public class TableWithVideos extends TableView<TableVideo> {
         return result;
     }
 
-    private TableColumn<TableVideo, ?> getSubtitleColumn() {
+    private TableColumn<TableVideo, ?> getSubtitlesColumn() {
         TableColumn<TableVideo, ?> result = new TableColumn<>("subtitles");
 
         result.setMinWidth(
@@ -367,12 +366,7 @@ public class TableWithVideos extends TableView<TableVideo> {
         result.getChildren().add(optionTitleLabel);
 
         if (option.getType() == TableSubtitleOptionType.EXTERNAL) {
-            Button removeButton = GuiUtils.getImageButton(
-                    null,
-                    "/gui/icons/remove.png",
-                    8,
-                    8
-            );
+            Button removeButton = GuiUtils.getImageButton("", "/gui/icons/remove.png", 8, 8);
             removeButton.setOnAction(event -> removeSubtitleFileHandler.get().remove(option));
             result.getChildren().add(removeButton);
         }
@@ -412,11 +406,11 @@ public class TableWithVideos extends TableView<TableVideo> {
             Region spacer = new Region();
             HBox.setHgrow(spacer, Priority.ALWAYS);
 
-            Hyperlink loadSubtitleLink = new Hyperlink("load");
-            loadSubtitleLink.setOnAction(event -> singleSubtitleLoader.get().load(option));
-            loadSubtitleLink.visibleProperty().bind(option.sizeProperty().isEqualTo(UNKNOWN_SIZE));
+            Hyperlink loadLink = new Hyperlink("load");
+            loadLink.setOnAction(event -> singleSubtitlesLoader.get().load(option));
+            loadLink.visibleProperty().bind(option.sizeProperty().isEqualTo(UNKNOWN_SIZE));
 
-            result.getChildren().addAll(spacer, loadSubtitleLink);
+            result.getChildren().addAll(spacer, loadLink);
         }
 
         return result;
@@ -514,32 +508,25 @@ public class TableWithVideos extends TableView<TableVideo> {
         result.setAlignment(Pos.CENTER_LEFT);
         result.setSpacing(25);
 
-        if (video.getHideableOptionCount() != 0) {
-            Hyperlink showHideLink = new Hyperlink();
-            showHideLink.setOnAction(event -> video.setSomeOptionsHidden(!video.isSomeOptionsHidden()));
-            showHideLink.textProperty().bind(
-                    Bindings.when(video.someOptionsHiddenProperty())
-                            .then("show " + video.getHideableOptionCount() + " hidden")
-                            .otherwise("hide extra")
-            );
-            result.getChildren().add(showHideLink);
-        }
+        Hyperlink showHideLink = new Hyperlink();
+        showHideLink.setOnAction(event -> video.setSomeOptionsHidden(!video.isSomeOptionsHidden()));
+        showHideLink.textProperty().bind(
+                Bindings.when(video.someOptionsHiddenProperty())
+                        .then("show " + video.getHideableOptionCount() + " hidden")
+                        .otherwise("hide extra")
+        );
+        GuiUtils.bindVisibleAndManaged(showHideLink, video.hideableOptionCountProperty().greaterThan(0));
 
-        result.getChildren().add(getAddSubtitleFileButton(video));
-
-        return result;
-    }
-
-    private Button getAddSubtitleFileButton(TableVideo video) {
-        Button result = GuiUtils.getImageButton(
+        Button addSubtitleFileButton =  GuiUtils.getImageButton(
                 "Add subtitles",
                 "/gui/icons/add.png",
                 9,
                 9
         );
+        addSubtitleFileButton.setOnAction(event -> addSubtitleFileHandler.get().add(video));
+        addSubtitleFileButton.visibleProperty().bind(video.externalOptionCountProperty().lessThan(2));
 
-        result.setOnAction(event -> addSubtitleFileHandler.get().add(video));
-        result.visibleProperty().bind(video.externalOptionCountProperty().lessThan(2));
+        result.getChildren().addAll(showHideLink, addSubtitleFileButton);
 
         return result;
     }
@@ -551,7 +538,7 @@ public class TableWithVideos extends TableView<TableVideo> {
         result.setAlignment(Pos.CENTER);
 
         Hyperlink loadAllLink = new Hyperlink("load all subtitles");
-        loadAllLink.setOnAction(event -> allVideoSubtitleLoader.get().load(video));
+        loadAllLink.setOnAction(event -> allVideoSubtitlesLoader.get().load(video));
         loadAllLink.visibleProperty().bind(video.notLoadedOptionCountProperty().greaterThan(1));
 
         result.getChildren().add(loadAllLink);
@@ -572,7 +559,7 @@ public class TableWithVideos extends TableView<TableVideo> {
                 15,
                 10
         );
-        previewButton.setOnAction(event -> mergedSubtitlePreviewHandler.get().showPreview(video));
+        previewButton.setOnAction(event -> mergedSubtitlesPreviewHandler.get().showPreview(video));
 
         InvalidationListener listener = observable -> setMergedPreviewDisabledAndTooltip(previewButton, result, video);
         video.upperOptionProperty().addListener(listener);
@@ -697,8 +684,8 @@ public class TableWithVideos extends TableView<TableVideo> {
     public void clearTable() {
         cellCache.clear();
 
-        mode = null;
         setItems(FXCollections.emptyObservableList());
+        mode = null;
 
         selectableCount = 0;
         selectedAvailableCount = 0;
@@ -715,7 +702,7 @@ public class TableWithVideos extends TableView<TableVideo> {
         sortDirectionGroup.selectToggle(null);
 
         /*
-         * I wanted to place System.gc() here but it causes the jvm to crash and I don't know why, there are so many
+         * I wanted to place System.gc() here but it causes the JVM to crash and I don't know why, there are so many
          * jvm-crash related issues on the JavaFX's tracker that I couldn't find the matching one. So I guess I'll just
          * won't call the garbage collector manually.
          * By the way it crashes with the "C  [libc.so.6+0xa87b2]  __memcpy_sse2_unaligned_erms+0x62". It happens inside
@@ -788,33 +775,33 @@ public class TableWithVideos extends TableView<TableVideo> {
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public SingleSubtitleLoader getSingleSubtitleLoader() {
-        return singleSubtitleLoader.get();
+    public SingleSubtitlesLoader getSingleSubtitlesLoader() {
+        return singleSubtitlesLoader.get();
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public ObjectProperty<SingleSubtitleLoader> singleSubtitleLoaderProperty() {
-        return singleSubtitleLoader;
+    public ObjectProperty<SingleSubtitlesLoader> singleSubtitlesLoaderProperty() {
+        return singleSubtitlesLoader;
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public void setSingleSubtitleLoader(SingleSubtitleLoader singleSubtitleLoader) {
-        this.singleSubtitleLoader.set(singleSubtitleLoader);
+    public void setSingleSubtitlesLoader(SingleSubtitlesLoader singleSubtitlesLoader) {
+        this.singleSubtitlesLoader.set(singleSubtitlesLoader);
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public AllVideoSubtitleLoader getAllVideoSubtitleLoader() {
-        return allVideoSubtitleLoader.get();
+    public AllVideoSubtitlesLoader getAllVideoSubtitlesLoader() {
+        return allVideoSubtitlesLoader.get();
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public ObjectProperty<AllVideoSubtitleLoader> allVideoSubtitleLoaderProperty() {
-        return allVideoSubtitleLoader;
+    public ObjectProperty<AllVideoSubtitlesLoader> allVideoSubtitlesLoaderProperty() {
+        return allVideoSubtitlesLoader;
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public void setAllVideoSubtitleLoader(AllVideoSubtitleLoader allVideoSubtitleLoader) {
-        this.allVideoSubtitleLoader.set(allVideoSubtitleLoader);
+    public void setAllVideoSubtitlesLoader(AllVideoSubtitlesLoader allVideoSubtitlesLoader) {
+        this.allVideoSubtitlesLoader.set(allVideoSubtitlesLoader);
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
@@ -833,18 +820,18 @@ public class TableWithVideos extends TableView<TableVideo> {
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public MergedSubtitlePreviewHandler getMergedSubtitlePreviewHandler() {
-        return mergedSubtitlePreviewHandler.get();
+    public MergedSubtitlesPreviewHandler getMergedSubtitlesPreviewHandler() {
+        return mergedSubtitlesPreviewHandler.get();
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public ObjectProperty<MergedSubtitlePreviewHandler> mergedSubtitlePreviewHandlerProperty() {
-        return mergedSubtitlePreviewHandler;
+    public ObjectProperty<MergedSubtitlesPreviewHandler> mergedSubtitlesPreviewHandlerProperty() {
+        return mergedSubtitlesPreviewHandler;
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
-    public void setMergedSubtitlePreviewHandler(MergedSubtitlePreviewHandler mergedSubtitlePreviewHandler) {
-        this.mergedSubtitlePreviewHandler.set(mergedSubtitlePreviewHandler);
+    public void setMergedSubtitlesPreviewHandler(MergedSubtitlesPreviewHandler mergedSubtitlesPreviewHandler) {
+        this.mergedSubtitlesPreviewHandler.set(mergedSubtitlesPreviewHandler);
     }
 
     @SuppressWarnings({"unused", "WeakerAccess", "RedundantSuppression"})
@@ -888,12 +875,12 @@ public class TableWithVideos extends TableView<TableVideo> {
     }
 
     @FunctionalInterface
-    public interface SingleSubtitleLoader {
+    public interface SingleSubtitlesLoader {
         void load(TableSubtitleOption option);
     }
 
     @FunctionalInterface
-    public interface AllVideoSubtitleLoader {
+    public interface AllVideoSubtitlesLoader {
         void load(TableVideo video);
     }
 
@@ -903,7 +890,7 @@ public class TableWithVideos extends TableView<TableVideo> {
     }
 
     @FunctionalInterface
-    public interface MergedSubtitlePreviewHandler {
+    public interface MergedSubtitlesPreviewHandler {
         void showPreview(TableVideo video);
     }
 

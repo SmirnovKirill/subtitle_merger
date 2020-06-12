@@ -2,17 +2,20 @@
     -fx-font-size: 1.166667em;
 }
 
-.files-pane {
-    -fx-background-color: -fx-box-border, -fx-background;
-    -fx-background-insets: 0, 1;
-}
-
+.files-pane,
 .directory-pane {
     -fx-background-color: -fx-box-border, -fx-background;
-    -fx-background-insets: 0, 1 1 1 0;
 }
 
 .files-pane:hover,
 .directory-pane:hover {
     -fx-background-color: -fx-box-border, -fx-body-color;
+}
+
+.files-pane {
+    -fx-background-insets: 0, 1;
+}
+
+.directory-pane {
+    -fx-background-insets: 0, 1 1 1 0;
 }

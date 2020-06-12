@@ -27,9 +27,9 @@ import static kirill.subtitlemerger.gui.forms.videos.background.VideosBackground
 public class ProcessExtraVideoFilesRunner implements BackgroundRunner<ProcessExtraVideoFilesRunner.Result> {
     private List<File> videoFilesToAdd;
 
-    private List<Video> allVideosOriginal;
+    private List<Video> allVideosInitial;
 
-    private List<TableVideo> allTableVideosOriginal;
+    private List<TableVideo> allTableVideosInitial;
 
     private boolean hideUnavailable;
 
@@ -48,9 +48,9 @@ public class ProcessExtraVideoFilesRunner implements BackgroundRunner<ProcessExt
                 context.getFfprobe(),
                 backgroundManager
         );
-        removeAlreadyAdded(videosToAdd, allVideosOriginal, backgroundManager);
+        removeAlreadyAdded(videosToAdd, allVideosInitial, backgroundManager);
 
-        if (videosToAdd.size() + allVideosOriginal.size() > GuiConstants.VIDEO_TABLE_LIMIT) {
+        if (videosToAdd.size() + allVideosInitial.size() > GuiConstants.VIDEO_TABLE_LIMIT) {
             String error = "There will be too many videos (>" + GuiConstants.VIDEO_TABLE_LIMIT + ")";
             return new Result(
                     MultiPartActionResult.onlyError(error),
@@ -69,8 +69,8 @@ public class ProcessExtraVideoFilesRunner implements BackgroundRunner<ProcessExt
                 backgroundManager
         );
 
-        List<Video> allVideos = ListUtils.union(allVideosOriginal, videosToAdd);
-        List<TableVideo> allTableVideos = ListUtils.union(allTableVideosOriginal, tableVideosToAdd);
+        List<Video> allVideos = ListUtils.union(allVideosInitial, videosToAdd);
+        List<TableVideo> allTableVideos = ListUtils.union(allTableVideosInitial, tableVideosToAdd);
         allTableVideos = getSortedVideos(allTableVideos, context.getSettings().getSort(), backgroundManager);
 
         return new Result(

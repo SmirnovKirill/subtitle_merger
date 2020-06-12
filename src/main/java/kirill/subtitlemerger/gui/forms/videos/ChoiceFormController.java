@@ -9,14 +9,12 @@ import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.utils.Popups;
 import kirill.subtitlemerger.logic.settings.Settings;
-import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.List;
 
-@CommonsLog
 public class ChoiceFormController {
     @FXML
     private Pane choicePane;
@@ -25,25 +23,17 @@ public class ChoiceFormController {
 
     private Stage stage;
 
-    private GuiContext context;
+    private Settings settings;
 
     void initialize(VideosFormController videosTabController, Stage stage, GuiContext context) {
         this.videosFormController = videosTabController;
         this.stage = stage;
-        this.context = context;
-    }
-
-    void show() {
-        choicePane.setVisible(true);
-    }
-
-    void hide() {
-        choicePane.setVisible(false);
+        settings = context.getSettings();
     }
 
     @FXML
     private void separateVideosButtonClicked() {
-        List<File> videoFiles = getVideoFiles(stage, context.getSettings());
+        List<File> videoFiles = getVideoFiles(stage, settings);
         if (CollectionUtils.isEmpty(videoFiles)) {
             return;
         }
@@ -55,7 +45,6 @@ public class ChoiceFormController {
             return;
         }
 
-        context.setVideosInProgress(true);
         videosFormController.setActivePane(ActivePane.MAIN);
         videosFormController.processChosenVideoFiles(videoFiles);
     }
@@ -72,12 +61,11 @@ public class ChoiceFormController {
 
     @FXML
     private void directoryButtonClicked() {
-        File directory = getDirectory(stage, context.getSettings());
+        File directory = getDirectory(stage, settings);
         if (directory == null) {
             return;
         }
 
-        context.setVideosInProgress(true);
         videosFormController.setActivePane(ActivePane.MAIN);
         videosFormController.processChosenDirectory(directory);
     }
@@ -90,5 +78,13 @@ public class ChoiceFormController {
         directoryChooser.setInitialDirectory(settings.getLastDirectoryWithVideos());
 
         return directoryChooser.showDialog(stage);
+    }
+
+    void show() {
+        choicePane.setVisible(true);
+    }
+
+    void hide() {
+        choicePane.setVisible(false);
     }
 }

@@ -7,11 +7,9 @@ import javafx.stage.Stage;
 import kirill.subtitlemerger.gui.forms.MainFormController;
 import kirill.subtitlemerger.gui.utils.GuiUtils;
 import kirill.subtitlemerger.gui.utils.entities.FormInfo;
-import lombok.extern.apachecommons.CommonsLog;
 
 import java.awt.*;
 
-@CommonsLog
 public class GuiLauncher extends Application {
     private GuiContext context;
 
@@ -28,9 +26,7 @@ public class GuiLauncher extends Application {
         Application.setUserAgentStylesheet(STYLESHEET_MODENA);
 
         context = new GuiContext();
-
         FormInfo mainFormInfo = GuiUtils.loadForm("/gui/javafx/forms/main_form.fxml");
-
         MainFormController controller = mainFormInfo.getController();
         controller.initialize(stage, context);
 
@@ -46,12 +42,12 @@ public class GuiLauncher extends Application {
 
         /*
          * I've encountered a very strange behaviour - at first the stage's width and height are set to their computed
-         * sizes but very soon after this method (start) is called during the startup window sizes are changed for a
+         * sizes but very soon after this method (start) is called during the startup, the sizes are changed for a
          * reason completely unknown to me. The sizes are changed because the com.sun.glass.ui.Window::notifyResize is
-         * called. This method is called from a native method com.sun.glass.ui.gtk.GtkApplication::_runLoop so I can't
-         * understand why that happens. Anyway, I've discovered that if I set the stage's width and height explicitly
-         * these original sizes will be restored after these weird changes. And it reproduces only in Kubuntu for me, in
-         * Windows 10 and Arch everything works fine.
+         * called. This method is called from the native method com.sun.glass.ui.gtk.GtkApplication::_runLoop so I can't
+         * understand why that happens. Anyway, I've discovered that if I set the sizes explicitly they will be restored
+         * after these weird changes. And it reproduces only on Kubuntu for me, on Windows 10 and Arch everything works
+         * fine.
          */
         stage.setWidth(stage.getWidth());
         stage.setHeight(stage.getHeight());

@@ -60,8 +60,7 @@ public class Utils {
             return string;
         }
 
-        return string.substring(0, charsBeforeEllipsis)
-                + "..."
+        return string.substring(0, charsBeforeEllipsis) + "..."
                 + string.substring(string.length() - charsAfterEllipsis);
     }
 

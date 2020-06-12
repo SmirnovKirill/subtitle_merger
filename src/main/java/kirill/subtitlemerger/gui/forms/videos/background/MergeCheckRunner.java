@@ -39,10 +39,10 @@ public class MergeCheckRunner implements BackgroundRunner<MergeCheckRunner.Resul
         clearActionResults(tableVideos, backgroundManager);
 
         List<TableVideo> selectedTableVideos = getSelectedVideos(tableVideos, backgroundManager);
-        String videosWithoutSelectionWarning = processVideosWithoutSelection(selectedTableVideos, backgroundManager);
-        if (!StringUtils.isBlank(videosWithoutSelectionWarning)) {
+        String selectionWarning = processVideosWithoutSelection(selectedTableVideos, backgroundManager);
+        if (!StringUtils.isBlank(selectionWarning)) {
             return new Result(
-                    videosWithoutSelectionWarning,
+                    selectionWarning,
                     null,
                     null,
                     null,
@@ -87,33 +87,6 @@ public class MergeCheckRunner implements BackgroundRunner<MergeCheckRunner.Resul
         }
     }
 
-    private static List<File> getFilesToOverwrite(
-            List<TableVideo> tableVideos,
-            List<Video> videos,
-            Settings settings,
-            BackgroundManager backgroundManager
-    ) {
-        if (settings.getMergeMode() != MergeMode.SEPARATE_SUBTITLE_FILES) {
-            return null;
-        }
-
-        backgroundManager.updateMessage("Getting a list of files to overwrite...");
-
-        List<File> result = new ArrayList<>();
-        for (TableVideo tableVideo : tableVideos) {
-            Video video = Video.getById(tableVideo.getId(), videos);
-            SubtitleOption upperOption = video.getOption(tableVideo.getUpperOption().getId());
-            SubtitleOption lowerOption = video.getOption(tableVideo.getLowerOption().getId());
-
-            File subtitleFile = new File(Utils.getMergedSubtitleFilePath(video, upperOption, lowerOption));
-            if (subtitleFile.exists()) {
-                result.add(subtitleFile);
-            }
-        }
-
-        return result;
-    }
-
     @Nullable
     private static FreeSpaceInfo getFreeSpaceInfo(
             List<TableVideo> tableVideos,
@@ -125,7 +98,7 @@ public class MergeCheckRunner implements BackgroundRunner<MergeCheckRunner.Resul
             return null;
         }
 
-        backgroundManager.updateMessage("Calculating required temporary space...");
+        backgroundManager.updateMessage("Calculating the required temporary space...");
 
         Long requiredSpace = null;
         Long freeSpace = null;
@@ -167,10 +140,37 @@ public class MergeCheckRunner implements BackgroundRunner<MergeCheckRunner.Resul
                 + "available, proceed anyway?";
     }
 
+    private static List<File> getFilesToOverwrite(
+            List<TableVideo> tableVideos,
+            List<Video> videos,
+            Settings settings,
+            BackgroundManager backgroundManager
+    ) {
+        if (settings.getMergeMode() != MergeMode.SEPARATE_SUBTITLE_FILES) {
+            return null;
+        }
+
+        backgroundManager.updateMessage("Getting a list of files to overwrite...");
+
+        List<File> result = new ArrayList<>();
+        for (TableVideo tableVideo : tableVideos) {
+            Video video = Video.getById(tableVideo.getId(), videos);
+            SubtitleOption upperOption = video.getOption(tableVideo.getUpperOption().getId());
+            SubtitleOption lowerOption = video.getOption(tableVideo.getLowerOption().getId());
+
+            File subtitleFile = new File(Utils.getMergedSubtitleFilePath(video, upperOption, lowerOption));
+            if (subtitleFile.exists()) {
+                result.add(subtitleFile);
+            }
+        }
+
+        return result;
+    }
+
     @AllArgsConstructor
     @Getter
     public static class Result {
-        private String videosWithoutSelectionWarning;
+        private String selectionWarning;
 
         private List<TableVideo> selectedTableVideos;
 

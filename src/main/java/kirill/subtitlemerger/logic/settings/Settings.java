@@ -5,6 +5,7 @@ import kirill.subtitlemerger.logic.LogicConstants;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.HashMap;
@@ -50,6 +51,7 @@ public class Settings {
         return result;
     }
 
+    @Nullable
     private static Object stringToObject(String string, SettingType settingType) throws SettingsException {
         if (StringUtils.isEmpty(string)) {
             return null;
@@ -244,6 +246,7 @@ public class Settings {
         settings.put(settingType, object);
     }
 
+    @Nullable
     private static String objectToString(Object object, SettingType settingType) {
         if (object == null) {
             return null;

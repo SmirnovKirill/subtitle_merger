@@ -21,18 +21,21 @@
         <VBox fx:id="mainPane">
             <Hyperlink onAction="#backToSelectionClicked" styleClass="back-link" text="back to selection"/>
             <Region minHeight="5" maxHeight="5"/>
-            <HBox fx:id="chosenDirectoryPane" alignment="CENTER_LEFT" visible="false" managed="false" spacing="10">
-                <TextField fx:id="chosenDirectoryField" HBox.hgrow="ALWAYS"/>
-                <Button fx:id="refreshButton" onAction="#refreshClicked">
-                    <graphic>
-                        <ImageView fitWidth="16" fitHeight="16">
-                            <Image url="/gui/icons/refresh.png"/>
-                        </ImageView>
-                    </graphic>
-                </Button>
-                <Button onAction="#chooseAnotherClicked" text="Choose another"/>
-            </HBox>
-            <Region minHeight="15" maxHeight="15"/>
+            <VBox fx:id="chosenDirectoryPane" visible="false" managed="false">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <TextField fx:id="chosenDirectoryField" HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="refreshButton" onAction="#refreshClicked">
+                        <graphic>
+                            <ImageView fitWidth="16" fitHeight="16">
+                                <Image url="/gui/icons/refresh.png"/>
+                            </ImageView>
+                        </graphic>
+                    </Button>
+                    <Button onAction="#chooseAnotherClicked" text="Choose another"/>
+                </HBox>
+                <Region minHeight="10" maxHeight="10"/>
+            </VBox>
+            <Region minHeight="5" maxHeight="5"/>
             <MultiPartActionResultPane fx:id="totalResultPane" alwaysManaged="true" textAlignment="CENTER"/>
             <Region minHeight="5" maxHeight="5"/>
             <VBox fx:id="tableAndActionsPane" VBox.vgrow="ALWAYS" spacing="10">
@@ -52,8 +55,7 @@
                         </Button>
                     </HBox>
                     <HBox fx:id="loadAllButtonWrapper" alignment="CENTER">
-                        <Button fx:id="loadAllButton" onAction="#loadAllSubtitlesClicked"
-                                text="Load all subtitles">
+                        <Button fx:id="loadAllButton" onAction="#loadAllSubtitlesClicked" text="Load all subtitles">
                             <graphic>
                                 <ImageView fitWidth="16" fitHeight="16">
                                     <Image url="/gui/icons/load.png"/>
