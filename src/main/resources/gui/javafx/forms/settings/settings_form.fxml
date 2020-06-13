@@ -6,6 +6,7 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import kirill.subtitlemerger.gui.common_controls.ActionResultLabel?>
+<?import kirill.subtitlemerger.gui.common_controls.auto_complete.AutoCompleteTextField?>
 <?import kirill.subtitlemerger.gui.forms.settings.controls.*?>
 <?import kirill.subtitlemerger.gui.forms.settings.SettingsFormController?>
 <?import kirill.subtitlemerger.gui.GuiConstants?>
@@ -41,8 +42,9 @@
                     This setting will be used to auto-select subtitles to merge when working with videos.
                 </tooltipText>
             </TextAndQuestionMark>
-            <ComboBox fx:id="upperLanguageComboBox" GridPane.rowIndex="0" GridPane.columnIndex="1"
-                      onAction="#upperLanguageChanged" maxWidth="Infinity"/>
+            <AutoCompleteTextField fx:id="upperLanguageTextField" GridPane.rowIndex="0" GridPane.columnIndex="1"
+                                   maxWidth="Infinity" maxPopupHeight="200" maxItemsInPopup="15"
+                                   noMatchingItemsText="No languages found"/>
 
             <Region GridPane.rowIndex="1" GridPane.columnIndex="0"/>
             <Button fx:id="swapButton" GridPane.rowIndex="1" GridPane.columnIndex="1" onAction="#swapClicked">
@@ -65,8 +67,9 @@
                     This setting will be used to auto-select subtitles to merge when working with videos.
                 </tooltipText>
             </TextAndQuestionMark>
-            <ComboBox fx:id="lowerLanguageComboBox" GridPane.rowIndex="2" GridPane.columnIndex="1"
-                      onAction="#lowerLanguageChanged" maxWidth="Infinity"/>
+            <AutoCompleteTextField fx:id="lowerLanguageTextField" GridPane.rowIndex="2" GridPane.columnIndex="1"
+                                   maxWidth="Infinity" maxPopupHeight="200" maxItemsInPopup="15"
+                                   noMatchingItemsText="No languages found"/>
 
             <Label GridPane.rowIndex="3" GridPane.columnIndex="0" text="Video merge mode">
                 <GridPane.margin>

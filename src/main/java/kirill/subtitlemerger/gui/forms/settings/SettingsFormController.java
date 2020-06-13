@@ -8,13 +8,16 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
 import javafx.util.StringConverter;
+import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.GuiContext;
 import kirill.subtitlemerger.gui.common_controls.ActionResultLabel;
+import kirill.subtitlemerger.gui.common_controls.auto_complete.AutoCompleteTextField;
 import kirill.subtitlemerger.logic.LogicConstants;
 import kirill.subtitlemerger.logic.settings.MergeMode;
 import kirill.subtitlemerger.logic.settings.SettingType;
 import kirill.subtitlemerger.logic.settings.Settings;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Comparator;
 import java.util.List;
@@ -42,15 +45,13 @@ public class SettingsFormController {
     private Pane settingsPane;
 
     @FXML
-    //todo make editable with drop-down
-    private ComboBox<LanguageAlpha3Code> upperLanguageComboBox;
+    private AutoCompleteTextField<LanguageAlpha3Code> upperLanguageTextField;
 
     @FXML
     private Button swapButton;
 
     @FXML
-    //todo make editable with drop-down
-    private ComboBox<LanguageAlpha3Code> lowerLanguageComboBox;
+    private AutoCompleteTextField<LanguageAlpha3Code> lowerLanguageTextField;
 
     @FXML
     private CheckBox makeDefaultCheckBox;
@@ -100,22 +101,62 @@ public class SettingsFormController {
     }
 
     private void setUpperLanguage() {
-        upperLanguageComboBox.getItems().setAll(ALLOWED_LANGUAGES);
-        upperLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
+        upperLanguageTextField.setItems(ALLOWED_LANGUAGES);
+        upperLanguageTextField.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
+        upperLanguageTextField.setText(LANGUAGE_CODE_STRING_CONVERTER.toString(settings.getUpperLanguage()));
+        upperLanguageTextField.setValueSetHandler(this::handleUpperLanguageSet);
+    }
 
-        LanguageAlpha3Code upperLanguage = settings.getUpperLanguage();
-        if (upperLanguage != null) {
-            upperLanguageComboBox.getSelectionModel().select(upperLanguage);
+    private void handleUpperLanguageSet(LanguageAlpha3Code value) {
+        upperLanguageTextField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
+
+        if (Objects.equals(value, settings.getLowerLanguage())) {
+            upperLanguageTextField.getStyleClass().add(GuiConstants.TEXT_FIELD_ERROR_CLASS);
+            actionResultLabel.setError("Languages have to be different, please choose another one");
+            return;
+        }
+
+        boolean hadValueBefore = settings.getUpperLanguage() != null;
+
+        settings.saveCorrect(value, SettingType.UPPER_LANGUAGE);
+        context.getMissingSettings().remove(SettingType.UPPER_LANGUAGE);
+        swapButton.setDisable(settings.getUpperLanguage() == null || settings.getLowerLanguage() == null);
+
+        String prefix = "The language for upper subtitles (" + value.toString().toUpperCase() + ") has been";
+        if (hadValueBefore) {
+            actionResultLabel.setSuccess(prefix + " updated successfully");
+        } else {
+            actionResultLabel.setSuccess(prefix + " saved successfully");
         }
     }
 
     private void setLowerLanguage() {
-        lowerLanguageComboBox.getItems().setAll(ALLOWED_LANGUAGES);
-        lowerLanguageComboBox.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
+        lowerLanguageTextField.setItems(ALLOWED_LANGUAGES);
+        lowerLanguageTextField.setConverter(LANGUAGE_CODE_STRING_CONVERTER);
+        lowerLanguageTextField.setText(LANGUAGE_CODE_STRING_CONVERTER.toString(settings.getLowerLanguage()));
+        lowerLanguageTextField.setValueSetHandler(this::handleLowerLanguageSet);
+    }
 
-        LanguageAlpha3Code lowerLanguage = settings.getLowerLanguage();
-        if (lowerLanguage != null) {
-            lowerLanguageComboBox.getSelectionModel().select(lowerLanguage);
+    private void handleLowerLanguageSet(LanguageAlpha3Code value) {
+        lowerLanguageTextField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
+
+        if (Objects.equals(value, settings.getUpperLanguage())) {
+            lowerLanguageTextField.getStyleClass().add(GuiConstants.TEXT_FIELD_ERROR_CLASS);
+            actionResultLabel.setError("Languages have to be different, please choose another one");
+            return;
+        }
+
+        boolean hadValueBefore = settings.getLowerLanguage() != null;
+
+        settings.saveCorrect(value, SettingType.LOWER_LANGUAGE);
+        context.getMissingSettings().remove(SettingType.LOWER_LANGUAGE);
+        swapButton.setDisable(settings.getUpperLanguage() == null || settings.getLowerLanguage() == null);
+
+        String prefix = "The language for lower subtitles (" + value.toString().toUpperCase() + ") has been";
+        if (hadValueBefore) {
+            actionResultLabel.setSuccess(prefix + " updated successfully");
+        } else {
+            actionResultLabel.setSuccess(prefix + " saved successfully");
         }
     }
 
@@ -173,69 +214,23 @@ public class SettingsFormController {
     }
 
     @FXML
-    private void upperLanguageChanged() {
-        LanguageAlpha3Code value = upperLanguageComboBox.getSelectionModel().getSelectedItem();
-
-        if (Objects.equals(value, settings.getUpperLanguage())) {
-            return;
-        }
-
-        if (Objects.equals(value, settings.getLowerLanguage())) {
-            actionResultLabel.setError("Languages have to be different, please choose another one");
-            return;
-        }
-
-        boolean hadValueBefore = settings.getUpperLanguage() != null;
-
-        settings.saveCorrect(value, SettingType.UPPER_LANGUAGE);
-        context.getMissingSettings().remove(SettingType.UPPER_LANGUAGE);
-        swapButton.setDisable(settings.getUpperLanguage() == null || settings.getLowerLanguage() == null);
-
-        if (hadValueBefore) {
-            actionResultLabel.setSuccess("The language for upper subtitles has been updated successfully");
-        } else {
-            actionResultLabel.setSuccess("The language for upper subtitles has been saved successfully");
-        }
-    }
-
-    @FXML
     private void swapClicked() {
         LanguageAlpha3Code oldUpperLanguage = settings.getUpperLanguage();
         LanguageAlpha3Code oldLowerLanguage = settings.getLowerLanguage();
 
         settings.saveCorrect(oldLowerLanguage, SettingType.UPPER_LANGUAGE);
-        upperLanguageComboBox.getSelectionModel().select(oldLowerLanguage);
+        upperLanguageTextField.setText(LANGUAGE_CODE_STRING_CONVERTER.toString(oldLowerLanguage));
 
         settings.saveCorrect(oldUpperLanguage, SettingType.LOWER_LANGUAGE);
-        lowerLanguageComboBox.getSelectionModel().select(oldUpperLanguage);
+        lowerLanguageTextField.setText(LANGUAGE_CODE_STRING_CONVERTER.toString(oldUpperLanguage));
+
+        /* It will definitely have this class because the value is considered to be duplicate during the swapping. */
+        upperLanguageTextField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
+
+        /* Lower field could be marked as incorrect before the swapping and should also be cleared. */
+        lowerLanguageTextField.getStyleClass().remove(GuiConstants.TEXT_FIELD_ERROR_CLASS);
 
         actionResultLabel.setSuccess("The languages have been swapped successfully");
-    }
-
-    @FXML
-    private void lowerLanguageChanged() {
-        LanguageAlpha3Code value = lowerLanguageComboBox.getSelectionModel().getSelectedItem();
-
-        if (Objects.equals(value, settings.getLowerLanguage())) {
-            return;
-        }
-
-        if (Objects.equals(value, settings.getUpperLanguage())) {
-            actionResultLabel.setError("Languages have to be different, please choose another one");
-            return;
-        }
-
-        boolean hadValueBefore = settings.getLowerLanguage() != null;
-
-        settings.saveCorrect(value, SettingType.LOWER_LANGUAGE);
-        context.getMissingSettings().remove(SettingType.LOWER_LANGUAGE);
-        swapButton.setDisable(settings.getUpperLanguage() == null || settings.getLowerLanguage() == null);
-
-        if (hadValueBefore) {
-            actionResultLabel.setSuccess("The language for lower subtitles has been updated successfully");
-        } else {
-            actionResultLabel.setSuccess("The language for lower subtitles has been saved successfully");
-        }
     }
 
     @FXML
@@ -282,27 +277,43 @@ public class SettingsFormController {
     }
 
     private static class LanguageCodeStringConverter extends StringConverter<LanguageAlpha3Code> {
-        private static final String LANGUAGE_NOT_SET = "The language code is not set";
-
         @Override
         public String toString(LanguageAlpha3Code languageCode) {
             if (languageCode == null) {
-                return LANGUAGE_NOT_SET;
+                return null;
             }
 
             return languageCode.getName() + " (" + languageCode.toString() + ")";
         }
 
         @Override
-        public LanguageAlpha3Code fromString(String rawCode) {
-            if (Objects.equals(rawCode, LANGUAGE_NOT_SET)) {
+        public LanguageAlpha3Code fromString(String string) {
+            if (StringUtils.isBlank(string)) {
                 return null;
             }
 
-            int leftBracketIndex = rawCode.indexOf("(");
+            int leftBracketIndex = string.lastIndexOf("(");
+            if (leftBracketIndex == -1) {
+                return null;
+            }
 
             /* + 4 because every code is 3 symbol long. */
-            return LanguageAlpha3Code.getByCode(rawCode.substring(leftBracketIndex + 1, leftBracketIndex + 4));
+            if (leftBracketIndex + 4 > string.length()) {
+                return null;
+            }
+
+            LanguageAlpha3Code result = LanguageAlpha3Code.getByCode(
+                    string.substring(leftBracketIndex + 1, leftBracketIndex + 4)
+            );
+            if (result == null) {
+                return null;
+            }
+
+            if (!Objects.equals(toString(result), string)) {
+                return null;
+            }
+
+            return result;
         }
     }
 }
