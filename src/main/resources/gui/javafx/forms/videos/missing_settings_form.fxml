@@ -7,5 +7,5 @@
       fx:controller="kirill.subtitlemerger.gui.forms.videos.MissingSettingsFormController" spacing="20">
     <Label text="Before you start working with videos you have to set the following settings:"/>
     <VBox fx:id="labelsPane" spacing="10"/>
-    <Hyperlink onAction="#goToSettingsClicked" text="Open the settings tab"/>
+    <Hyperlink onAction="#goToSettingsClicked" focusTraversable="false" text="Open the settings tab"/>
 </VBox>

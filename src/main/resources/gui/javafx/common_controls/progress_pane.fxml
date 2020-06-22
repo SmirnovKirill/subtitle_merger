@@ -11,7 +11,7 @@
     <HBox fx:id="cancelPane" alignment="CENTER">
         <Label fx:id="cancelDescriptionLabel"/>
         <Label text="If you want to cancel the task click "/>
-        <Hyperlink fx:id="cancelLink" text="here">
+        <Hyperlink fx:id="cancelLink" focusTraversable="false" text="here">
             <padding>
                 <Insets/>
             </padding>

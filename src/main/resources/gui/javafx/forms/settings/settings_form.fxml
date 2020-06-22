@@ -47,7 +47,8 @@
                                    noMatchingItemsText="No languages found"/>
 
             <Region GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-            <Button fx:id="swapButton" GridPane.rowIndex="1" GridPane.columnIndex="1" onAction="#swapClicked">
+            <Button fx:id="swapButton" GridPane.rowIndex="1" GridPane.columnIndex="1" onAction="#swapClicked"
+                    focusTraversable="false">
                 <GridPane.margin>
                     <Insets top="8" bottom="8" left="10"/>
                 </GridPane.margin>

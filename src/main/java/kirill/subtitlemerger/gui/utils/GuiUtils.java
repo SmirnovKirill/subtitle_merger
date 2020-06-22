@@ -122,9 +122,9 @@ public class GuiUtils {
     public static Button getImageButton(String text, String imageUrl, int width, int height) {
         Button result = new Button(text);
 
-        result.getStyleClass().add(GuiConstants.IMAGE_BUTTON_CLASS);
-
         result.setGraphic(getImageView(imageUrl, width, height));
+        result.getStyleClass().add(GuiConstants.IMAGE_BUTTON_CLASS);
+        result.setFocusTraversable(false);
 
         return result;
     }

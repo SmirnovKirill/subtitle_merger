@@ -19,7 +19,8 @@
         <!--suppress JavaFxUnresolvedFxIdReference -->
         <fx:include fx:id="choiceForm" source="choice_form.fxml"/>
         <VBox fx:id="mainPane">
-            <Hyperlink onAction="#backToSelectionClicked" styleClass="back-link" text="back to selection"/>
+            <Hyperlink onAction="#backToSelectionClicked" styleClass="back-link" focusTraversable="false"
+                       text="back to selection"/>
             <Region minHeight="5" maxHeight="5"/>
             <VBox fx:id="chosenDirectoryPane" visible="false" managed="false">
                 <HBox alignment="CENTER_LEFT" spacing="10">
@@ -73,7 +74,7 @@
                         </Button>
                     </HBox>
                 </HBox>
-                <TableWithVideos fx:id="table" VBox.vgrow="ALWAYS"/>
+                <TableWithVideos fx:id="table" VBox.vgrow="ALWAYS" focusTraversable="false"/>
                 <HBox fx:id="addRemoveVideosPane" alignment="CENTER_RIGHT" visible="false" managed="false"
                       spacing="10">
                     <Button fx:id="removeVideosButton" onAction="#removeVideosClicked" text="Remove selected"/>

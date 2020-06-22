@@ -409,6 +409,7 @@ public class TableWithVideos extends TableView<TableVideo> {
             Hyperlink loadLink = new Hyperlink("load");
             loadLink.setOnAction(event -> singleSubtitlesLoader.get().load(option));
             loadLink.visibleProperty().bind(option.sizeProperty().isEqualTo(UNKNOWN_SIZE));
+            loadLink.setFocusTraversable(false);
 
             result.getChildren().addAll(spacer, loadLink);
         }
@@ -510,6 +511,7 @@ public class TableWithVideos extends TableView<TableVideo> {
 
         Hyperlink showHideLink = new Hyperlink();
         showHideLink.setOnAction(event -> video.setSomeOptionsHidden(!video.isSomeOptionsHidden()));
+        showHideLink.setFocusTraversable(false);
         showHideLink.textProperty().bind(
                 Bindings.when(video.someOptionsHiddenProperty())
                         .then("show " + video.getHideableOptionCount() + " hidden")
@@ -540,6 +542,7 @@ public class TableWithVideos extends TableView<TableVideo> {
         Hyperlink loadAllLink = new Hyperlink("load all subtitles");
         loadAllLink.setOnAction(event -> allVideoSubtitlesLoader.get().load(video));
         loadAllLink.visibleProperty().bind(video.notLoadedOptionCountProperty().greaterThan(1));
+        loadAllLink.setFocusTraversable(false);
 
         result.getChildren().add(loadAllLink);
 
