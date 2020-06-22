@@ -107,8 +107,8 @@ public class AutoCompleteTextField<T> extends TextField {
         scrollPane = getScrollPane(maxPopupHeight, autoCompleteData, noMatchingItemsText, this::handleItemSelected);
         popup = getAutoCompletePopup(scrollPane);
 
-        focusedProperty().addListener((observable, oldFocused, focused) -> handleFocusChanged(focused));
-        textProperty().addListener((observable, oldText, text) -> handleTextChanged(text));
+        focusedProperty().addListener(observable -> handleFocusChanged(isFocused()));
+        textProperty().addListener(observable -> handleTextChanged(getText()));
         setPopupDimensionsListeners();
         addEventFilter(
                 KeyEvent.KEY_PRESSED,
@@ -219,8 +219,8 @@ public class AutoCompleteTextField<T> extends TextField {
         result.setOnMouseClicked(event -> selectItemHandler.accept(labelInfo.getValue()));
         result.setMaxWidth(Double.MAX_VALUE);
         GuiUtils.bindVisibleAndManaged(result, labelInfo.visibleProperty());
-        labelInfo.keyboardFocusProperty().addListener((observable, oldFocus, focus) -> {
-            if (!focus) {
+        labelInfo.keyboardFocusProperty().addListener(observable -> {
+            if (!labelInfo.isKeyboardFocus()) {
                 result.getStyleClass().remove(LABEL_KEYBOARD_FOCUS_CLASS);
             } else {
                 result.getStyleClass().add(LABEL_KEYBOARD_FOCUS_CLASS);
@@ -351,6 +351,10 @@ public class AutoCompleteTextField<T> extends TextField {
      * boundsInLocalProperty() changes.
      */
     private void setPopupDimensionsListeners() {
+        /*
+         * It has to be a change listener, not an invalidation listener, because isNeedsLayout() will not make the
+         * property valid since it doesn't actually work with the property.
+         */
         needsLayoutProperty().addListener((observable, oldNeedsLayout, needsLayout) -> {
             if (needsLayout) {
                 setPopupDimensions();

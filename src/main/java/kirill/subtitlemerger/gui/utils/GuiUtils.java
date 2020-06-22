@@ -102,8 +102,8 @@ public class GuiUtils {
      * focus is lost.
      */
     public static void setTextEnteredHandler(TextField textField, Consumer<String> valueProcessor) {
-        textField.focusedProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue) {
+        textField.focusedProperty().addListener(observable -> {
+            if (textField.isFocused()) {
                 return;
             }
 

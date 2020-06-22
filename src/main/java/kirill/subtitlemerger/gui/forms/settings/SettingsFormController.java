@@ -3,7 +3,6 @@ package kirill.subtitlemerger.gui.forms.settings;
 import com.neovisionaries.i18n.LanguageAlpha3Code;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
@@ -73,7 +72,9 @@ public class SettingsFormController {
         settings = context.getSettings();
         this.context = context;
 
-        context.videosInProgressProperty().addListener(this::videosInProgressChanged);
+        context.videosInProgressProperty().addListener(
+                observable -> videosInProgressChanged(context.getVideosInProgress())
+        );
 
         setUpperLanguage();
         swapButton.setDisable(settings.getUpperLanguage() == null || settings.getLowerLanguage() == null);
@@ -83,15 +84,13 @@ public class SettingsFormController {
         makeDefaultCheckBox.setSelected(settings.isMakeMergedStreamsDefault());
         plainTextCheckBox.setSelected(settings.isPlainTextSubtitles());
 
-        mergeModeToggleGroup.selectedToggleProperty().addListener(this::mergeModeChanged);
+        mergeModeToggleGroup.selectedToggleProperty().addListener(
+                observable -> mergeModeChanged(mergeModeToggleGroup.getSelectedToggle())
+        );
     }
 
-    private void videosInProgressChanged(
-            ObservableValue<? extends Boolean> observable,
-            Boolean oldValue,
-            Boolean newValue
-    ) {
-        if (newValue) {
+    private void videosInProgressChanged(boolean videosInProgress) {
+        if (videosInProgress) {
             settingsPane.setDisable(true);
             unavailablePane.setVisible(true);
         } else {
@@ -191,8 +190,8 @@ public class SettingsFormController {
         throw new IllegalStateException();
     }
 
-    private void mergeModeChanged(ObservableValue<? extends Toggle> observable, Toggle oldValue, Toggle newValue) {
-        RadioButton radioButton = (RadioButton) newValue;
+    private void mergeModeChanged(Toggle mergeModeToggle) {
+        RadioButton radioButton = (RadioButton) mergeModeToggle;
         MergeMode mergeMode;
         switch (radioButton.getText()) {
             case MERGE_MODE_ORIGINAL_VIDEOS:
