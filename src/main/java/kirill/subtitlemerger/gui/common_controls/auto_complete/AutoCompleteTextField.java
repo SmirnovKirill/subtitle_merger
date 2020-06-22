@@ -277,8 +277,7 @@ public class AutoCompleteTextField<T> extends TextField {
     }
 
     private void setPopupDimensions() {
-        /* It can happen only during the application start. */
-        if (boundInLocalNotFocused == null) {
+        if (!popup.isShowing() && !popupHasNoSpace) {
             return;
         }
 

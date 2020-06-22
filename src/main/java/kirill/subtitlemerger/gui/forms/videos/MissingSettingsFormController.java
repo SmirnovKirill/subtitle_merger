@@ -44,11 +44,11 @@ public class MissingSettingsFormController {
     private static String getText(SettingType settingType) {
         switch (settingType) {
             case UPPER_LANGUAGE:
-                return "the preferred language for upper subtitles";
+                return "preferred language for upper subtitles";
             case LOWER_LANGUAGE:
-                return "the preferred language for lower subtitles";
+                return "preferred language for lower subtitles";
             case MERGE_MODE:
-                return "the video merge mode";
+                return "video merge mode";
             default:
                 log.error("unexpected missing setting type: " + settingType + ", most likely a bug");
                 throw new IllegalStateException();
