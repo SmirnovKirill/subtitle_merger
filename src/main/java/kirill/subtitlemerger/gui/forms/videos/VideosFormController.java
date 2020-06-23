@@ -644,7 +644,7 @@ public class VideosFormController extends BackgroundTaskFormController {
 
     @FXML
     private void chooseAnotherClicked() {
-        File directory = getDirectory(new File(directoryPath), stage);
+        File directory = getDirectory(new File(directoryPath), stage, settings);
         if (directory == null) {
             return;
         }
@@ -653,11 +653,20 @@ public class VideosFormController extends BackgroundTaskFormController {
     }
 
     @Nullable
-    private static File getDirectory(File initialDirectory, Stage stage) {
+    private static File getDirectory(File currentDirectory, Stage stage, Settings settings) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
 
         directoryChooser.setTitle("Choose a directory with videos");
-        directoryChooser.setInitialDirectory(initialDirectory);
+
+        /* We have to validate this value because otherwise JavaFX will throw an exception. */
+        if (currentDirectory.isDirectory()) {
+            directoryChooser.setInitialDirectory(currentDirectory);
+        } else {
+            File initialDirectory = settings.getLastDirectoryWithVideos();
+            if (initialDirectory.isDirectory()) {
+                directoryChooser.setInitialDirectory(initialDirectory);
+            }
+        }
 
         return directoryChooser.showDialog(stage);
     }

@@ -75,7 +75,12 @@ public class ChoiceFormController {
         DirectoryChooser directoryChooser = new DirectoryChooser();
 
         directoryChooser.setTitle("Choose a directory with videos");
-        directoryChooser.setInitialDirectory(settings.getLastDirectoryWithVideos());
+
+        /* We have to validate this value because otherwise JavaFX will throw an exception. */
+        File initialDirectory = settings.getLastDirectoryWithVideos();
+        if (initialDirectory.isDirectory()) {
+            directoryChooser.setInitialDirectory(settings.getLastDirectoryWithVideos());
+        }
 
         return directoryChooser.showDialog(stage);
     }
