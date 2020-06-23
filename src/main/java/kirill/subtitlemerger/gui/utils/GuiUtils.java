@@ -19,6 +19,7 @@ import kirill.subtitlemerger.gui.GuiConstants;
 import kirill.subtitlemerger.gui.utils.entities.FormInfo;
 import kirill.subtitlemerger.logic.utils.Utils;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.IOException;
@@ -211,5 +212,13 @@ public class GuiUtils {
                 () -> Utils.getTextDependingOnCount(count.getValue(), oneItemText, zeroOrSeveralItemsText),
                 count
         );
+    }
+
+    /**
+     * Returns true if texts are equal as Java strings. The only difference is that null values and empty strings ("")
+     * are considered to be equal because for JavaFX's text fields they are the same.
+     */
+    public static boolean textsEqual(String first, String second) {
+        return ObjectUtils.firstNonNull(first, "").equals(ObjectUtils.firstNonNull(second, ""));
     }
 }

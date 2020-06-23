@@ -151,17 +151,17 @@ public class SubtitleFilesFormController extends BackgroundTaskFormController {
     private boolean pathNotChanged(String path, SubtitleType subtitleType) {
         String currentPath;
         if (subtitleType == SubtitleType.UPPER) {
-            currentPath = upperSubtitlesInfo != null ? upperSubtitlesInfo.getPath() : "";
+            currentPath = upperSubtitlesInfo != null ? upperSubtitlesInfo.getPath() : null;
         } else if (subtitleType == SubtitleType.LOWER) {
-            currentPath = lowerSubtitlesInfo != null ? lowerSubtitlesInfo.getPath() : "";
+            currentPath = lowerSubtitlesInfo != null ? lowerSubtitlesInfo.getPath() : null;
         } else if (subtitleType == SubtitleType.MERGED) {
-            currentPath = mergedSubtitlesFileInfo != null ? mergedSubtitlesFileInfo.getPath() : "";
+            currentPath = mergedSubtitlesFileInfo != null ? mergedSubtitlesFileInfo.getPath() : null;
         } else {
             log.error("unexpected subtitle type: " + subtitleType + ", most likely a bug");
             throw new IllegalStateException();
         }
 
-        return Objects.equals(path, currentPath);
+        return GuiUtils.textsEqual(path, currentPath);
     }
 
     @Nullable

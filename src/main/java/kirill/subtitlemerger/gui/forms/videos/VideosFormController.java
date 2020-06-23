@@ -36,7 +36,6 @@ import kirill.subtitlemerger.logic.videos.entities.SubtitleOption;
 import kirill.subtitlemerger.logic.videos.entities.Video;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
@@ -218,7 +217,7 @@ public class VideosFormController extends BackgroundTaskFormController {
     }
 
     private void processDirectoryPath(String path, FileOrigin fileOrigin) {
-        if (fileOrigin == FileOrigin.TEXT_FIELD && path.equals(ObjectUtils.firstNonNull(directoryPath, ""))) {
+        if (fileOrigin == FileOrigin.TEXT_FIELD && GuiUtils.textsEqual(path, directoryPath)) {
             return;
         }
 
