@@ -78,7 +78,7 @@ public class ChoiceFormController {
 
         /* We have to validate this value because otherwise JavaFX will throw an exception. */
         File initialDirectory = settings.getLastDirectoryWithVideos();
-        if (initialDirectory.isDirectory()) {
+        if (initialDirectory != null && initialDirectory.isDirectory()) {
             directoryChooser.setInitialDirectory(settings.getLastDirectoryWithVideos());
         }
 

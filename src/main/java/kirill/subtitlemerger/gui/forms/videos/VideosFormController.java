@@ -662,7 +662,7 @@ public class VideosFormController extends BackgroundTaskFormController {
             directoryChooser.setInitialDirectory(currentDirectory);
         } else {
             File initialDirectory = settings.getLastDirectoryWithVideos();
-            if (initialDirectory.isDirectory()) {
+            if (initialDirectory != null && initialDirectory.isDirectory()) {
                 directoryChooser.setInitialDirectory(initialDirectory);
             }
         }
