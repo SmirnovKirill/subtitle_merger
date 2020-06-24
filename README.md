@@ -12,7 +12,7 @@ external files nearby.
 * [What formats are supported?](#formats)  
 * [Why is the the application size so big?](#size)  
 * [Hot to use it?](#how_to_use)
-    * [To merge two subtitle files into the third](#subtitle_files_tab)
+    * [To merge two subtitle files into a third](#subtitle_files_tab)
     * [To work with videos](#videos_tab)
 * [Other questions](#other_question)
     * [What merge mode should I choose?](#merge_mode)
@@ -26,31 +26,32 @@ external files nearby.
 <a name="formats"></a>
 ## What formats are supported?
 Currently the application supports SubRip subtitles (**.srt**) and Matroska videos (**.mkv**). It also supports
-SubStation Alpha subtitles if they are already in videos and will convert them with ffmpeg to SubRip internally.
+SubStation Alpha subtitles (**.ssa**, **.ass**) if they are already in videos and will convert them with Ffmpeg to 
+SubRip internally.
 
 
 <a name="size"></a>
 ## Why is the application size so big?
-The size of the application varies from 80 megabytes for Linux to almost 90 megabytes for Windows although the 
-application itself is relatively simple.<br/>
+The size of the application varies from 80 megabytes (the Linux version) to almost 90 megabytes (the Windows version)
+although the application itself is relatively simple.<br/>
 There are two main reasons for it:
 1. 40 megabytes are taken by the custom Java Runtime Environment (JRE) which is included because starting from version 9
 Java no longer has JREs, only development kits.
-2. 35-45 megabytes are taken by ffmpeg. It is a very useful open source utility that the application uses internally to
+2. 35-45 megabytes are taken by Ffmpeg. It is a very useful open source utility that the application uses internally to
 work with videos. 
 
 The "pure" jar with the application takes approximately 350 KB. After adding required libraries and making a "fat" jar, 
-the size rises up to 5.5 MB. All other space is taken by the JRE and ffmpeg.
+the size rises up to 5.5 MB. All other space is taken by the JRE and Ffmpeg.
 
 
 <a name="how_to_use"></a>
 ## How to use it?
-The application has two main tabs to work with subtitles, the first one simply merges subtitles from two files to the
+The application has two main tabs to work with subtitles, the first one simply merges subtitles from two files to a
 third one. The second tab is much more powerful and allows to work with videos.
 
 
 <a name="subtitle_files_tab"></a>
-### To merge two subtitle files into the third
+### To merge two subtitle files into a third
 Open the first tab called "Subtitle files". On that tab you just need to select a file with subtitles that will be
 displayed at the top of the video and another file with subtitles that will go at the bottom. You also need to select 
 the file where the result will be written.
