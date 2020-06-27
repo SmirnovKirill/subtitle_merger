@@ -24,15 +24,15 @@
             <Region minHeight="5" maxHeight="5"/>
             <VBox fx:id="chosenDirectoryPane" visible="false" managed="false">
                 <HBox alignment="CENTER_LEFT" spacing="10">
-                    <TextField fx:id="chosenDirectoryField" HBox.hgrow="ALWAYS"/>
-                    <Button fx:id="refreshButton" onAction="#refreshClicked">
+                    <TextField fx:id="chosenDirectoryField" HBox.hgrow="ALWAYS" focusTraversable="false"/>
+                    <Button fx:id="refreshButton" onAction="#refreshClicked" focusTraversable="false">
                         <graphic>
                             <ImageView fitWidth="16" fitHeight="16">
                                 <Image url="/gui/icons/refresh.png"/>
                             </ImageView>
                         </graphic>
                     </Button>
-                    <Button onAction="#chooseAnotherClicked" text="Choose another"/>
+                    <Button onAction="#chooseAnotherClicked" focusTraversable="false" text="Choose another"/>
                 </HBox>
                 <Region minHeight="10" maxHeight="10"/>
             </VBox>
