@@ -30,7 +30,7 @@ import static kirill.subtitlemerger.gui.forms.videos.table.TableSubtitleOption.U
 public class TableWithVideos extends TableView<TableVideo> {
     private static final int CELL_PADDING = 4;
 
-    private static final int TITLE_AND_REMOVE_PANE_MIN_WIDTH = 190;
+    private static final int TITLE_AND_REMOVE_PANE_MIN_WIDTH = 182;
 
     /*
      * On Windows the default font is more compact than the Linux's one. So it's better to make the width smaller

@@ -93,8 +93,8 @@
                         subtitles in the subtitle list. This approach requires extra disk space during the merging
                         process (equal to the size of the largest video to process) because the application will create
                         a temporary video first and then will overwrite the original video with this temporary one. Note
-                        that the original files will be overwritten! And if something goes wrong during a merge you may
-                        lose your video files.
+                        that the original files will be overwritten! And if something goes wrong during the merge you
+                        may lose your video files.
                     </tooltip>
                 </MergeModeOption>
                 <MergeModeOption GridPane.rowIndex="0" GridPane.columnIndex="1" toggleGroup="$mergeModeToggleGroup">
@@ -129,7 +129,7 @@
                                  visible="${controller.makeDefaultVisible}" managed="${controller.makeDefaultVisible}">
                 <labelText>Mark merged subtitles as default</labelText>
                 <tooltipText>
-                    Merged subtitles will be played by video players by default automatically.
+                    Merged subtitles will be selected by video players by default automatically.
                 </tooltipText>
             </TextAndQuestionMark>
             <CheckBox fx:id="makeDefaultCheckBox" GridPane.rowIndex="4" GridPane.columnIndex="1"
