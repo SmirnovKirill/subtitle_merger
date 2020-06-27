@@ -34,24 +34,26 @@ function download_and_unpack {
 }
 
 if [[ $BUILD_LINUX_64 == "y" ]]; then
-  DOWNLOAD_JDK="$(need_to_download "$PROJECT_BASE_DIR/build_parts/downloads/jdk/linux_64")"
+  DOWNLOAD_JDK="$(need_to_download "$DOWNLOADED_JDK_DIRECTORY/linux_64")"
   if [[ $DOWNLOAD_JDK == "y" ]]; then
-    download_and_unpack "$PROJECT_BASE_DIR/build_parts/downloads/jdk/linux_64" "$JDK_LINUX_64_DOWNLOAD_URL"
+    download_and_unpack "$DOWNLOADED_JDK_DIRECTORY/linux_64" "$JDK_LINUX_64_DOWNLOAD_URL"
   else
     echo "jdk for linux x64 has already been downloaded"
   fi
 
-  DOWNLOAD_JAVAFX_JMODS="$(need_to_download "$PROJECT_BASE_DIR/build_parts/downloads/javafx_jmods/linux")"
+  DOWNLOAD_JAVAFX_JMODS="$(need_to_download "$DOWNLOADED_JAVAFX_DIRECTORY/linux")"
   if [[ $DOWNLOAD_JAVAFX_JMODS == "y" ]]; then
-    download_and_unpack "$PROJECT_BASE_DIR/build_parts/downloads/javafx_jmods/linux" "$OPENJFX_JMODS_LINUX_DOWNLOAD_URL"
+    download_and_unpack "$DOWNLOADED_JAVAFX_DIRECTORY/linux" "$OPENJFX_JMODS_LINUX_DOWNLOAD_URL"
   else
     echo "javafx jmods for linux has already been downloaded"
   fi
 
   if [[ $INCLUDE_FFMPEG == "y" ]]; then
-    DOWNLOAD_FFMPEG="$(need_to_download "$PROJECT_BASE_DIR/build_parts/downloads/ffmpeg/linux_64")"
+    DOWNLOAD_FFMPEG="$(need_to_download "$DOWNLOADED_FFMPEG_DIRECTORY/linux_64")"
     if [[ $DOWNLOAD_FFMPEG == "y" ]]; then
-      download_and_unpack "$PROJECT_BASE_DIR/build_parts/downloads/ffmpeg/linux_64" "$FFMPEG_LINUX_64_DOWNLOAD_URL"
+      download_and_unpack "$DOWNLOADED_FFMPEG_DIRECTORY/linux_64" "$FFMPEG_LINUX_64_DOWNLOAD_URL"
+      rm "$DOWNLOADED_FFMPEG_DIRECTORY/linux_64/manpages" -rf
+      rm "$DOWNLOADED_FFMPEG_DIRECTORY/linux_64/model" -rf
     else
       echo "ffmpeg for linux x64 has already been downloaded"
     fi
@@ -61,24 +63,27 @@ if [[ $BUILD_LINUX_64 == "y" ]]; then
 fi
 
 if [[ $BUILD_WIN_64 == "y" ]]; then
-  DOWNLOAD_JDK="$(need_to_download "$PROJECT_BASE_DIR/build_parts/downloads/jdk/win_64")"
+  DOWNLOAD_JDK="$(need_to_download "$DOWNLOADED_JDK_DIRECTORY/win_64")"
   if [[ $DOWNLOAD_JDK == "y" ]]; then
-    download_and_unpack "$PROJECT_BASE_DIR/build_parts/downloads/jdk/win_64" "$JDK_WIN_64_DOWNLOAD_URL"
+    download_and_unpack "$DOWNLOADED_JDK_DIRECTORY/win_64" "$JDK_WIN_64_DOWNLOAD_URL"
   else
     echo "jdk for windows x64 has already been downloaded"
   fi
 
-  DOWNLOAD_JAVAFX_JMODS="$(need_to_download "$PROJECT_BASE_DIR/build_parts/downloads/javafx_jmods/win")"
+  DOWNLOAD_JAVAFX_JMODS="$(need_to_download "$DOWNLOADED_JAVAFX_DIRECTORY/win")"
   if [[ $DOWNLOAD_JAVAFX_JMODS == "y" ]]; then
-    download_and_unpack "$PROJECT_BASE_DIR/build_parts/downloads/javafx_jmods/win" "$OPENJFX_JMODS_WIN_DOWNLOAD_URL"
+    download_and_unpack "$DOWNLOADED_JAVAFX_DIRECTORY/win" "$OPENJFX_JMODS_WIN_DOWNLOAD_URL"
   else
     echo "javafx jmods for windows has already been downloaded"
   fi
 
   if [[ $INCLUDE_FFMPEG == "y" ]]; then
-    DOWNLOAD_FFMPEG="$(need_to_download "$PROJECT_BASE_DIR/build_parts/downloads/ffmpeg/win_64")"
+    DOWNLOAD_FFMPEG="$(need_to_download "$DOWNLOADED_FFMPEG_DIRECTORY/win_64")"
     if [[ $DOWNLOAD_FFMPEG == "y" ]]; then
-      download_and_unpack "$PROJECT_BASE_DIR/build_parts/downloads/ffmpeg/win_64" "$FFMPEG_WIN_64_DOWNLOAD_URL"
+      download_and_unpack "$DOWNLOADED_FFMPEG_DIRECTORY/win_64" "$FFMPEG_WIN_64_DOWNLOAD_URL"
+      rm "$DOWNLOADED_FFMPEG_DIRECTORY/win_64/doc" -rf
+      rm "$DOWNLOADED_FFMPEG_DIRECTORY/win_64/presets" -rf
+      rm "$DOWNLOADED_FFMPEG_DIRECTORY/win_64/bin/ffplay.exe"
     else
       echo "ffmpeg for windows x64 has already been downloaded"
     fi

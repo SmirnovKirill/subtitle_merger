@@ -1,0 +1,19 @@
+1
+00:08:03,000 --> 00:08:05,290
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Но я не хочу, чтобы соус засох.</font>
+
+2
+00:08:05,420 --> 00:08:11,340
+<font face="Franklin Gothic Medium" size="63" color="#f4f4f4">{\an8}Иначе ты не сможешь его убрать.</font>
+
+3
+00:29:30,740 --> 00:29:32,830
+<font face="Times New Roman" size="60" color="#f7f7f7"><b>СЧЕТ</b>
+
+НЕОТЛОЖНАЯ ПОМОЩЬ
+Перелом берцовой кости</font>
+
+4
+00:45:36,830 --> 00:45:39,800
+<font face="Tahoma" size="51" color="#e5df9c"><font size="30">РЕЛИЗ ПОДГОТОВИЛ
+<font size="50"><b>Lostrator</b></font></font></font>

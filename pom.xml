@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>kirill</groupId>
-    <artifactId>subtitles-merger</artifactId>
-    <version>1.0</version>
+    <artifactId>subtitle-merger</artifactId>
+    <version>1.0-beta</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -21,6 +21,10 @@
                 <os>
                     <family>unix</family>
                 </os>
+                <property>
+                    <name>prepare_build_parts</name>
+                    <value>true</value>
+                </property>
             </activation>
             <build>
                 <plugins>
@@ -38,6 +42,84 @@
                                     <executable>bash</executable>
                                     <commandlineArgs>prepare_build_parts.sh</commandlineArgs>
                                     <workingDirectory>src/main/for_build/build_scripts</workingDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>make_full_build</id>
+            <activation>
+                <property>
+                    <name>make_full_build</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.akathist.maven.plugins.launch4j</groupId>
+                        <artifactId>launch4j-maven-plugin</artifactId>
+                        <version>1.7.25</version>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>launch4j</goal>
+                                </goals>
+                                <configuration>
+                                    <jar>${project.build.finalName}.jar</jar>
+                                    <dontWrapJar>true</dontWrapJar>
+                                    <headerType>gui</headerType>
+                                    <icon>src/main/resources/gui/icons/icon.ico</icon>
+                                    <outfile>${project.build.directory}/subtitle-merger.exe</outfile>
+                                    <jre>
+                                        <path>jre</path>
+                                    </jre>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>3.1.1</version>
+                        <executions>
+                            <execution>
+                                <id>linux_tarxz</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                                <configuration>
+                                    <appendAssemblyId>false</appendAssemblyId>
+                                    <tarLongFileMode>posix</tarLongFileMode>
+                                    <descriptors>
+                                        <descriptor>
+                                            src/main/for_build/assembly_plugin_descriptors/linux_tarxz.xml
+                                        </descriptor>
+                                    </descriptors>
+                                    <finalName>${project.artifactId}_${project.version}_build_linux</finalName>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>win_zip</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                                <configuration>
+                                    <appendAssemblyId>false</appendAssemblyId>
+                                    <tarLongFileMode>posix</tarLongFileMode>
+                                    <descriptors>
+                                        <descriptor>
+                                            src/main/for_build/assembly_plugin_descriptors/win_zip.xml
+                                        </descriptor>
+                                    </descriptors>
+                                    <finalName>${project.artifactId}_${project.version}_build_win</finalName>
                                 </configuration>
                             </execution>
                         </executions>
@@ -100,12 +182,12 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>kirill.subtitlesmerger.gui.GuiLauncher</mainClass>
+                            <mainClass>kirill.subtitlemerger.gui.GuiLauncher</mainClass>
                         </manifest>
                         <manifestEntries>
                             <!-- Otherwise log4j will produce warnings at runtime. -->
                             <Multi-Release>true</Multi-Release>
-                            <SplashScreen-Image>gui/icons/splash.png</SplashScreen-Image>
+                            <SplashScreen-Image>gui/icons/icon.png</SplashScreen-Image>
                         </manifestEntries>
                     </archive>
                 </configuration>
@@ -132,6 +214,12 @@
                                     </includes>
                                 </filter>
                                 <filter>
+                                    <artifact>org.apache.logging.log4j</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
                                     <artifact>*:*</artifact>
                                     <excludes>
                                         <exclude>module-info.class</exclude>
@@ -144,75 +232,10 @@
                     </execution>
                 </executions>
             </plugin>
-
-            <plugin>
-                <groupId>com.akathist.maven.plugins.launch4j</groupId>
-                <artifactId>launch4j-maven-plugin</artifactId>
-                <version>1.7.25</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>launch4j</goal>
-                        </goals>
-                        <configuration>
-                            <jar>${project.build.finalName}.jar</jar>
-                            <dontWrapJar>true</dontWrapJar>
-                            <headerType>gui</headerType>
-                            <outfile>${project.build.directory}/subtitles-merger.exe</outfile>
-                            <jre>
-                                <path>jre</path>
-                            </jre>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.1.1</version>
-                <executions>
-                    <execution>
-                        <id>zip_linux_64</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <appendAssemblyId>false</appendAssemblyId>
-                            <descriptors>
-                                <descriptor>src/main/for_build/assembly_plugin_descriptors/zip_linux_64.xml</descriptor>
-                            </descriptors>
-                            <finalName>${project.artifactId}_${project.version}_build_linux_64</finalName>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>zip_win_64</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <appendAssemblyId>false</appendAssemblyId>
-                            <descriptors>
-                                <descriptor>src/main/for_build/assembly_plugin_descriptors/zip_win_64.xml</descriptor>
-                            </descriptors>
-                            <finalName>${project.artifactId}_${project.version}_build_win_64</finalName>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 
     <dependencies>
-	    <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.29</version>
-        </dependency>
-
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
@@ -241,6 +264,18 @@
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-jcl</artifactId>
             <version>2.12.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-jul</artifactId>
+            <version>2.12.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>19.0.0</version>
         </dependency>
 
         <dependency>
@@ -295,14 +330,14 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>11.0.2</version>
+            <version>14.0.1</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>11.0.2</version>
+            <version>14.0.1</version>
             <scope>provided</scope>
         </dependency>
 
@@ -311,6 +346,13 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>5.5.2</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>3.1.0</version>
             <scope>test</scope>
         </dependency>
 

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import kirill.subtitlemerger.gui.GuiConstants?>
+<fx:root xmlns:fx="http://javafx.com/fxml" type="javafx.scene.control.Button" focusTraversable="false">
+    <styleClass>
+        <GuiConstants fx:constant="IMAGE_BUTTON_CLASS"/>
+    </styleClass>
+    <graphic>
+        <ImageView fitWidth="21" fitHeight="14">
+            <Image url="/gui/icons/eye.png"/>
+        </ImageView>
+    </graphic>
+</fx:root>

@@ -1,0 +1,31 @@
+1
+00:02:55,050 --> 00:02:56,300
+<font face="Tahoma" size="65" color="#ebebeb"><i>Fifteen, 16,...</i></font>
+
+2
+00:02:56,380 --> 00:02:59,300
+<font face="Tahoma" size="70" color="#ebebeb">- Убирай шасси!
+- Посадка! Скорость 190!</font>
+<font face="Tahoma" size="65" color="#ebebeb">- Full flaps!
+- Gear down! Airspeed 190!</font>
+
+3
+00:03:00,930 --> 00:03:12,060
+<font face="Tahoma" size="70" color="#ebebeb">Идем слишком курто!</font>
+<font face="Tahoma" size="65" color="#ebebeb">We're coming in too steep!</font>
+
+4
+00:03:12,060 --> 00:03:13,270
+<font face="Tahoma" size="70" color="#ebebeb">Идем слишком курто!</font>
+<font face="Tahoma" size="65" color="#ebebeb">Reverse thrusters!</font>
+
+5
+00:03:16,980 --> 00:03:18,490
+<font face="Tahoma" size="70" color="#ebebeb">Давай же!</font>
+<font face="Tahoma" size="65" color="#ebebeb">Come on!</font>
+
+6
+00:03:18,570 --> 00:03:19,950
+<font face="Tahoma" size="70" color="#ebebeb">Не получается!
+Не получается!</font>
+<font face="Tahoma" size="65" color="#ebebeb">We're running out!</font>
