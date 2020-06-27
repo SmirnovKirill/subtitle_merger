@@ -1,7 +1,7 @@
 <a name="download_links"></a>
 # Download links
-* ![Windows logo](/readme_images/windows_logo.png) Windows (x64) [87.8 MB](#set_in_release)
-* ![Linux logo](/readme_images/linux_logo.png) Linux (x64) [80.6 MB](#set_in_release)
+* ![Windows logo](/readme_images/windows_logo.png) Windows (x64) [87.8 MB](https://github.com/SmirnovKirill/subtitle_merger/releases/download/1.0-release/subtitle-merger_1.0-beta_build_win.zip)
+* ![Linux logo](/readme_images/linux_logo.png) Linux (x64) [80.6 MB](https://github.com/SmirnovKirill/subtitle_merger/releases/download/1.0-release/subtitle-merger_1.0-beta_build_linux.tar.xz)
 
 [Why is the application size so big?](#size)
 
