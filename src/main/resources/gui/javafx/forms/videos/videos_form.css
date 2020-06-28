@@ -35,11 +35,11 @@
 }
 
 .table-cell > .pane-warning {
-    -fx-background: #fee8cc;
+  -fx-background: #fee8cc;
 }
 
 .table-cell > .pane-error {
-    -fx-background: #f9dddb;
+  -fx-background: #f9dddb;
 }
 
 .table-cell:last-visible > .pane-warning,
@@ -64,7 +64,7 @@
 }
 
 .table-cell .path-label {
-  -fx-font-size: 1.0em;
+  -fx-font-size: 1em;
 }
 
 .table-cell .merged-title {
