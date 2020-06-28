@@ -1,21 +1,21 @@
 .choose-title {
-    -fx-font-size: 1.166667em;
+  -fx-font-size: 1.166667em;
 }
 
 .files-pane,
 .directory-pane {
-    -fx-background-color: -fx-box-border, -fx-background;
+  -fx-background-color: -fx-box-border, -fx-background;
+}
+
+.files-pane {
+  -fx-background-insets: 0, 1;
+}
+
+.directory-pane {
+  -fx-background-insets: 0, 1 1 1 0;
 }
 
 .files-pane:hover,
 .directory-pane:hover {
-    -fx-background-color: -fx-box-border, -fx-body-color;
-}
-
-.files-pane {
-    -fx-background-insets: 0, 1;
-}
-
-.directory-pane {
-    -fx-background-insets: 0, 1 1 1 0;
+  -fx-background-color: -fx-box-border, -fx-body-color;
 }

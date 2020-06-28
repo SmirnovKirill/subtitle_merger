@@ -1,19 +1,19 @@
 .labels-wrapper {
-    -fx-background-color: -fx-control-inner-background;
+  -fx-background-color: -fx-control-inner-background;
 }
 
 .label {
-    -fx-padding: 4 0 4 5;
+  -fx-padding: 4 0 4 5;
 }
 
 .label:hover,
 .label-keyboard-focus {
-    -fx-text-fill: white;
-    -fx-background-color: -fx-accent;
+  -fx-text-fill: white;
+  -fx-background-color: -fx-accent;
 }
 
 .utility-label,
 .utility-label:hover {
-    -fx-text-fill: -fx-text-background-color;
-    -fx-background-color: -fx-control-inner-background;
+  -fx-text-fill: -fx-text-background-color;
+  -fx-background-color: -fx-control-inner-background;
 }

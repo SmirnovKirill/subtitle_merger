@@ -1,57 +1,57 @@
 .button-error {
-    -fx-outer-border: #e2574c;
+  -fx-outer-border: #e2574c;
 }
 
 .button-error:focused {
-    -fx-faint-focus-color: #e2574c22;
-    -fx-focus-color: #e2574c;
+  -fx-faint-focus-color: #e2574c22;
+  -fx-focus-color: #e2574c;
 }
 
 .text-field-error {
-    -fx-text-box-border: #e2574c;
+  -fx-text-box-border: #e2574c;
 }
 
 .text-field-error:focused {
-    -fx-faint-focus-color: #e2574c22;
-    -fx-focus-color: #e2574c;
+  -fx-faint-focus-color: #e2574c22;
+  -fx-focus-color: #e2574c;
 }
 
 .label-success {
-    -fx-text-fill: green;
+  -fx-text-fill: green;
 }
 
 .label-warning {
-    -fx-text-fill: #ff8c00;
+  -fx-text-fill: #ff8c00;
 }
 
 .label-error {
-    -fx-text-fill: #e2574c;
+  -fx-text-fill: #e2574c;
 }
 
 .underline {
-    -fx-underline: true;
+  -fx-underline: true;
 }
 
 .hyperlink {
-    -fx-border-style: none;
-    -fx-border-width: 0;
-    -fx-padding: 0;
-    -fx-text-fill: -fx-accent;
-    -fx-underline: false;
+  -fx-border-style: none;
+  -fx-border-width: 0;
+  -fx-padding: 0;
+  -fx-text-fill: -fx-accent;
+  -fx-underline: false;
 }
 
 .hyperlink:hover {
-    -fx-underline: true;
+  -fx-underline: true;
 }
 
 .tooltip {
-    -fx-background-color: -fx-body-color;
-    -fx-text-fill: -fx-text-base-color;
+  -fx-background-color: -fx-body-color;
+  -fx-text-fill: -fx-text-base-color;
 }
 
 /* A button that consists of only one image or an image and a text, it should look very simple, without any borders. */
 .image-button {
-    -fx-background-color: transparent;
-    -fx-background-insets: 0;
-    -fx-padding: 0;
+  -fx-background-color: transparent;
+  -fx-background-insets: 0;
+  -fx-padding: 0;
 }

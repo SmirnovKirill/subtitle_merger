@@ -1,11 +1,11 @@
 .back-link {
-    -fx-font-size: 0.916667em;
+  -fx-font-size: 0.916667em;
 }
 
 .table-view:focused {
-    -fx-background-color: -fx-box-border, -fx-control-inner-background;
-    -fx-background-insets: 0, 1;
-    -fx-background-radius: 0;
+  -fx-background-color: -fx-box-border, -fx-control-inner-background;
+  -fx-background-insets: 0, 1;
+  -fx-background-radius: 0;
 }
 
 /*
@@ -14,45 +14,45 @@
  has an error pane with the reddish background as its content.
 */
 .table-cell {
-    -fx-background-color: -fx-table-cell-border-color, -fx-background;
-    -fx-background-insets: 0, 0 1 1 0;
-    -fx-border-width: 0;
-    -fx-padding: 0;
+  -fx-background-color: -fx-table-cell-border-color, -fx-background;
+  -fx-background-insets: 0, 0 1 1 0;
+  -fx-border-width: 0;
+  -fx-padding: 0;
 }
 
 .table-cell:last-visible {
-    -fx-background-insets: 0, 0 0 1 0;
+  -fx-background-insets: 0, 0 0 1 0;
 }
 
 .table-cell > .pane-unavailable {
-    -fx-opacity: 0.4;
+  -fx-opacity: 0.4;
 }
 
 .table-cell > .pane-warning,
 .table-cell > .pane-error {
-    -fx-background-color: -fx-table-cell-border-color, -fx-background;
-    -fx-background-insets: 0, 0 1 1 0;
-}
-
-.table-cell:last-visible > .pane-warning,
-.table-cell:last-visible > .pane-error {
-    -fx-background-insets: 0, 0 0 1 0;
+  -fx-background-color: -fx-table-cell-border-color, -fx-background;
+  -fx-background-insets: 0, 0 1 1 0;
 }
 
 .table-cell > .pane-warning {
     -fx-background: #fee8cc;
 }
 
-.table-cell:odd > .pane-warning {
-    -fx-background: derive(#fee8cc, -2%);
-}
-
 .table-cell > .pane-error {
     -fx-background: #f9dddb;
 }
 
+.table-cell:last-visible > .pane-warning,
+.table-cell:last-visible > .pane-error {
+  -fx-background-insets: 0, 0 0 1 0;
+}
+
+.table-cell:odd > .pane-warning {
+  -fx-background: derive(#fee8cc, -2%);
+}
+
 .table-cell:odd > .pane-error {
-    -fx-background: derive(#f9dddb, -2%);
+  -fx-background: derive(#f9dddb, -2%);
 }
 
 .table-cell .button,
@@ -60,13 +60,13 @@
 .table-cell .label,
 .table-cell Text,
 .table-cell .radio-button {
-    -fx-font-size: 0.75em;
+  -fx-font-size: 0.75em;
 }
 
 .table-cell .path-label {
-    -fx-font-size: 1.0em;
+  -fx-font-size: 1.0em;
 }
 
 .table-cell .merged-title {
-    -fx-text-fill: green;
+  -fx-text-fill: green;
 }
