@@ -1,5 +1,8 @@
 <a name="download_links"></a>
 # Download links
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/1f364784067f4fe0b8c48520047ac810)](https://app.codacy.com/manual/smirnov.kirill.vladimirovich/subtitle_merger?utm_source=github.com&utm_medium=referral&utm_content=SmirnovKirill/subtitle_merger&utm_campaign=Badge_Grade_Dashboard)
+
 * ![Windows logo](/readme_images/windows_logo.png) Windows (x64) [87.8 MB](https://github.com/SmirnovKirill/subtitle_merger/releases/download/v1.0-beta/subtitle-merger_1.0-beta_build_win.zip)
 * ![Linux logo](/readme_images/linux_logo.png) Linux (x64) [80.6 MB](https://github.com/SmirnovKirill/subtitle_merger/releases/download/v1.0-beta/subtitle-merger_1.0-beta_build_linux.tar.xz)
 
