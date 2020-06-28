@@ -1,3 +1,6 @@
+path_classifiers:
+  generated:
+    - exclude: src/main/java/kirill/subtitlemerger/
 extraction:
   java:
     index:
