@@ -1,3 +1,6 @@
+[![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/SmirnovKirill/subtitle_merger.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/SmirnovKirill/subtitle_merger/context:java)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/aeec084e580444f3be51efcabc69b739)](https://www.codacy.com/manual/smirnov.kirill.vladimirovich/subtitle_merger?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=SmirnovKirill/subtitle_merger&amp;utm_campaign=Badge_Grade)
+
 <a name="download_links"></a>
 ## Download links
 
